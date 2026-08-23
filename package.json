@@ -11,6 +11,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "edge-tts-universal": "^1.4.0",
     "googleapis": "^176.0.0",
     "next": "16.3.1",
     "pg": "^8.23.0",

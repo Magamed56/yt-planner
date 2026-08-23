@@ -24,12 +24,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
-  const dir = path.join(process.cwd(), "public", "voiceovers");
+  const dir = path.join(process.cwd(), "storage", "voiceovers");
   await mkdir(dir, { recursive: true });
   const fileName = `${id}-${Date.now()}.mp3`;
   await writeFile(path.join(dir, fileName), audio);
 
-  const voiceoverPath = `/voiceovers/${fileName}`;
+  const voiceoverPath = `/api/voiceovers/${fileName}`;
   const updated = await prisma.video.update({
     where: { id },
     data: { voiceoverPath },
