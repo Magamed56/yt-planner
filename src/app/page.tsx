@@ -4,7 +4,12 @@ import AddChannelForm from "@/components/AddChannelForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ youtube_connected?: string; youtube_error?: string }>;
+}) {
+  const { youtube_connected, youtube_error } = await searchParams;
   const channels = await prisma.channel.findMany({
     include: { videos: true },
     orderBy: { name: "asc" },
@@ -19,6 +24,16 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-[1400px] px-6 md:px-10 py-[clamp(40px,8vh,80px)]">
+      {youtube_connected && (
+        <div className="mb-6 rounded-lg bg-success-soft border border-success/30 px-4 py-2.5 text-sm text-success">
+          YouTube-канал подключён.
+        </div>
+      )}
+      {youtube_error && (
+        <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2.5 text-sm text-red-300">
+          Не удалось подключить YouTube: {youtube_error}
+        </div>
+      )}
       <div className="mb-12">
         <h1 className="text-[clamp(36px,6vw,56px)] text-ink mb-3 font-bold">YT Planner</h1>
         <p className="text-ink-dim leading-relaxed max-w-[60ch] text-base">

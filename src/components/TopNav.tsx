@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import YoutubeConnectButton from "@/components/YoutubeConnectButton";
 
 export default function TopNav({ channels }: { channels: { id: string; name: string }[] }) {
   const pathname = usePathname();
@@ -34,6 +35,8 @@ export default function TopNav({ channels }: { channels: { id: string; name: str
             );
           })}
         </nav>
+
+        <YoutubeConnectButton />
       </div>
     </header>
   );

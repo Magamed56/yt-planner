@@ -45,6 +45,13 @@ model Video {
   videoUrl         String?
   notes            String?
 
+  // Путь к готовому файлу видео на диске — приложение работает локально, так
+  // что загрузка на YouTube просто читает файл по этому пути, без отдельного
+  // хранилища.
+  videoFilePath    String?
+  youtubeVideoId   String?
+  privacyStatus    String     @default("unlisted") // private | unlisted | public
+
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
@@ -63,4 +70,15 @@ model VideoStageEvent {
   createdAt DateTime   @default(now())
 
   @@index([videoId])
+}
+
+// Единственная строка — OAuth-токен подключённого YouTube-аккаунта
+// (single-user приложение, отдельная таблица per-user не нужна).
+model GoogleAuthToken {
+  id           String   @id @default("singleton")
+  accessToken  String
+  refreshToken String
+  expiryDate   DateTime
+  channelTitle String?  // название YouTube-канала, для отображения "подключено как …"
+  updatedAt    DateTime @updatedAt
 }

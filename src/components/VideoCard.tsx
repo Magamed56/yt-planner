@@ -100,9 +100,13 @@ function EditVideoModal({
     plannedPublishAt: video.plannedPublishAt ? video.plannedPublishAt.toISOString().slice(0, 10) : "",
     videoUrl: video.videoUrl ?? "",
     notes: video.notes ?? "",
+    videoFilePath: video.videoFilePath ?? "",
   });
   const [isShort, setIsShort] = useState(video.isShort);
+  const [privacyStatus, setPrivacyStatus] = useState(video.privacyStatus);
   const [initialForm] = useState(form);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -134,6 +138,8 @@ function EditVideoModal({
         plannedPublishAt: form.plannedPublishAt || null,
         videoUrl: form.videoUrl.trim() || null,
         notes: form.notes.trim() || null,
+        videoFilePath: form.videoFilePath.trim() || null,
+        privacyStatus,
       }),
     });
     setBusy(false);
@@ -166,6 +172,37 @@ function EditVideoModal({
     }
     onClose();
     onDeleted?.(video);
+    router.refresh();
+  }
+
+  async function uploadToYoutube() {
+    if (!form.videoFilePath.trim()) {
+      setUploadError("Укажи путь к файлу видео на диске");
+      return;
+    }
+    setUploading(true);
+    setUploadError(null);
+    const res = await fetch(`/api/videos/${video.id}/upload-youtube`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ videoFilePath: form.videoFilePath.trim(), privacyStatus }),
+    });
+    setUploading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setUploadError(data.error ?? "Не удалось загрузить");
+      return;
+    }
+    const updated = await res.json();
+    onClose();
+    onUpdated?.({
+      ...updated,
+      plannedPublishAt: updated.plannedPublishAt ? new Date(updated.plannedPublishAt) : null,
+      publishedAt: updated.publishedAt ? new Date(updated.publishedAt) : null,
+      createdAt: new Date(updated.createdAt),
+      updatedAt: new Date(updated.updatedAt),
+      stageEvents: updated.stageEvents.map((ev: { createdAt: string }) => ({ ...ev, createdAt: new Date(ev.createdAt) })),
+    });
     router.refresh();
   }
 
@@ -206,6 +243,45 @@ function EditVideoModal({
         <div>
           <label className="metric-label">Заметки</label>
           <textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} className={inputClass} rows={2} />
+        </div>
+
+        <div className="space-y-3 pt-3 border-t border-line">
+          <p className="label-eyebrow">Автозагрузка на YouTube</p>
+          {video.youtubeVideoId && (
+            <p className="text-xs text-ink-faint">
+              Уже загружено:{" "}
+              <a href={video.videoUrl ?? undefined} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+                {video.videoUrl}
+              </a>
+            </p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
+            <div>
+              <label className="metric-label">Путь к файлу видео на диске</label>
+              <input
+                value={form.videoFilePath}
+                onChange={(e) => set("videoFilePath", e.target.value)}
+                className={inputClass}
+                placeholder="C:\Videos\ролик.mp4"
+              />
+            </div>
+            <div>
+              <label className="metric-label">Доступ</label>
+              <select
+                value={privacyStatus}
+                onChange={(e) => setPrivacyStatus(e.target.value)}
+                className="rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-sm text-ink outline-none transition-all duration-200 focus:border-accent focus:bg-surface-3 focus:ring-1 focus:ring-accent-soft cursor-pointer"
+              >
+                <option value="private">Приватное</option>
+                <option value="unlisted">По ссылке</option>
+                <option value="public">Публичное</option>
+              </select>
+            </div>
+          </div>
+          {uploadError && <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-xs text-red-300">{uploadError}</div>}
+          <button type="button" onClick={uploadToYoutube} disabled={uploading} className="btn-secondary text-sm">
+            {uploading ? "Загружаю…" : video.youtubeVideoId ? "Загрузить заново" : "Загрузить на YouTube"}
+          </button>
         </div>
 
         {error && <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-xs text-red-300">{error}</div>}
