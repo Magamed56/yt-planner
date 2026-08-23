@@ -52,6 +52,8 @@ model Video {
   youtubeVideoId   String?
   privacyStatus    String     @default("unlisted") // private | unlisted | public
 
+  voiceoverPath    String?    // публичный URL сгенерированной озвучки (/voiceovers/{id}.mp3)
+
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 

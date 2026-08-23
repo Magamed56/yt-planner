@@ -107,6 +107,9 @@ function EditVideoModal({
   const [initialForm] = useState(form);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [voiceoverPath, setVoiceoverPath] = useState(video.voiceoverPath);
+  const [generatingVoice, setGeneratingVoice] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -206,6 +209,28 @@ function EditVideoModal({
     router.refresh();
   }
 
+  async function generateVoice() {
+    if (!form.script.trim()) {
+      setVoiceError("Нет текста сценария для озвучки");
+      return;
+    }
+    setGeneratingVoice(true);
+    setVoiceError(null);
+    const res = await fetch(`/api/videos/${video.id}/generate-voiceover`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ script: form.script.trim() }),
+    });
+    setGeneratingVoice(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setVoiceError(data.error ?? "Не удалось сгенерировать озвучку");
+      return;
+    }
+    const updated = await res.json();
+    setVoiceoverPath(updated.voiceoverPath);
+  }
+
   return (
     <Modal title="Редактировать видео" onClose={requestClose} size="lg">
       <form onSubmit={submit} className="space-y-4">
@@ -243,6 +268,19 @@ function EditVideoModal({
         <div>
           <label className="metric-label">Заметки</label>
           <textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} className={inputClass} rows={2} />
+        </div>
+
+        <div className="space-y-3 pt-3 border-t border-line">
+          <p className="label-eyebrow">Озвучка</p>
+          {voiceoverPath && (
+            <audio controls src={voiceoverPath} className="w-full h-9">
+              Браузер не поддерживает аудио.
+            </audio>
+          )}
+          {voiceError && <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-xs text-red-300">{voiceError}</div>}
+          <button type="button" onClick={generateVoice} disabled={generatingVoice} className="btn-secondary text-sm">
+            {generatingVoice ? "Генерирую…" : voiceoverPath ? "Сгенерировать заново" : "Озвучить сценарий"}
+          </button>
         </div>
 
         <div className="space-y-3 pt-3 border-t border-line">

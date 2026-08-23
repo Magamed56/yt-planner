@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# сгенерированная озвучка — большие бинарники, не нужны в git
+/public/voiceovers/*
+!/public/voiceovers/.gitkeep

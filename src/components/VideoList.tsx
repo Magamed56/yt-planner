@@ -16,6 +16,7 @@ export type VideoRow = {
   videoFilePath: string | null;
   youtubeVideoId: string | null;
   privacyStatus: string;
+  voiceoverPath: string | null;
   createdAt: Date;
   updatedAt: Date;
   stageEvents: { id: string; stage: VideoStage; note: string | null; createdAt: Date }[];
