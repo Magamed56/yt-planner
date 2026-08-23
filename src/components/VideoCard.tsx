@@ -8,8 +8,16 @@ import Modal from "@/components/Modal";
 import type { VideoRow } from "@/components/VideoList";
 import { STAGE_LABELS } from "@/lib/stages";
 
-const dateFmt = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", year: "numeric" });
+const dateFmt = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const dateTimeFmt = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+// <input type="datetime-local"> хочет "YYYY-MM-DDTHH:mm" в ЛОКАЛЬНОМ времени
+// пользователя — toISOString() отдаёт UTC, поэтому нельзя использовать его
+// напрямую (сдвинет время при выводе обратно в форму).
+function toLocalDatetimeInput(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 export default function VideoCard({
   video,
@@ -97,7 +105,7 @@ function EditVideoModal({
     title: video.title,
     idea: video.idea ?? "",
     script: video.script ?? "",
-    plannedPublishAt: video.plannedPublishAt ? video.plannedPublishAt.toISOString().slice(0, 10) : "",
+    plannedPublishAt: video.plannedPublishAt ? toLocalDatetimeInput(video.plannedPublishAt) : "",
     videoUrl: video.videoUrl ?? "",
     notes: video.notes ?? "",
     videoFilePath: video.videoFilePath ?? "",
@@ -138,7 +146,7 @@ function EditVideoModal({
         idea: form.idea.trim() || null,
         script: form.script.trim() || null,
         isShort,
-        plannedPublishAt: form.plannedPublishAt || null,
+        plannedPublishAt: form.plannedPublishAt ? new Date(form.plannedPublishAt).toISOString() : null,
         videoUrl: form.videoUrl.trim() || null,
         notes: form.notes.trim() || null,
         videoFilePath: form.videoFilePath.trim() || null,
@@ -257,8 +265,13 @@ function EditVideoModal({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="metric-label">Плановая дата публикации</label>
-            <input type="date" value={form.plannedPublishAt} onChange={(e) => set("plannedPublishAt", e.target.value)} className={inputClass} />
+            <label className="metric-label">Плановые дата и время публикации</label>
+            <input
+              type="datetime-local"
+              value={form.plannedPublishAt}
+              onChange={(e) => set("plannedPublishAt", e.target.value)}
+              className={inputClass}
+            />
           </div>
           <div>
             <label className="metric-label">Ссылка на видео</label>

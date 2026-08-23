@@ -6,7 +6,8 @@
     "dev": "next dev -p 3000",
     "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start -p 3000",
-    "lint": "eslint"
+    "lint": "eslint",
+    "scheduler": "node scripts/scheduler.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",

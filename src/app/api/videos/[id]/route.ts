@@ -38,6 +38,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           publishedAt,
           videoUrl: body.videoUrl !== undefined ? (body.videoUrl?.trim() || null) : undefined,
           notes: body.notes !== undefined ? (body.notes?.trim() || null) : undefined,
+          videoFilePath: body.videoFilePath !== undefined ? (body.videoFilePath?.trim() || null) : undefined,
+          privacyStatus: body.privacyStatus ?? undefined,
         },
         include: { stageEvents: true },
       }),

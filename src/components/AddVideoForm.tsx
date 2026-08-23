@@ -56,7 +56,7 @@ export default function AddVideoForm({
         script: form.script.trim() || null,
         isShort,
         stage: defaultStage,
-        plannedPublishAt: form.plannedPublishAt || null,
+        plannedPublishAt: form.plannedPublishAt ? new Date(form.plannedPublishAt).toISOString() : null,
         videoUrl: form.videoUrl.trim() || null,
         notes: form.notes.trim() || null,
       }),
@@ -117,8 +117,13 @@ export default function AddVideoForm({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="metric-label">Плановая дата публикации</label>
-            <input type="date" value={form.plannedPublishAt} onChange={(e) => set("plannedPublishAt", e.target.value)} className={inputClass} />
+            <label className="metric-label">Плановые дата и время публикации</label>
+            <input
+              type="datetime-local"
+              value={form.plannedPublishAt}
+              onChange={(e) => set("plannedPublishAt", e.target.value)}
+              className={inputClass}
+            />
           </div>
           <div>
             <label className="metric-label">Ссылка на видео</label>
