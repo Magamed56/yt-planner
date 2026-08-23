@@ -14,6 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       title: body.title,
       idea: body.idea?.trim() || null,
       script: body.script?.trim() || null,
+      isShort: body.isShort ?? true,
       stage,
       plannedPublishAt: body.plannedPublishAt ? new Date(body.plannedPublishAt) : null,
       videoUrl: body.videoUrl?.trim() || null,

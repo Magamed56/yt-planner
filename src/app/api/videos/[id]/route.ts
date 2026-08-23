@@ -27,6 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           title: body.title ?? undefined,
           idea: body.idea !== undefined ? (body.idea?.trim() || null) : undefined,
           script: body.script !== undefined ? (body.script?.trim() || null) : undefined,
+          isShort: body.isShort ?? undefined,
           stage: body.stage ?? undefined,
           plannedPublishAt:
             body.plannedPublishAt !== undefined

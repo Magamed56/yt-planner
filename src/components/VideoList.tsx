@@ -7,6 +7,7 @@ export type VideoRow = {
   title: string;
   idea: string | null;
   script: string | null;
+  isShort: boolean;
   stage: VideoStage;
   plannedPublishAt: Date | null;
   publishedAt: Date | null;

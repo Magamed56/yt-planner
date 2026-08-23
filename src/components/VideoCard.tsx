@@ -31,6 +31,15 @@ export default function VideoCard({
         <div className="flex-1 min-w-[220px]">
           <div className="flex items-center gap-1.5">
             <h3 className="text-sm font-semibold text-ink">{video.title}</h3>
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset ${
+                video.isShort
+                  ? "bg-accent-soft text-accent ring-accent/20"
+                  : "bg-slate-400/15 text-slate-300 ring-slate-400/20"
+              }`}
+            >
+              {video.isShort ? "Shorts" : "Видео"}
+            </span>
             <button type="button" onClick={() => setEditOpen(true)} className="shrink-0 text-ink-faint hover:text-accent transition-colors" aria-label="Редактировать" title="Редактировать">
               ✎
             </button>
@@ -92,13 +101,14 @@ function EditVideoModal({
     videoUrl: video.videoUrl ?? "",
     notes: video.notes ?? "",
   });
+  const [isShort, setIsShort] = useState(video.isShort);
   const [initialForm] = useState(form);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm) || isShort !== video.isShort;
 
   function requestClose() {
     if (isDirty && !confirm("Закрыть без сохранения? Введённые изменения будут потеряны.")) return;
@@ -120,6 +130,7 @@ function EditVideoModal({
         title: form.title.trim(),
         idea: form.idea.trim() || null,
         script: form.script.trim() || null,
+        isShort,
         plannedPublishAt: form.plannedPublishAt || null,
         videoUrl: form.videoUrl.trim() || null,
         notes: form.notes.trim() || null,
@@ -165,6 +176,15 @@ function EditVideoModal({
           <label className="metric-label">Название *</label>
           <input value={form.title} onChange={(e) => set("title", e.target.value)} className={inputClass} />
         </div>
+        <label className="flex items-center gap-2 text-sm text-ink-dim cursor-pointer w-fit">
+          <input
+            type="checkbox"
+            checked={isShort}
+            onChange={(e) => setIsShort(e.target.checked)}
+            className="rounded border-line accent-[var(--color-accent)]"
+          />
+          Shorts
+        </label>
         <div>
           <label className="metric-label">Идея / питч</label>
           <textarea value={form.idea} onChange={(e) => set("idea", e.target.value)} className={inputClass} rows={2} />

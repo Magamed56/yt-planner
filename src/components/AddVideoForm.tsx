@@ -22,8 +22,9 @@ export default function AddVideoForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [isShort, setIsShort] = useState(true);
 
-  const isDirty = JSON.stringify(form) !== JSON.stringify(EMPTY_FORM);
+  const isDirty = JSON.stringify(form) !== JSON.stringify(EMPTY_FORM) || !isShort;
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -32,6 +33,7 @@ export default function AddVideoForm({
   function close() {
     setOpen(false);
     setForm(EMPTY_FORM);
+    setIsShort(true);
     setError(null);
   }
 
@@ -52,6 +54,7 @@ export default function AddVideoForm({
         title: form.title.trim(),
         idea: form.idea.trim() || null,
         script: form.script.trim() || null,
+        isShort,
         stage: defaultStage,
         plannedPublishAt: form.plannedPublishAt || null,
         videoUrl: form.videoUrl.trim() || null,
@@ -95,6 +98,15 @@ export default function AddVideoForm({
           <label className="metric-label">Название *</label>
           <input autoFocus value={form.title} onChange={(e) => set("title", e.target.value)} className={inputClass} placeholder="Заголовок видео" />
         </div>
+        <label className="flex items-center gap-2 text-sm text-ink-dim cursor-pointer w-fit">
+          <input
+            type="checkbox"
+            checked={isShort}
+            onChange={(e) => setIsShort(e.target.checked)}
+            className="rounded border-line accent-[var(--color-accent)]"
+          />
+          Shorts
+        </label>
         <div>
           <label className="metric-label">Идея / питч</label>
           <textarea value={form.idea} onChange={(e) => set("idea", e.target.value)} className={inputClass} rows={2} />

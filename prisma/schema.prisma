@@ -38,6 +38,7 @@ model Video {
   title            String
   idea             String?    // питч/описание идеи
   script           String?    // текст сценария
+  isShort          Boolean    @default(true) // Shorts (вертикальное, до 60 сек) или обычное видео
   stage            VideoStage @default(IDEA)
   plannedPublishAt DateTime?
   publishedAt      DateTime?

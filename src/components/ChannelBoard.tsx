@@ -17,6 +17,13 @@ export default function ChannelBoard({
   availableStages: VideoStage[];
 }) {
   const [videos, setVideos] = useState(initialVideos);
+  const [typeFilter, setTypeFilter] = useState<"all" | "short" | "long">("all");
+
+  const visibleVideos = videos.filter((v) => {
+    if (typeFilter === "short") return v.isShort;
+    if (typeFilter === "long") return !v.isShort;
+    return true;
+  });
 
   function handleAdded(video: VideoRow) {
     setVideos((prev) => [...prev, video]);
@@ -35,12 +42,34 @@ export default function ChannelBoard({
     setVideos((prev) => prev.filter((v) => v.id !== video.id));
   }
 
+  const filterOptions: { key: typeof typeFilter; label: string }[] = [
+    { key: "all", label: "Все" },
+    { key: "short", label: "Shorts" },
+    { key: "long", label: "Видео" },
+  ];
+
   return (
     <>
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setTypeFilter(opt.key)}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                typeFilter === opt.key
+                  ? "border-accent bg-accent-soft text-accent"
+                  : "border-line text-ink-dim hover:border-line-strong hover:text-ink"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         <AddVideoForm channelId={channelId} defaultStage={stage} onAdded={handleAdded} />
       </div>
-      <VideoList videos={videos} availableStages={availableStages} onUpdated={handleUpdated} onDeleted={handleDeleted} />
+      <VideoList videos={visibleVideos} availableStages={availableStages} onUpdated={handleUpdated} onDeleted={handleDeleted} />
     </>
   );
 }
