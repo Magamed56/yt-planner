@@ -13,6 +13,7 @@ import { Rng, mixSeed } from '../core/rng';
 import type { AABB } from '../core/math';
 import { themes } from '../theme/ThemeDef';
 import { resolveDifficulty, type DifficultyParams } from './difficulty';
+import { clearDecorFromPath } from './decorBounds';
 import { finalizeLevel } from './finalize';
 import { LevelBuilder } from './LevelBuilder';
 import type { ModuleContext, ModuleDef, ModuleOptions, ModuleRegistry, ModuleRole } from './ModuleRegistry';
@@ -226,6 +227,8 @@ export function generateLevel(p: LevelGenParams): LevelData {
     frame = r.exit;
   }
 
+  // props from one module must not stand in the track of a later (turning) one
+  clearDecorFromPath(b.pieces, b.spine);
   const start = instances[0];
   const sp = localToWorld(start.entry, 0, 0, 1.5);
   const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now();

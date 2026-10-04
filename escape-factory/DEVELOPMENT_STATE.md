@@ -119,8 +119,37 @@
   chunk), `?debug` flag, 123 unit + 6 e2e tests green, bot 100/100 for all profiles and
   characters, sample Short + 5-min long video rendered and inspected.
 
+- PHASE 18.1 — Camera collision + video framing (fix on top of the existing director):
+  - Found (validator over 100 levels × CHASE short/long, ~355k frames, old code): camera inside
+    geometry 4698 frames, below floor 106, beyond a ceiling 1407, player out of frame 9.2 %,
+    Grumbo out of frame in CHASE/WIDE 8.6 %, 7571 uncut jumps > 1.2 m (max 52.7 m). Causes:
+    the old render-only occlusion snap (teleports, ignored decor/enemy/crusher housings, no
+    near-plane clearance, absent headless so planning saw other shots), falling player dragged
+    the camera under the course, framing ignored a chasing-but-not-yet-visible Grumbo,
+    whip blends (TOP→LOW) animated through walls, balconies/props generated inside the track
+    of a later turning module (130 of 6016 decor pieces).
+  - Fixed: `camera/CameraObstacles` (colliders + decor bounds + crusher housings/heads +
+    enemy body, walkable/solid/moving kinds), `camera/CameraCollision` (raise over / pull in
+    with 0.35 m clearance, smoothed in 0.1 s / out 0.45 s, speed-capped; big pull-ins and
+    blocked shots become director cuts to a clearance-tested fallback shot; never inside,
+    never behind a surface, never below the floor, min arm 0.9 m), `camera/framing`
+    (runner + chaser solver: re-aim, widen, dolly; runner has priority), director fixes
+    (floor clamp to the track, whip blends > 6–9 m become cuts, cut on respawn, portrait WIDE
+    along the track, FOLLOW/BACK/LOW blend to high follow when Grumbo is close behind),
+    `level/decorBounds` + `clearDecorFromPath` in the generator. Collision runs in
+    `GameSession.renderOnly`, so headless planning, audits and the rendered video agree.
+  - Verified: `camera/CameraQuality` validator + `npm run audit:camera`; same audit after:
+    inside 0, below floor 0, beyond ceiling 3 frames, occluded 3.6 → 1.7 %, player out
+    0.01 %, Grumbo out 0.02 %, jumps 96 (max 3.4 m). 15 levels × 8 scenario/format variants
+    (~232k frames): inside 2, below 0, ceiling 3, player out 0.04 %, Grumbo out 0.05 %.
+    Browser renders through EditRunner (`tools/camera-shots.ts`), off vs on:
+    docs/img/camera_collision.jpg (long L55 BACK pillar + DRAMATIC inside a wall, L88 CHASE
+    behind a wall; Shorts 9:16 L30 IMPOSSIBLE ×2, L12 CHASE unchanged).
+    133 unit + 6 e2e green, build OK, bots SKILLED/PERFECT/CAUTIOUS 100/100, the 24 planned
+    Shorts still deliver their titles.
+
 ## CURRENT
-- v1 complete — all phases 0–17 done. Next work comes from the backlog below.
+- v1 complete — phases 0–17 + 18.1 (camera collision) done. Next work comes from the backlog below.
 
 ## NEXT
 - TTS voice-over step for `voice.lines` (e.g. a local TTS → mixed into the AudioTimeline).
@@ -129,6 +158,8 @@
 - Second sibling game (ESCAPE SCHOOL) as a content pack to prove the framework split.
 
 ## BUGS
+- Camera: 1–2 frames per crusher transit can still sit inside a crusher column/beyond its
+  housing while the director cuts away (3 frames in 355k); occlusion by thin props ~1.7 %.
 - Google Fonts blocked in the cloud container (falls back to Arial Black) — fine for users.
 - Voice lines (config.voice) are exported to metadata only — no TTS in the pipeline yet.
 
@@ -151,3 +182,6 @@
   synthesised offline from an event timeline (no realtime capture, no drift).
 - ADR-007: Themes may change physics only within the jump-range fairness budget (≤ +12 %);
   generator compensates floatiness via `rangeScale`. Keeps one generator valid for all themes.
+- ADR-008: Camera collision is a separate layer after the director (ideal pose → safe pose),
+  part of the simulation-side session (no Three.js), so headless planning sees the real shot.
+  When a shot can't be kept without a whip or a teleport, the director cuts instead.

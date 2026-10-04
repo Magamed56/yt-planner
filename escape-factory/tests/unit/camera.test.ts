@@ -115,18 +115,26 @@ describe('CameraDirector', () => {
     }
   });
 
-  it('cuts snap instantly, blends move smoothly', () => {
+  it('cuts snap instantly, moderate blends move smoothly, far blends become cuts', () => {
     const { d, s, tick } = setup();
     tick(1);
     d.request('TOP', 50, 5, 'test', true);
     tick(0.016);
     const topY = d.pose.y;
     expect(topY).toBeGreaterThan(s.y + 10);
+    // TOP (15 m up) → LOW (0.35 m) would be a whip-pan blend: it is a cut now
     d.request('LOW', 60, 5, 'test', false);
     tick(0.016);
-    expect(d.pose.y).toBeGreaterThan(s.y + 8); // still moving down smoothly
-    tick(3);
+    expect(d.lastCut).toBe(true);
     expect(d.pose.y).toBeLessThan(s.y + 1);
+    // LOW → BACK is close: a smooth, speed-capped blend
+    d.request('BACK', 70, 5, 'test', false);
+    tick(0.016);
+    expect(d.lastCut).toBe(false);
+    const y1 = d.pose.y;
+    expect(y1).toBeLessThan(s.y + 1.7); // still on its way up
+    tick(2);
+    expect(d.pose.y).toBeGreaterThan(y1);
   });
 
   it('gameplay style keeps the follow camera during normal play', () => {

@@ -15,7 +15,8 @@
     "validate:levels": "tsx tools/validate-levels.ts",
     "record": "tsx tools/record.ts",
     "record:long": "tsx tools/record.ts --long",
-    "plan:videos": "tsx tools/plan-videos.ts"
+    "plan:videos": "tsx tools/plan-videos.ts",
+    "audit:camera": "tsx tools/camera-audit.ts"
   },
   "dependencies": {
     "three": "^0.186.1"

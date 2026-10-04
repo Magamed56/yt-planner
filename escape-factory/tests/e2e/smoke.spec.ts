@@ -35,7 +35,8 @@ test('level 1 is playable with the keyboard and can be paused', async ({ page })
   await page.waitForFunction(() => (window as W).__booted === true);
   await expect(page.locator('#ui .hud.show')).toBeVisible();
   await page.keyboard.down('KeyW');
-  await page.waitForTimeout(2500);
+  // hold until 1.5 s of game time passed (wall time varies with software WebGL)
+  await page.waitForFunction(() => ((window as W).__app?.session.world.time ?? 0) > 1.5, null, { timeout: 30000 });
   await page.keyboard.up('KeyW');
   const s = await page.evaluate(() => {
     const w = (window as W).__app!.session.world;

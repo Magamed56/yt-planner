@@ -2,9 +2,10 @@
 
 ```bash
 npm run typecheck          # TypeScript strict (noUnused*, exactness)
-npm test                   # 123 unit tests, ~25 s (headless simulation in Node)
+npm test                   # 133 unit tests, ~25 s (headless simulation in Node)
 npm run test:e2e           # 6 browser tests, ~1 min (real WebGL via Chromium/SwiftShader)
 npm run validate:levels -- 1 100 SKILLED [character]   # bot campaign report
+npm run audit:camera -- [1-100] [--all]                # camera quality over video takes
 ```
 
 Every phase was committed only with typecheck + unit + e2e green.
@@ -22,7 +23,8 @@ Every phase was committed only with typecheck + unit + e2e green.
 | campaign.test.ts | 3 | 100 distinct valid reproducible levels; **SKILLED bot finishes all 100**; difficulty ramp |
 | themes.test.ts | 6 | 10 themes registered, decor builders exist, physics fairness budget, costumes, themed generation |
 | bot.test.ts | 9 | profiles, jumps, rides, gates, both blinking variants, reaction time, forced mistakes |
-| camera.test.ts | 10 | 13 modes, event → shot rules, priority/hold/cooldown, slow-mo, smoothing, portrait |
+| camera.test.ts | 10 | 13 modes, event → shot rules, priority/hold/cooldown, slow-mo, smoothing, far blends become cuts, portrait |
+| camera-collision.test.ts | 10 | validator; walls/floor/roof per mode (never inside, below floor, beyond ceiling, occluded); smooth pull-in/release; CHASE/WIDE keep runner + chaser framed (16:9, 9:16); real take audits (6 levels/scenarios); generated decor stays off the track |
 | video.test.ts | 12 | config validation (all bundled configs), scenarios, takes, determinism, clean/fail takes |
 | recording.test.ts | 11 | interest curve, best window, cold-open camera, Shorts plan, frame-exact edits, audio timeline, long plan, **series delivers every title** |
 | audio.test.ts | 2 | music never scheduled before t=0 (offline chunks), every theme kit |
@@ -37,7 +39,7 @@ Every phase was committed only with typecheck + unit + e2e green.
 | video mode | no UI, portrait aspect, bot advances |
 | studio | builds a config, preview |
 | record mode | init plan (25–40 s, exact frame count), JPEG frames, frames differ, soundtrack chunks (incl. mid-video), captions metadata |
-| perf | reloading 4 levels twice: GPU geometries flat, textures bounded, draw calls < 300 |
+| perf | reloading 4 levels three times: GPU geometries flat (round 3 vs 2), textures bounded, draw calls < 300 |
 
 The Playwright config starts its own Vite server (port 5179) and uses the preinstalled
 Chromium with SwiftShader flags (`tools/browser.ts`); set `PW_CHROMIUM_PATH` to override.
@@ -53,6 +55,21 @@ Current results (all 100 levels): PERFECT, SKILLED, AVERAGE, CLUMSY, DAREDEVIL, 
 
 `tools/trace-bot.ts <level> [profile] [seconds]` (env `CHAR=`) prints a frame trace around
 deaths — the main tool behind the bot/generator fixes listed in DEVELOPMENT_STATE.md.
+
+Timing in the e2e tests waits for simulated time (`waitForFunction`), not wall time, so slow
+software WebGL doesn't fail them.
+
+## Camera quality
+
+`camera/CameraQuality.ts` checks every frame of a take (headless): camera inside geometry,
+below the floor, beyond a ceiling, occluded, too close, player outside the frame, Grumbo
+outside the frame in CHASE/WIDE, and uncut camera jumps. `npm run audit:camera` prints it per
+take (default 11 levels × CHASE short/long; `1-100`, `--all` = 8 scenario/format variants,
+`--raw` = director pose without collision, for comparison). Exit 1 on hard errors.
+
+`tools/camera-shots.ts out.png "level:format:scenario:take:simTime" …` (dev server on :5173)
+renders the same moments with collision off and on through the real `EditRunner`
+(docs/img/camera_collision.jpg).
 
 ## Visual checks
 

@@ -158,3 +158,9 @@ Styles are data tables (`camera/styles.ts`): event → shot rules (priority, hol
 chance, slow-mo, cut) and coverage rotations. Shorts use portrait framing and more close/
 chase shots; long videos use wider coverage. 13 modes: FOLLOW, SIDE, FRONT, BACK, TOP, LOW,
 WIDE, CLOSE, CHASE, DRAMATIC, IMPACT, SLOW, FINISH (gallery: `docs/img/camera_gallery.png`).
+
+Camera collision (`camera/CameraCollision.ts`) runs after the director in `GameSession`
+(headless too): the camera rises over or eases in front of walls, ceilings, floors, large
+decor, crusher heads and Grumbo, keeps 0.35 m clearance, eases back when free, and turns a
+shot that can't be kept smoothly into a director cut. CHASE/WIDE then re-frame runner and
+chaser (`camera/framing.ts`). Quality: `npm run audit:camera` (see TESTING.md).

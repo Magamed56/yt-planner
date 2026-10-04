@@ -23,6 +23,16 @@
 - A PERFECT take relies on a clean-take search (up to 8 seeds). If none is clean, the take
   contains a death; `plan:videos` rejects such configs, hand-written configs are not checked.
 
+## Camera
+
+- Camera collision uses axis-aligned boxes (physics colliders + registered decor bounds).
+  Decorations without registered bounds, or with odd shapes, can still block the view
+  briefly (`npm run audit:camera`: ~1.7 % occluded frames, mostly thin props).
+- A crusher head moving onto the camera can leave 1–2 bad frames before the director cuts
+  to a free shot (3 frames in ~355k audited).
+- When nothing nearby is free (narrow corridors under ceilings) the camera may cut more
+  often than in open areas (the cuts are rate-limited).
+
 ## Gameplay
 
 - The PERFECT bot profile still dies occasionally on hard levels (by design it reacts like a

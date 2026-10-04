@@ -4,6 +4,7 @@
  * merges into the level's static geometry at near-zero draw-call cost.
  */
 import * as THREE from 'three';
+import { prop, registerDecorBounds } from '@engine/level/decorBounds';
 import { decorRegistry, type DecorBuildCtx } from '@engine/render/decor';
 import { boxGeo, coneGeo, cylinderGeo, roundBoxGeo, sphereGeo, torusGeo } from '@engine/render/geometry';
 
@@ -32,6 +33,15 @@ let done = false;
 export function registerThemeDecor(): void {
   if (done) return;
   done = true;
+  // camera-blocking bounds of the larger props (small ones are ignored)
+  for (const [kind, r, h] of [
+    ['plant', 0.5, 1.6], ['tree', 1.3, 4.4], ['neonSign', 0.9, 3.9], ['snowPile', 1.1, 0.6], ['iceCrystal', 0.6, 2.2],
+    ['snowman', 0.65, 2.6], ['pineTree', 1.2, 4.3], ['lollipop', 0.75, 3.8], ['candyCane', 0.6, 3.3], ['coral', 0.7, 2.1],
+    ['treasureChest', 0.6, 0.9], ['lavaRock', 0.9, 1.1], ['obsidianSpike', 0.6, 2.5], ['lavaVent', 1.0, 0.7],
+    ['satDish', 1.0, 2.7], ['crystal', 0.6, 2.5], ['pumpkin', 0.8, 1.3], ['tombstone', 0.5, 1.6], ['deadTree', 0.9, 3.6],
+    ['xmasTree', 1.3, 4.1], ['present', 0.7, 0.9], ['cupcake', 0.6, 1.3],
+  ] as Array<[string, number, number]>)
+    registerDecorBounds(kind, prop(r, h));
   const sphere = sphereGeo(14);
 
   // ---- NORMAL / generic

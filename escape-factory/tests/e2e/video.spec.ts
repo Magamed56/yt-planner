@@ -3,7 +3,8 @@ import { expect, test } from '@playwright/test';
 test('video mode hides UI, uses the format aspect and the bot plays', async ({ page }) => {
   await page.goto('/?mode=video&level=2&scenario=CHASE&format=short');
   await page.waitForFunction(() => (window as unknown as { __booted?: boolean }).__booted === true);
-  await page.waitForTimeout(2500);
+  // wait for simulated time, not wall time (software WebGL renders a few fps in CI)
+  await page.waitForFunction(() => ((window as unknown as { __video?: { video?: { world: { time: number } } } }).__video?.video?.world.time ?? 0) > 1.2, null, { timeout: 30000 });
   expect(await page.locator('#ui').count()).toBe(0);
   const info = await page.evaluate(() => {
     const v = (window as unknown as { __video: { video: { world: { playerS: number; time: number } }; rc: { size: { width: number; height: number } } } }).__video;
