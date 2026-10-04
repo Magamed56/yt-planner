@@ -3,6 +3,23 @@ import { LevelBuilder } from '@engine/level/LevelBuilder';
 import { finalizeLevel } from '@engine/level/finalize';
 import type { LevelData, ModuleInstance } from '@engine/level/types';
 
+/** Long flat course with a chase — used for the camera gallery. */
+export function flatChaseLevel(): LevelData {
+  const b = new LevelBuilder();
+  b.begin({ x: 0, y: 0, z: 0, dir: 0 }, 0);
+  b.spinePoint(0, 0, 0, 3);
+  b.floor(-3, 3, -4, 300);
+  b.trigger(3, { kind: 'chaseStart', intensity: 0.7 });
+  for (let i = 0; i < 20; i++) b.solid(2.2, 2.9, 0, 0.7, 20 + i * 12, 20.7 + i * 12, { style: 'crate', breakable: true });
+  for (let i = 0; i < 25; i++) b.decor(['pipe', 'lamp', 'barrel', 'gear', 'crate'][i % 5], (i % 2 ? 1 : -1) * 6, 0, 8 + i * 11, 0, 1, i % 4);
+  b.spinePoint(0, 0, 300, 3);
+  const mod: ModuleInstance = {
+    index: 0, type: 'SANDBOX', s0: 0, s1: 300, entry: { x: 0, y: 0, z: 0, dir: 0 }, exit: { x: 0, y: 0, z: 300, dir: 0 },
+    footprint: { minX: -3, minY: -1, minZ: 0, maxX: 3, maxY: 5, maxZ: 300 }, estTime: 40, estStart: 0, beat: false, tags: [],
+  };
+  return finalizeLevel(b, { seed: 0, difficulty: 2, theme: 'FACTORY', enemy: 'grumbo', specialEvents: [], modules: [mod], spawn: { x: 0, y: 0, z: 1, dir: 0 }, generationMs: 0 });
+}
+
 export function sandboxLevel(): LevelData {
   const b = new LevelBuilder();
   b.begin({ x: 0, y: 0, z: 0, dir: 0 }, 0);

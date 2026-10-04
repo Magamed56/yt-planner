@@ -39,8 +39,12 @@
   (ENEMY_STEP → stomp SFX + camera shake + dust), heartbeat SFX, red danger vignette, HUD danger
   meter, grabbed player dangles from Grumbo's claw, chase music intensity; chase tests.
 
+- PHASE 8 — Camera Director: 13 modes verified visually (docs/img/camera_gallery.png), relative
+  smoothing (fast runner never outruns the camera), enemy-aware high follow, occlusion avoidance
+  against level colliders, styles gameplay/cinematicPlay/video/shorts/classic, unit tests.
+
 ## CURRENT
-- PHASE 8 — Camera Director tests + video rules verification.
+- PHASE 9 — Bot (hint-following, predictive gates, mistakes, takes).
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →

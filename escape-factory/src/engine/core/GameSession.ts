@@ -130,11 +130,67 @@ export class GameSession {
     }
     const pose = this.director.update(s, dt);
     if (this.view) {
+      this.avoidOcclusion(pose, s);
       const t = w.time - (1 - alpha) * w.dt;
       this.view.sync(w, alpha, dt, t);
       this.view.render(pose, dt, this.presentTime);
     }
   }
+
+  /**
+   * Pulls the camera toward the subject when solid level geometry blocks the
+   * line of sight (corridor walls, doors). Cheap: segment vs nearby AABBs.
+   */
+  private avoidOcclusion(pose: { x: number; y: number; z: number }, s: CameraSubject): void {
+    const ox = s.x;
+    const oy = s.y + 1.2;
+    const oz = s.z;
+    const dx = pose.x - ox;
+    const dy = pose.y - oy;
+    const dz = pose.z - oz;
+    const box = this.occBox;
+    box.minX = Math.min(ox, pose.x) - 0.2;
+    box.maxX = Math.max(ox, pose.x) + 0.2;
+    box.minY = Math.min(oy, pose.y) - 0.2;
+    box.maxY = Math.max(oy, pose.y) + 0.2;
+    box.minZ = Math.min(oz, pose.z) - 0.2;
+    box.maxZ = Math.max(oz, pose.z) + 0.2;
+    const list = this.world.physics.query(box, this.occList);
+    let tMin = 1;
+    for (const c of list) {
+      // slab test
+      let t0 = 0;
+      let t1 = 1;
+      const axes: Array<[number, number, number, number]> = [
+        [ox, dx, c.minX - 0.15, c.maxX + 0.15],
+        [oy, dy, c.minY - 0.15, c.maxY + 0.15],
+        [oz, dz, c.minZ - 0.15, c.maxZ + 0.15],
+      ];
+      let hit = true;
+      for (const [o, d, lo, hi] of axes) {
+        if (Math.abs(d) < 1e-6) {
+          if (o < lo || o > hi) hit = false;
+          continue;
+        }
+        let a = (lo - o) / d;
+        let b = (hi - o) / d;
+        if (a > b) [a, b] = [b, a];
+        t0 = Math.max(t0, a);
+        t1 = Math.min(t1, b);
+        if (t0 > t1) hit = false;
+      }
+      if (hit && t0 > 0.02 && t0 < tMin) tMin = t0;
+    }
+    if (tMin < 1) {
+      const k = Math.max(0.18, tMin - 0.04);
+      pose.x = ox + dx * k;
+      pose.y = oy + dy * k;
+      pose.z = oz + dz * k;
+    }
+  }
+
+  private readonly occBox = { minX: 0, minY: 0, minZ: 0, maxX: 0, maxY: 0, maxZ: 0 };
+  private readonly occList: import('../physics/PhysicsWorld').Collider[] = [];
 
   get cameraSubject(): CameraSubject {
     return this.subject;

@@ -196,24 +196,48 @@ export class CameraDirector {
     const target = this.computeShot(this.shot, s);
     // keep the camera above the floor
     target.y = Math.max(target.y, s.groundY + 0.35);
+    // Smooth the camera *relative to the subject*: a fast runner never outruns
+    // the camera, while shot changes and heading turns still glide.
+    const off = this.off;
+    const tx = target.x - s.x;
+    const ty = target.y - s.y;
+    const tz = target.z - s.z;
+    const lx = target.tx - s.x;
+    const ly = target.ty - s.y;
+    const lz = target.tz - s.z;
     if (this.cutPending) {
-      Object.assign(this.pose, target);
+      off.x = tx;
+      off.y = ty;
+      off.z = tz;
+      off.lx = lx;
+      off.ly = ly;
+      off.lz = lz;
+      this.pose.fov = target.fov;
+      this.pose.roll = target.roll;
       for (const k of Object.keys(this.vel) as Array<keyof typeof this.vel>) this.vel[k].v = 0;
       this.cutPending = false;
-      return this.pose;
+    } else {
+      const st = this.smoothTime(this.shot.mode);
+      off.x = smoothDamp(off.x, tx, this.vel.x, st, dt);
+      off.y = smoothDamp(off.y, ty, this.vel.y, st, dt);
+      off.z = smoothDamp(off.z, tz, this.vel.z, st, dt);
+      off.lx = smoothDamp(off.lx, lx, this.vel.tx, st * 0.6, dt);
+      off.ly = smoothDamp(off.ly, ly, this.vel.ty, st * 0.6, dt);
+      off.lz = smoothDamp(off.lz, lz, this.vel.tz, st * 0.6, dt);
+      this.pose.fov = smoothDamp(this.pose.fov, target.fov, this.vel.fov, 0.3, dt);
+      this.pose.roll = lerp(this.pose.roll, target.roll, clamp(dt * 4, 0, 1));
     }
-    const st = this.smoothTime(this.shot.mode);
     const p = this.pose;
-    p.x = smoothDamp(p.x, target.x, this.vel.x, st, dt);
-    p.y = smoothDamp(p.y, target.y, this.vel.y, st, dt);
-    p.z = smoothDamp(p.z, target.z, this.vel.z, st, dt);
-    p.tx = smoothDamp(p.tx, target.tx, this.vel.tx, st * 0.6, dt);
-    p.ty = smoothDamp(p.ty, target.ty, this.vel.ty, st * 0.6, dt);
-    p.tz = smoothDamp(p.tz, target.tz, this.vel.tz, st * 0.6, dt);
-    p.fov = smoothDamp(p.fov, target.fov, this.vel.fov, 0.3, dt);
-    p.roll = lerp(p.roll, target.roll, clamp(dt * 4, 0, 1));
+    p.x = s.x + off.x;
+    p.y = Math.max(s.y + off.y, s.groundY + 0.35);
+    p.z = s.z + off.z;
+    p.tx = s.x + off.lx;
+    p.ty = s.y + off.ly;
+    p.tz = s.z + off.lz;
     return p;
   }
+
+  private readonly off = { x: 0, y: 4, z: -7, lx: 0, ly: 1, lz: 4 };
 
   private smoothTime(m: CameraMode): number {
     switch (m) {
@@ -224,6 +248,7 @@ export class CameraDirector {
       case 'FRONT':
         return 0.2;
       case 'IMPACT':
+      case 'CLOSE':
         return 0.08;
       case 'SLOW':
       case 'DRAMATIC':
@@ -254,13 +279,30 @@ export class CameraDirector {
       out.tz = s.z + fz * f + rz * r;
     };
     const k = clamp(sh.time / Math.max(0.01, sh.hold), 0, 1);
+    // is the enemy right behind the player (would block chase-cam views)?
+    let behind = 99;
+    if (s.enemy && s.enemy.visible) {
+      const ex = s.x - s.enemy.x;
+      const ez = s.z - s.enemy.z;
+      const back = ex * fx + ez * fz;
+      const lat = Math.abs(ex * rx + ez * rz);
+      if (back > -1 && lat < 4) behind = back;
+    }
     switch (sh.mode) {
       case 'FOLLOW':
-        at(P ? -8.5 : -7.2, 0, P ? 4.6 : 3.7);
-        look(P ? 3 : 4.5, 0, 1.1);
+        if (behind < 12) {
+          // high follow: look over Grumbo's head down at the runner
+          at(P ? -6.5 : -6, 0, (P ? 8.2 : 7.4) + Math.max(0, 4 - behind) * 0.3);
+          look(P ? 4 : 5, 0, 0.4);
+          out.fov = P ? 72 : 62;
+        } else {
+          at(P ? -8.5 : -7.2, 0, P ? 4.6 : 3.7);
+          look(P ? 3 : 4.5, 0, 1.1);
+        }
         break;
       case 'BACK':
-        at(-4.2, 0.6, 1.7);
+        if (behind < 8) at(-3.4, side * 3.6, 2.0);
+        else at(-4.2, 0.6, 1.7);
         look(7, 0, 1.3);
         out.fov = P ? 74 : 66;
         break;
@@ -280,7 +322,7 @@ export class CameraDirector {
         out.fov = 55;
         break;
       case 'LOW':
-        at(-2.8, side * 1.4, 0.35);
+        at(-2.8, side * (behind < 8 ? 3.4 : 1.4), 0.35);
         look(3, 0, 1.9);
         out.fov = 72;
         break;
