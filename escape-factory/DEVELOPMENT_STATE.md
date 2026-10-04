@@ -60,16 +60,37 @@
   in-frame captions + scripted events), ?mode=video URL params, Video Studio (?mode=studio),
   12 title recipes, bot-driven attract mode behind the main menu.
 
+- PHASE 11 — Shorts recording: `npm run record -- videos/video_001.json` → MP4 (H.264 1080×1920
+  30 fps + AAC, loudness-normalised to −14 LUFS) + metadata JSON + SRT + thumbnail. Pipeline:
+  in-process Vite → headless Chromium `?mode=record` → `EditRunner` steps the edit at exactly
+  1/fps (never wall clock) → JPEG frames piped to ffmpeg; soundtrack synthesised afterwards from
+  the recorded `AudioTimeline` with OfflineAudioContext in 30 s chunks (pre-roll joins chunks).
+  Highlight finder (event-interest curve) + Shorts planner: best 25–40 s window, hook caption
+  in the first second, climax/outro captions anchored to simulation time (slow-motion safe),
+  cold open flash-forward with CHASE camera when Grumbo is involved, slow-motion instant replay
+  when a level is too short, flash + whoosh on cuts, exact length fitted by headless measuring.
+  Verified: video_001 renders to 28.9 s, 868 frames, hook→chase→finish→replay
+  (docs/img/short_video_001.jpg). SwiftShader renders ~2.4 fps at 1080×1920; `--gpu` / `--scale`.
+- PHASE 13 (core) — One game → many videos: `npm run plan:videos` writes video_002…025 (12
+  recipes × levels × 7 characters) + long_05/10/15/20min configs + videos/INDEX.md; every Short
+  is verified headlessly to deliver its title (CAUGHT ends on the catch, PERFECT RUN has 0
+  deaths, BOSS shows the boss, FLOOR DISAPPEARED shows the collapse…) and to land in 25–40 s.
+  Scripted mistakes reworked: 'caught' freezes on plain chase ground (Grumbo slows at gaps),
+  late forced jumps override an earlier timing decision, lateJump only on static targets;
+  edge landings emit PLAYER_NEAR_DEATH (cause 'edge').
+
 ## CURRENT
-- PHASE 11 — Shorts recording (deterministic frame capture → ffmpeg, highlight window, audio).
+- PHASE 12 — Long videos (5/10/15/20 min): LongPlanner implemented (cold open, one chapter per
+  level with rotating scenario program, boss levels, long-run trimming, chapters, outro teaser,
+  ±3 % length fit); rendering verification pending.
 
 ## NEXT
-- PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →
-  9 bot → 10 video mode → 11 shorts → 12 long video → 13 scenarios → 14 themes → 15 100 levels →
-  16 optimisation → 17 QA.
+- 12 long video verification → 13 scenario polish → 14 themes → 15 100 levels → 16 optimisation →
+  17 QA + docs.
 
 ## BUGS
 - Google Fonts blocked in the cloud container (falls back to Arial Black) — fine for users.
+- Voice lines (config.voice) are exported to metadata only — no TTS in the pipeline yet.
 
 ## TODO
 - see NEXT
@@ -81,3 +102,8 @@
 - ADR-003: Fixed 60 Hz timestep + seeded RNG streams ⇒ seed + config reproduces a run exactly.
 - ADR-004: The game lives in `escape-factory/` inside the yt-planner repo (self-contained, own
   package.json) and can be split out with `git subtree split -P escape-factory`.
+- ADR-005: Videos are *edits* of deterministic takes: a segment is (config, sim time range);
+  the runner fast-forwards unrendered to the cut point, so any moment of any take can be
+  filmed again exactly, and planning/measuring runs headless in Node.
+- ADR-006: Recording renders frames in the browser but encodes in Node/ffmpeg; audio is
+  synthesised offline from an event timeline (no realtime capture, no drift).

@@ -1,0 +1,51 @@
+{
+  "id": "video_025",
+  "title": "Pick The Right Door!",
+  "seed": 1030,
+  "difficulty": 2.47,
+  "theme": "NIGHT",
+  "character": "cat",
+  "enemy": "grumbo",
+  "scenario": "CHASE",
+  "take": 2,
+  "cameraStyle": "shorts",
+  "duration": 32,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "WHICH DOOR?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "WHICH DOOR?",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "PICK_A_DOOR",
+  "level": 30,
+  "specialEvents": [
+    "more:DOOR",
+    "more:WALL"
+  ],
+  "meta": {
+    "description": "Three doors. Two slam shut. Grumbo is waiting behind one of them. (Level 30: Lights Out · Mittens)",
+    "tags": [
+      "choose",
+      "doors",
+      "puzzle",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

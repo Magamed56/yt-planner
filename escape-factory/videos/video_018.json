@@ -1,0 +1,53 @@
+{
+  "id": "video_018",
+  "title": "The Floor Disappeared!",
+  "seed": 1059,
+  "difficulty": 3.58,
+  "theme": "UNDERWATER",
+  "character": "cat",
+  "enemy": "grumbo",
+  "scenario": "CHAOS",
+  "take": 5,
+  "cameraStyle": "shorts",
+  "duration": 28,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "THE FLOOR?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "THE FLOOR!!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "FLOOR_DISAPPEARED",
+  "level": 59,
+  "specialEvents": [
+    "more:TRAP",
+    "more:DISAPPEARING_PLATFORM",
+    "floorCollapse",
+    "debris"
+  ],
+  "meta": {
+    "description": "The factory floor started falling apart behind Pip. Keep running! (Level 59: The Speedy Laser Lab · Mittens)",
+    "tags": [
+      "floor is lava",
+      "trap",
+      "chaos",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

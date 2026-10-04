@@ -1,0 +1,53 @@
+{
+  "id": "video_009",
+  "title": "Everything Went Wrong!",
+  "seed": 1043,
+  "difficulty": 2.72,
+  "theme": "CANDY",
+  "character": "pip",
+  "enemy": "grumbo",
+  "scenario": "CHAOS",
+  "take": 2,
+  "cameraStyle": "shorts",
+  "duration": 38,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "EVERYTHING WENT WRONG?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "EVERYTHING WENT WRONG",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "EVERYTHING_WRONG",
+  "level": 43,
+  "specialEvents": [
+    "chaos",
+    "more:FALLING_OBJECT",
+    "alarm",
+    "lightsFlicker"
+  ],
+  "meta": {
+    "description": "Alarms, falling crates, a collapsing floor… and then Grumbo showed up. (Level 43: The Noisy Workshop · Pip)",
+    "tags": [
+      "fail",
+      "chaos",
+      "funny",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

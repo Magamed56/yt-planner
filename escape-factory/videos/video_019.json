@@ -1,0 +1,48 @@
+{
+  "id": "video_019",
+  "title": "Impossible Factory Escape!",
+  "seed": 1092,
+  "difficulty": "IMPOSSIBLE",
+  "theme": "CHRISTMAS",
+  "character": "toy",
+  "enemy": "grumbo",
+  "scenario": "IMPOSSIBLE",
+  "take": 4,
+  "cameraStyle": "shorts",
+  "duration": 32,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "IMPOSSIBLE MODE?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "IMPOSSIBLE MODE",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "IMPOSSIBLE_ESCAPE",
+  "level": 92,
+  "specialEvents": [],
+  "meta": {
+    "description": "The hardest settings the factory has. Is it even possible? (Level 92: The Steamy Factory Floor · Tick-Tock)",
+    "tags": [
+      "impossible",
+      "hardest",
+      "speedrun",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

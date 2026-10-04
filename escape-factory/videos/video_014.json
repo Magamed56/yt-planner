@@ -1,0 +1,49 @@
+{
+  "id": "video_014",
+  "title": "Can I Escape The Factory?",
+  "seed": 1004,
+  "difficulty": 1.1,
+  "theme": "FACTORY",
+  "character": "pumpkin",
+  "enemy": "grumbo",
+  "scenario": "CHASE",
+  "take": 1,
+  "cameraStyle": "shorts",
+  "duration": 35,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "CAN I ESCAPE?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "CAN I ESCAPE?!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "CAN_I_ESCAPE",
+  "level": 4,
+  "specialEvents": [],
+  "meta": {
+    "description": "Pip wakes up inside a giant factory… and Grumbo is coming. Can Pip escape? (Level 4: The Spinning Elevator Shaft · Jack)",
+    "tags": [
+      "escape",
+      "obby",
+      "chase",
+      "monster",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

@@ -25,7 +25,7 @@ import { World } from '../sim/World';
 import { themes, type ThemeDef } from '../theme/ThemeDef';
 import type { GameEvent } from '../events/GameEvents';
 import { SCENARIOS, takePreset } from './Scenarios';
-import { VIDEO_FORMATS, type VideoConfig } from './VideoConfig';
+import { VIDEO_FORMATS, type CaptionSpec, type VideoConfig } from './VideoConfig';
 
 export interface ResolvedVideo {
   config: VideoConfig;
@@ -95,7 +95,7 @@ export function resolveVideo(config: VideoConfig, opts: ResolveOptions = {}): Re
   for (const e of config.events) if (e.type === 'forceMistake' && e.atS !== undefined) forced.push({ atS: e.atS, kind: e.kind, duration: e.duration });
   const wantFail = take.wantFail ?? sc.wantFail;
   if (wantFail && !forced.length) {
-    const pick = pickDramaticMistake(level, new Rng(takeSeed));
+    const pick = pickDramaticMistake(level, new Rng(takeSeed), config.scenario === 'FAIL' ? 'caught' : 'any');
     if (pick) forced.push(pick);
   }
   if (forced.length) bot.forced = forced;
@@ -129,16 +129,41 @@ export function resolveVideo(config: VideoConfig, opts: ResolveOptions = {}): Re
   return resolved;
 }
 
-/** Picks a dramatic place for a scripted mistake: a jump in a chase or the biggest gap. */
-export function pickDramaticMistake(level: LevelData, rng: Rng): ForcedMistake | null {
+/**
+ * Picks a dramatic place for a scripted mistake. 'caught': freeze on solid
+ * ground in the second half of a chase so Grumbo catches up (he deliberately
+ * slows at gaps, so never right before a jump). 'any': a catch, a botched jump
+ * into a gap, or rushing a hazard gate — whatever the level offers.
+ */
+export function pickDramaticMistake(level: LevelData, rng: Rng, prefer: 'caught' | 'any' = 'any'): ForcedMistake | null {
   const total = level.spine[level.spine.length - 1].s;
-  const chaseRanges = level.modules.filter((m) => m.tags.includes('chase')).map((m) => [m.s0, m.s1]);
-  const jumps = level.hints.filter((h): h is Extract<typeof h, { kind: 'jump' }> => h.kind === 'jump' && h.s > total * 0.25 && h.s < total * 0.85);
-  if (!jumps.length) return null;
-  const inChase = jumps.filter((j) => chaseRanges.some(([a, b]) => j.s >= a && j.s <= b));
-  const pool = inChase.length ? inChase : jumps;
-  const j = rng.pick(pool);
-  return { atS: j.s, kind: inChase.length ? 'stop' : 'lateJump', duration: 1.6 };
+  const blocked: Array<[number, number]> = [];
+  for (const h of level.hints) {
+    if (h.kind === 'jump') blocked.push([h.s - 3, h.landS + 2]);
+    else if (h.kind === 'gate' || h.kind === 'arena') blocked.push([h.s0 - 2, h.s1 + 2]);
+  }
+  const chaseGround: number[] = [];
+  for (const m of level.modules) {
+    // plain running ground only (conveyors would carry the frozen runner away)
+    if (!m.tags.includes('chase') || !['STRAIGHT', 'TURN', 'CHASE'].includes(m.type) || m.s0 < total * 0.12 || m.s1 > total * 0.94) continue;
+    for (let s = m.s0 + 2; s <= m.s1 - 6; s += 1) if (!blocked.some(([a, b]) => s + 7 > a && s < b)) chaseGround.push(s);
+  }
+  const late = chaseGround.filter((s) => s > total * 0.4);
+  // frozen long enough for Grumbo to close any chase gap (the catch ends it early)
+  const caught = (): ForcedMistake | null => (chaseGround.length ? { atS: rng.pick(late.length ? late : chaseGround), kind: 'stop', duration: 4.5 } : null);
+  if (prefer === 'caught') {
+    const c = caught();
+    if (c) return c;
+  }
+  const staticIds = new Set(level.pieces.filter((p) => p.type === 'solid' && !p.motion && !p.vanish).map((p) => p.id));
+  const jumps = level.hints.filter((h): h is Extract<typeof h, { kind: 'jump' }> => h.kind === 'jump' && h.s > total * 0.25 && h.s < total * 0.9 && staticIds.has(h.targetId));
+  const gates = level.hints.filter((h): h is Extract<typeof h, { kind: 'gate' }> => h.kind === 'gate' && h.s0 > total * 0.25 && h.s1 < total * 0.9);
+  const options: Array<() => ForcedMistake | null> = [];
+  if (chaseGround.length) options.push(caught);
+  if (jumps.length) options.push(() => ({ atS: rng.pick(jumps).s, kind: 'lateJump', duration: 1.6 }));
+  if (gates.length) options.push(() => ({ atS: rng.pick(gates).s0 - 0.5, kind: 'gateRush', duration: 1.6 }));
+  if (!options.length) return null;
+  return rng.pick(options)();
 }
 
 export interface TakeResult {
@@ -172,6 +197,10 @@ export interface VideoSessionOptions {
   rc?: RenderContext;
   mats?: MaterialLibrary;
   audio?: AudioSystem | null;
+  /** replaces the config captions (edit segments supply their own, in segment time) */
+  captions?: CaptionSpec[];
+  /** video-time offset of this session inside the final edit (for `at`-timed script events) */
+  timeOffset?: number;
 }
 
 export class VideoSession {
@@ -180,6 +209,14 @@ export class VideoSession {
   readonly captions: CaptionLayer | null;
   videoTime = 0;
   private readonly firedScript = new Set<number>();
+  private readonly captionList: CaptionSpec[];
+  private readonly timeOffset: number;
+  /** captions only appear after fast-forward (segment-local clock starts at 0) */
+  private captionClock = 0;
+  private ffwd = false;
+  /** caption visible on the current frame (for subtitles / metadata) */
+  currentCaption: { text: string; style: string } | null = null;
+  private readonly simCaptionStart = new Map<CaptionSpec, number>();
 
   constructor(
     readonly resolved: ResolvedVideo,
@@ -204,29 +241,65 @@ export class VideoSession {
     this.bot = new BotController(this.session.world, { ...r.bot, forced: r.bot.forced ? [...r.bot.forced] : undefined }, r.takeSeed);
     proxy.target = this.bot;
     this.captions = o.rc ? new CaptionLayer(o.rc.camera, r.portrait) : null;
+    this.captionList = o.captions ?? r.config.captions;
+    this.timeOffset = o.timeOffset ?? 0;
   }
 
   get world(): World {
     return this.session.world;
   }
 
-  /** Advances by `dt` seconds of video time. */
-  frame(dt: number): void {
+  /** Advances by `dt` seconds of video time (`draw=false`: simulate + film without GPU work). */
+  frame(dt: number, draw = true): void {
     this.videoTime += dt;
+    this.captionClock += dt;
     this.applyScript();
-    this.session.frame(dt);
+    this.session.frame(dt, draw);
+    const cap = this.ffwd ? null : this.activeCaption();
+    this.currentCaption = cap;
     if (this.captions) {
-      const cap = this.activeCaption();
-      this.captions.set(cap?.text ?? null, cap?.style, this.videoTime);
-      this.captions.update(this.videoTime);
+      this.captions.set(cap?.text ?? null, cap?.style, this.captionClock);
+      this.captions.update(this.captionClock);
     }
+  }
+
+  /**
+   * Plays (unrendered) until simulation time `simTime`, keeping the camera
+   * director and visuals warm so the first recorded frame looks continuous.
+   * Resets the caption clock so segment captions start at 0.
+   */
+  fastForward(simTime: number, dt = 1 / 60): void {
+    const w = this.session.world;
+    let guard = 0;
+    this.ffwd = true;
+    while (w.time + 1e-9 < simTime && guard++ < 200000) this.frame(dt, false);
+    this.ffwd = false;
+    this.captionClock = 0;
+    // sim-anchored captions that belong before the cut never show
+    for (const c of this.captionList) if (c.atSim !== undefined && c.atSim < w.time - 0.25) this.simCaptionStart.set(c, -1e9);
+    this.scriptCaption = null;
   }
 
   private scriptCaption: { text: string; until: number } | null = null;
 
   private activeCaption(): { text: string; style: string } | null {
-    if (this.scriptCaption && this.videoTime < this.scriptCaption.until) return { text: this.scriptCaption.text, style: 'label' };
-    for (const c of this.resolved.config.captions) if (this.videoTime >= c.at && this.videoTime < c.at + c.duration) return { text: c.text, style: c.style ?? 'label' };
+    if (this.scriptCaption && this.captionClock < this.scriptCaption.until) return { text: this.scriptCaption.text, style: 'label' };
+    const t = this.captionClock;
+    const simT = this.session.world.time;
+    for (const c of this.captionList) {
+      let at = c.at;
+      if (c.atSim !== undefined) {
+        // sim-anchored: starts on the frame the take reaches atSim (slow-motion safe)
+        let start = this.simCaptionStart.get(c);
+        if (start === undefined && simT >= c.atSim && !this.ffwd) {
+          start = t;
+          this.simCaptionStart.set(c, t);
+        }
+        if (start === undefined) continue;
+        at = start;
+      }
+      if (t >= at && t < at + c.duration) return { text: c.text, style: c.style ?? 'label' };
+    }
     return null;
   }
 
@@ -236,7 +309,8 @@ export class VideoSession {
     for (let i = 0; i < ev.length; i++) {
       if (this.firedScript.has(i)) continue;
       const e = ev[i];
-      const due = (e.at !== undefined && this.videoTime >= e.at) || (e.atS !== undefined && w.playerS >= e.atS);
+      // `at` = time in the final edit; never fires while fast-forwarding to a segment
+      const due = (e.at !== undefined && !this.ffwd && this.captionClock + this.timeOffset >= e.at) || (e.atS !== undefined && w.playerS >= e.atS);
       if (!due || e.type === 'forceMistake') continue;
       this.firedScript.add(i);
       const pos = w.playerPos();
@@ -245,7 +319,7 @@ export class VideoSession {
           this.session.director.request(e.mode, 50, e.hold ?? 2, 'script', true, null, e.slowmo ?? 1, e.hold ?? 2);
           break;
         case 'caption':
-          this.scriptCaption = { text: e.text, until: this.videoTime + (e.duration ?? 1.6) };
+          this.scriptCaption = { text: e.text, until: this.captionClock + (e.duration ?? 1.6) };
           break;
         case 'ALARM':
           w.events.emit('ALARM', { pos, duration: 3 });

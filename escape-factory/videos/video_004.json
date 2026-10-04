@@ -1,0 +1,48 @@
+{
+  "id": "video_004",
+  "title": "I Almost Died!",
+  "seed": 1035,
+  "difficulty": "NORMAL",
+  "theme": "WINTER",
+  "character": "cat",
+  "enemy": "grumbo",
+  "scenario": "NEAR_DEATH",
+  "take": 3,
+  "cameraStyle": "shorts",
+  "duration": 30,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "I ALMOST DIED?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "I ALMOST DIED…",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "ALMOST_DIED",
+  "level": 35,
+  "specialEvents": [],
+  "meta": {
+    "description": "Crushers, lasers and spinners — every single one missed by centimetres. (Level 35: The Crooked Storage Bay · Mittens)",
+    "tags": [
+      "near death",
+      "close call",
+      "obby",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

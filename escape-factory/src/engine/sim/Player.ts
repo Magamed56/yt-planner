@@ -199,6 +199,13 @@ export class Player {
         fallSpeed: -prevVy,
         airTime: this.airTime,
       });
+      // close call: a real jump that lands with the feet half over the edge
+      const g = b.ground;
+      if (g && this.airTime > 0.4) {
+        const hw = b.halfWidth;
+        const o = Math.min(Math.min(b.x + hw, g.maxX) - Math.max(b.x - hw, g.minX), Math.min(b.z + hw, g.maxZ) - Math.max(b.z - hw, g.minZ));
+        if (o < 0.6) this.events.emit('PLAYER_NEAR_DEATH', { pos: { x: b.x, y: b.y, z: b.z }, cause: 'edge', margin: o });
+      }
       this.jumping = false;
       this.airTime = 0;
       if (b.ground && b.ground.surface === 'jelly' && -prevVy > 4) {

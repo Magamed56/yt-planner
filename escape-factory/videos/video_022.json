@@ -1,0 +1,48 @@
+{
+  "id": "video_022",
+  "title": "I Escaped The Factory Boss!",
+  "seed": 1030,
+  "difficulty": "NORMAL",
+  "theme": "NIGHT",
+  "character": "alien",
+  "enemy": "grumbo",
+  "scenario": "BOSS_ESCAPE",
+  "take": 1,
+  "cameraStyle": "shorts",
+  "duration": 30,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "BOSS FIGHT?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "BOSS FIGHT!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "BOSS_ESCAPE",
+  "level": 30,
+  "specialEvents": [],
+  "meta": {
+    "description": "Grumbo blocks the exit and starts smashing the floor. Only one way out. (Level 30: Lights Out · Zip)",
+    "tags": [
+      "boss fight",
+      "escape",
+      "monster",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

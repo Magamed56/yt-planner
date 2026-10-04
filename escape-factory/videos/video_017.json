@@ -1,0 +1,51 @@
+{
+  "id": "video_017",
+  "title": "Only One Jump Saved Me!",
+  "seed": 1012,
+  "difficulty": 1.39,
+  "theme": "FACTORY",
+  "character": "robot",
+  "enemy": "grumbo",
+  "scenario": "NEAR_DEATH",
+  "take": 3,
+  "cameraStyle": "shorts",
+  "duration": 34,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "ONE JUMP?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "ONE JUMP…",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "ONE_JUMP",
+  "level": 12,
+  "specialEvents": [
+    "more:JUMP",
+    "more:MOVING_PLATFORM"
+  ],
+  "meta": {
+    "description": "One perfectly timed jump was the only thing between Pip and Grumbo. (Level 12: The Steamy Factory Floor · Bolt)",
+    "tags": [
+      "parkour",
+      "jump",
+      "clutch",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

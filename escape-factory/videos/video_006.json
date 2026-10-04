@@ -1,0 +1,53 @@
+{
+  "id": "video_006",
+  "title": "The Floor Disappeared!",
+  "seed": 1050,
+  "difficulty": 3.27,
+  "theme": "CANDY",
+  "character": "cookie",
+  "enemy": "grumbo",
+  "scenario": "CHAOS",
+  "take": 5,
+  "cameraStyle": "shorts",
+  "duration": 28,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "THE FLOOR?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "THE FLOOR!!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "FLOOR_DISAPPEARED",
+  "level": 50,
+  "specialEvents": [
+    "more:TRAP",
+    "more:DISAPPEARING_PLATFORM",
+    "floorCollapse",
+    "debris"
+  ],
+  "meta": {
+    "description": "The factory floor started falling apart behind Pip. Keep running! (Level 50: Sugar Rush · Crumbs)",
+    "tags": [
+      "floor is lava",
+      "trap",
+      "chaos",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

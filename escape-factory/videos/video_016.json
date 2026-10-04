@@ -1,0 +1,48 @@
+{
+  "id": "video_016",
+  "title": "I Almost Died!",
+  "seed": 1019,
+  "difficulty": "NORMAL",
+  "theme": "FACTORY",
+  "character": "pip",
+  "enemy": "grumbo",
+  "scenario": "NEAR_DEATH",
+  "take": 3,
+  "cameraStyle": "shorts",
+  "duration": 30,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "I ALMOST DIED?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "I ALMOST DIED…",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "ALMOST_DIED",
+  "level": 19,
+  "specialEvents": [],
+  "meta": {
+    "description": "Crushers, lasers and spinners — every single one missed by centimetres. (Level 19: The Speedy Laser Lab · Pip)",
+    "tags": [
+      "near death",
+      "close call",
+      "obby",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

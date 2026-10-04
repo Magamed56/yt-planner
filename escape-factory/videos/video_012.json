@@ -1,0 +1,50 @@
+{
+  "id": "video_012",
+  "title": "He Caught Me…",
+  "seed": 1054,
+  "difficulty": 3.19,
+  "theme": "UNDERWATER",
+  "character": "toy",
+  "enemy": "grumbo",
+  "scenario": "FAIL",
+  "take": 2,
+  "cameraStyle": "shorts",
+  "duration": 28,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "WAIT… NO?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "WAIT… NO!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "CAUGHT",
+  "level": 54,
+  "specialEvents": [
+    "doubleChase"
+  ],
+  "meta": {
+    "description": "One tiny mistake and Grumbo got Pip. Will Pip try again? (Level 54: The Cosmic Catwalk · Tick-Tock)",
+    "tags": [
+      "fail",
+      "caught",
+      "monster",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

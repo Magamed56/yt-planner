@@ -463,6 +463,12 @@ export class BotController implements InputSource {
       }
       dec = { offsetS: off, skip };
       this.jumpDecision.set(j, dec);
+    } else if (forced === 'lateJump' || forced === 'earlyJump' || forced === 'noJump') {
+      // scripted mistake arriving after the timing was decided: override it
+      if (forced === 'lateJump') dec.offsetS = 1.3;
+      else if (forced === 'earlyJump') dec.offsetS = -2.2;
+      else dec.skip = true;
+      this.forced.shift();
     }
     const d = w.solids.get(j.targetId);
     let dynamic = !!d && (!!d.piece.motion || !!d.piece.vanish);

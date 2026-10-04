@@ -1,0 +1,48 @@
+{
+  "id": "video_008",
+  "title": "The Monster Was RIGHT Behind Me!",
+  "seed": 1042,
+  "difficulty": 2.64,
+  "theme": "CANDY",
+  "character": "alien",
+  "enemy": "grumbo",
+  "scenario": "CHASE",
+  "take": 6,
+  "cameraStyle": "shorts",
+  "duration": 35,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "DON'T LOOK BACK?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "DON'T LOOK BACK",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "RIGHT_BEHIND_ME",
+  "level": 42,
+  "specialEvents": [],
+  "meta": {
+    "description": "Grumbo was one step away the whole time… (Level 42: The Haunted Crusher Hall · Zip)",
+    "tags": [
+      "monster",
+      "jumpscare",
+      "chase",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

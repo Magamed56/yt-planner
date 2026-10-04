@@ -118,7 +118,7 @@ export class GameView {
   }
 
   /** Applies a director pose (+ shake) to the camera and renders a frame. */
-  render(pose: CameraPose, dt: number, t: number): void {
+  render(pose: CameraPose, dt: number, t: number, draw = true): void {
     const cam = this.rc.camera;
     const sh = this.effects.shake;
     const amp = sh * sh * 0.45;
@@ -145,6 +145,7 @@ export class GameView {
     this.particles.update(dt, cam);
     this.ambient.update(dt, t, cam);
     this.backdrop.update(cam);
+    if (!draw) return;
     const p = this.charView.pos;
     this.rc.focusShadows(p.x, p.y, p.z);
     this.rc.render();

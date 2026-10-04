@@ -1,0 +1,50 @@
+{
+  "id": "video_024",
+  "title": "He Caught Me…",
+  "seed": 1037,
+  "difficulty": 2.64,
+  "theme": "WINTER",
+  "character": "robot",
+  "enemy": "grumbo",
+  "scenario": "FAIL",
+  "take": 2,
+  "cameraStyle": "shorts",
+  "duration": 28,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "WAIT… NO?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "WAIT… NO!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "CAUGHT",
+  "level": 37,
+  "specialEvents": [
+    "doubleChase"
+  ],
+  "meta": {
+    "description": "One tiny mistake and Grumbo got Pip. Will Pip try again? (Level 37: The Molten Conveyor · Bolt)",
+    "tags": [
+      "fail",
+      "caught",
+      "monster",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

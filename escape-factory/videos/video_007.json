@@ -1,0 +1,48 @@
+{
+  "id": "video_007",
+  "title": "Impossible Factory Escape!",
+  "seed": 1083,
+  "difficulty": "IMPOSSIBLE",
+  "theme": "HALLOWEEN",
+  "character": "pumpkin",
+  "enemy": "grumbo",
+  "scenario": "IMPOSSIBLE",
+  "take": 4,
+  "cameraStyle": "shorts",
+  "duration": 32,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "IMPOSSIBLE MODE?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "IMPOSSIBLE MODE",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "IMPOSSIBLE_ESCAPE",
+  "level": 83,
+  "specialEvents": [],
+  "meta": {
+    "description": "The hardest settings the factory has. Is it even possible? (Level 83: The Noisy Workshop · Jack)",
+    "tags": [
+      "impossible",
+      "hardest",
+      "speedrun",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

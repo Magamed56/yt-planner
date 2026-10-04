@@ -1,0 +1,48 @@
+{
+  "id": "video_020",
+  "title": "The Monster Was RIGHT Behind Me!",
+  "seed": 1033,
+  "difficulty": 2.32,
+  "theme": "WINTER",
+  "character": "cookie",
+  "enemy": "grumbo",
+  "scenario": "CHASE",
+  "take": 6,
+  "cameraStyle": "shorts",
+  "duration": 35,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "DON'T LOOK BACK?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "DON'T LOOK BACK",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "RIGHT_BEHIND_ME",
+  "level": 33,
+  "specialEvents": [],
+  "meta": {
+    "description": "Grumbo was one step away the whole time… (Level 33: The Sticky Pipe Maze · Crumbs)",
+    "tags": [
+      "monster",
+      "jumpscare",
+      "chase",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

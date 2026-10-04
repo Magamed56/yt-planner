@@ -1,0 +1,50 @@
+{
+  "id": "video_003",
+  "title": "The Monster Got Faster!",
+  "seed": 1012,
+  "difficulty": "HARD",
+  "theme": "FACTORY",
+  "character": "robot",
+  "enemy": "grumbo",
+  "scenario": "CHASE",
+  "take": 6,
+  "cameraStyle": "shorts",
+  "duration": 38,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "HE GOT FASTER?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "HE GOT FASTER?!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "MONSTER_FASTER",
+  "level": 12,
+  "specialEvents": [
+    "doubleChase"
+  ],
+  "meta": {
+    "description": "Grumbo had extra coal today. Every lunge gets closer… (Level 12: The Steamy Factory Floor · Bolt)",
+    "tags": [
+      "chase",
+      "monster",
+      "hard mode",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

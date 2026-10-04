@@ -1,0 +1,43 @@
+{
+  "id": "long_20min",
+  "title": "Escape Factory — 20 Minute Escape Marathon",
+  "seed": 1001,
+  "difficulty": "EASY",
+  "theme": "FACTORY",
+  "character": "pip",
+  "enemy": "grumbo",
+  "scenario": "CHASE",
+  "take": 1,
+  "cameraStyle": "dynamic",
+  "duration": 1200,
+  "format": "long",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": false,
+    "lines": []
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 3,
+      "text": "CAN I SURVIVE THIS?!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "full",
+  "meta": {
+    "tags": [
+      "escape factory",
+      "gameplay",
+      "obby",
+      "monster chase"
+    ],
+    "description": "20 minutes of factory escapes: chases, near misses, fails and boss fights."
+  },
+  "long": {
+    "minutes": 20,
+    "startLevel": 49
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "video_023",
+  "title": "Perfect Run — No Deaths!",
+  "seed": 1038,
+  "difficulty": 2.71,
+  "theme": "WINTER",
+  "character": "pip",
+  "enemy": "grumbo",
+  "scenario": "PERFECT_RUN",
+  "take": 1,
+  "cameraStyle": "shorts",
+  "duration": 34,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "NO DEATHS?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "NO DEATHS?",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "PERFECT_RUN",
+  "level": 38,
+  "specialEvents": [],
+  "meta": {
+    "description": "Not a single mistake from start to finish. (Level 38: The Bouncy Control Room · Pip)",
+    "tags": [
+      "perfect run",
+      "no death",
+      "satisfying",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

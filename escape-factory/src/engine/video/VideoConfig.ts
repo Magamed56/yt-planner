@@ -15,8 +15,10 @@ export type VideoFormat = keyof typeof VIDEO_FORMATS;
 export type CameraStyleName = 'dynamic' | 'smooth' | 'classic' | 'shorts' | 'gameplay';
 
 export interface CaptionSpec {
-  /** video seconds */
+  /** video seconds (segment-local in edits) */
   at: number;
+  /** alternatively: show when the take's simulation clock reaches this time */
+  atSim?: number;
   duration: number;
   text: string;
   style?: 'hook' | 'title' | 'label' | 'outro';

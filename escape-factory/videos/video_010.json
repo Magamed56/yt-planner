@@ -1,0 +1,48 @@
+{
+  "id": "video_010",
+  "title": "I Escaped The Factory Boss!",
+  "seed": 1080,
+  "difficulty": "NORMAL",
+  "theme": "SPACE",
+  "character": "robot",
+  "enemy": "grumbo",
+  "scenario": "BOSS_ESCAPE",
+  "take": 1,
+  "cameraStyle": "shorts",
+  "duration": 30,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": {
+    "enabled": true,
+    "lines": [
+      {
+        "at": 0.2,
+        "text": "BOSS FIGHT?"
+      }
+    ]
+  },
+  "captions": [
+    {
+      "at": 0,
+      "duration": 1.8,
+      "text": "BOSS FIGHT!",
+      "style": "hook"
+    }
+  ],
+  "events": [],
+  "highlight": "auto",
+  "recipe": "BOSS_ESCAPE",
+  "level": 80,
+  "specialEvents": [],
+  "meta": {
+    "description": "Grumbo blocks the exit and starts smashing the floor. Only one way out. (Level 80: Zero Gravity Panic · Bolt)",
+    "tags": [
+      "boss fight",
+      "escape",
+      "monster",
+      "escape factory",
+      "shorts"
+    ]
+  }
+}

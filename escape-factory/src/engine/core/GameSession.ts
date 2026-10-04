@@ -94,18 +94,19 @@ export class GameSession {
    * frame duration in recording). Slow motion from the director scales the
    * simulation. Renders if a view exists.
    */
-  frame(dt: number): void {
+  frame(dt: number, draw = true): void {
     if (this.paused) {
-      this.renderOnly(0);
+      this.renderOnly(0, draw);
       return;
     }
     this.presentTime += dt;
     this.loop.advance(dt, () => this.stepFixed(), this.director.timeScale);
     this.audio?.update(this.world, dt);
-    this.renderOnly(dt);
+    this.renderOnly(dt, draw);
   }
 
-  private renderOnly(dt: number): void {
+  /** `draw=false` keeps camera/visual state current without issuing GPU work (fast-forward). */
+  private renderOnly(dt: number, draw = true): void {
     const w = this.world;
     const alpha = this.loop.alpha;
     const b = w.player.body;
@@ -133,7 +134,7 @@ export class GameSession {
       this.avoidOcclusion(pose, s);
       const t = w.time - (1 - alpha) * w.dt;
       this.view.sync(w, alpha, dt, t);
-      this.view.render(pose, dt, this.presentTime);
+      this.view.render(pose, dt, this.presentTime, draw);
     }
   }
 
