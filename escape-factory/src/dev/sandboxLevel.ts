@@ -9,6 +9,7 @@ export function sandboxLevel(): LevelData {
   const hw = 3;
   b.spinePoint(0, 0, 0, hw);
   b.floor(-3, 3, -2, 16);
+  b.trigger(3, { kind: 'chaseStart', intensity: 0.7 });
   b.spinePoint(0, 0, 16, hw);
   b.spinePoint(0, 0, 19, hw, true);
   b.floor(-2.5, 2.5, 19, 26);

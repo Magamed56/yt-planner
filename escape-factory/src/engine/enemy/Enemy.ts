@@ -338,7 +338,7 @@ export class Enemy {
     const baseGap = d.enemyBaseGap * (this.finalEscape ? 0.85 : 1);
     if (this.lungeLeft > 0) {
       this.lungeLeft -= dt;
-      this.desiredGap = damp(this.desiredGap, nearGap, 2.2, dt);
+      this.desiredGap = damp(this.desiredGap, nearGap, 3.2, dt);
       if (this.lungeLeft <= 0) {
         this.lungeTimer =
           this.rng.range(d.enemyLungeMin, d.enemyLungeMax) / Math.max(0.3, this.tuning.aggression * (0.7 + 0.6 * this.intensity));
@@ -357,7 +357,7 @@ export class Enemy {
     // --- speed: never slower than the hunt speed, rubber band toward desired gap
     const gap = ctx.playerS - this.s;
     const hunt = d.enemyHunt * this.def.stats.speedMul * (0.92 + 0.16 * this.intensity);
-    let target = Math.max(hunt, ctx.playerSpeedS + 1.6 * (gap - this.desiredGap));
+    let target = Math.max(hunt, ctx.playerSpeedS + 2.2 * (gap - this.desiredGap));
     let maxSpeed = d.enemyMax;
     if (gap > 22) maxSpeed = 22;
     if (this.graceLeft > 0) {

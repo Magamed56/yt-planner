@@ -61,7 +61,14 @@ export function buildModel(spec: ModelSpec, mats: MaterialLibrary, extraParts: M
     meshes.push(mesh);
 
     let node: THREE.Object3D = mesh;
-    if (p.offset) {
+    if (scale && !p.offset) {
+      // children of spheres live in unscaled (metre) space: wrap the scaled mesh
+      const holder = new THREE.Group();
+      holder.position.set(p.pos[0], p.pos[1], p.pos[2]);
+      if (p.rot) holder.rotation.set(p.rot[0], p.rot[1], p.rot[2]);
+      holder.add(mesh);
+      node = holder;
+    } else if (p.offset) {
       const joint = new THREE.Group();
       joint.position.set(p.pos[0], p.pos[1], p.pos[2]);
       if (p.rot) joint.rotation.set(p.rot[0], p.rot[1], p.rot[2]);
@@ -72,6 +79,7 @@ export function buildModel(spec: ModelSpec, mats: MaterialLibrary, extraParts: M
       mesh.position.set(p.pos[0], p.pos[1], p.pos[2]);
       if (p.rot) mesh.rotation.set(p.rot[0], p.rot[1], p.rot[2]);
     }
+    if (scale && p.offset) mesh.scale.set(scale[0], scale[1], scale[2]);
     const parent = (p.parent && slots.get(p.parent)) || scaleRoot;
     parent.add(node);
     if (p.name && !slots.has(p.name)) {

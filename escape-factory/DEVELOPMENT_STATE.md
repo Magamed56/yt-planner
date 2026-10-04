@@ -13,8 +13,12 @@
   variable jump), data-driven Character System (7 characters), ModelBuilder, CharacterView with
   procedural animation, RenderContext, LevelView (merged static geometry), keyboard/gamepad input.
 
+- PHASE 3 — First enemy GRUMBO: deterministic brain (dormant/peek/chase/block/boss/grab/retreat),
+  rubber-band chase with lunges (never catches a full-speed runner, catches anyone who stops),
+  smashes breakable crates, theme costumes, EnemyView procedural animation + gauge-needle mood.
+
 ## CURRENT
-- PHASE 3 — First enemy (Grumbo) — brain implemented in engine/enemy/Enemy.ts, needs def + view + tests.
+- PHASE 4 — Obstacle system views + hazard tests.
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →

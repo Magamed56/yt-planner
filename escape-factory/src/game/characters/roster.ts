@@ -40,8 +40,8 @@ function eyes(y: number, z: number, spacing: number, size = 0.065, color = '#151
   return [
     { name: 'eyeL', parent: 'head', shape: 'sphere', size: [size, size * 1.25, size * 0.7], pos: [spacing, y, z], color, roughness: 0.2, noShadow: true },
     { name: 'eyeR', parent: 'head', shape: 'sphere', size: [size, size * 1.25, size * 0.7], pos: [-spacing, y, z], color, roughness: 0.2, noShadow: true },
-    { parent: 'eyeL', shape: 'sphere', size: [0.3, 0.3, 0.3], pos: [0.3, 0.35, 0.7], color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.6, noShadow: true },
-    { parent: 'eyeR', shape: 'sphere', size: [0.3, 0.3, 0.3], pos: [0.3, 0.35, 0.7], color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.6, noShadow: true },
+    { parent: 'eyeL', shape: 'sphere', size: [size * 0.32, size * 0.32, size * 0.32], pos: [size * 0.3, size * 0.45, size * 0.5], color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.6, noShadow: true },
+    { parent: 'eyeR', shape: 'sphere', size: [size * 0.32, size * 0.32, size * 0.32], pos: [size * 0.3, size * 0.45, size * 0.5], color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.6, noShadow: true },
   ];
 }
 
@@ -57,16 +57,16 @@ export const PIP: CharacterDef = {
   model: {
     parts: [
       { name: 'body', shape: 'capsule', size: [0.38, 0.5, 0], pos: [0, 0.78, 0], color: '#19c3b0', roughness: 0.55 },
-      { name: 'head', shape: 'sphere', size: [0.001, 0.001, 0.001], pos: [0, 0.0, 0], color: '#19c3b0', noShadow: true },
+      { name: 'head', shape: 'box', size: [0.01, 0.01, 0.01], pos: [0, 1.0, 0], color: '#19c3b0', noShadow: true },
       { parent: 'body', shape: 'sphere', size: [0.27, 0.23, 0.14], pos: [0, 0.2, 0.27], color: '#ffe8c4', roughness: 0.6 },
-      ...eyes(1.0, 0.41, 0.095),
+      ...eyes(0, 0.41, 0.095),
       { parent: 'body', shape: 'disc', size: [0.035, 0, 0], pos: [0.18, 0.13, 0.36], rot: [0, 0.5, 0], color: '#ff8fa3', noShadow: true },
       { parent: 'body', shape: 'disc', size: [0.035, 0, 0], pos: [-0.18, 0.13, 0.36], rot: [0, -0.5, 0], color: '#ff8fa3', noShadow: true },
       { parent: 'body', shape: 'roundBox', size: [0.3, 0.16, 0.06], pos: [0, -0.18, 0.35], color: '#0f8f82' },
       { parent: 'body', shape: 'cylinder', size: [0.392, 0.392, 0.07], pos: [0, -0.08, 0], color: '#2d3142' },
       { name: 'hat', parent: 'body', shape: 'sphere', size: [0.41, 0.3, 0.41], pos: [0, 0.48, 0], color: '#ffcc1f', roughness: 0.35 },
-      { parent: 'hat', shape: 'cylinder', size: [1.15, 1.15, 0.12], pos: [0, -0.05, 0.05], color: '#ffcc1f', roughness: 0.35 },
-      { parent: 'hat', shape: 'cylinder', size: [0.17, 0.17, 0.35], pos: [0, 0.45, 0.82], rot: [Math.PI / 2, 0, 0], color: '#fff6c8', emissive: '#fff1a8', emissiveIntensity: 1.2, noShadow: true },
+      { parent: 'hat', shape: 'cylinder', size: [0.47, 0.47, 0.04], pos: [0, -0.02, 0.03], color: '#ffcc1f', roughness: 0.35 },
+      { parent: 'hat', shape: 'cylinder', size: [0.07, 0.07, 0.12], pos: [0, 0.12, 0.36], rot: [Math.PI / 2, 0, 0], color: '#fff6c8', emissive: '#fff1a8', emissiveIntensity: 1.2, noShadow: true },
       ...limbs({ arm: '#13a596', hand: '#ffe8c4', leg: '#2d3142', boot: '#e85d2a', shoulderY: 0.78, shoulderX: 0.4, hipX: 0.15, hipY: 0.32 }),
     ],
   },
@@ -165,7 +165,7 @@ export const COOKIE: CharacterDef = {
   model: {
     parts: [
       { name: 'body', shape: 'cylinder', size: [0.5, 0.5, 0.2], pos: [0, 0.82, 0], rot: [Math.PI / 2, 0, 0], color: '#d4a373', roughness: 0.9 },
-      { name: 'head', shape: 'sphere', size: [0.001, 0.001, 0.001], pos: [0, 0.82, 0], color: '#d4a373', noShadow: true },
+      { name: 'head', shape: 'box', size: [0.01, 0.01, 0.01], pos: [0, 0.82, 0], color: '#d4a373', noShadow: true },
       ...[[0.25, 0.2], [-0.3, 0.05], [0.1, -0.25], [-0.15, 0.3], [0.32, -0.12], [-0.28, -0.25]].map(
         ([x, y]): ModelPart => ({ parent: 'body', shape: 'sphere', size: [0.06, 0.05, 0.06], pos: [x, 0.11, y], color: '#4a2c17', noShadow: true }),
       ),
@@ -192,16 +192,16 @@ export const PUMPKIN: CharacterDef = {
         (i): ModelPart => ({
           parent: 'body',
           shape: 'sphere',
-          size: [0.2, 0.41, 0.2],
-          pos: [Math.sin((i * Math.PI) / 3) * 0.33, 0, Math.cos((i * Math.PI) / 3) * 0.33],
+          size: [0.18, 0.4, 0.18],
+          pos: [Math.sin((i * Math.PI) / 3 + Math.PI / 6) * 0.31, 0, Math.cos((i * Math.PI) / 3 + Math.PI / 6) * 0.31],
           color: '#e36414',
           roughness: 0.6,
         }),
       ),
-      { name: 'head', shape: 'sphere', size: [0.001, 0.001, 0.001], pos: [0, 0.78, 0], color: '#f77f00', noShadow: true },
-      { name: 'eyeL', parent: 'head', shape: 'cone', size: [0.07, 0.1, 0], pos: [0.14, 0.1, 0.43], rot: [Math.PI / 2, 0, 0], color: '#ffe066', emissive: '#ffb703', emissiveIntensity: 2, noShadow: true },
-      { name: 'eyeR', parent: 'head', shape: 'cone', size: [0.07, 0.1, 0], pos: [-0.14, 0.1, 0.43], rot: [Math.PI / 2, 0, 0], color: '#ffe066', emissive: '#ffb703', emissiveIntensity: 2, noShadow: true },
-      { parent: 'head', shape: 'box', size: [0.3, 0.06, 0.05], pos: [0, -0.1, 0.43], color: '#ffe066', emissive: '#ffb703', emissiveIntensity: 2, noShadow: true },
+      { name: 'head', shape: 'box', size: [0.01, 0.01, 0.01], pos: [0, 0.78, 0], color: '#f77f00', noShadow: true },
+      { name: 'eyeL', parent: 'head', shape: 'cone', size: [0.07, 0.1, 0], pos: [0.14, 0.1, 0.47], rot: [Math.PI / 2, 0, 0], color: '#ffe066', emissive: '#ffb703', emissiveIntensity: 2, noShadow: true },
+      { name: 'eyeR', parent: 'head', shape: 'cone', size: [0.07, 0.1, 0], pos: [-0.14, 0.1, 0.47], rot: [Math.PI / 2, 0, 0], color: '#ffe066', emissive: '#ffb703', emissiveIntensity: 2, noShadow: true },
+      { parent: 'head', shape: 'box', size: [0.3, 0.06, 0.05], pos: [0, -0.1, 0.45], color: '#ffe066', emissive: '#ffb703', emissiveIntensity: 2, noShadow: true },
       { name: 'hat', parent: 'body', shape: 'cylinder', size: [0.05, 0.07, 0.2], pos: [0, 0.48, 0], rot: [0.2, 0, 0.1], color: '#386641' },
       { parent: 'hat', shape: 'sphere', size: [0.12, 0.03, 0.08], pos: [0.1, 0.05, 0], color: '#6a994e' },
       ...limbs({ arm: '#386641', hand: '#6a994e', leg: '#386641', boot: '#283618', shoulderY: 0.8, shoulderX: 0.48, hipX: 0.16, hipY: 0.38 }),

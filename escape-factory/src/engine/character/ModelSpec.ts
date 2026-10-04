@@ -20,6 +20,10 @@ export type RigSlot =
   | 'hat'
   | 'extra';
 
+/**
+ * Positions of child parts are always in metres relative to the parent's
+ * origin (sphere radii never scale their children).
+ */
 export interface ModelPart {
   /** rig slot used by the animator; several parts may share a slot only if parented */
   name?: RigSlot | string;

@@ -44,7 +44,7 @@ const ANCHORS: Anchor[] = [
   {
     obstacleSpeed: 0.75, trapDensity: 0.25, lengthMin: 10, lengthMax: 12, gapMin: 1.6, gapMax: 2.6,
     platformMin: 3.2, platformMax: 4.5, trackHalfWidth: 3.0, bridgeWidth: 1.6, enemyHunt: 5.0, enemyMax: 12,
-    enemyBaseGap: 9, enemyNearGap: 3.4, enemyLungeMin: 6, enemyLungeMax: 9, surpriseRate: 0.9,
+    enemyBaseGap: 9, enemyNearGap: 3.2, enemyLungeMin: 6, enemyLungeMax: 9, surpriseRate: 0.9,
     timingWindow: 1.3, chaseSegments: 1, checkpointEvery: 4, coinRate: 1,
   },
   // NORMAL
