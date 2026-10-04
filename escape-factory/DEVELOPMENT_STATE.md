@@ -17,8 +17,13 @@
   rubber-band chase with lunges (never catches a full-speed runner, catches anyone who stops),
   smashes breakable crates, theme costumes, EnemyView procedural animation + gauge-needle mood.
 
+- PHASE 4 — Obstacle system: 7 deterministic hazard kinds (spinner, crusher, laser, faller,
+  zone, boss slam, roller) with telegraphs, near-miss detection, bot prediction API; dynamic
+  solids (moving, pingpong, triggered doors/pushers, cycle/step/trigger vanish, breakables);
+  HazardViews for every kind; obstacle unit tests.
+
 ## CURRENT
-- PHASE 4 — Obstacle system views + hazard tests.
+- PHASE 5 — Level generator (19 modules, seeds, difficulty).
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →

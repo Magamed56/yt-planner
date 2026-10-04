@@ -372,6 +372,12 @@ export class Enemy {
     target = clamp(target, 0, maxSpeed);
     this.speed = approach(this.speed, target, 24 * dt);
     this.s = Math.min(this.track.length, this.s + this.speed * dt);
+    // never overtake the player (mercy takes / dead player): stop right behind
+    const minGap = this.def.stats.catchDistance * 0.85;
+    if (this.s > ctx.playerS - minGap) {
+      this.s = ctx.playerS - minGap;
+      this.speed = Math.min(this.speed, Math.max(0, ctx.playerSpeedS));
+    }
     this.lateral = damp(this.lateral, clamp(ctx.playerLateral * 0.6, -2, 2), 3, dt);
 
     // --- smash breakables on the way (comedy + OBSTACLE_BREAK beats)

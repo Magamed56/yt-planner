@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RenderContext } from '@engine/render/RenderContext';
 import { MaterialLibrary } from '@engine/render/materials';
 import { LevelView } from '@engine/render/LevelView';
+import { hazardViewsExtension } from '@engine/render/HazardViews';
 import { CharacterView } from '@engine/render/CharacterView';
 import { EnemyView } from '@engine/render/EnemyView';
 import { GRUMBO } from '@game/enemies/grumbo';
@@ -23,7 +24,7 @@ rc.scene.fog = new THREE.Fog(theme.palette.fog, theme.lighting.fogNear, theme.li
 const mats = new MaterialLibrary();
 const level = sandboxLevel();
 const world = new World({ level, character: PIP, enemy: GRUMBO, enemyTuning: { mercy: true } });
-const lv = new LevelView(level, world, theme, mats);
+const lv = new LevelView(level, world, theme, mats, [hazardViewsExtension]);
 rc.scene.add(lv.root);
 const cv = new CharacterView(PIP, mats);
 rc.scene.add(cv.root);
@@ -49,6 +50,8 @@ const loop = new FixedLoop();
 const inp = emptyInput();
 const cam = new THREE.Vector3(0, 4, -6);
 let last = performance.now();
+const startZ = Number(new URLSearchParams(location.search).get('z') ?? 0);
+if (startZ) world.player.spawn(0, 0.1, startZ, 0);
 const auto = new URLSearchParams(location.search).has('auto');
 function frame(now: number) {
   const dt = Math.min(0.1, (now - last) / 1000);

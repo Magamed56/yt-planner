@@ -26,6 +26,15 @@ export function sandboxLevel(): LevelData {
     b.floor(-1.2, 1.2, 62 + i * 3.5, 64.5 + i * 3.5, 0, { style: 'trap', vanish: { kind: 'step', delay: 0.5, respawn: 3 } });
   b.spinePoint(0, 0, 76, hw, true);
   b.floor(-3, 3, 76, 100);
+  const sp = b.w(0, 0.55, 84);
+  b.hazard({ kind: 'spinner', x: sp.x, y: sp.y, z: sp.z, radius: 2.8, thick: 0.18, omega: 2.2, phase: 0, arms: 2, lethal: false });
+  const c = b.box(-1.5, 1.5, 0, 0, 90, 92);
+  b.hazard({ kind: 'crusher', minX: c.minX, maxX: c.maxX, minZ: c.minZ, maxZ: c.maxZ, floorY: 0, topY: 3.2, period: 2.6, phase: 0.3 });
+  const la = b.w(-2.6, 0.7, 95);
+  const lb = b.w(2.6, 0.7, 95);
+  b.hazard({ kind: 'laser', ax: la.x, ay: la.y, az: la.z, bx: lb.x, by: lb.y, bz: lb.z, radius: 0.09, period: 2, on: 0.55, phase: 0 });
+  const f = b.w(1.2, 0, 98);
+  b.hazard({ kind: 'faller', x: f.x, z: f.z, floorY: 0, topY: 7, size: 1.1, period: 2.4, phase: 0.1, warn: 0.35, drop: 0.08 });
   b.solid(-3, -2.6, 0, 3, 80, 100, { style: 'wall' });
   b.solid(2.6, 3, 0, 3, 80, 100, { style: 'wall' });
   b.spinePoint(0, 0, 100, hw);
