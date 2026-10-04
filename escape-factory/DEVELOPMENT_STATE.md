@@ -8,8 +8,13 @@
 - PHASE 1 — Project foundation: Vite/TS scaffold, engine core (seeded RNG, math, pool, fixed loop,
   typed EventBus + event catalogue), headless WebGL verified (SwiftShader), Vitest + Playwright setup.
 
+- PHASE 2 — Player controller: AABB kinematic physics (grid broadphase, move&slide, step-up,
+  platform carry, conveyor, crush detection), Player state machine (coyote time, jump buffer,
+  variable jump), data-driven Character System (7 characters), ModelBuilder, CharacterView with
+  procedural animation, RenderContext, LevelView (merged static geometry), keyboard/gamepad input.
+
 ## CURRENT
-- PHASE 2 — Player controller (kinematic physics + character system).
+- PHASE 3 — First enemy (Grumbo) — brain implemented in engine/enemy/Enemy.ts, needs def + view + tests.
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →
