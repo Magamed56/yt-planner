@@ -1,0 +1,1450 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Персонаж Тилек</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@400;500;600&family=Caveat:wght@600&display=swap">
+<style>
+/* Layout: an animator's model sheet. Blue construction-grid paper on the left holds the 3D hero,
+   a passport column on the right holds controls and the character bible. Red pencil marks annotations. */
+:root {
+  --paper: #EEF1F5;
+  --paper-2: #E2E7EE;
+  --grid: rgba(64, 104, 168, 0.12);
+  --grid-strong: rgba(64, 104, 168, 0.22);
+  --ink: #18213B;
+  --ink-2: #4E5874;
+  --line: rgba(24, 33, 59, 0.14);
+  --pencil: #C4452D;
+  --chip: #FFFFFF;
+  --glow: rgba(255, 255, 255, 0);
+  --f-display: "Unbounded", "Arial Black", "Helvetica Neue", system-ui, sans-serif;
+  --f-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-hand: "Caveat", "Comic Sans MS", "Segoe Print", cursive;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121722; --paper-2: #1A2131; --grid: rgba(120, 160, 230, 0.09); --grid-strong: rgba(120, 160, 230, 0.18);
+    --ink: #E7EBF3; --ink-2: #9DA8BF; --line: rgba(231, 235, 243, 0.14); --pencil: #F0806A; --chip: #1E2639;
+    --glow: rgba(196, 214, 255, 0.16); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121722; --paper-2: #1A2131; --grid: rgba(120, 160, 230, 0.09); --grid-strong: rgba(120, 160, 230, 0.18);
+  --ink: #E7EBF3; --ink-2: #9DA8BF; --line: rgba(231, 235, 243, 0.14); --pencil: #F0806A; --chip: #1E2639;
+  --glow: rgba(196, 214, 255, 0.16); color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--paper-2); color: var(--ink);
+  font: 15px/1.5 var(--f-body);
+  padding-inline: 16px; padding-block: 16px; box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+.app {
+  height: 100%; display: grid; gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+}
+.sheet {
+  position: relative; min-height: 0; border-radius: var(--r); overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(60% 55% at 50% 45%, var(--glow), transparent 70%),
+    linear-gradient(var(--grid-strong) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    var(--paper);
+}
+.sheet canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#gl { touch-action: none; cursor: grab; }
+#gl:active { cursor: grabbing; }
+#marks { pointer-events: none; }
+.stamp {
+  position: absolute; left: 16px; top: 12px; pointer-events: none;
+  font: 600 22px/1 var(--f-hand); color: var(--pencil); transform: rotate(-2deg);
+}
+.hint {
+  position: absolute; left: 16px; bottom: 12px; right: 16px; pointer-events: none;
+  font-size: 12px; color: var(--ink-2);
+}
+.loading {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font: 600 26px/1.2 var(--f-hand); color: var(--pencil); text-align: center; padding: 16px;
+}
+.panel {
+  min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px;
+  padding: 4px 2px 24px;
+}
+.name { display: flex; flex-direction: column; gap: 4px; }
+.name h1 {
+  margin: 0; font: 800 clamp(30px, 4vw, 40px)/1 var(--f-display); letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.name p { margin: 0; color: var(--ink-2); font-size: 14px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+legend, .label {
+  padding: 0; margin-bottom: 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  font: 500 14px/1 var(--f-body); color: var(--ink); background: var(--chip);
+  border: 1px solid var(--line); border-radius: 999px; padding: 9px 13px; cursor: pointer;
+}
+.seg button:hover { border-color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.seg button:focus-visible, .copy:focus-visible { outline: 2px solid var(--pencil); outline-offset: 2px; }
+.seg button[disabled] { opacity: 0.4; cursor: default; }
+.bible { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.row dt { font-size: 12px; color: var(--ink-2); padding-top: 2px; }
+.row dd { margin: 0; font-size: 14px; }
+.quote { font: 600 24px/1.1 var(--f-hand); color: var(--pencil); }
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.sw { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.sw i { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line); display: inline-block; }
+.anchor { display: flex; flex-direction: column; gap: 8px; }
+.anchor p {
+  margin: 0; font: 13px/1.5 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; color: var(--ink);
+  background: var(--chip); border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+}
+.copy {
+  align-self: flex-start; font: 500 13px/1 var(--f-body); color: var(--ink); background: transparent;
+  border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; cursor: pointer;
+}
+.note { font-size: 13px; color: var(--ink-2); margin: 0; }
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { height: auto; grid-template-columns: minmax(0, 1fr); }
+  .sheet { height: 66svh; min-height: 420px; }
+  .panel { overflow: visible; }
+}
+.sheet.poster {
+  /* the poster keeps one vivid look in both themes */
+  background:
+    radial-gradient(28% 22% at 18% 22%, rgba(255, 236, 160, 0.75), transparent 70%),
+    radial-gradient(18% 14% at 82% 18%, rgba(255, 255, 255, 0.45), transparent 70%),
+    radial-gradient(22% 18% at 86% 78%, rgba(255, 196, 120, 0.55), transparent 70%),
+    radial-gradient(14% 12% at 12% 82%, rgba(255, 255, 255, 0.35), transparent 70%),
+    radial-gradient(70% 70% at 50% 40%, #FF9F5A 0%, #F2586B 52%, #8E3FB8 100%);
+}
+/* Clean render mode used to save reference images */
+body.export { padding: 0; background: #E9ECF0; }
+body.export .app { display: block; }
+body.export .panel, body.export .hint, body.export .stamp { display: none; }
+body.export .sheet { position: fixed; inset: 0; height: auto; min-height: 0; border: 0; border-radius: 0; }
+body.export .sheet:not(.poster) { background: #E9ECF0; }
+body.export.white .sheet:not(.poster) { background: #FFFFFF; }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="sheet" aria-label="3D-модель персонажа">
+    <canvas id="gl"></canvas>
+    <canvas id="marks"></canvas>
+    <div class="stamp" id="stamp">модель · вид 3/4</div>
+    <div class="hint" id="hint">Тяните, чтобы повернуть.</div>
+    <div class="loading" id="loading">Собираю героя…</div>
+  </section>
+
+  <aside class="panel">
+    <header class="name">
+      <h1>Тилек</h1>
+      <p>Главный герой канала · 25 лет · 3D-модель</p>
+    </header>
+
+    <fieldset>
+      <legend>Что показать</legend>
+      <div class="seg" data-key="mode">
+        <button type="button" id="m-model" data-val="model" aria-pressed="true">Модель</button>
+        <button type="button" id="m-turn" data-val="turn" aria-pressed="false">Все стороны</button>
+        <button type="button" id="m-emo" data-val="emo" aria-pressed="false">Эмоции</button>
+        <button type="button" id="m-poster" data-val="poster" aria-pressed="false">Постер</button>
+      </div>
+    </fieldset>
+
+    <fieldset id="f-view">
+      <legend>Ракурс</legend>
+      <div class="seg" data-key="view">
+        <button type="button" id="v-front" data-val="front" aria-pressed="false">Спереди</button>
+        <button type="button" id="v-q" data-val="q" aria-pressed="true">3/4</button>
+        <button type="button" id="v-side" data-val="side" aria-pressed="false">Сбоку</button>
+        <button type="button" id="v-back" data-val="back" aria-pressed="false">Сзади</button>
+        <button type="button" id="v-spin" data-toggle="spin" aria-pressed="false">Вращать</button>
+      </div>
+      <div class="seg" data-key="frame">
+        <button type="button" id="fr-full" data-val="full" aria-pressed="true">В полный рост</button>
+        <button type="button" id="fr-face" data-val="face" aria-pressed="false">Портрет</button>
+      </div>
+    </fieldset>
+
+    <fieldset id="f-emo">
+      <legend>Эмоция</legend>
+      <div class="seg" data-key="emotion">
+        <button type="button" id="e-smile" data-val="smile" aria-pressed="true">Улыбается</button>
+        <button type="button" id="e-calm" data-val="calm" aria-pressed="false">Спокоен</button>
+        <button type="button" id="e-laugh" data-val="laugh" aria-pressed="false">Смеётся</button>
+        <button type="button" id="e-surprise" data-val="surprise" aria-pressed="false">Удивлён</button>
+        <button type="button" id="e-angry" data-val="angry" aria-pressed="false">Злится</button>
+      </div>
+    </fieldset>
+
+    <fieldset id="f-pose">
+      <legend>Поза</legend>
+      <div class="seg" data-key="pose">
+        <button type="button" id="p-pockets" data-val="pockets" aria-pressed="true">Руки в карманах</button>
+        <button type="button" id="p-apose" data-val="apose" aria-pressed="false">А-поза</button>
+      </div>
+    </fieldset>
+
+    <fieldset id="f-glasses">
+      <legend>Очки</legend>
+      <div class="seg" data-key="glasses">
+        <button type="button" id="g-off" data-val="off" aria-pressed="true">Без очков</button>
+        <button type="button" id="g-on" data-val="on" aria-pressed="false">В очках</button>
+      </div>
+    </fieldset>
+
+    <section>
+      <div class="label">Паспорт героя</div>
+      <dl class="bible">
+        <div class="row"><dt>Имя</dt><dd>Тилек</dd></div>
+        <div class="row"><dt>Возраст</dt><dd>25 лет</dd></div>
+        <div class="row"><dt>Характер</dt><dd>Спокойный и уверенный, шутит с серьёзным лицом. Сначала думает, потом делает.</dd></div>
+        <div class="row"><dt>Цель</dt><dd>Построить своё дело с нуля и честно показать путь: с ошибками и победами.</dd></div>
+        <div class="row"><dt>Слабость</dt><dd>Не умеет говорить «нет» и берёт на себя слишком много.</dd></div>
+        <div class="row"><dt>Манера речи</dt><dd>Коротко и спокойно, с паузой перед главным словом.</dd></div>
+        <div class="row"><dt>Коронная фраза</dt><dd class="quote">«Спокойно. Сейчас разберёмся».</dd></div>
+      </dl>
+    </section>
+
+    <section>
+      <div class="label">Внешность</div>
+      <dl class="bible">
+        <div class="row"><dt>Силуэт</dt><dd>Короткая стрижка с чёлкой, острый V двубортного пиджака, руки в карманах.</dd></div>
+        <div class="row"><dt>3 цвета</dt><dd>
+          <div class="swatches">
+            <span class="sw"><i style="background:#1E2A4F"></i>тёмно-синий</span>
+            <span class="sw"><i style="background:#F4F2EC"></i>белый</span>
+            <span class="sw"><i style="background:#C9CED6"></i>серебро</span>
+          </div>
+        </dd></div>
+        <div class="row"><dt>Одежда</dt><dd>Тёмно-синий двубортный костюм, белая рубашка без галстука с расстёгнутым воротом, чёрные туфли.</dd></div>
+        <div class="row"><dt>Деталь</dt><dd>Серебряная брошь из трёх цепочек на левом лацкане.</dd></div>
+      </dl>
+    </section>
+
+    <section class="anchor">
+      <div class="label">Якорь для сцен</div>
+      <p id="anchor-text">Stylized 3D animated feature-film character: 25-year-old Central Asian man, slim build, short black textured crop with straight short fringe and faded sides, thick straight black eyebrows, large dark-brown almond eyes, broad cheekbones, soft rounded jaw, a few small moles, warm light-tan skin, navy double-breasted suit, open-collar white shirt, silver triple-chain brooch on left lapel.</p>
+      <button type="button" class="copy" id="copy-anchor">Скопировать</button>
+      <p class="note">Этот текст я вставляю в каждую сцену, чтобы герой не менялся от кадра к кадру.</p>
+    </section>
+  </aside>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeVertices, mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* ---------------- math helpers ---------------- */
+const V3 = THREE.Vector3;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const g2 = (dx, dy, sx, sy) => Math.exp(-0.5 * (dx * dx / (sx * sx) + dy * dy / (sy * sy)));
+const table = (x, pts) => {
+  if (x <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++) {
+    if (x <= pts[i][0]) {
+      const t = (x - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0]);
+      return lerp(pts[i - 1][1], pts[i][1], t * t * (3 - 2 * t));
+    }
+  }
+  return pts[pts.length - 1][1];
+};
+const catmull = (p0, p1, p2, p3, t) => {
+  const t2 = t * t, t3 = t2 * t;
+  return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
+};
+const qbez = (a, c, b, t) => [
+  (1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0],
+  (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1],
+];
+const mix2 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+
+/* ---------------- palette & materials ---------------- */
+const COL = {
+  skin: 0xBC8058, hair: 0x16110E, suit: 0x18203A, suitDark: 0x0e1426, shirt: 0xF4F2EC,
+  silver: 0xD9DEE6, shoe: 0x141418, mouth: 0x4A1A1E, teeth: 0xF6F2E9, tongue: 0xC45C64,
+  lip: 0x9E5A50, mole: 0x6A4330, line: 0x6B3530, button: 0x0F1529,
+};
+const M = {
+  skin: new THREE.MeshPhysicalMaterial({ color: COL.skin, roughness: 0.52, sheen: 0.5, sheenColor: new THREE.Color(0xffb895), sheenRoughness: 0.55 }),
+  hair: new THREE.MeshPhysicalMaterial({ color: COL.hair, roughness: 0.58, sheen: 0.5, sheenColor: new THREE.Color(0x4b3b30), sheenRoughness: 0.5 }),
+  brow: new THREE.MeshStandardMaterial({ color: 0x1a1411, roughness: 0.75 }),
+  suit: new THREE.MeshPhysicalMaterial({ color: COL.suit, roughness: 0.72, sheen: 0.6, sheenColor: new THREE.Color(0x46588c), sheenRoughness: 0.5 }),
+  suitDark: new THREE.MeshStandardMaterial({ color: COL.suitDark, roughness: 0.8 }),
+  shirt: new THREE.MeshPhysicalMaterial({ color: COL.shirt, roughness: 0.68, sheen: 0.3, sheenColor: new THREE.Color(0xffffff) }),
+  silver: new THREE.MeshStandardMaterial({ color: COL.silver, metalness: 1, roughness: 0.2 }),
+  shoe: new THREE.MeshPhysicalMaterial({ color: COL.shoe, roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.18 }),
+  sole: new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.85 }),
+  button: new THREE.MeshPhysicalMaterial({ color: COL.button, roughness: 0.3, clearcoat: 0.6 }),
+  mouth: new THREE.MeshStandardMaterial({ color: COL.mouth, roughness: 0.6 }),
+  teeth: new THREE.MeshStandardMaterial({ color: COL.teeth, roughness: 0.35 }),
+  tongue: new THREE.MeshStandardMaterial({ color: COL.tongue, roughness: 0.5 }),
+  line: new THREE.MeshStandardMaterial({ color: COL.line, roughness: 0.6 }),
+  mole: new THREE.MeshStandardMaterial({ color: COL.mole, roughness: 0.6 }),
+  tint: new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 0.6 }),
+  hairFade: new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 0.8 }),
+};
+
+/* ---------------- geometry helpers ---------------- */
+// Smoothly interpolated rings -> superellipse loft along +Y
+function loft(ctrl, { seg = 64, steps = 6, n = 2.4, caps = true, a0 = 0, a1 = Math.PI * 2 } = {}) {
+  const C = ctrl.map(r => ({ y: r.y, rx: r.rx, rz: r.rz, cx: r.cx ?? 0, cz: r.cz ?? 0, n: r.n ?? n }));
+  const rings = [];
+  for (let i = 0; i < C.length - 1; i++) {
+    const p0 = C[Math.max(0, i - 1)], p1 = C[i], p2 = C[i + 1], p3 = C[Math.min(C.length - 1, i + 2)];
+    for (let s = 0; s < steps; s++) {
+      const t = s / steps, r = {};
+      for (const k of Object.keys(p1)) r[k] = catmull(p0[k], p1[k], p2[k], p3[k], t);
+      rings.push(r);
+    }
+  }
+  rings.push({ ...C[C.length - 1] });
+  const full = Math.abs(a1 - a0 - Math.PI * 2) < 1e-6;
+  const pos = [], idx = [], W = seg + 1;
+  const ringPt = (R, a) => {
+    const c = Math.cos(a), s = Math.sin(a), e = 2 / R.n;
+    return [R.cx + Math.sign(c) * Math.pow(Math.abs(c), e) * R.rx, R.y, R.cz + Math.sign(s) * Math.pow(Math.abs(s), e) * R.rz];
+  };
+  for (const R of rings) for (let j = 0; j <= seg; j++) pos.push(...ringPt(R, a0 + (a1 - a0) * j / seg));
+  for (let i = 0; i < rings.length - 1; i++) for (let j = 0; j < seg; j++) {
+    const a = i * W + j, b = a + 1, d = a + W, c = d + 1;
+    idx.push(a, d, b, b, d, c);
+  }
+  let g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  g = mergeVertices(g); g.computeVertexNormals();
+  if (!caps || !full) return g;
+  const capGeo = (R, up) => {
+    const p = [R.cx, R.y, R.cz], ix = [];
+    for (let j = 0; j <= seg; j++) p.push(...ringPt(R, (Math.PI * 2 * j) / seg));
+    for (let j = 1; j <= seg; j++) up ? ix.push(0, j + 1, j) : ix.push(0, j, j + 1);
+    const cg = new THREE.BufferGeometry();
+    cg.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); cg.setIndex(ix); cg.computeVertexNormals();
+    return cg;
+  };
+  return mergeGeometries([g.toNonIndexed(), capGeo(rings[0], false).toNonIndexed(), capGeo(rings[rings.length - 1], true).toNonIndexed()]);
+}
+
+// Tube swept along a Catmull-Rom curve with a radius profile
+function sweep(points, rFn, { seg = 28, along = 48, caps = true } = {}) {
+  const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.5);
+  const fr = curve.computeFrenetFrames(along, false);
+  const pos = [], idx = [], W = seg + 1;
+  for (let i = 0; i <= along; i++) {
+    const t = i / along, P = curve.getPointAt(t), N = fr.normals[i], B = fr.binormals[i], r = rFn(t);
+    for (let j = 0; j <= seg; j++) {
+      const a = (j / seg) * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
+      pos.push(P.x + (N.x * c + B.x * s) * r, P.y + (N.y * c + B.y * s) * r, P.z + (N.z * c + B.z * s) * r);
+    }
+  }
+  for (let i = 0; i < along; i++) for (let j = 0; j < seg; j++) {
+    const a = i * W + j, b = a + 1, d = a + W, c = d + 1;
+    idx.push(a, b, d, b, c, d);
+  }
+  let g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  g = mergeVertices(g); g.computeVertexNormals();
+  if (!caps) return { geo: g, curve };
+  const cap = (i, outward) => {
+    const P = curve.getPointAt(i / along), base = i * W, p = [P.x, P.y, P.z], ix = [];
+    for (let j = 0; j <= seg; j++) p.push(pos[(base + j) * 3], pos[(base + j) * 3 + 1], pos[(base + j) * 3 + 2]);
+    for (let j = 1; j <= seg; j++) ix.push(0, j, j + 1);
+    const cg = new THREE.BufferGeometry();
+    cg.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); cg.setIndex(ix); cg.computeVertexNormals();
+    const n = new V3().fromBufferAttribute(cg.attributes.normal, 1);
+    if (n.dot(outward) < 0) { ix.reverse(); cg.setIndex(ix); cg.computeVertexNormals(); }
+    return cg.toNonIndexed();
+  };
+  const T0 = curve.getTangentAt(0).negate(), T1 = curve.getTangentAt(1);
+  return { geo: mergeGeometries([g.toNonIndexed(), cap(0, T0), cap(along, T1)]), curve };
+}
+
+// Orthographic depth map of a mesh seen from one side: lets flat shapes be wrapped onto curved surfaces
+class DepthMap {
+  constructor(geo, { right, up, fwd, u0, u1, v0, v1, res = 300 }) {
+    Object.assign(this, { right, up, fwd, u0, u1, v0, v1 });
+    this.W = res; this.H = Math.round(res * (v1 - v0) / (u1 - u0));
+    const W = this.W, H = this.H, D = new Float32Array(W * H).fill(-1e9);
+    const p = geo.attributes.position, n = p.count, U = new Float32Array(n), Vv = new Float32Array(n), Dd = new Float32Array(n), q = new V3();
+    for (let i = 0; i < n; i++) {
+      q.fromBufferAttribute(p, i);
+      U[i] = ((q.dot(right) - u0) / (u1 - u0)) * (W - 1);
+      Vv[i] = ((q.dot(up) - v0) / (v1 - v0)) * (H - 1);
+      Dd[i] = q.dot(fwd);
+    }
+    const index = geo.index ? geo.index.array : null, tc = index ? index.length / 3 : n / 3;
+    for (let t = 0; t < tc; t++) {
+      const a = index ? index[t * 3] : t * 3, b = index ? index[t * 3 + 1] : t * 3 + 1, c = index ? index[t * 3 + 2] : t * 3 + 2;
+      const ax = U[a], ay = Vv[a], bx = U[b], by = Vv[b], cx = U[c], cy = Vv[c];
+      const minx = Math.max(0, Math.floor(Math.min(ax, bx, cx))), maxx = Math.min(W - 1, Math.ceil(Math.max(ax, bx, cx)));
+      const miny = Math.max(0, Math.floor(Math.min(ay, by, cy))), maxy = Math.min(H - 1, Math.ceil(Math.max(ay, by, cy)));
+      const den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
+      if (Math.abs(den) < 1e-12) continue;
+      for (let y = miny; y <= maxy; y++) for (let x = minx; x <= maxx; x++) {
+        const w1 = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / den;
+        const w2 = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / den;
+        const w3 = 1 - w1 - w2;
+        if (w1 < -1e-4 || w2 < -1e-4 || w3 < -1e-4) continue;
+        const d = w1 * Dd[a] + w2 * Dd[b] + w3 * Dd[c], k = y * W + x;
+        if (d > D[k]) D[k] = d;
+      }
+    }
+    this.D = D;
+  }
+  sample(u, v) {
+    const fx = ((u - this.u0) / (this.u1 - this.u0)) * (this.W - 1), fy = ((v - this.v0) / (this.v1 - this.v0)) * (this.H - 1);
+    const x = clamp(Math.floor(fx), 0, this.W - 2), y = clamp(Math.floor(fy), 0, this.H - 2), tx = fx - x, ty = fy - y, W = this.W, D = this.D;
+    const a = D[y * W + x], b = D[y * W + x + 1], c = D[(y + 1) * W + x], d = D[(y + 1) * W + x + 1];
+    if (a < -1e8 || b < -1e8 || c < -1e8 || d < -1e8) return null;
+    return lerp(lerp(a, b, tx), lerp(c, d, tx), ty);
+  }
+  point(u, v, off = 0) {
+    const d = this.sample(u, v); if (d === null) return null;
+    const e = 0.004 * (this.u1 - this.u0);
+    const du = ((this.sample(u + e, v) ?? d) - (this.sample(u - e, v) ?? d)) / (2 * e);
+    const dv = ((this.sample(u, v + e) ?? d) - (this.sample(u, v - e) ?? d)) / (2 * e);
+    const nrm = this.fwd.clone().addScaledVector(this.right, -du).addScaledVector(this.up, -dv).normalize();
+    return this.right.clone().multiplyScalar(u).addScaledVector(this.up, v).addScaledVector(this.fwd, d).addScaledVector(nrm, off);
+  }
+  normal(u, v) {
+    const p0 = this.point(u, v, 0), p1 = this.point(u, v, 1);
+    return p1.sub(p0).normalize();
+  }
+}
+
+// A surface patch between two 2D curves A(t) and B(t), wrapped onto a depth map
+function ribbon(dm, A, B, { nt = 40, ns = 8, off = 0.0015, thick = 0, color = null, mat } = {}) {
+  const pos = [], col = [], idx = [];
+  const th = typeof thick === 'function' ? thick : () => thick;
+  for (let i = 0; i <= nt; i++) {
+    const t = i / nt, a = A(t), b = B(t);
+    for (let j = 0; j <= ns; j++) {
+      const s = j / ns, uv = mix2(a, b, s);
+      let P = dm.point(uv[0], uv[1], off + th(t, s));
+      for (let k = 0; !P && k < 30; k++) { uv[0] *= 0.985; P = dm.point(uv[0], uv[1], off + th(t, s)); }
+      P = P ?? new V3();
+      pos.push(P.x, P.y, P.z);
+      if (color) col.push(...color(t, s));
+    }
+  }
+  const W = ns + 1;
+  for (let i = 0; i < nt; i++) for (let j = 0; j < ns; j++) {
+    const a = i * W + j, b = a + 1, d = a + W, c = d + 1;
+    idx.push(a, d, b, b, d, c);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  if (color) g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4));
+  g.setIndex(idx); g.computeVertexNormals();
+  // make it face away from the surface
+  const mid = Math.floor(nt / 2) * W + Math.floor(ns / 2);
+  const n = new V3().fromBufferAttribute(g.attributes.normal, mid);
+  if (n.dot(dm.fwd) < 0) { idx.reverse(); g.setIndex(idx); g.computeVertexNormals(); }
+  return new THREE.Mesh(g, mat);
+}
+const roundEdge = (x, w = 0.15) => smooth(0, w, x) * smooth(1, 1 - w, x);
+const rgba = (hex, a) => { const c = new THREE.Color(hex); return [c.r, c.g, c.b, a]; };
+
+/* ---------------- head ---------------- */
+const HEAD_S = 0.17;          // metres per head unit
+let HEAD_Y = 1.62;            // head centre height (recomputed from the chin)
+const CHIN_Y = 1.432;         // where the chin meets the collar
+let CHIN_LOCAL = -1.2;
+// Sculpt: radial bumps on a sphere, then proportions
+function headShape(d, out) {
+  const x = d.x, y = d.y, z = d.z, ax = Math.abs(x);
+  const f = smooth(0.2, 0.8, z);
+  let r = 1;
+  r -= 0.16 * g2(ax - 0.37, y - 0.03, 0.22, 0.12) * f;                         // eye sockets, wide and shallow-set
+  r -= 0.05 * g2(ax - 0.37, y + 0.1, 0.19, 0.05) * f;
+  r -= 0.06 * g2(ax - 0.2, y - 0.02, 0.07, 0.07) * f;                          // open the inner corners                         // tuck under the lower lid
+  r += 0.035 * g2(x, y - 0.21, 0.6, 0.07) * f;                                 // brow ridge
+  r += 0.02 * g2(x, y + 0.08, 0.075, 0.13) * f;                                // low nose bridge
+  r += 0.135 * g2(x, y + 0.27, 0.13, 0.085) * f;                               // round nose tip
+  r += 0.1 * g2(ax - 0.145, y + 0.3, 0.065, 0.055) * f;                        // broad nose wings
+  r += 0.08 * g2(ax - 0.6, y + 0.1, 0.2, 0.16) * smooth(-0.2, 0.5, z);         // broad cheekbones
+  r += 0.06 * g2(x, y + 0.52, 0.34, 0.17) * f;                                 // muzzle
+  r += 0.025 * g2(x, y + 0.45, 0.17, 0.03) * f;                                // upper lip
+  r += 0.03 * g2(x, y + 0.585, 0.15, 0.035) * f;                               // lower lip
+  r += 0.075 * g2(x, y + 0.83, 0.2, 0.085) * f;                                // defined chin
+  let px = x * r * 0.9, py = y * r * 1.17, pz = z * r;
+  pz += 0.075 * smooth(-0.1, 0.6, z) * g2(0, y - 0.48, 1, 0.26);              // fuller, more upright forehead
+  pz += 0.075 * f * g2(0, y + 0.3, 1, 0.35);                                    // face plane sits forward
+  const t = smooth(-0.2, -1.17, py);
+  px *= 1 - 0.25 * Math.pow(t, 1.6);                                           // broad cheekbones taper to a defined chin
+  if (pz < 0) pz *= 0.88 * (1 - 0.3 * t) * (1 + 0.06 * smooth(-0.4, 0.6, py));
+  out.set(px, py, pz);
+  return out;
+}
+const dirFromAngles = (th, ph) => new V3(Math.sin(ph) * Math.sin(th), Math.cos(ph), Math.sin(ph) * Math.cos(th));
+
+function buildHeadMesh() {
+  let geo = new THREE.IcosahedronGeometry(1, 56);
+  geo.deleteAttribute('normal'); geo.deleteAttribute('uv');
+  geo = mergeVertices(geo);
+  const p = geo.attributes.position, d = new V3(), o = new V3();
+  for (let i = 0; i < p.count; i++) { d.fromBufferAttribute(p, i).normalize(); headShape(d, o); p.setXYZ(i, o.x, o.y, o.z); }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+// Eyes: painted eyeball + eyelid shell whose almond opening is a texture cut-out
+const EYE_R = 0.24, LID_R = EYE_R * 1.07, EYE_FLAT = 0.55;
+function eyeballTexture() {
+  const W = 1024, H = 512, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d'), img = ctx.createImageData(W, H), D = img.data;
+  const IA = 0.57, cl = new V3(-0.3, 0.34, 0.89).normalize(), cl2 = new V3(0.22, -0.2, 0.95).normalize();
+  for (let j = 0; j < H; j++) {
+    const th = ((j + 0.5) / H) * Math.PI, st = Math.sin(th), y = Math.cos(th);
+    for (let i = 0; i < W; i++) {
+      const ph = ((i + 0.5) / W) * Math.PI * 2, x = -Math.cos(ph) * st, z = Math.sin(ph) * st;
+      let r = 246, g = 242, b = 236;
+      const top = smooth(-0.1, 0.55, y);                       // shade under the upper lid
+      r -= 62 * top; g -= 66 * top; b -= 62 * top;
+      const side = smooth(0.5, 0.0, z); r -= 30 * side; g -= 34 * side; b -= 30 * side;
+      const ang = Math.acos(clamp(z, -1, 1)), rho = ang / IA;
+      if (rho < 1.06) {
+        const a = Math.atan2(y, x);
+        const stri = 0.86 + 0.14 * Math.sin(a * 37 + Math.sin(a * 9) * 2.5) * smooth(0.45, 0.8, rho);
+        let ir = lerp(112, 58, smooth(0.35, 1.0, rho)) * stri, ig = lerp(70, 34, smooth(0.35, 1.0, rho)) * stri, ib = lerp(40, 20, smooth(0.35, 1.0, rho)) * stri;
+        const limb = smooth(0.82, 1.0, rho); ir *= 1 - 0.55 * limb; ig *= 1 - 0.55 * limb; ib *= 1 - 0.55 * limb;
+        const ishade = 1 - 0.45 * smooth(0.0, 0.5, y); ir *= ishade; ig *= ishade; ib *= ishade;
+        const pu = smooth(0.43, 0.39, rho); ir = lerp(ir, 10, pu); ig = lerp(ig, 7, pu); ib = lerp(ib, 6, pu);
+        const k = smooth(1.03, 0.97, rho);
+        r = lerp(r, ir, k); g = lerp(g, ig, k); b = lerp(b, ib, k);
+      }
+      const c1 = smooth(0.9955, 0.9975, x * cl.x + y * cl.y + z * cl.z);
+      const c2 = smooth(0.9991, 0.9996, x * cl2.x + y * cl2.y + z * cl2.z) * 0.7;
+      r = lerp(r, 255, Math.max(c1, c2)); g = lerp(g, 255, Math.max(c1, c2)); b = lerp(b, 255, Math.max(c1, c2));
+      const k4 = (j * W + i) * 4; D[k4] = r; D[k4 + 1] = g; D[k4 + 2] = b; D[k4 + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  return tex;
+}
+// Almond opening in lid coordinates (u: inner -1 .. outer +1, v: down -1 .. up +1)
+function almond(P, u) {
+  const a = 0.88, s = (u + a) / (2 * a);
+  if (s <= 0 || s >= 1) return null;
+  const yb = lerp(P.yi, P.yo, s);
+  const bt = Math.pow(Math.sin(Math.PI * Math.pow(s, 0.78)), 0.42);
+  const bb = Math.pow(Math.sin(Math.PI * Math.pow(s, 1.15)), 1.0);
+  const vb = yb - P.bot * bb;
+  let vt = yb + P.top * bt - (P.inner || 0) * (1 - s) * bt;
+  vt = lerp(vt, vb + 0.004, P.blink || 0);
+  return { s, vt, vb };
+}
+function lidTexture(P) {
+  const N = 256, cv = document.createElement('canvas'); cv.width = N; cv.height = N;
+  const ctx = cv.getContext('2d'), img = ctx.createImageData(N, N), D = img.data;
+  const sk = new THREE.Color(COL.skin).getRGB(new THREE.Color(), THREE.SRGBColorSpace);
+  const SK = [Math.round(sk.r * 255), Math.round(sk.g * 255), Math.round(sk.b * 255)];
+  const px = 2.2 / N;
+  for (let j = 0; j < N; j++) {
+    const v = 1 - ((j + 0.5) / N) * 2;
+    for (let i = 0; i < N; i++) {
+      const u = ((i + 0.5) / N) * 2 - 1;
+      let r = SK[0], g = SK[1], b = SK[2], al = 255;
+      const A = almond(P, u);
+      if (A) {
+        const { s, vt, vb } = A;
+        const inside = smooth(-px, px, vt - v) * smooth(-px, px, v - vb);
+        // soft warm shading around the opening
+        const near = smooth(0.22, 0, v - vt) * (v > vt ? 1 : 0);
+        r -= 22 * near; g -= 30 * near; b -= 26 * near;
+        // lash line along the upper lid, heavier towards the outer corner
+        const lw = 0.095 + 0.08 * s + (P.blink ? 0.02 : 0);
+        const lash = smooth(-px, px, v - vt) * smooth(lw + px, lw - px, v - vt);
+        r = lerp(r, 14, lash); g = lerp(g, 11, lash); b = lerp(b, 10, lash);
+        // thin lower lid line
+        const low = smooth(-px, px, vb - v) * smooth(0.035, 0.0, vb - v) * 0.55;
+        r = lerp(r, 150, low); g = lerp(g, 92, low); b = lerp(b, 80, low);
+        al = Math.round(255 * (1 - inside));
+      }
+      // outer-corner lash flick
+      const k4 = (j * N + i) * 4; D[k4] = r; D[k4 + 1] = g; D[k4 + 2] = b; D[k4 + 3] = al;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  return tex;
+}
+function lidGeometry(R, mirror) {
+  const NR = 44, NA = 96, pos = [], uv = [], idx = [];
+  for (let i = 0; i <= NR; i++) {
+    const rho = Math.sin((i / NR) * Math.PI / 2), z = Math.sqrt(Math.max(0, 1 - rho * rho));
+    for (let j = 0; j <= NA; j++) {
+      const a = (j / NA) * Math.PI * 2, gx = rho * Math.cos(a), gy = rho * Math.sin(a);
+      pos.push(R * gx, R * gy, R * z);
+      uv.push(((mirror ? -gx : gx) + 1) / 2, (gy + 1) / 2);
+    }
+  }
+  const W = NA + 1;
+  for (let i = 0; i < NR; i++) for (let j = 0; j < NA; j++) {
+    const a = i * W + j, b = a + 1, d = a + W, c = d + 1;
+    idx.push(a, d, b, b, d, c);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx); g.computeVertexNormals();
+  const n = new V3().fromBufferAttribute(g.attributes.normal, 3 * W + 5);
+  if (n.z < 0) { idx.reverse(); g.setIndex(idx); g.computeVertexNormals(); }
+  return g;
+}
+
+/* ---------------- emotions ---------------- */
+const EMO = {
+  smile: {
+    lid: { top: 0.5, bot: 0.06, yi: -0.04, yo: 0.12 },
+    brow: { l: [[0.1, 0.33], [0.38, 0.375], [0.66, 0.33]], r: [[0.1, 0.33], [0.38, 0.375], [0.66, 0.33]] },
+    head: [-0.03, 0.0, 0.04],
+  },
+  calm: {
+    lid: { top: 0.5, bot: 0.22, yi: -0.06, yo: 0.1 },
+    brow: { l: [[0.1, 0.3], [0.38, 0.335], [0.66, 0.3]], r: [[0.1, 0.29], [0.38, 0.325], [0.66, 0.287]] },
+    head: [0.0, 0.0, 0.0],
+  },
+  laugh: {
+    lid: { top: 0.26, bot: -0.1, yi: -0.02, yo: 0.12 },
+    brow: { l: [[0.1, 0.35], [0.38, 0.4], [0.66, 0.35]], r: [[0.1, 0.35], [0.38, 0.4], [0.66, 0.35]] },
+    head: [-0.09, 0.0, 0.05],
+  },
+  surprise: {
+    lid: { top: 0.7, bot: 0.44, yi: -0.04, yo: 0.07 },
+    brow: { l: [[0.1, 0.4], [0.38, 0.49], [0.66, 0.41]], r: [[0.1, 0.4], [0.38, 0.49], [0.66, 0.41]] },
+    head: [-0.05, 0.0, 0.0],
+  },
+  angry: {
+    lid: { top: 0.48, bot: 0.22, yi: -0.07, yo: 0.12, inner: 0.28 },
+    brow: { l: [[0.08, 0.22], [0.36, 0.31], [0.66, 0.36]], r: [[0.08, 0.22], [0.36, 0.31], [0.66, 0.36]] },
+    head: [0.08, 0.0, 0.0],
+  },
+};
+const EMO_KEYS = ['smile', 'calm', 'laugh', 'surprise', 'angry'];
+
+function buildBrow(dm, pts, side) {
+  const C = t => { const p = qbez(pts[0], pts[1], pts[2], t); return [p[0] * side, p[1]]; };
+  const hw = t => lerp(0.05, 0.03, t) * (0.55 + 0.45 * smooth(0, 0.12, t)) * (0.35 + 0.65 * smooth(1, 0.8, t));
+  const A = t => { const c = C(t); return [c[0], c[1] + hw(t)]; };
+  const B = t => { const c = C(t); return [c[0], c[1] - hw(t)]; };
+  return ribbon(dm, A, B, { nt: 36, ns: 8, off: 0.004, thick: (t, s) => 0.03 * Math.pow(Math.sin(Math.PI * s), 0.55) * (0.5 + 0.5 * smooth(1, 0.6, t)), mat: M.brow });
+}
+
+function buildMouths(dm) {
+  const out = {};
+  const lineRibbon = (P0, Pc, P1, w, off, mat) => {
+    const C = t => qbez(P0, Pc, P1, t);
+    const hw = t => w * (0.35 + 0.65 * Math.pow(Math.sin(Math.PI * t), 0.5));
+    return ribbon(dm, t => { const c = C(t); return [c[0], c[1] + hw(t)]; }, t => { const c = C(t); return [c[0], c[1] - hw(t)]; }, { nt: 40, ns: 4, off, thick: 0.002, mat });
+  };
+  const lipShade = (cy, hw, hh, alpha) => ribbon(dm,
+    t => [lerp(-hw, hw, t), cy + hh], t => [lerp(-hw, hw, t), cy - hh],
+    { nt: 24, ns: 8, off: 0.0025, color: (t, s) => rgba(COL.lip, alpha * Math.pow(Math.sin(Math.PI * t), 1.2) * Math.sin(Math.PI * s)), mat: M.tint });
+  const filled = (A, B, off, mat, nt = 40) => ribbon(dm, A, B, { nt, ns: 10, off, mat });
+
+  const blush = () => {
+    const g = new THREE.Group();
+    for (const sx of [1, -1]) g.add(ribbon(dm, t => [sx * lerp(0.36, 0.66, t), -0.2], t => [sx * lerp(0.36, 0.66, t), -0.4],
+      { nt: 16, ns: 10, off: 0.003, color: (t, w) => rgba(0xE0705E, 0.22 * Math.sin(Math.PI * t) * Math.sin(Math.PI * w)), mat: M.tint }));
+    return g;
+  };
+  // smile: friendly open smile, upper teeth, cheeks lifted
+  {
+    const g = new THREE.Group();
+    const L = [-0.235, -0.445], R = [0.235, -0.445];
+    const top = t => qbez(L, [0, -0.52], R, t), bot = t => qbez(L, [0, -0.83], R, t);
+    g.add(filled(top, bot, 0.004, M.mouth));
+    const tTop = t => top(lerp(0.09, 0.91, t)), tBot = t => { const p = top(lerp(0.09, 0.91, t)); return [p[0], p[1] - 0.06 * Math.pow(Math.sin(Math.PI * t), 0.3)]; };
+    g.add(filled(tTop, tBot, 0.0065, M.teeth));
+    g.add(filled(t => { const a = Math.PI * (1 - t); return [0.1 * Math.cos(a), -0.63 + 0.025 * Math.sin(a)]; },
+                 t => { const a = Math.PI * (1 - t); return [0.1 * Math.cos(a), -0.63 - 0.022 * Math.sin(a)]; }, 0.006, M.tongue));
+    g.add(lineRibbon([0.225, -0.425], [0.252, -0.44], [0.25, -0.475], 0.005, 0.004, M.line));
+    g.add(lineRibbon([-0.225, -0.425], [-0.252, -0.44], [-0.25, -0.475], 0.005, 0.004, M.line));
+    g.add(lipShade(-0.71, 0.13, 0.035, 0.6));
+    g.add(blush());
+    out.smile = g;
+  }
+  // calm: closed confident half-smile, the left corner lifts
+  {
+    const g = new THREE.Group();
+    g.add(lineRibbon([-0.2, -0.505], [0.0, -0.53], [0.205, -0.49], 0.011, 0.004, M.line));
+    g.add(lineRibbon([0.195, -0.475], [0.222, -0.485], [0.226, -0.52], 0.005, 0.004, M.line));
+    g.add(ribbon(dm, t => [lerp(-0.17, 0.17, t), -0.455 - 0.02 * Math.sin(Math.PI * t)], t => [lerp(-0.17, 0.17, t), -0.52 + 0.004 * Math.sin(Math.PI * t)],
+      { nt: 24, ns: 6, off: 0.0025, color: (t, w) => rgba(COL.lip, 0.55 * Math.pow(Math.sin(Math.PI * t), 0.7) * smooth(0, 0.6, w)), mat: M.tint }));
+    g.add(lipShade(-0.575, 0.14, 0.045, 0.75));
+    out.calm = g;
+  }
+  // laugh: wide open, upper teeth and tongue
+  {
+    const g = new THREE.Group();
+    const L = [-0.22, -0.49], R = [0.22, -0.49];
+    const top = t => qbez(L, [0, -0.54], R, t), bot = t => qbez(L, [0, -0.98], R, t);
+    g.add(filled(top, bot, 0.004, M.mouth));
+    const tTop = t => top(lerp(0.1, 0.9, t)), tBot = t => { const p = top(lerp(0.1, 0.9, t)); return [p[0], p[1] - 0.055 * Math.pow(Math.sin(Math.PI * t), 0.3)]; };
+    g.add(filled(tTop, tBot, 0.0065, M.teeth));
+    g.add(filled(t => { const a = Math.PI * (1 - t); return [0.12 * Math.cos(a), -0.69 + 0.04 * Math.sin(a)]; },
+                 t => { const a = Math.PI * (1 - t); return [0.12 * Math.cos(a), -0.69 - 0.035 * Math.sin(a)]; }, 0.006, M.tongue));
+    g.add(lipShade(-0.77, 0.13, 0.03, 0.55));
+    out.laugh = g;
+  }
+  // surprise: small round "o"
+  {
+    const g = new THREE.Group(), cx = 0, cy = -0.58, hw = 0.075, hh = 0.1;
+    g.add(filled(t => { const a = Math.PI * (1 - t); return [cx + hw * Math.cos(a), cy + hh * Math.sin(a)]; },
+                 t => { const a = Math.PI * (1 - t); return [cx + hw * Math.cos(a), cy - hh * Math.sin(a)]; }, 0.004, M.mouth));
+    g.add(filled(t => { const a = Math.PI * lerp(0.82, 0.18, t); return [cx + hw * 0.92 * Math.cos(a), cy + hh * 0.92 * Math.sin(a)]; },
+                 t => { const a = Math.PI * lerp(0.82, 0.18, t); return [cx + hw * 0.92 * Math.cos(a), cy + hh * 0.92 * Math.sin(a) - 0.025]; }, 0.0065, M.teeth));
+    g.add(lipShade(-0.705, 0.085, 0.026, 0.55));
+    out.surprise = g;
+  }
+  // angry: clenched teeth, corners down
+  {
+    const g = new THREE.Group();
+    const L = [-0.2, -0.56], R = [0.2, -0.56];
+    const top = t => qbez(L, [0, -0.47], R, t), bot = t => qbez(L, [0, -0.7], R, t);
+    g.add(filled(top, bot, 0.004, M.mouth));
+    const inset = (f, d) => t => { const p = f(lerp(0.08, 0.92, t)); return [p[0], p[1] + d]; };
+    g.add(filled(inset(top, -0.006), inset(top, -0.045), 0.0065, M.teeth));
+    g.add(filled(inset(bot, 0.04), inset(bot, 0.006), 0.0065, M.teeth));
+    g.add(lipShade(-0.665, 0.12, 0.028, 0.5));
+    out.angry = g;
+  }
+  return out;
+}
+
+// Thin rectangular glasses from the selfies: dark browline on top, thin silver rims below
+function buildGlasses(dm) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshStandardMaterial({ color: 0x14161c, roughness: 0.3, metalness: 0.4 });
+  const lens = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, roughness: 0.04, depthWrite: false });
+  const W = 0.47, Hh = 0.27, rr = 0.07;
+  let zMax = -1;
+  for (let x = 0.12; x <= 0.62; x += 0.05) for (let y = -0.12; y <= 0.32; y += 0.04) { const d = dm.sample(x, y); if (d !== null) zMax = Math.max(zMax, d); }
+  const zc = zMax + 0.035;
+  const outline = [];
+  const N = 96;
+  for (let i = 0; i < N; i++) {
+    // rounded rectangle, a touch wider at the top
+    const a = (i / N) * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
+    const ex = Math.sign(c) * Math.pow(Math.abs(c), 0.32), ey = Math.sign(sn) * Math.pow(Math.abs(sn), 0.42);
+    const top = (ey + 1) / 2;
+    outline.push(new V3(ex * (W / 2) * (0.93 + 0.07 * top), ey * Hh / 2, 0));
+  }
+  for (const s of [1, -1]) {
+    const L = new THREE.Group();
+    const rimCurve = new THREE.CatmullRomCurve3(outline, true);
+    const rim = new THREE.Mesh(new THREE.TubeGeometry(rimCurve, 160, 0.0075, 8, true), M.silver);
+    const browPts = outline.filter(p => p.y > Hh / 2 - 0.07).sort((a, b) => a.x - b.x);
+    const brow = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(browPts), 64, 0.017, 10, false), dark);
+    brow.scale.set(1, 1, 1);
+    const shape = new THREE.Shape(outline.map(p => new THREE.Vector2(p.x, p.y)));
+    const glass = new THREE.Mesh(new THREE.ShapeGeometry(shape, 24), lens);
+    glass.renderOrder = 3;
+    L.add(rim, brow, glass);
+    L.position.set(s * 0.37, 0.03, zc - 0.012);
+    L.rotation.y = s * 0.13;
+    g.add(L);
+    // temple arm back to the ear
+    const arm = new THREE.CatmullRomCurve3([
+      new V3(s * 0.6, 0.12, zc - 0.05), new V3(s * 0.86, 0.1, zc - 0.25), new V3(s * 0.99, 0.06, 0.2),
+      new V3(s * 1.0, 0.03, -0.12), new V3(s * 0.92, -0.08, -0.3),
+    ]);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(arm, 64, 0.014, 8, false), dark));
+  }
+  const bridge = new THREE.CatmullRomCurve3([new V3(-0.15, 0.1, zc - 0.012), new V3(0, 0.13, zc + 0.005), new V3(0.15, 0.1, zc - 0.012)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(bridge, 24, 0.009, 8, false), M.silver));
+  g.traverse(o => { if (o.isMesh && o.material !== lens) o.castShadow = true; });
+  return g;
+}
+
+function buildHead() {
+  const head = new THREE.Group();
+  const geo = buildHeadMesh();
+  { const p = geo.attributes.position; let m = 0; for (let i = 0; i < p.count; i++) if (p.getZ(i) > 0.2) m = Math.min(m, p.getY(i)); CHIN_LOCAL = m; HEAD_Y = CHIN_Y - m * HEAD_S; }
+  const skull = new THREE.Mesh(geo, M.skin); skull.castShadow = true; skull.receiveShadow = true; skull.name = 'head';
+  head.add(skull);
+  const dm = new DepthMap(geo, { right: new V3(1, 0, 0), up: new V3(0, 1, 0), fwd: new V3(0, 0, 1), u0: -1.1, u1: 1.1, v0: -1.25, v1: 1.25, res: 380 });
+
+  // ears
+  for (const s of [1, -1]) {
+    const base = headShape(new V3(s, -0.08, -0.1).normalize(), new V3());
+    const ear = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 24), M.skin);
+    body.scale.set(0.055, 0.215, 0.13); body.castShadow = true;
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.032, 12, 40, Math.PI * 1.55), M.skin);
+    rim.rotation.set(0, Math.PI / 2, Math.PI * 0.3); rim.scale.set(1, 1.45, 1); rim.position.x = 0.03 * s;
+    const bowl = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 16), new THREE.MeshStandardMaterial({ color: 0xC98B6A, roughness: 0.6 }));
+    bowl.scale.set(0.02, 0.09, 0.055); bowl.position.set(0.035 * s, -0.01, 0.005);
+    ear.add(body, rim, bowl);
+    ear.position.copy(base).add(new V3(0.035 * s, 0, -0.02));
+    ear.rotation.y = s * -0.32; ear.rotation.z = s * 0.06;
+    head.add(ear);
+  }
+
+  // eyes
+  const eyeTex = eyeballTexture();
+  const eyeMat = new THREE.MeshPhysicalMaterial({ map: eyeTex, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.05 });
+  const lidMat = new THREE.MeshPhysicalMaterial({ roughness: 0.52, sheen: 0.5, sheenColor: new THREE.Color(0xffb895), sheenRoughness: 0.55, alphaTest: 0.5, alphaToCoverage: true });
+  const lidTex = {};
+  for (const k of EMO_KEYS) {
+    lidTex[k] = [0, 0.55, 1].map(b => lidTexture({ ...EMO[k].lid, blink: b }));
+  }
+  const eyes = [];
+  for (const s of [1, -1]) {
+    const ex = s * 0.37, ey = 0.03, zs = dm.sample(ex, ey);
+    const socket = new THREE.Group();
+    socket.position.set(ex, ey, zs - 0.095);
+    socket.rotation.y = s * 0.03;
+    socket.scale.set(1, 1, EYE_FLAT);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(EYE_R, 64, 48), eyeMat);
+    ball.rotation.y = s * 0.11;
+    const lid = new THREE.Mesh(lidGeometry(LID_R, s < 0), lidMat);
+    lid.castShadow = false;
+    socket.add(ball, lid);
+    head.add(socket);
+    eyes.push({ socket, ball, lid });
+  }
+
+  // moles
+  for (const [u, v] of [[-0.2, 0.47], [-0.27, -0.2], [0.47, -0.24], [0.36, -0.44]]) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 8), M.mole);
+    m.position.copy(dm.point(u, v, -0.003));
+    head.add(m);
+  }
+
+  // brows and mouths per emotion
+  const brows = {}, mouths = buildMouths(dm);
+  for (const k of EMO_KEYS) {
+    const g = new THREE.Group();
+    g.add(buildBrow(dm, EMO[k].brow.l, 1), buildBrow(dm, EMO[k].brow.r, -1));
+    brows[k] = g; head.add(g); head.add(mouths[k]);
+  }
+
+  // glasses (optional)
+  const glasses = buildGlasses(dm); glasses.visible = false; head.add(glasses);
+
+  // hair
+  const hair = buildHair();
+  head.add(hair.cap, hair.fade);
+
+  head.scale.setScalar(HEAD_S);
+  head.position.set(0, HEAD_Y, 0.004);
+  return { head, eyes, lidMat, lidTex, brows, mouths, glasses };
+}
+
+function buildHair() {
+  const NT = 200, NP = 70;
+  const front = th => 1 - smooth(0.45, 0.9, Math.abs(th));
+  const hash = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+  // irregular pointed tips along the short fringe
+  const tips = th => {
+    const k = th * 3.6 + 7.3, i = Math.floor(k), f = k - i;
+    const a = 0.6 + 0.8 * hash(i);
+    return a * (1 - Math.pow(Math.abs(2 * f - 1), 0.75));
+  };
+  const phiMax = th => {
+    const a = Math.abs(th);
+    let pm = table(a, [[0, 0.82], [0.4, 0.84], [0.72, 0.96], [1.1, 1.08], [1.57, 1.13], [2.3, 1.42], [Math.PI, 1.55]]);
+    pm += front(th) * 0.05 * tips(th);
+    return pm;
+  };
+  const thick = (th, ph) => {
+    const a = Math.abs(th);
+    const rim = table(a, [[0, 0.1], [0.6, 0.075], [1.1, 0.03], [1.57, 0.022], [2.3, 0.026], [Math.PI, 0.028]]);
+    const top = 0.1 + 0.05 * smooth(1.2, 0.0, a) * smooth(0.0, 0.6, ph);
+    let t = lerp(rim, top, smooth(0.9, 0.25, ph));
+    t -= 0.05 * smooth(0.6, 0.0, ph);    // flatter crown
+    // chunky clumps flowing from the crown towards the fringe
+    const cl = Math.abs(Math.sin(th * 7 + ph * 1.8 + 0.5 * Math.sin(th * 2.3)));
+    t *= 1 - 0.24 * Math.pow(cl, 5) * smooth(0.12, 0.45, ph);
+    t += 0.02 * Math.sin(th * 15 + ph * 8) * Math.sin(ph * 6) * smooth(0.1, 0.5, ph);
+    // the fringe lifts slightly forward
+    t += 0.04 * front(th) * smooth(0.55, 0.97, ph / phiMax(th));
+    return t;
+  };
+  const pos = [], W = NT + 1, S = new V3();
+  for (let r = 0; r <= NP + 1; r++) {
+    for (let c = 0; c <= NT; c++) {
+      const th = -Math.PI + (c / NT) * Math.PI * 2, pm = phiMax(th);
+      let ph, off;
+      if (r <= NP) {
+        const s = r / NP; ph = Math.max(0.0005, s * pm);
+        const edge = 0.35 + 0.65 * smooth(1, 0.86, s);
+        off = thick(th, ph) * edge;
+      } else { ph = pm + 0.02; off = -0.02; }
+      const d = dirFromAngles(th, ph);
+      headShape(d, S);
+      const n = S.clone().normalize();
+      pos.push(S.x + n.x * off, S.y + n.y * off, S.z + n.z * off);
+    }
+  }
+  const idx = [];
+  for (let i = 0; i < NP + 1; i++) for (let j = 0; j < NT; j++) {
+    const a = i * W + j, b = a + 1, d = a + W, c = d + 1;
+    idx.push(a, b, d, b, c, d);
+  }
+  let g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  g = mergeVertices(g, 1e-5); g.computeVertexNormals();
+  const testN = new V3().fromBufferAttribute(g.attributes.normal, 0);
+  if (testN.y < 0) { const ix = Array.from(g.index.array).reverse(); g.setIndex(ix); g.computeVertexNormals(); }
+  // short textured tufts that break up the helmet silhouette, brushed forward and up
+  const tuftGeos = [], q = new THREE.Quaternion(), m4 = new THREE.Matrix4();
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (let i = 0; i < 70; i++) {
+    const th = (rnd() * 2 - 1) * 1.25, pm = phiMax(th);
+    const ph = 0.12 + rnd() * (pm - 0.22);
+    const d = dirFromAngles(th, ph), S0 = headShape(d, new V3());
+    const nrm = S0.clone().normalize();
+    const base = S0.clone().addScaledVector(nrm, thick(th, ph) * 0.8);
+    // flow direction: forward (towards the fringe) along the surface, lifted a little
+    const ahead = headShape(dirFromAngles(th, ph + 0.08), new V3()).sub(S0).normalize();
+    const dir = ahead.addScaledVector(nrm, 0.35 + 0.25 * rnd()).normalize();
+    const len = 0.11 + 0.08 * rnd() * (1 - ph / pm * 0.4), wid = 0.045 + 0.025 * rnd();
+    const tg = new THREE.ConeGeometry(wid, len, 7, 1);
+    tg.translate(0, len / 2, 0); tg.scale(1, 1, 0.75);
+    q.setFromUnitVectors(new V3(0, 1, 0), dir);
+    m4.compose(base, q, new V3(1, 1, 1));
+    tg.applyMatrix4(m4); tuftGeos.push(tg);
+  }
+  const tufts = new THREE.Mesh(mergeGeometries(tuftGeos.map(t => t.toNonIndexed())), M.hair);
+  tufts.castShadow = true;
+  const cap = new THREE.Mesh(g, M.hair); cap.castShadow = true; cap.add(tufts);
+
+  // faded sides and nape
+  const fpos = [], fcol = [], FN = 40, hc = new THREE.Color(0x2b2725);
+  for (let r = 0; r <= FN; r++) {
+    for (let c = 0; c <= NT; c++) {
+      const th = -Math.PI + (c / NT) * Math.PI * 2, a = Math.abs(th);
+      const p0 = phiMax(th) - 0.1, p1 = table(a, [[0.6, 1.02], [0.95, 1.45], [1.2, 1.64], [1.57, 1.62], [2.3, 1.9], [Math.PI, 2.0]]);
+      const s = r / FN, ph = lerp(p0, Math.max(p1, p0 + 0.05), s);
+      const d = dirFromAngles(th, ph); headShape(d, S);
+      const n = S.clone().normalize(), off = 0.006;
+      fpos.push(S.x + n.x * off, S.y + n.y * off, S.z + n.z * off);
+      const al = 0.82 * (1 - smooth(0.05, 1, s)) * smooth(0.55, 0.95, a);
+      fcol.push(hc.r, hc.g, hc.b, al);
+    }
+  }
+  const fidx = [];
+  for (let i = 0; i < FN; i++) for (let j = 0; j < NT; j++) {
+    const a = i * W + j, b = a + 1, d = a + W, c = d + 1;
+    fidx.push(a, b, d, b, c, d);
+  }
+  const fg = new THREE.BufferGeometry();
+  fg.setAttribute('position', new THREE.Float32BufferAttribute(fpos, 3));
+  fg.setAttribute('color', new THREE.Float32BufferAttribute(fcol, 4));
+  fg.setIndex(fidx); fg.computeVertexNormals();
+  const fnv = new V3().fromBufferAttribute(fg.attributes.normal, Math.floor(NT / 2));
+  const fpv = new V3().fromBufferAttribute(fg.attributes.position, Math.floor(NT / 2));
+  if (fnv.dot(fpv) < 0) { fidx.reverse(); fg.setIndex(fidx); fg.computeVertexNormals(); }
+  const fade = new THREE.Mesh(fg, M.hairFade); fade.renderOrder = 2;
+  return { cap, fade };
+}
+
+/* ---------------- body ---------------- */
+function buildBody() {
+  const body = new THREE.Group();
+  const add = (geo, mat, cast = true) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = true; body.add(m); return m; };
+
+  // jacket torso
+  const torsoGeo = loft([
+    { y: 0.772, rx: 0.2, rz: 0.126, cz: 0.0 },
+    { y: 0.83, rx: 0.197, rz: 0.123, cz: 0.0 },
+    { y: 0.92, rx: 0.184, rz: 0.115, cz: 0.003 },
+    { y: 1.0, rx: 0.176, rz: 0.112, cz: 0.005 },
+    { y: 1.1, rx: 0.194, rz: 0.12, cz: 0.01 },
+    { y: 1.2, rx: 0.204, rz: 0.126, cz: 0.012 },
+    { y: 1.28, rx: 0.21, rz: 0.12, cz: 0.006 },
+    { y: 1.335, rx: 0.2, rz: 0.104, cz: 0.0 },
+    { y: 1.372, rx: 0.168, rz: 0.094, cz: -0.004 },
+    { y: 1.408, rx: 0.108, rz: 0.08, cz: -0.008 },
+    { y: 1.44, rx: 0.074, rz: 0.069, cz: -0.01 },
+    { y: 1.462, rx: 0.07, rz: 0.065, cz: -0.012 },
+  ], { seg: 72, steps: 6, n: 2.6 });
+  add(torsoGeo, M.suit);
+
+  // neck
+  const neck = add(new THREE.CylinderGeometry(0.056, 0.061, 0.2, 32), M.skin);
+  neck.position.set(0, 1.47, -0.006);
+
+  // shirt collar band at the back of the neck
+  add(loft([{ y: 1.43, rx: 0.068, rz: 0.066, cz: -0.009 }, { y: 1.485, rx: 0.064, rz: 0.062, cz: -0.009 }],
+    { seg: 40, steps: 2, n: 2.0, caps: false, a0: Math.PI * 0.82, a1: Math.PI * 2.18 }), M.shirt);
+
+  const front = new DepthMap(torsoGeo, { right: new V3(1, 0, 0), up: new V3(0, 1, 0), fwd: new V3(0, 0, 1), u0: -0.26, u1: 0.26, v0: 0.74, v1: 1.5, res: 320 });
+  const back = new DepthMap(torsoGeo, { right: new V3(-1, 0, 0), up: new V3(0, 1, 0), fwd: new V3(0, 0, -1), u0: -0.26, u1: 0.26, v0: 0.74, v1: 1.5, res: 240 });
+
+  const P0 = [0.0, 1.052];
+  const roll = s => t => { const p = qbez(P0, [0.03, 1.2], [0.062, 1.432], t); return [p[0] * s, p[1]]; };
+  // shirt in the V, then open-collar skin
+  body.add(ribbon(front, roll(-1), roll(1), { nt: 40, ns: 12, off: 0.0012, mat: M.shirt }));
+  body.add(ribbon(front, t => [lerp(0, -0.034, t), lerp(1.36, 1.445, t)], t => [lerp(0, 0.034, t), lerp(1.36, 1.445, t)], { nt: 16, ns: 8, off: 0.0024, mat: M.skin }));
+  for (const s of [1, -1]) {
+    // collar points of the shirt, lying open
+    body.add(ribbon(front,
+      t => { const p = qbez([0.04, 1.445], [0.042, 1.39], [0.083, 1.335], t); return [p[0] * s, p[1]]; },
+      t => { const p = qbez([0.07, 1.452], [0.098, 1.4], [0.083, 1.335], t); return [p[0] * s, p[1]]; },
+      { nt: 20, ns: 6, off: 0.0026, thick: (t, w) => 0.003 * roundEdge(w, 0.3), mat: M.shirt }));
+    // peak lapel
+    const Pg = [0.06, 1.3], PT = [0.198, 1.318];
+    body.add(ribbon(front,
+      t => { const p = qbez(P0, [0.028, 1.18], Pg, t); return [p[0] * s, p[1]]; },
+      t => { const p = qbez(P0, [0.17, 1.14], PT, t); return [p[0] * s, p[1]]; },
+      { nt: 44, ns: 12, off: 0.0016, thick: (t, w) => 0.0075 * roundEdge(w, 0.12) * smooth(0, 0.05, t), mat: M.suit }));
+    // upper collar
+    body.add(ribbon(front,
+      t => { const p = qbez([0.06, 1.302], [0.058, 1.38], [0.058, 1.446], t); return [p[0] * s, p[1]]; },
+      t => { const p = qbez([0.128, 1.326], [0.11, 1.4], [0.068, 1.452], t); return [p[0] * s, p[1]]; },
+      { nt: 24, ns: 8, off: 0.003, thick: (t, w) => 0.0065 * roundEdge(w, 0.15), mat: M.suit }));
+    // hip pocket flaps
+    const x0 = s > 0 ? 0.075 : -0.195;
+    body.add(ribbon(front, t => [x0 + 0.12 * t, 0.878 + 0.004 * t * s], t => [x0 + 0.12 * t, 0.842 + 0.004 * t * s],
+      { nt: 16, ns: 6, off: 0.0012, thick: (t, w) => 0.0055 * roundEdge(t, 0.08) * roundEdge(w, 0.2), mat: M.suit }));
+  }
+  // overlap edge of the double-breasted front
+  const edge = t => {
+    const p = t < 0.3 ? mix2(P0, [-0.1, 1.0], t / 0.3) : mix2([-0.1, 1.0], [-0.104, 0.776], (t - 0.3) / 0.7);
+    return p;
+  };
+  body.add(ribbon(front, t => [edge(t)[0] + 0.0028, edge(t)[1]], t => [edge(t)[0] - 0.0028, edge(t)[1]], { nt: 30, ns: 2, off: 0.0016, mat: M.suitDark }));
+  // six buttons
+  for (const y of [1.028, 0.952, 0.876]) for (const s of [1, -1]) {
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.006, 24), M.button);
+    const p = front.point(s * 0.068, y, 0.004), n = front.normal(s * 0.068, y);
+    b.position.copy(p); b.quaternion.setFromUnitVectors(new V3(0, 1, 0), n); b.castShadow = true;
+    body.add(b);
+  }
+  // back seam
+  body.add(ribbon(back, t => [0.002, lerp(1.43, 0.776, t)], t => [-0.002, lerp(1.43, 0.776, t)], { nt: 30, ns: 2, off: 0.0012, mat: M.suitDark }));
+
+  // silver lapel chain from the photos: two domed pins, three chains draping between them
+  const P1 = [0.104, 1.232], P2 = [0.186, 1.214];
+  const beads = [];
+  [0.028, 0.052, 0.078].forEach((sag, k) => {
+    const n = 30 + k * 6;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, u = lerp(P1[0], P2[0], t), v = lerp(P1[1], P2[1], t) - sag * Math.pow(Math.sin(Math.PI * t), 0.85);
+      const p = front.point(u, v, 0.0115);
+      if (!p) continue;
+      const bg = new THREE.SphereGeometry(0.0022, 8, 6); bg.translate(p.x, p.y, p.z); beads.push(bg);
+    }
+  });
+  add(mergeGeometries(beads), M.silver, false);
+  for (const P of [P1, P2]) {
+    const pin = add(new THREE.SphereGeometry(0.0115, 24, 16), M.silver);
+    pin.scale.set(1, 1, 0.45);
+    pin.position.copy(front.point(P[0], P[1], 0.012));
+    pin.quaternion.setFromUnitVectors(new V3(0, 0, 1), front.normal(P[0], P[1]));
+    const ring = add(new THREE.TorusGeometry(0.0118, 0.0016, 8, 28), M.silver);
+    ring.position.copy(pin.position); ring.quaternion.copy(pin.quaternion);
+  }
+
+  // trousers
+  for (const s of [1, -1]) {
+    add(loft([
+      { y: 0.04, rx: 0.064, rz: 0.068, cx: s * 0.09, cz: 0.012 },
+      { y: 0.1, rx: 0.061, rz: 0.065, cx: s * 0.089, cz: 0.008 },
+      { y: 0.3, rx: 0.064, rz: 0.068, cx: s * 0.088, cz: 0.004 },
+      { y: 0.46, rx: 0.068, rz: 0.072, cx: s * 0.089, cz: 0.006 },
+      { y: 0.62, rx: 0.08, rz: 0.083, cx: s * 0.09, cz: 0.004 },
+      { y: 0.76, rx: 0.093, rz: 0.098, cx: s * 0.092, cz: 0.0 },
+      { y: 0.84, rx: 0.1, rz: 0.11, cx: s * 0.09, cz: 0.0 },
+    ], { seg: 40, steps: 5, n: 2.1 }), M.suit);
+    // shoes
+    const shoe = loft([
+      { y: -0.078, rx: 0.026, rz: 0.03, cz: -0.052 },
+      { y: -0.064, rx: 0.04, rz: 0.044, cz: -0.052 },
+      { y: -0.02, rx: 0.046, rz: 0.05, cz: -0.056 },
+      { y: 0.04, rx: 0.048, rz: 0.041, cz: -0.047 },
+      { y: 0.1, rx: 0.049, rz: 0.031, cz: -0.038 },
+      { y: 0.16, rx: 0.045, rz: 0.025, cz: -0.032 },
+      { y: 0.19, rx: 0.035, rz: 0.021, cz: -0.03 },
+      { y: 0.204, rx: 0.016, rz: 0.013, cz: -0.03 },
+    ], { seg: 40, steps: 5, n: 2.3 });
+    shoe.rotateX(Math.PI / 2);
+    const sm = add(shoe, M.shoe); sm.position.set(s * 0.092, 0.0, 0.0); sm.rotation.y = s * 0.12;
+    const sole = loft([
+      { y: -0.076, rx: 0.03, rz: 0.006, cz: -0.006 },
+      { y: -0.06, rx: 0.044, rz: 0.006, cz: -0.006 },
+      { y: 0.06, rx: 0.051, rz: 0.006, cz: -0.006 },
+      { y: 0.17, rx: 0.046, rz: 0.006, cz: -0.006 },
+      { y: 0.207, rx: 0.02, rz: 0.006, cz: -0.006 },
+    ], { seg: 32, steps: 4, n: 2.3 });
+    sole.rotateX(Math.PI / 2);
+    const so = add(sole, M.sole); so.position.copy(sm.position); so.rotation.y = sm.rotation.y;
+  }
+  return body;
+}
+
+function buildHand(s) {
+  const g = new THREE.Group();
+  const palm = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 18), M.skin);
+  palm.scale.set(0.02, 0.05, 0.042); palm.position.set(0, -0.045, 0); g.add(palm);
+  [-0.025, -0.0085, 0.0085, 0.025].forEach((z, i) => {
+    const len = [0.036, 0.044, 0.042, 0.034][i];
+    const f = new THREE.Mesh(new THREE.CapsuleGeometry(0.0105, len, 6, 12), M.skin);
+    f.position.set(-0.004, -0.09 - len / 2 + 0.006, z * 0.95); f.rotation.x = z * 1.2; f.rotation.z = 0.22 * s;
+    g.add(f);
+  });
+  const th = new THREE.Mesh(new THREE.CapsuleGeometry(0.0115, 0.032, 6, 12), M.skin);
+  th.position.set(0.012 * s, -0.05, 0.036); th.rotation.set(-0.5, 0, 0.35 * s); g.add(th);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+function buildArms(pose) {
+  const g = new THREE.Group();
+  for (const s of [1, -1]) {
+    const pts = pose === 'pockets'
+      ? [[0.19, 1.325, -0.005], [0.228, 1.19, -0.035], [0.262, 1.045, -0.062], [0.236, 0.94, -0.01], [0.196, 0.872, 0.036], [0.175, 0.836, 0.055]]
+      : [[0.19, 1.325, 0.0], [0.245, 1.2, -0.01], [0.3, 1.06, -0.02], [0.336, 0.94, -0.005], [0.366, 0.84, 0.012]];
+    const P = pts.map(p => new V3(p[0] * s, p[1], p[2]));
+    const { geo, curve } = sweep(P, t => lerp(0.051, 0.044, t) * (1 - 0.06 * Math.sin(Math.PI * t)), { seg: 28, along: 56 });
+    const sleeve = new THREE.Mesh(geo, M.suit); sleeve.castShadow = true; sleeve.receiveShadow = true; g.add(sleeve);
+    const sh = new THREE.Mesh(new THREE.SphereGeometry(0.047, 28, 20), M.suit); sh.position.copy(P[0]); sh.castShadow = true; g.add(sh);
+    if (pose !== 'pockets') {
+      const end = curve.getPointAt(1), dir = curve.getTangentAt(1);
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.041, 0.024, 24), M.shirt);
+      cuff.quaternion.setFromUnitVectors(new V3(0, -1, 0), dir); cuff.position.copy(end).addScaledVector(dir, 0.006); g.add(cuff);
+      const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.05, 20), M.skin);
+      wrist.quaternion.copy(cuff.quaternion); wrist.position.copy(end).addScaledVector(dir, 0.026); g.add(wrist);
+      const hand = buildHand(s);
+      hand.quaternion.setFromUnitVectors(new V3(0, -1, 0), dir);
+      hand.rotateY(s > 0 ? Math.PI : 0);
+      hand.position.copy(end).addScaledVector(dir, 0.04); g.add(hand);
+    }
+  }
+  return g;
+}
+
+/* ---------------- assemble ---------------- */
+const glCanvas = document.getElementById('gl'), marks = document.getElementById('marks');
+const exportMode = location.hash.startsWith('#export-') ? location.hash.slice(8) : null;
+if (exportMode) document.body.classList.add('export');
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: true, alpha: true, preserveDrawingBuffer: !!exportMode });
+} catch (e) {
+  document.getElementById('loading').textContent = 'Браузер не смог включить 3D (WebGL). Откройте страницу в Chrome или Safari.';
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, exportMode ? 1 : 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const key = new THREE.DirectionalLight(0xfff1e4, 2.3); key.position.set(2.2, 4.2, 3.6);
+key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -1.2, right: 1.2, top: 2.2, bottom: -0.3, near: 0.5, far: 12 });
+key.shadow.bias = -0.0004; key.shadow.normalBias = 0.02;
+const rim = new THREE.DirectionalLight(0xcfe0ff, 1.6); rim.position.set(-2.4, 3.2, -3.4);
+const fill = new THREE.HemisphereLight(0xf2f5ff, 0x8a7c72, 0.55);
+scene.add(key, rim, fill);
+const ground = new THREE.Mesh(new THREE.CircleGeometry(3, 48), new THREE.ShadowMaterial({ opacity: 0.18 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+const hero = new THREE.Group(); scene.add(hero);
+const H = buildHead();
+hero.add(H.head, buildBody());
+const arms = { pockets: buildArms('pockets'), apose: buildArms('apose') };
+hero.add(arms.pockets, arms.apose);
+
+/* ---------------- state ---------------- */
+const state = { mode: 'model', view: 'q', frame: 'full', emotion: 'smile', pose: 'pockets', glasses: 'off', spin: false, blink: 0 };
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function applyEmotion(k, blink = 0) {
+  for (const e of EMO_KEYS) { H.brows[e].visible = e === k; H.mouths[e].visible = e === k; }
+  H.lidMat.map = H.lidTex[k][blink];
+  H.lidMat.needsUpdate = true;
+  const hr = EMO[k].head; H.head.rotation.set(hr[0], hr[1], hr[2]);
+}
+function applyGlasses(v) { H.glasses.visible = v === 'on'; }
+function applyPose(p) { arms.pockets.visible = p === 'pockets'; arms.apose.visible = p === 'apose'; }
+
+/* ---------------- cameras ---------------- */
+const persp = new THREE.PerspectiveCamera(28, 1, 0.05, 50);
+const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 50);
+const controls = new OrbitControls(persp, glCanvas);
+controls.enablePan = false; controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 0.6; controls.maxDistance = 7; controls.minPolarAngle = 0.35; controls.maxPolarAngle = 1.75;
+const VIEW_AZ = { front: 0, q: 0.62, side: Math.PI / 2, back: Math.PI, right: -Math.PI / 2 };
+const FRAME = { full: { target: new V3(0, 0.92, 0), dist: 4.3, pol: 1.5 }, face: { target: new V3(0, HEAD_Y - 0.03, 0), dist: 1.55, pol: 1.53 } };
+let camAnim = null;
+function goToView(instant = false) {
+  const F = FRAME[state.frame], az = VIEW_AZ[state.view];
+  const to = { tx: F.target.x, ty: F.target.y, tz: F.target.z, az, pol: F.pol, dist: F.dist };
+  const off = persp.position.clone().sub(controls.target), sph = new THREE.Spherical().setFromVector3(off);
+  let from = { tx: controls.target.x, ty: controls.target.y, tz: controls.target.z, az: sph.theta, pol: sph.phi, dist: sph.radius };
+  let d = to.az - from.az; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; to.az = from.az + d;
+  if (instant || reduceMotion) { from = to; }
+  camAnim = { from, to, t0: performance.now(), dur: instant || reduceMotion ? 0 : 650 };
+}
+function stepCam(now) {
+  if (!camAnim) return;
+  const { from, to, t0, dur } = camAnim, k = dur ? clamp((now - t0) / dur, 0, 1) : 1, e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  const c = {}; for (const key of Object.keys(to)) c[key] = lerp(from[key], to[key], e);
+  controls.target.set(c.tx, c.ty, c.tz);
+  persp.position.copy(controls.target).add(new V3().setFromSphericalCoords(c.dist, c.pol, c.az));
+  persp.lookAt(controls.target);
+  if (k >= 1) camAnim = null;
+}
+
+/* ---------------- sizing & overlay ---------------- */
+let cw = 1, ch = 1;
+function resize() {
+  const r = glCanvas.getBoundingClientRect();
+  cw = Math.max(1, Math.round(r.width)); ch = Math.max(1, Math.round(r.height));
+  renderer.setSize(cw, ch, false);
+  const dpr = renderer.getPixelRatio();
+  marks.width = Math.round(cw * dpr); marks.height = Math.round(ch * dpr);
+  persp.aspect = cw / ch; persp.updateProjectionMatrix();
+  dirty = true;
+}
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let dirty = true;
+
+const heroTop = () => { const b = new THREE.Box3().setFromObject(H.head); return b.max.y; };
+const TURN = [{ az: 0, label: 'Спереди' }, { az: 0.62, label: 'Три четверти' }, { az: Math.PI / 2, label: 'Сбоку' }, { az: Math.PI, label: 'Сзади' }];
+const EMO_LABEL = { smile: 'Улыбается', calm: 'Спокоен', laugh: 'Смеётся', surprise: 'Удивлён', angry: 'Злится' };
+
+function drawMarks(lines) {
+  const ctx = marks.getContext('2d'), dpr = renderer.getPixelRatio();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, cw, ch);
+  if (!lines) return;
+  const pencil = exportMode ? '#C4452D' : css('--pencil'), ink = exportMode ? '#18213B' : css('--ink-2');
+  for (const L of lines) {
+    if (L.type === 'h') {
+      ctx.strokeStyle = pencil; ctx.globalAlpha = 0.35; ctx.setLineDash([6, 6]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(L.x0, L.y); ctx.lineTo(L.x1, L.y); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      if (L.text) { ctx.fillStyle = pencil; ctx.font = `600 ${L.size || 18}px Caveat, "Comic Sans MS", cursive`; ctx.textBaseline = 'middle'; ctx.fillText(L.text, L.x0 + 4, L.y - 10); }
+    } else if (L.type === 't') {
+      ctx.fillStyle = L.color === 'ink' ? ink : pencil;
+      ctx.font = L.font; ctx.textAlign = L.align || 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText(L.text, L.x, L.y); ctx.textAlign = 'left';
+    }
+  }
+}
+
+/* ---------------- render ---------------- */
+function renderModel() {
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, cw, ch);
+  hero.rotation.y = 0;
+  renderer.render(scene, persp);
+}
+function renderTurn() {
+  applyEmotion('smile', 0);
+  const top = heroTop() + 0.03, bottom = -0.04, hgt = top - bottom;
+  const pad = 46, panelW = cw / 4, viewH = ch - pad * 2;
+  const scale = Math.min(viewH / hgt, panelW / 0.95);
+  renderer.setScissorTest(true);
+  renderer.setClearColor(0x000000, 0); renderer.clear();
+  const lines = [];
+  TURN.forEach((v, i) => {
+    const x = Math.round(i * panelW), w = Math.round(panelW);
+    renderer.setViewport(x, pad, w, viewH); renderer.setScissor(x, pad, w, viewH);
+    const halfW = (w / scale) / 2, halfH = (viewH / scale) / 2, cy = bottom + halfH;
+    Object.assign(ortho, { left: -halfW, right: halfW, top: halfH, bottom: -halfH }); ortho.updateProjectionMatrix();
+    ortho.position.set(0, cy, 10); ortho.lookAt(0, cy, 0);
+    hero.rotation.y = -v.az;
+    renderer.render(scene, ortho);
+    lines.push({ type: 't', text: v.label, x: x + w / 2, y: ch - 16, font: '600 15px "Golos Text", system-ui, sans-serif', color: 'ink' });
+  });
+  hero.rotation.y = 0;
+  // head-height guides: a model-sheet convention for proportions
+  const headTopY = top - 0.03;
+  const chin = HEAD_Y + CHIN_LOCAL * HEAD_S, headH = headTopY - chin;
+  const yToScreen = y => ch - pad - (y - bottom) * scale;
+  const units = Math.floor(headTopY / headH);
+  for (let k = 0; k <= units; k++) {
+    const y = headTopY - k * headH;
+    lines.push({ type: 'h', y: yToScreen(y), x0: 8, x1: cw - 8, text: k === 0 ? '' : String(k) });
+  }
+  lines.push({ type: 'h', y: yToScreen(0), x0: 8, x1: cw - 8, text: '' });
+  lines.push({ type: 't', text: `рост ≈ ${(headTopY / headH).toFixed(1).replace('.', ',')} головы`, x: cw - 12, y: 30, font: '600 22px Caveat, "Comic Sans MS", cursive', align: 'right' });
+  drawMarks(lines);
+  renderer.setScissorTest(false);
+  applyEmotion(state.emotion, 0);
+}
+function renderEmo() {
+  const n = EMO_KEYS.length, pad = 30;
+  let cols = 1, best = 0;
+  for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c), w = cw / c, h = (ch - pad * r) / r, sc = Math.min(w / 0.85, h); if (sc > best) { best = sc; cols = c; } }
+  const rows = Math.ceil(n / cols), w = Math.floor(cw / cols), h = Math.floor((ch - pad * rows) / rows);
+  renderer.setScissorTest(true); renderer.setClearColor(0x000000, 0); renderer.clear();
+  const cam = new THREE.PerspectiveCamera(24, w / h, 0.05, 20);
+  const target = new V3(0, HEAD_Y - 0.03, 0), dist = Math.max(1.05, 0.62 / Math.min(1, w / h) / (2 * Math.tan(THREE.MathUtils.degToRad(12))));
+  cam.position.set(Math.sin(0.28) * dist, HEAD_Y + 0.02, Math.cos(0.28) * dist); cam.lookAt(target);
+  const lines = [];
+  EMO_KEYS.forEach((k, i) => {
+    const r = Math.floor(i / cols), inRow = Math.min(cols, n - r * cols), offX = Math.round((cw - inRow * w) / 2);
+    const cx = offX + (i % cols) * w, y = ch - (r + 1) * (h + pad) + pad;
+    applyEmotion(k, 0);
+    renderer.setViewport(cx, y, w, h); renderer.setScissor(cx, y, w, h);
+    renderer.render(scene, cam);
+    lines.push({ type: 't', text: EMO_LABEL[k], x: cx + w / 2, y: ch - y + 20, font: '600 15px "Golos Text", system-ui, sans-serif', color: 'ink' });
+  });
+  drawMarks(lines);
+  renderer.setScissorTest(false);
+  applyEmotion(state.emotion, 0);
+}
+
+const posterCam = new THREE.PerspectiveCamera(26, 1, 0.05, 30);
+function renderPoster() {
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, cw, ch); renderer.setClearColor(0x000000, 0); renderer.clear();
+  hero.rotation.y = 0;
+  ground.visible = false; rim.color.set(0x9fe7ff); rim.intensity = 2.6; fill.intensity = 0.8; key.intensity = 2.0;
+  const aspect = cw / ch, target = new V3(0.02, HEAD_Y - 0.17, 0), vfit = 0.86 / Math.min(1, aspect);
+  const dist = vfit / (2 * Math.tan(THREE.MathUtils.degToRad(13)));
+  posterCam.aspect = aspect; posterCam.updateProjectionMatrix();
+  posterCam.position.set(Math.sin(0.42) * dist, target.y + 0.12, Math.cos(0.42) * dist); posterCam.lookAt(target);
+  renderer.render(scene, posterCam);
+  ground.visible = true; rim.color.set(0xcfe0ff); rim.intensity = 1.6; fill.intensity = 0.55; key.intensity = 2.3;
+  drawMarks(null);
+}
+
+let nextBlink = performance.now() + 2500, blinkT = -1;
+function animate(now) {
+  requestAnimationFrame(animate);
+  if (state.mode === 'model') {
+    stepCam(now);
+    if (state.spin && !camAnim) { controls.autoRotate = true; controls.autoRotateSpeed = 1.6; } else controls.autoRotate = false;
+    controls.update();
+    // blink
+    if (blinkT < 0 && now > nextBlink) blinkT = now;
+    let b = 0;
+    if (blinkT >= 0) {
+      const e = now - blinkT; b = e < 45 ? 1 : e < 115 ? 2 : e < 165 ? 1 : 0;
+      if (e >= 165) { blinkT = -1; nextBlink = now + 2200 + Math.random() * 2800; }
+    }
+    if (b !== state.blink) { state.blink = b; H.lidMat.map = H.lidTex[state.emotion][b]; }
+    if (!reduceMotion && !exportMode) {
+      const t = now / 1000;
+      H.head.rotation.z = EMO[state.emotion].head[2] + Math.sin(t * 0.7) * 0.012;
+      H.head.rotation.y = EMO[state.emotion].head[1] + Math.sin(t * 0.45) * 0.02;
+    }
+    renderModel();
+    if (dirty) { drawMarks(null); dirty = false; }
+  } else if (dirty) {
+    dirty = false;
+    if (state.mode === 'turn') renderTurn(); else if (state.mode === 'poster') renderPoster(); else renderEmo();
+  }
+}
+
+/* ---------------- UI ---------------- */
+const stamp = document.getElementById('stamp');
+const VIEW_NAME = { front: 'спереди', q: 'вид 3/4', side: 'сбоку', back: 'сзади' };
+function syncUI() {
+  document.querySelectorAll('.seg[data-key]').forEach(seg => {
+    const k = seg.dataset.key;
+    seg.querySelectorAll('button[data-val]').forEach(b => b.setAttribute('aria-pressed', String(state[k] === b.dataset.val)));
+  });
+  document.getElementById('v-spin').setAttribute('aria-pressed', String(state.spin));
+  const model = state.mode === 'model';
+  document.querySelectorAll('#f-view button').forEach(b => { b.disabled = !model; });
+  document.querySelectorAll('#f-emo button').forEach(b => { b.disabled = state.mode === 'emo'; });
+  document.querySelector('.sheet').classList.toggle('poster', state.mode === 'poster');
+  stamp.textContent = model ? `модель · ${VIEW_NAME[state.view]}` : state.mode === 'turn' ? 'лист: все стороны' : state.mode === 'poster' ? 'постер' : 'лист: эмоции';
+  document.getElementById('hint').hidden = !model;
+  controls.enabled = model;
+}
+document.querySelectorAll('.seg[data-key]').forEach(seg => {
+  seg.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.dataset.toggle === 'spin') { state.spin = !state.spin; syncUI(); return; }
+    const k = seg.dataset.key; state[k] = b.dataset.val;
+    if (k === 'emotion') { applyEmotion(state.emotion, 0); if (state.mode === 'model' && state.frame === 'full' && !exportMode) { /* keep framing */ } }
+    if (k === 'pose') applyPose(state.pose);
+    if (k === 'glasses') applyGlasses(state.glasses);
+    if (k === 'view' || k === 'frame') { state.spin = false; goToView(); }
+    if (k === 'mode') { drawMarks(null); if (state.mode === 'model') goToView(true); }
+    try { localStorage.setItem('tilek-ui', JSON.stringify({ mode: state.mode, view: state.view, frame: state.frame, emotion: state.emotion, pose: state.pose, glasses: state.glasses })); } catch (_) {}
+    dirty = true; syncUI();
+  });
+});
+document.getElementById('copy-anchor').addEventListener('click', async e => {
+  const text = document.getElementById('anchor-text').textContent, btn = e.currentTarget;
+  try { await navigator.clipboard.writeText(text); btn.textContent = 'Скопировано'; }
+  catch (_) {
+    const r = document.createRange(); r.selectNodeContents(document.getElementById('anchor-text'));
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = 'Выделено: нажмите «Копировать»';
+  }
+  setTimeout(() => { btn.textContent = 'Скопировать'; }, 2200);
+});
+
+if (!exportMode) {
+  try { const saved = JSON.parse(localStorage.getItem('tilek-ui') || 'null'); if (saved) Object.assign(state, saved); } catch (_) {}
+} else {
+  const [mode, a, b] = exportMode.split('-');
+  state.mode = ['turn', 'emo', 'poster'].includes(mode) ? mode : 'model';
+  if (mode === 'model') { state.view = a || 'q'; state.frame = b || 'full'; }
+  if (mode === 'turn' && a === 'apose') state.pose = 'apose';
+  if (exportMode.includes('glasses')) state.glasses = 'on';
+  if (exportMode.includes('apose')) state.pose = 'apose';
+  if (exportMode.includes('calm')) state.emotion = 'calm';
+  if (exportMode.includes('white')) { document.body.classList.add('white'); ground.visible = false; }
+}
+applyEmotion(state.emotion, 0); applyPose(state.pose); applyGlasses(state.glasses);
+syncUI();
+new ResizeObserver(resize).observe(glCanvas);
+resize(); goToView(true);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { dirty = true; });
+requestAnimationFrame(t => { animate(t); document.getElementById('loading').hidden = true; window.__ready = true; });
+
+// Hooks used to save reference images and a 3D file
+window.__hero = { hero, H, applyEmotion, applyPose, applyGlasses, state, renderer, scene };
+window.__exportGLB = async () => {
+  const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
+  applyPose('apose'); applyEmotion('smile', 0); H.head.rotation.set(0, 0, 0);
+  const visibleOnly = hero.clone(true);
+  const strip = [];
+  visibleOnly.traverse(o => { if (!o.visible) strip.push(o); });
+  strip.forEach(o => o.parent && o.parent.remove(o));
+  const buf = await new GLTFExporter().parseAsync(visibleOnly, { binary: true, onlyVisible: true });
+  applyPose(state.pose); applyEmotion(state.emotion, 0);
+  let s = ''; const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+</script>
+</body>
+</html>
