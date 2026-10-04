@@ -22,8 +22,14 @@
   solids (moving, pingpong, triggered doors/pushers, cycle/step/trigger vanish, breakables);
   HazardViews for every kind; obstacle unit tests.
 
+- PHASE 5 — Level generator: 19-module standard library (engine/level/modules), level grammar
+  following the gameplay loop, beat planner (notable moment every 10–20 s), surprise system,
+  turn planning without self-intersection, rollback on overlap, 5 difficulty presets (continuous
+  1..5), LevelValidator (200 seeds clean), reproducibility tests.
+
 ## CURRENT
-- PHASE 5 — Level generator (19 modules, seeds, difficulty).
+- PHASE 6 — First complete level: app shell, menus, HUD, save system, props/decor/backdrop,
+  particles, audio.
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →

@@ -42,6 +42,17 @@ export type LocalMotion =
   | { kind: 'pingpong'; lx: number; ly: number; lz: number; period: number; phase: number; hold: number }
   | { kind: 'trigger'; lx: number; ly: number; lz: number; duration: number; delay: number; triggerId: number };
 
+export interface BuilderMark {
+  pieces: number;
+  spine: number;
+  hints: number;
+  checkpoints: number;
+  finish: FinishPiece | null;
+  minY: number;
+  nextId: number;
+  lastSpine: SpinePoint | null;
+}
+
 export class LevelBuilder {
   readonly pieces: Piece[] = [];
   readonly spine: SpinePoint[] = [];
@@ -57,6 +68,51 @@ export class LevelBuilder {
 
   id(): number {
     return this.nextId++;
+  }
+
+  /** Snapshot for rollback (used when a module overlaps earlier geometry). */
+  mark(): BuilderMark {
+    return {
+      pieces: this.pieces.length,
+      spine: this.spine.length,
+      hints: this.hints.length,
+      checkpoints: this.checkpoints.length,
+      finish: this.finish,
+      minY: this.minY,
+      nextId: this.nextId,
+      lastSpine: this.spine.length ? { ...this.spine[this.spine.length - 1] } : null,
+    };
+  }
+
+  rollback(m: BuilderMark): void {
+    this.pieces.length = m.pieces;
+    this.spine.length = m.spine;
+    if (m.lastSpine && this.spine.length) this.spine[this.spine.length - 1] = m.lastSpine;
+    this.hints.length = m.hints;
+    this.checkpoints.length = m.checkpoints;
+    this.finish = m.finish;
+    this.minY = m.minY;
+    this.nextId = m.nextId;
+  }
+
+  /** XZ footprint of walkable/solid pieces added since `m`. */
+  footprintSince(m: BuilderMark): AABB | null {
+    let fp: AABB | null = null;
+    for (let i = m.pieces; i < this.pieces.length; i++) {
+      const p = this.pieces[i];
+      if (p.type !== 'solid') continue;
+      const b = p.box;
+      if (!fp) fp = { ...b };
+      else {
+        fp.minX = Math.min(fp.minX, b.minX);
+        fp.minY = Math.min(fp.minY, b.minY);
+        fp.minZ = Math.min(fp.minZ, b.minZ);
+        fp.maxX = Math.max(fp.maxX, b.maxX);
+        fp.maxY = Math.max(fp.maxY, b.maxY);
+        fp.maxZ = Math.max(fp.maxZ, b.maxZ);
+      }
+    }
+    return fp;
   }
 
   begin(frame: Frame, module: number): void {

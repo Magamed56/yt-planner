@@ -22,7 +22,12 @@ const theme = FACTORY;
 rc.scene.background = new THREE.Color(theme.palette.skyHorizon);
 rc.scene.fog = new THREE.Fog(theme.palette.fog, theme.lighting.fogNear, theme.lighting.fogFar);
 const mats = new MaterialLibrary();
-const level = sandboxLevel();
+const qs = new URLSearchParams(location.search);
+const { generateLevel } = await import('@engine/level/LevelGenerator');
+const level = qs.has('seed')
+  ? generateLevel({ seed: Number(qs.get('seed')), difficulty: qs.get('difficulty') ?? 2, specialEvents: qs.get('events')?.split(',') ?? [] })
+  : sandboxLevel();
+(window as unknown as { __level: unknown }).__level = level;
 const world = new World({ level, character: PIP, enemy: GRUMBO, enemyTuning: { mercy: true } });
 const lv = new LevelView(level, world, theme, mats, [hazardViewsExtension]);
 rc.scene.add(lv.root);
@@ -75,6 +80,21 @@ function frame(now: number) {
   const tz = p.z - Math.cos(camYaw) * dist;
   cam.set(damp(cam.x, tx, 6, dt), damp(cam.y, p.y + 3.6, 6, dt), damp(cam.z, tz, 6, dt));
   rc.camera.position.copy(cam);
+  if (qs.has('overview')) {
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    for (const pt of level.spine) { minX = Math.min(minX, pt.x); maxX = Math.max(maxX, pt.x); minZ = Math.min(minZ, pt.z); maxZ = Math.max(maxZ, pt.z); }
+    const cxo = (minX + maxX) / 2, czo = (minZ + maxZ) / 2;
+    const span = Math.max(maxX - minX, maxZ - minZ);
+    rc.camera.position.set(cxo + span * 0.35, span * 0.75, czo - span * 0.1);
+    rc.camera.lookAt(cxo, 0, czo);
+    rc.camera.far = 2000; rc.camera.updateProjectionMatrix();
+    rc.scene.fog = null;
+    rc.setShadowRange(span * 0.6);
+    rc.focusShadows(cxo, 0, czo);
+    rc.render();
+    requestAnimationFrame(frame);
+    return;
+  }
   if (modelId) {
     rc.camera.position.set(0, 1.6, 7.5);
     rc.camera.lookAt(0, 0.9, 0);
