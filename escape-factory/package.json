@@ -1,0 +1,33 @@
+{
+  "name": "escape-factory",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ESCAPE FACTORY — procedural 3D escape/chase game + automated YouTube video system, built on the reusable EscapeKit framework.",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "validate:levels": "tsx tools/validate-levels.ts",
+    "record": "tsx tools/record.ts",
+    "record:long": "tsx tools/record.ts --long",
+    "plan:videos": "tsx tools/plan-videos.ts"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.10.0",
+    "@types/three": "^0.186.0",
+    "playwright": "1.56.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.1.0",
+    "vitest": "^3.2.0"
+  }
+}

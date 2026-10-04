@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone game project with its own toolchain.
+    "escape-factory/**",
   ]),
 ]);
 
