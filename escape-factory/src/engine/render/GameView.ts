@@ -41,6 +41,9 @@ export class GameView {
   private readonly flashMesh: THREE.Mesh;
   private readonly flashMat: THREE.MeshBasicMaterial;
   private readonly root = new THREE.Group();
+  private readonly vignette: THREE.Mesh;
+  private readonly vignetteMat: THREE.MeshBasicMaterial;
+  private danger = 0;
   private readonly target = new THREE.Vector3();
 
   constructor(o: GameViewOptions) {
@@ -83,12 +86,33 @@ export class GameView {
     this.flashMesh.renderOrder = 999;
     this.flashMesh.frustumCulled = false;
     rc.camera.add(this.flashMesh);
+
+    // red danger vignette that tightens as the enemy closes in
+    const vc = document.createElement('canvas');
+    vc.width = vc.height = 128;
+    const vg = vc.getContext('2d')!;
+    const grd = vg.createRadialGradient(64, 64, 30, 64, 64, 90);
+    grd.addColorStop(0, 'rgba(255,0,0,0)');
+    grd.addColorStop(1, 'rgba(255,20,10,1)');
+    vg.fillStyle = grd;
+    vg.fillRect(0, 0, 128, 128);
+    const vt = new THREE.CanvasTexture(vc);
+    this.vignetteMat = new THREE.MeshBasicMaterial({ map: vt, transparent: true, opacity: 0, depthTest: false, depthWrite: false, fog: false });
+    this.vignette = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.vignetteMat);
+    this.vignette.position.z = -0.31;
+    this.vignette.renderOrder = 998;
+    this.vignette.frustumCulled = false;
+    rc.camera.add(this.vignette);
   }
 
   /** Interpolated world state → visuals. `t` = simulation time for animations. */
   sync(world: World, alpha: number, dt: number, t: number): void {
-    this.charView.update(world.player, alpha, dt, t);
     if (this.enemyView && world.enemy) this.enemyView.update(world.enemy, alpha, dt, t);
+    this.charView.holdPoint = this.enemyView?.visible && world.enemy?.state === 'grab' ? this.enemyView.hand : null;
+    this.charView.update(world.player, alpha, dt, t);
+    const gap = world.enemy ? world.enemy.gapTo(world.playerS) : Infinity;
+    const target = world.player.isAlive && gap < 9 ? Math.min(1, (9 - gap) / 7) : 0;
+    this.danger += (target - this.danger) * Math.min(1, dt * 4);
     this.levelView.update(world, t, dt);
     this.effects.update(dt, t);
   }
@@ -113,6 +137,11 @@ export class GameView {
     this.flashMat.opacity = this.effects.flash * 0.6;
     this.flashMat.color.set(this.effects.flashColor);
     this.flashMesh.visible = this.effects.flash > 0.01;
+    // size the vignette to cover the view at its distance
+    const vh = 2 * Math.tan((cam.fov * Math.PI) / 360) * 0.31;
+    this.vignette.scale.set(vh * cam.aspect * 1.02, vh * 1.02, 1);
+    this.vignetteMat.opacity = this.danger * (0.55 + 0.1 * Math.sin(t * 9));
+    this.vignette.visible = this.danger > 0.02;
     this.particles.update(dt, cam);
     this.ambient.update(dt, t, cam);
     this.backdrop.update(cam);
@@ -143,6 +172,10 @@ export class GameView {
     this.rc.camera.remove(this.flashMesh);
     this.flashMesh.geometry.dispose();
     this.flashMat.dispose();
+    this.rc.camera.remove(this.vignette);
+    this.vignette.geometry.dispose();
+    this.vignetteMat.map?.dispose();
+    this.vignetteMat.dispose();
     this.root.removeFromParent();
   }
 }

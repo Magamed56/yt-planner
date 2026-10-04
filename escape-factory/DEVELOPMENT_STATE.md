@@ -34,8 +34,13 @@
   CameraDirector (13 modes) + styles, GameSession/GameView, DebugOverlay (F3), 100-level
   campaign definition, Playwright smoke tests.
 
+- PHASE 7 — Chase system: chase segments end with a blast-door slam at a checkpoint (Grumbo
+  bonks + visible retreat), final escape before the finish (survives respawn), enemy footsteps
+  (ENEMY_STEP → stomp SFX + camera shake + dust), heartbeat SFX, red danger vignette, HUD danger
+  meter, grabbed player dangles from Grumbo's claw, chase music intensity; chase tests.
+
 ## CURRENT
-- PHASE 7 — Chase system polish + chase tests over generated levels.
+- PHASE 8 — Camera Director tests + video rules verification.
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →

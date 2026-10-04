@@ -261,6 +261,8 @@ export class App {
     if (this.state === 'play' || this.state === 'paused') {
       const w = s.world;
       this.ui.updateHUD(w.status === 'finished' ? w.finishTime : w.time, w.deaths, w.coins);
+      const gap = w.enemy?.gapTo(w.playerS) ?? Infinity;
+      this.ui.setDanger(Number.isFinite(gap) && w.player.isAlive ? 1 - Math.min(1, Math.max(0, (gap - 1.3) / 12)) : null);
       if (this.finishTimer > 0) {
         this.finishTimer -= dt;
         if (this.finishTimer <= 0) this.completeLevel();

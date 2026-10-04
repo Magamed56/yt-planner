@@ -20,6 +20,8 @@ export class EnemyView {
   readonly pos = new THREE.Vector3();
   /** world position of the chimney top (steam emitter) */
   readonly chimney = new THREE.Vector3();
+  /** world position of the claw hand (grab attachment) */
+  readonly hand = new THREE.Vector3();
   yaw = 0;
   private rise = 0;
   private readonly tmp = new THREE.Vector3();
@@ -193,5 +195,10 @@ export class EnemyView {
 
     const chim = s.get('tail');
     if (chim) chim.getWorldPosition(this.chimney).add(this.tmp.set(0, 0.6, 0));
+    const arm = s.get('armL');
+    if (arm) {
+      arm.updateWorldMatrix(true, false);
+      this.hand.set(0, -2.0, 0.2).applyMatrix4(arm.matrixWorld);
+    }
   }
 }

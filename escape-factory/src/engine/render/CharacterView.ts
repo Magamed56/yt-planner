@@ -60,11 +60,21 @@ export class CharacterView {
     }
   }
 
+  /** when set (caught by the enemy) the character dangles from this world point */
+  holdPoint: THREE.Vector3 | null = null;
+  private holdK = 0;
+
   update(p: Player, alpha: number, dt: number, time: number): void {
     const b = p.body;
-    const x = lerp(p.prevX, b.x, alpha);
-    const y = lerp(p.prevY, b.y, alpha);
-    const z = lerp(p.prevZ, b.z, alpha);
+    let x = lerp(p.prevX, b.x, alpha);
+    let y = lerp(p.prevY, b.y, alpha);
+    let z = lerp(p.prevZ, b.z, alpha);
+    if (p.state === 'caught' && this.holdPoint) {
+      this.holdK = Math.min(1, this.holdK + dt * 4);
+      x = lerp(x, this.holdPoint.x, this.holdK);
+      y = lerp(y, this.holdPoint.y - 1.2, this.holdK);
+      z = lerp(z, this.holdPoint.z, this.holdK);
+    } else this.holdK = 0;
     this.pos.set(x, y, z);
     const yaw = p.prevYaw + wrap(p.yaw - p.prevYaw) * alpha;
     this.yaw = yaw;

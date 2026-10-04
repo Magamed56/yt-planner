@@ -69,6 +69,8 @@ export class Enemy {
   private breakables: Array<{ id: number; s: number; x: number; y: number; z: number }> = [];
   private nextBreakable = 0;
   catches = 0;
+  private strideAcc = 0;
+  private retreatHold = 0;
 
   constructor(
     readonly def: EnemyDef,
@@ -145,6 +147,7 @@ export class Enemy {
     this.finalEscape = false;
     this.setState('retreat');
     this.setAction('bonk');
+    this.retreatHold = 1.1;
     ctx.events.emit('ENEMY_RETREAT', { pos: this.pos() });
   }
 
@@ -194,6 +197,7 @@ export class Enemy {
 
   endBoss(ctx: SimContext): void {
     if (this.state !== 'boss') return;
+    this.retreatHold = 0;
     this.setState('retreat');
     this.setAction('sink');
     this.boss = null;
@@ -249,6 +253,7 @@ export class Enemy {
         this.mood = damp(this.mood, 0.45, 2, dt);
         const d = Math.hypot(px - this.x, pz - this.z);
         if (this.peekLeft <= 0 || d < 10) {
+          this.retreatHold = 0;
           this.setState('retreat');
           this.setAction('sink');
           ctx.events.emit('ENEMY_DISAPPEAR', { pos: this.pos() });
@@ -256,8 +261,13 @@ export class Enemy {
         return;
       }
       case 'retreat': {
+        this.speed = approach(this.speed, 0, 30 * dt);
+        if (this.retreatHold > 0) {
+          // stay visible for the comedic bonk before fading away
+          this.retreatHold -= dt;
+          return;
+        }
         this.visible = Math.max(0, this.visible - dt * 1.2);
-        this.speed = approach(this.speed, 0, 18 * dt);
         if (this.action === 'sink') this.y -= dt * 2.5;
         if (this.visible <= 0) {
           this.setState('dormant');
@@ -276,6 +286,7 @@ export class Enemy {
           return;
         }
         if (ctx.playerS > this.blockS + 4) {
+          this.retreatHold = 0;
           this.setState('retreat');
           this.setAction('sink');
           ctx.events.emit('ENEMY_DISAPPEAR', { pos: this.pos() });
@@ -394,6 +405,12 @@ export class Enemy {
     }
 
     this.placeOnTrack();
+    // heavy footsteps (camera shake / stomp sound)
+    this.strideAcc += this.speed * dt;
+    if (this.strideAcc > 2.6 && !this.track.gapAt(this.s)) {
+      this.strideAcc = 0;
+      ctx.events.emit('ENEMY_STEP', { pos: this.pos(), speed: this.speed });
+    }
     const sm = this.track.sample(Math.min(this.track.length, this.s + 2));
     const wantYaw = Math.atan2(sm.x - this.x, sm.z - this.z);
     this.yaw = dampAngle(this.yaw, wantYaw, 8, dt);

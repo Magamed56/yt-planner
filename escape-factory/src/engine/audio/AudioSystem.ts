@@ -33,6 +33,7 @@ export const EVENT_SFX: Partial<Record<GameEventType, { sfx: SfxName; gain?: num
   ENEMY_GRAB: { sfx: 'grab' },
   ENEMY_STUMBLE: { sfx: 'bonk', spatial: true },
   ENEMY_RETREAT: { sfx: 'bonk', spatial: true, gain: 1.2 },
+  ENEMY_STEP: { sfx: 'stomp', spatial: true, gain: 0.9 },
   OBSTACLE_BREAK: { sfx: 'break', spatial: true },
   DOOR_CLOSE: { sfx: 'door', spatial: true },
   TRAP_TRIGGER: { sfx: 'trap', spatial: true },
@@ -137,8 +138,18 @@ export class AudioSystem {
     this.synth.play(m.sfx, t, { gain, pan, pitch });
   }
 
-  /** Per-frame: music intensity follows the world state. */
+  private heartT = 0;
+
+  /** Per-frame: music intensity follows the world state; heartbeat when Grumbo is close. */
   update(world: World, dt: number): void {
+    const gap = world.enemy ? world.enemy.gapTo(world.playerS) : Infinity;
+    if (gap < 5 && world.player.isControllable) {
+      this.heartT -= dt;
+      if (this.heartT <= 0) {
+        this.heartT = 0.32 + gap * 0.06;
+        this.synth.play('stomp', this.ctx.currentTime, { gain: 0.35, pitch: 1.4 });
+      }
+    }
     const target = musicIntensity(world);
     this.intensity += (target - this.intensity) * Math.min(1, dt * 1.5);
     this.music?.pump(this.intensity);

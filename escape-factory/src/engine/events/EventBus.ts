@@ -15,7 +15,7 @@ export class EventBus {
   readonly log: GameEvent[] = [];
   logEnabled = true;
   /** Events excluded from the log to keep it compact. */
-  logExclude = new Set<GameEventType>(['PLAYER_STEP']);
+  logExclude = new Set<GameEventType>(['PLAYER_STEP', 'ENEMY_STEP']);
   private emitting = 0;
 
   setClock(clock: () => { t: number; tick: number }): void {

@@ -66,7 +66,8 @@ export class UI {
     this.hud.className = 'hud';
     this.hud.innerHTML = `<div class="tl"><div data-r="title"></div><div data-r="sub" style="font-size:0.7em;opacity:0.85"></div></div>
       <div class="tr"><span data-r="time">0:00.0</span><span data-r="deaths">💀 0</span><span class="coins" data-r="coins">● 0</span></div>
-      <button class="pausebtn" data-a="pause">II</button>`;
+      <button class="pausebtn" data-a="pause">II</button>
+      <div class="danger" data-r="danger"><div class="label">GRUMBO</div><div class="fill" data-r="dfill"></div><div class="face" data-r="dface"></div></div>`;
     this.hud.querySelectorAll<HTMLElement>('[data-r]').forEach((e) => (this.hudRefs[e.dataset.r!] = e));
     this.hud.querySelector('[data-a=pause]')!.addEventListener('click', () => h.onPause());
     this.root.appendChild(this.hud);
@@ -255,6 +256,19 @@ export class UI {
     this.hudRefs.title.textContent = title;
     this.hudRefs.sub.textContent = sub;
     this.touch.classList.toggle('show', touch);
+  }
+
+  /** Danger meter: closeness 0..1 of the chasing enemy (null hides it). */
+  setDanger(k: number | null): void {
+    const el = this.hudRefs.danger;
+    if (k === null) {
+      el.classList.remove('show');
+      return;
+    }
+    el.classList.add('show');
+    const pct = Math.round(Math.max(0, Math.min(1, k)) * 100);
+    this.hudRefs.dfill.style.width = `${pct}%`;
+    this.hudRefs.dface.style.left = `${pct}%`;
   }
 
   updateHUD(time: number, deaths: number, coins: number): void {

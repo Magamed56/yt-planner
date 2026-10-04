@@ -113,6 +113,13 @@ export class EffectsDirector {
         }
         if (this.near(e.payload.pos, 25)) this.addShake(0.35);
       }),
+      events.on('ENEMY_STEP', (e) => {
+        const q = e.payload.pos;
+        const b = this.world.player.body;
+        const d = Math.hypot(q.x - b.x, q.z - b.z);
+        if (d < 18) this.addShake(0.12 * (1 - d / 18));
+        fx.emit('puff', 3, q.x, q.y + 0.1, q.z, { speed: 2, up: 0.4, color: '#d8cfc0', size: 0.8, life: 0.6 });
+      }),
       events.on('ENEMY_STUMBLE', () => {
         if (!this.enemyView) return;
         const c = this.enemyView.pos;

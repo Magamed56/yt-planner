@@ -60,3 +60,9 @@
 #ui .coins { color: var(--ui-yellow); }
 #ui .footer { position: absolute; bottom: 10px; width: 100%; text-align: center; font-family: system-ui, sans-serif; font-size: 12px; opacity: 0.6; pointer-events: none; }
 @media (max-width: 760px) { #ui .levels { grid-template-columns: repeat(5, 1fr); } #ui .btn { min-width: 180px; font-size: 20px; } }
+#ui .danger { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); width: min(360px, 60vw); height: 22px; border: 3px solid #000; border-radius: 12px; background: rgba(0,0,0,0.45); display: none; overflow: visible; }
+#ui .danger.show { display: block; }
+#ui .danger .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 9px; background: linear-gradient(90deg, #ffd23f, #ff3b30); width: 0%; transition: width 0.1s linear; }
+#ui .danger .face { position: absolute; top: 50%; width: 34px; height: 34px; margin-top: -17px; margin-left: -17px; border-radius: 50%; background: #ff6b35; border: 3px solid #000; left: 0%;
+  box-shadow: inset 0 0 0 5px #fffaf0; }
+#ui .danger .label { position: absolute; top: -26px; width: 100%; text-align: center; font-size: 16px; -webkit-text-stroke: 1px #000; }
