@@ -113,19 +113,29 @@
   reloading 4 levels twice keeps GPU geometries flat, textures bounded, draw calls < 300.
   `tools/perf-probe.ts` prints per-view mesh/draw stats.
 
+- PHASE 17 — Final QA + docs: README, ARCHITECTURE (Phase 0 decision, layers, systems map,
+  determinism, pipeline, how to build ESCAPE SCHOOL), GAME_DESIGN, LEVEL_GENERATOR,
+  VIDEO_SYSTEM, TESTING, KNOWN_ISSUES. Production build verified (three.js split into its own
+  chunk), `?debug` flag, 123 unit + 6 e2e tests green, bot 100/100 for all profiles and
+  characters, sample Short + 5-min long video rendered and inspected.
+
 ## CURRENT
-- PHASE 17 — Final QA + documentation (README, ARCHITECTURE, GAME_DESIGN, VIDEO_SYSTEM,
-  LEVEL_GENERATOR, TESTING, KNOWN_ISSUES).
+- v1 complete — all phases 0–17 done. Next work comes from the backlog below.
 
 ## NEXT
-- 17 QA + docs → post-v1 backlog (see TODO).
+- TTS voice-over step for `voice.lines` (e.g. a local TTS → mixed into the AudioTimeline).
+- "Best moments" supercut planner for long videos (cross-level highlights).
+- Bundle the caption font locally (container blocks Google Fonts).
+- Second sibling game (ESCAPE SCHOOL) as a content pack to prove the framework split.
 
 ## BUGS
 - Google Fonts blocked in the cloud container (falls back to Arial Black) — fine for users.
 - Voice lines (config.voice) are exported to metadata only — no TTS in the pipeline yet.
 
 ## TODO
-- see NEXT
+- Square-format (1:1) director style; distinct replay moment vs. cold open for very short levels.
+- Touch controls tuning for small phones; NIGHT theme exposure in wide shots.
+- Optional distance-based splitting of merged static geometry (better culling on huge levels).
 
 ## ARCHITECTURE_DECISIONS
 - ADR-001: Three.js/TS over Godot/Unity/Unreal (AI-friendly text code, headless tests in Node,

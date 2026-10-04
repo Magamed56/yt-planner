@@ -15,6 +15,10 @@ export default defineConfig({
   build: {
     target: 'es2022',
     chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      // three.js in its own long-cached chunk; game/engine code changes don't bust it
+      output: { manualChunks: (id) => (id.includes('node_modules/three') ? 'three' : undefined) },
+    },
   },
   test: {
     include: ['tests/unit/**/*.test.ts'],

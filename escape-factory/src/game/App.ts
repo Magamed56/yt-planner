@@ -52,6 +52,7 @@ export class App {
     this.keyboard = new KeyboardInput();
     this.keyboard.cameraYaw = () => this.session?.heading ?? 0;
     this.debug = new DebugOverlay(parent);
+    if (new URLSearchParams(location.search).has('debug')) this.debug.setVisible(true);
     this.ui = new UI(parent, {
       onPlay: () => this.play(Math.min(CAMPAIGN_SIZE, this.save.highestUnlocked)),
       onLevel: (n) => this.play(n),
