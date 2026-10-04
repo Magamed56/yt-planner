@@ -1,0 +1,62 @@
+:root {
+  --ui-yellow: #ffd23f;
+  --ui-orange: #ff6b35;
+  --ui-teal: #19c3b0;
+  --ui-dark: rgba(16, 19, 32, 0.86);
+  --ui-font: 'Lilita One', 'Luckiest Guy', 'Arial Black', Impact, system-ui, sans-serif;
+}
+#ui { position: fixed; inset: 0; pointer-events: none; font-family: var(--ui-font); color: #fff; user-select: none; -webkit-user-select: none; }
+#ui .screen { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; pointer-events: auto; }
+#ui .screen.show { display: flex; }
+#ui .panel { background: var(--ui-dark); border: 4px solid #000; border-radius: 22px; padding: 22px 26px; box-shadow: 0 10px 0 rgba(0,0,0,0.35); max-width: min(92vw, 980px); max-height: 86vh; overflow: auto; }
+#ui h1.logo { font-size: clamp(42px, 9vw, 112px); margin: 0; line-height: 0.9; letter-spacing: 2px; text-align: center; color: var(--ui-yellow);
+  -webkit-text-stroke: 4px #000; paint-order: stroke fill; text-shadow: 0 8px 0 #000, 0 0 40px rgba(255,140,40,0.6); transform: rotate(-3deg); }
+#ui h1.logo span { color: var(--ui-orange); display: block; }
+#ui .tag { font-size: clamp(14px, 2.4vw, 22px); margin: 14px 0 26px; color: #ffe8c4; text-shadow: 0 3px 0 #000; }
+#ui h2 { margin: 0 0 14px; font-size: 32px; color: var(--ui-yellow); -webkit-text-stroke: 2px #000; paint-order: stroke fill; }
+#ui .btn { font-family: var(--ui-font); font-size: 24px; color: #1d1d1f; background: var(--ui-yellow); border: 4px solid #000; border-radius: 16px; padding: 10px 26px; margin: 6px; cursor: pointer;
+  box-shadow: 0 6px 0 #000; transition: transform 0.06s; min-width: 220px; pointer-events: auto; }
+#ui .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+#ui .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
+#ui .btn.alt { background: var(--ui-teal); color: #062b27; }
+#ui .btn.red { background: var(--ui-orange); color: #fff; }
+#ui .btn.small { font-size: 18px; min-width: 0; padding: 6px 14px; }
+#ui .menu-col { display: flex; flex-direction: column; align-items: center; }
+#ui .levels { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+#ui .lvl { font-family: var(--ui-font); font-size: 18px; width: 64px; height: 58px; border: 3px solid #000; border-radius: 12px; cursor: pointer; color: #1d1d1f; position: relative; box-shadow: 0 4px 0 #000; }
+#ui .lvl.locked { filter: grayscale(1) brightness(0.5); cursor: not-allowed; }
+#ui .lvl.done::after { content: '★'; position: absolute; top: -6px; right: -4px; color: var(--ui-yellow); -webkit-text-stroke: 1px #000; font-size: 18px; }
+#ui .lvl.boss { outline: 3px dashed #ff3b30; outline-offset: 2px; }
+#ui .lvl small { display: block; font-size: 10px; opacity: 0.75; }
+#ui .chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+#ui .char { border: 3px solid #000; border-radius: 16px; padding: 12px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.06); }
+#ui .char.sel { outline: 4px solid var(--ui-yellow); }
+#ui .char .swatch { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 6px; border: 3px solid #000; }
+#ui .char p { font-family: system-ui, sans-serif; font-size: 12px; opacity: 0.8; margin: 6px 0; }
+#ui .row { display: flex; align-items: center; gap: 12px; margin: 10px 0; font-size: 20px; justify-content: space-between; }
+#ui input[type=range] { width: 200px; }
+#ui select { font-family: var(--ui-font); font-size: 18px; border-radius: 8px; border: 3px solid #000; padding: 2px 8px; }
+#ui .hud { position: absolute; inset: 0; display: none; pointer-events: none; }
+#ui .hud.show { display: block; }
+#ui .hud .tl, #ui .hud .tr { position: absolute; top: 14px; font-size: clamp(16px, 2.4vw, 26px); text-shadow: 0 3px 0 #000; -webkit-text-stroke: 1px #000; }
+#ui .hud .tl { left: 18px; }
+#ui .hud .tr { right: 18px; text-align: right; }
+#ui .hud .tr span { margin-left: 16px; }
+#ui .hud .pausebtn { pointer-events: auto; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-family: var(--ui-font); font-size: 20px; background: rgba(0,0,0,0.4); color: #fff; border: 3px solid #000; border-radius: 12px; padding: 2px 12px; cursor: pointer; }
+#ui .toast { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%) scale(0.6) rotate(-4deg); font-size: clamp(36px, 8vw, 96px); color: var(--ui-yellow); -webkit-text-stroke: 4px #000; paint-order: stroke fill;
+  text-shadow: 0 8px 0 #000; opacity: 0; transition: transform 0.25s cubic-bezier(.2,1.6,.4,1), opacity 0.2s; white-space: nowrap; }
+#ui .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-4deg); }
+#ui .toast.red { color: #ff4b3e; }
+#ui .toast.green { color: #5cff9d; }
+#ui .stats { font-size: 24px; margin: 8px 0 18px; text-align: center; line-height: 1.5; }
+#ui .stats b { color: var(--ui-yellow); }
+#ui .touch { position: absolute; inset: 0; display: none; pointer-events: none; }
+#ui .touch.show { display: block; }
+#ui .stick { position: absolute; left: 24px; bottom: 24px; width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 3px solid rgba(0,0,0,0.5); pointer-events: auto; touch-action: none; }
+#ui .stick .knob { position: absolute; left: 45px; top: 45px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,210,63,0.85); border: 3px solid #000; }
+#ui .jumpbtn { position: absolute; right: 28px; bottom: 36px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,107,53,0.85); border: 4px solid #000; pointer-events: auto; touch-action: none;
+  font-family: var(--ui-font); font-size: 26px; color: #fff; display: flex; align-items: center; justify-content: center; }
+#ui .fps { position: absolute; left: 8px; bottom: 6px; font: 12px monospace; color: #9f9; text-shadow: 0 1px 0 #000; }
+#ui .coins { color: var(--ui-yellow); }
+#ui .footer { position: absolute; bottom: 10px; width: 100%; text-align: center; font-family: system-ui, sans-serif; font-size: 12px; opacity: 0.6; pointer-events: none; }
+@media (max-width: 760px) { #ui .levels { grid-template-columns: repeat(5, 1fr); } #ui .btn { min-width: 180px; font-size: 20px; } }

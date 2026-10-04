@@ -78,7 +78,8 @@ export class World implements SimContext {
   private readonly proj: TrackProjection = { s: 0, lateral: 0, seg: -1, dist: 0 };
   private fallAnnounced = false;
   private readonly coinsLeft: CoinPiece[];
-  private readonly collected = new Set<number>();
+  /** ids of collected coin pieces */
+  readonly collectedCoins = new Set<number>();
   private readonly finalEscapeS: number;
 
   constructor(opts: WorldOptions) {
@@ -208,12 +209,12 @@ export class World implements SimContext {
     // coins
     const cy = b.y + b.height * 0.5;
     for (const c of this.coinsLeft) {
-      if (this.collected.has(c.id)) continue;
+      if (this.collectedCoins.has(c.id)) continue;
       const dx = c.x - b.x;
       const dz = c.z - b.z;
       if (Math.abs(dx) > 1 || Math.abs(dz) > 1) continue;
       if (dx * dx + dz * dz + (c.y - cy) * (c.y - cy) < 1.0) {
-        this.collected.add(c.id);
+        this.collectedCoins.add(c.id);
         this.coins++;
         this.events.emit('COIN_COLLECT', { pos: { x: c.x, y: c.y, z: c.z }, total: this.coins });
       }

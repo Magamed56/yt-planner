@@ -154,6 +154,26 @@ export class LevelView {
     const color = styleColor(s.style, p, s.module);
     const mat = this.mats.get(color, { roughness: s.style === 'wall' ? 0.85 : 0.62, metalness: s.style === 'grate' ? 0.4 : 0.08 });
     this.pushStatic(roundBoxGeo(w, h, d, 0.07, 2), this.boxMatrix(b.minX, b.minY, b.minZ, b.maxX, b.maxY, b.maxZ), mat);
+    if (s.style === 'wall' && h > 2) {
+      // wall dressing: hazard band + bright cap so corridors read clearly
+      const band = this.mats.get(p.accent, { roughness: 0.5 });
+      const dark = this.mats.get(p.stripe, { roughness: 0.6 });
+      const cap = this.mats.get(p.edge, { roughness: 0.4, emissive: p.edge, emissiveIntensity: 0.15 });
+      const y0 = b.minY + 1.0 + 0.35;
+      this.pushStatic(boxGeo(w + 0.04, 0.32, d + 0.04), this.boxMatrix(b.minX - 0.02, y0, b.minZ - 0.02, b.maxX + 0.02, y0 + 0.32, b.maxZ + 0.02), band);
+      const long = Math.max(w, d);
+      const n = Math.floor(long / 1.2);
+      for (let i = 0; i < n; i++) {
+        const k = (i + 0.5) / n;
+        const along = w >= d;
+        const cx = along ? b.minX + k * w : (b.minX + b.maxX) / 2;
+        const cz = along ? (b.minZ + b.maxZ) / 2 : b.minZ + k * d;
+        const sw = along ? 0.28 : w + 0.06;
+        const sd = along ? d + 0.06 : 0.28;
+        this.pushStatic(boxGeo(sw, 0.33, sd), this.boxMatrix(cx - sw / 2, y0 - 0.005, cz - sd / 2, cx + sw / 2, y0 + 0.325, cz + sd / 2), dark);
+      }
+      this.pushStatic(boxGeo(w + 0.08, 0.12, d + 0.08), this.boxMatrix(b.minX - 0.04, b.maxY, b.minZ - 0.04, b.maxX + 0.04, b.maxY + 0.12, b.maxZ + 0.04), cap);
+    }
     if (s.walkable) {
       // bright edge trim for readability of platform edges
       const trim = this.mats.get(p.edge, { roughness: 0.4, emissive: p.edge, emissiveIntensity: 0.12 });

@@ -14,7 +14,7 @@ export const FACTORY: ThemeDef = {
     floor: '#5b6c8f',
     floorAlt: '#4f5f80',
     edge: '#ffc93c',
-    wall: '#3d4a66',
+    wall: '#5a6890',
     metal: '#8a97b1',
     pipe: '#d9534f',
     platform: '#4f9dde',

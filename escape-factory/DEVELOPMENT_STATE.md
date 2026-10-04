@@ -27,9 +27,15 @@
   turn planning without self-intersection, rollback on overlap, 5 difficulty presets (continuous
   1..5), LevelValidator (200 seeds clean), reproducibility tests.
 
+- PHASE 6 — First complete level: App (menu with live 3D background, LEVELS grid, CHARACTERS
+  shop, SETTINGS, HUD, toasts, PAUSE, level complete), SaveSystem (localStorage, migrations),
+  decor registry (25 kinds, merged static), coins/checkpoint views, backdrop (sky dome,
+  silhouettes, abyss), pooled particles + EffectsDirector, procedural SFX + adaptive music,
+  CameraDirector (13 modes) + styles, GameSession/GameView, DebugOverlay (F3), 100-level
+  campaign definition, Playwright smoke tests.
+
 ## CURRENT
-- PHASE 6 — First complete level: app shell, menus, HUD, save system, props/decor/backdrop,
-  particles, audio.
+- PHASE 7 — Chase system polish + chase tests over generated levels.
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →
@@ -37,7 +43,7 @@
   16 optimisation → 17 QA.
 
 ## BUGS
-- none known
+- Google Fonts blocked in the cloud container (falls back to Arial Black) — fine for users.
 
 ## TODO
 - see NEXT
