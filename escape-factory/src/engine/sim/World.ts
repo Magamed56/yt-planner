@@ -273,6 +273,7 @@ export class World implements SimContext {
     this.playerSpeedS = 0;
     this.fallAnnounced = false;
     this.triggers.resetFrom(rp.s);
+    this.moduleIndex = Math.max(0, this.level.modules.findIndex((m) => m.index === rp.module));
     this.solids.resetFromModule(rp.module);
     if (this.enemy) {
       // a final escape behind the checkpoint keeps chasing; otherwise it re-triggers later

@@ -43,8 +43,18 @@
   smoothing (fast runner never outruns the camera), enemy-aware high follow, occlusion avoidance
   against level colliders, styles gameplay/cinematicPlay/video/shorts/classic, unit tests.
 
+- PHASE 9 — Bot: hint-following controller (jumps with air control, lanes, rides on moving
+  platforms, timing gates with jump-option search, door choices, boss/faller arenas), Predictor
+  (1/60 s traversal + landing prediction against deterministic hazards/solids), profiles
+  PERFECT/SKILLED/AVERAGE/CLUMSY/DAREDEVIL/CAUTIOUS (mistakeChance, reactionTime, riskLevel,
+  aggression, speed), forced mistakes for FAIL takes, learning after deaths, respawn jitter.
+  Campaign validation: PERFECT, SKILLED and AVERAGE each complete 100/100 levels
+  (`npm run validate:levels -- 1 100 PERFECT`). Generator fixes found by the bot: A/B blinking
+  platforms, spinner pads, chase-friendly jumps, always-on lasers as jump barriers, boss arena
+  roller spawn, door-block fairness.
+
 ## CURRENT
-- PHASE 9 — Bot (hint-following, predictive gates, mistakes, takes).
+- PHASE 10 — Video Mode (bot + director + no UI + URL params + studio).
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →

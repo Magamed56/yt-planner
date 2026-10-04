@@ -23,13 +23,16 @@ export const JUMP: ModuleDef = {
     for (let i = 0; i < n; i++) {
       let dy = 0;
       const roll = r.next();
+      const chase = !!ctx.opts.inChase;
       if (roll < 0.18 && y < 6) dy = r.pick([0.8, 1.1]);
-      else if (roll < 0.34 && y > -4) dy = -r.pick([0.8, 1.2]);
+      else if (!chase && roll < 0.34 && y > -4) dy = -r.pick([0.8, 1.2]);
       let gap = r.range(d.gapMin, d.gapMax) * chaseK;
       if (dy > 0) gap = Math.min(gap, 3.5);
       const last = i === n - 1;
       let plat = last ? PAD + 0.5 : r.range(d.platformMin, d.platformMax);
       if (dy < 0) plat = Math.max(plat, 3.0);
+      // during chases keep platforms long enough to land at full speed
+      if (chase && !last) plat = Math.max(plat, 4.6);
       const hwP = last ? hw : hw * r.range(0.45, 0.9);
       const lat = last ? 0 : r.range(-(hw - hwP), hw - hwP);
       gapSpine(ctx, lz, lz + gap, y, y + dy, hw);
@@ -154,10 +157,10 @@ export const DISAPPEARING_PLATFORM: ModuleDef = {
     const n = r.int(3, 4 + Math.round(d.level / 2));
     runFloor(ctx, 0, PAD, 0, hw);
     let lz = PAD;
-    const supports: number[] = [];
-    const jumps: number[] = [];
-    const period = r.range(2.3, 3.1) / d.obstacleSpeed;
-    const on = Math.min(0.82, 0.6 * d.timingWindow + 0.05);
+    // cycle variant: A/B rhythm — even platforms solid in the first part of the
+    // period, odd ones in the second, with an overlap window to hop across.
+    const period = r.range(2.6, 3.4) / Math.sqrt(d.obstacleSpeed);
+    const on = Math.min(0.66, 0.56 + 0.06 * d.timingWindow);
     const startLz = lz;
     for (let i = 0; i < n; i++) {
       const g = r.range(1.0, 1.9);
@@ -165,14 +168,11 @@ export const DISAPPEARING_PLATFORM: ModuleDef = {
       const half = 1.2;
       const lat = r.range(-(hw - half), hw - half) * 0.7;
       gapSpine(ctx, lz, lz + g, 0, 0, hw);
-      const arrive = (lz + g - startLz) / RUN;
       const vanish =
         variant === 'cycle'
-          ? { kind: 'cycle' as const, period, on, phase: -arrive / period + 0.04 }
+          ? { kind: 'cycle' as const, period, on, phase: i % 2 === 0 ? 0 : -0.5 }
           : { kind: 'step' as const, delay: r.range(0.45, 0.7) / Math.sqrt(d.obstacleSpeed), respawn: 2.6 };
-      const p = b.floor(lat - half, lat + half, lz + g, lz + g + pl, 0, { style: 'vanish', vanish });
-      supports.push(p.id);
-      jumps.push(b.sAt(lz - 0.3));
+      const p = b.floor(lat - half, lat + half, lz + g, lz + g + pl, 0, { style: variant === 'cycle' ? (i % 2 === 0 ? 'vanish' : 'vanishB') : 'vanish', vanish });
       b.hint({ kind: 'jump', s: b.sAt(lz - 0.3), landS: b.sAt(lz + g + pl / 2), lateral: lat, targetId: p.id, dy: 0 });
       b.hint({ kind: 'lane', s0: b.sAt(lz + g), s1: b.sAt(lz + g + pl), lateral: lat });
       coinArc(ctx, lz, lz + g, 0, 0, lat, 1);
@@ -183,13 +183,11 @@ export const DISAPPEARING_PLATFORM: ModuleDef = {
     gapSpine(ctx, lz, lz + g, 0, 0, hw);
     const exitPad = runFloor(ctx, lz + g, lz + g + PAD + 0.5, 0, hw);
     b.hint({ kind: 'jump', s: b.sAt(lz - 0.3), landS: b.sAt(lz + g + 1), lateral: 0, targetId: exitPad.id, dy: 0 });
-    if (variant === 'cycle')
-      b.hint({ kind: 'gate', s0: b.sAt(startLz - 0.6), s1: b.sAt(lz + g), lateral: 0, hazardIds: [], blockerIds: [], supportIds: supports, jumps });
-    b.hint({ kind: 'nowait', s0: b.sAt(startLz), s1: b.sAt(lz + g) });
+    if (variant === 'step') b.hint({ kind: 'nowait', s0: b.sAt(startLz), s1: b.sAt(lz + g) });
     lz += g + PAD + 0.5;
     decorate(ctx, 0, lz, 0, 0.6, hw);
     plantSurprise(ctx, 1, 0, hw);
-    return { exit: straightExit(ctx, lz), estTime: lz / RUN + (variant === 'cycle' ? period * 0.6 : 0.3), tags: [variant] };
+    return { exit: straightExit(ctx, lz), estTime: lz / RUN + (variant === 'cycle' ? period * 0.5 * n : 0.3), tags: [variant] };
   },
 };
 

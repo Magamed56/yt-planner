@@ -69,6 +69,10 @@ export class HazardSystem {
 
   /** Hazard-local time or null when the hazard's trigger hasn't fired. */
   localTime(spec: HazardSpec, t: number): number | null {
+    if (spec.endTriggerId !== undefined) {
+      const end = this.triggers.firedAt(spec.endTriggerId);
+      if (end !== null && t >= end) return null;
+    }
     if (spec.triggerId === undefined) return t;
     const ft = this.triggers.firedAt(spec.triggerId);
     return ft === null ? null : t - ft;
@@ -105,11 +109,11 @@ export class HazardSystem {
         continue;
       }
       // near miss: expanded box or slightly shifted time would have hit
-      if (h.nearCooldown <= 0) {
-        const near =
-          hazardHit(h.spec, lt, box, 0.45) !== null ||
-          hazardHit(h.spec, lt + 0.18, box, 0) !== null ||
-          hazardHit(h.spec, lt - 0.18, box, 0) !== null;
+      // near misses only count while the player is moving through danger (not waiting)
+      const moving = !pl.body.grounded || pl.speed > 2.5;
+      if (h.nearCooldown <= 0 && moving) {
+        // a near miss: slightly bigger, or a split second later, and it would have hit
+        const near = hazardHit(h.spec, lt, box, 0.3) !== null || hazardHit(h.spec, lt + 0.15, box, 0) !== null;
         if (near) {
           h.nearCooldown = 2;
           ctx.events.emit('PLAYER_NEAR_DEATH', {

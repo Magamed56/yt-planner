@@ -280,8 +280,8 @@ export class Enemy {
         this.faceTowards(px, pz, dt, 8);
         this.mood = damp(this.mood, 0.8, 3, dt);
         if (this.actionTime > 1.0) this.setAction('idle');
-        const d = Math.hypot(px - this.x, pz - this.z);
-        if (pl.isControllable && d < this.def.stats.width * 0.5 + 0.6 && !this.tuning.mercy) {
+        // only grabs runners that try to pass through *his* doorway
+        if (pl.isControllable && !this.tuning.mercy && Math.abs(ctx.playerLateral - this.lateral) < 1.05 && ctx.playerS > this.blockS - 2.2 && ctx.playerS < this.blockS + 0.4) {
           this.grab(ctx);
           return;
         }
@@ -380,6 +380,8 @@ export class Enemy {
       target = Math.min(target, 2.5);
     }
     if (!pl.isControllable) target = Math.min(target, 4);
+    // the big guy is clumsy over gaps
+    if (this.track.gapAt(this.s + 1)) target = Math.min(target, hunt * 0.85);
     target = clamp(target, 0, maxSpeed);
     this.speed = approach(this.speed, target, 24 * dt);
     this.s = Math.min(this.track.length, this.s + this.speed * dt);

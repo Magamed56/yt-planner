@@ -31,6 +31,11 @@ export const SPINNER: ModuleDef = {
       b.decor('warningSign', R + 0.9, 0, lz + 0.5, 0, 1);
       lz += L;
       wait += (Math.PI / Math.abs(omega) / arms) * 0.5;
+      if (i < count - 1) {
+        // safe pad between spinners so the runner can wait for the next one
+        runFloor(ctx, lz, lz + 2.6, 0, hw);
+        lz += 2.6;
+      }
     }
     runFloor(ctx, lz, lz + PAD, 0, hw);
     lz += PAD;
@@ -146,9 +151,14 @@ export const LASER: ModuleDef = {
         const on = variant === 'low' ? 1 : Math.min(0.62, 0.42 / d.timingWindow);
         const h = b.hazard({ kind: 'laser', ax: a.x, ay: a.y, az: a.z, bx: c.x, by: c.y, bz: c.z, radius: 0.08, period, on, phase: r.next() });
         ids.push(h.id);
-        b.hint({ kind: 'gate', s0: b.sAt(lz - 1.6), s1: b.sAt(lz + 0.7), lateral: 0, hazardIds: [h.id], blockerIds: [], supportIds: [], jumps: [] });
-        if (on < 1) wait += period * on * 0.5;
-        else wait += 0.1;
+        if (on >= 1) {
+          // always-on low beam = a barrier you jump over
+          b.hint({ kind: 'jump', s: b.sAt(lz - 1.35), landS: b.sAt(lz + 2.2), lateral: 0, targetId: -1, dy: 0 });
+          wait += 0.1;
+        } else {
+          b.hint({ kind: 'gate', s0: b.sAt(lz - 1.6), s1: b.sAt(lz + 0.7), lateral: 0, hazardIds: [h.id], blockerIds: [], supportIds: [], jumps: [] });
+          wait += period * on * 0.5;
+        }
       }
     }
     coinLine(ctx, PAD, L - PAD, 0, 0, k);
@@ -282,12 +292,12 @@ export const DOOR: ModuleDef = {
       });
       doorIds.push(p.id);
     }
-    b.hint({ kind: 'choice', s0: trigS, s1: b.sAt(doorZ + 1.2), options: lanes, blockerIds: doorIds });
+    b.hint({ kind: 'choice', s0: trigS, s1: b.sAt(doorZ + 3.2), options: lanes, blockerIds: doorIds });
     // with two doors left open, Grumbo may burst out of one of them
     const open = [0, 1, 2].filter((i) => order.indexOf(i) >= closing);
     if (ctx.enemy !== 'none' && open.length >= 2 && !ctx.opts.inChase && r.chance(0.55)) {
       const blockLane = r.pick(open);
-      const p = b.w(lanes[blockLane], 0, doorZ + 2.2);
+      const p = b.w(lanes[blockLane], 0, doorZ + 1.3);
       b.trigger(b.sAt(doorZ - 9), { kind: 'enemyBlock', x: p.x, y: p.y, z: p.z, lateral: lanes[blockLane] });
     }
     b.decor('alarmLight', -hw + 0.3, 3.4, doorZ - 0.1, 0, 1);

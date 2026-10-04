@@ -53,6 +53,8 @@ export function styleColor(style: string, p: ThemePalette, module: number): stri
       return p.moving;
     case 'vanish':
       return p.vanish;
+    case 'vanishB':
+      return p.accent2;
     case 'crate':
       return '#c98b4f';
     case 'door':

@@ -7,6 +7,8 @@
 interface HazardBase {
   /** if set, the hazard is inactive until this trigger fires; time is measured from the trigger */
   triggerId?: number;
+  /** if set, the hazard switches off for good once this trigger fires (e.g. boss defeated) */
+  endTriggerId?: number;
 }
 
 /** Rotating arms around a vertical axis. Hit => knockback + stun. */

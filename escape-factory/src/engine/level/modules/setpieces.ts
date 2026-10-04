@@ -104,6 +104,7 @@ export const BOSS: ModuleDef = {
       return { minX: box.minX, maxX: box.maxX, minZ: box.minZ, maxZ: box.maxZ };
     });
     const start = b.trigger(b.sAt(a0 + 0.8), { kind: 'fire' });
+    const end = b.trigger(b.sAt(a0 + A - 3), { kind: 'bossEnd' });
     const pattern: number[] = [];
     for (let i = 0; i < 8; i++) {
       let lane = r.int(0, 2);
@@ -119,12 +120,14 @@ export const BOSS: ModuleDef = {
       warn: Math.min(1.0, 0.8 * d.timingWindow),
       active: 0.28,
       triggerId: start.triggerId,
+      endTriggerId: end.triggerId,
     });
     const ids = [slam.id];
     const rollers = d.level >= 2 ? 2 : 1;
     for (let i = 0; i < rollers; i++) {
       const lane = i === 0 ? r.pick([0, 2]) : 1;
-      const s0 = b.w(lanes[lane], 0.55, a0 + A - 1);
+      // barrels start inside the slam zone so the last metres before the exit stay clear
+      const s0 = b.w(lanes[lane], 0.55, zB - 0.5);
       const s1 = b.w(lanes[lane], 0.55, a0 + 1);
       const len = Math.hypot(s1.x - s0.x, s1.z - s0.z);
       const sp = r.range(6, 7.5);
@@ -140,12 +143,12 @@ export const BOSS: ModuleDef = {
         phase: r.next(),
         travel: len,
         triggerId: start.triggerId,
+        endTriggerId: end.triggerId,
       });
       ids.push(h.id);
     }
     const g = b.w(bx, 0.6, bz);
     b.trigger(b.sAt(a0 + 0.6), { kind: 'bossStart', x: g.x, y: g.y, z: g.z, hazardId: slam.id });
-    b.trigger(b.sAt(a0 + A - 3), { kind: 'bossEnd' });
     b.hint({ kind: 'arena', s0: b.sAt(a0), s1: b.sAt(a0 + A), lanes, hazardIds: ids });
     coinLine(ctx, a0 + 2, a0 + A - 2, 0, r.pick(lanes));
     for (const s of [-1, 1]) {

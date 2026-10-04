@@ -159,7 +159,7 @@ export class LevelBuilder {
     if (o.motion) p.motion = this.motionToWorld(o.motion);
     if (o.vanish) p.vanish = o.vanish;
     if (o.breakable) p.breakable = true;
-    if (o.walkable ?? (o.style === undefined || /floor|platform|bridge|conveyor|grate|trap|tile/.test(o.style)))
+    if (o.walkable ?? (o.style === undefined || /floor|platform|bridge|conveyor|grate|trap|tile|vanish/.test(o.style)))
       p.walkable = true;
     this.minY = Math.min(this.minY, this.frame.y + ly1);
     this.pieces.push(p);
