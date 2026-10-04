@@ -97,15 +97,28 @@
   takeoff points recoverable, per-arena learning (boss clocks restart each attempt), aggressive
   bots may hold back in arenas; zigzag bridge spine follows the planks.
 
+- PHASE 12 — Long videos: `npm run record -- videos/long_05min.json` (or `--long N --start L`)
+  renders a 1920×1080 compilation: cold open (most intense moment of all chapters, CHASE/
+  DRAMATIC camera, slow-mo, hook), one chapter per level with a rotating scenario program
+  (Chase · Near Death · Speedrun · Fail & Retry · Almost Caught · Chaos, boss levels as
+  set-pieces), level title cards, fail captions, long-run trimming, outro teaser, exact length
+  fit (±3 %), YouTube chapters in the description. Verified: 5-min video = 291.1 s, 8 733
+  frames, 10 chapters, −14 LUFS audio (docs/img/long_05min.jpg). Draft scale (0.5) renders
+  ~5 fps on SwiftShader (5 min ≈ 30 min).
+- PHASE 16 — Optimisation: model parts baked per animated joint with vertex colours (Grumbo
+  42→21 meshes, Pip 22→17), rigid animated groups merged (spinner arms, crusher heads, gears
+  ~16→2, exit gate), door/pusher stripes merged; level 15 view 217→172 meshes. Leak fixes:
+  level-scoped geometry cache (unique platform sizes no longer accumulate), `disposeUnshared`
+  sweep for ad-hoc geometry, Character/EnemyView dispose merged geometry. e2e perf test:
+  reloading 4 levels twice keeps GPU geometries flat, textures bounded, draw calls < 300.
+  `tools/perf-probe.ts` prints per-view mesh/draw stats.
+
 ## CURRENT
-- PHASE 12 — Long videos (5/10/15/20 min): LongPlanner implemented (cold open, one chapter per
-  level with rotating scenario program, boss levels, long-run trimming, chapters, outro teaser,
-  ±3 % length fit). First 5-min render produced all 8 809 frames but the soundtrack failed
-  (music step scheduled at a negative time in a later chunk) → fixed + unit test; re-render
-  in progress.
+- PHASE 17 — Final QA + documentation (README, ARCHITECTURE, GAME_DESIGN, VIDEO_SYSTEM,
+  LEVEL_GENERATOR, TESTING, KNOWN_ISSUES).
 
 ## NEXT
-- 12 long video verification → 16 optimisation (character mesh merging, draw calls) → 17 QA + docs.
+- 17 QA + docs → post-v1 backlog (see TODO).
 
 ## BUGS
 - Google Fonts blocked in the cloud container (falls back to Arial Black) — fine for users.

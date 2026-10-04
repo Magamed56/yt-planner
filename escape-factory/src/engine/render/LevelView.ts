@@ -9,7 +9,7 @@ import type { LevelData, SolidPiece } from '../level/types';
 import type { DynamicSolid } from '../obstacle/SolidSystem';
 import type { ThemeDef, ThemePalette } from '../theme/ThemeDef';
 import type { World } from '../sim/World';
-import { boxGeo, roundBoxGeo } from './geometry';
+import { boxGeo, closeGeometryScope, disposeUnshared, openGeometryScope, releaseGeometryScope, roundBoxGeo } from './geometry';
 import type { MaterialLibrary } from './materials';
 
 export interface ViewPart {
@@ -91,7 +91,7 @@ interface DynView {
 }
 
 export class LevelView {
-  readonly root = new THREE.Group();
+  readonly root = Object.assign(new THREE.Group(), { name: 'level' });
   private readonly buckets = new Map<THREE.Material, THREE.BufferGeometry[]>();
   private readonly dyn: DynView[] = [];
   private readonly parts: ViewPart[] = [];
@@ -108,6 +108,7 @@ export class LevelView {
     extensions: LevelViewExtension[] = [],
   ) {
     const p = theme.palette;
+    this.geoScope = openGeometryScope();
     const dynamicIds = new Set(world.solids.dynamics.map((d) => d.piece.id));
     for (const piece of level.pieces) {
       if (piece.type !== 'solid') continue;
@@ -126,7 +127,10 @@ export class LevelView {
     };
     for (const ext of extensions) this.parts.push(...ext.build(ctx));
     this.flushStatic();
+    closeGeometryScope();
   }
+
+  private readonly geoScope: number;
 
   private pushStatic(geo: THREE.BufferGeometry, m: THREE.Matrix4, mat: THREE.Material): void {
     const g = geo.index ? geo.toNonIndexed() : geo.clone();
@@ -261,17 +265,25 @@ export class LevelView {
       group.add(rim);
     }
     if (s.style === 'pusher' || s.style === 'door') {
-      // hazard stripes
+      // hazard stripes, merged into a single mesh (one draw call)
       const stripeMat = this.mats.get(p.stripe, { roughness: 0.6 });
       const n = Math.max(2, Math.floor(Math.max(w, dd) / 0.8));
+      const parts: THREE.BufferGeometry[] = [];
       for (let i = 0; i < n; i++) {
         const k = (i + 0.5) / n - 0.5;
-        const st = new THREE.Mesh(boxGeo(w > dd ? 0.25 : w + 0.02, h * 0.18, w > dd ? dd + 0.02 : 0.25), stripeMat);
-        st.position.set(w > dd ? k * w : 0, h * 0.3, w > dd ? 0 : k * dd);
-        group.add(st);
+        const g = boxGeo(w > dd ? 0.25 : w + 0.02, h * 0.18, w > dd ? dd + 0.02 : 0.25).clone();
+        g.translate(w > dd ? k * w : 0, h * 0.3, w > dd ? 0 : k * dd);
+        parts.push(g);
+      }
+      const merged = mergeGeometries(parts, false);
+      for (const g of parts) g.dispose();
+      if (merged) {
+        this.ownedGeo.push(merged);
+        group.add(new THREE.Mesh(merged, stripeMat));
       }
     }
     group.position.set((b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2, (b.minZ + b.maxZ) / 2);
+    group.name = `solid:${style}`;
     this.root.add(group);
     this.dyn.push({ d, obj: group, mat, baseColor: new THREE.Color(color), tex, conv });
   }
@@ -291,6 +303,7 @@ export class LevelView {
         mesh.receiveShadow = true;
         mesh.matrixAutoUpdate = false;
         mesh.updateMatrix();
+        mesh.name = 'static';
         this.root.add(mesh);
         this.staticMeshes++;
       }
@@ -324,6 +337,9 @@ export class LevelView {
     for (const g of this.ownedGeo) g.dispose();
     for (const m of this.ownedMats) m.dispose();
     for (const part of this.parts) part.dispose?.();
+    // anything built ad hoc by extensions (merged decor, hazard parts…) — no leaks
+    disposeUnshared(this.root);
+    releaseGeometryScope(this.geoScope);
     this.stripeTex?.dispose();
     this.root.removeFromParent();
   }

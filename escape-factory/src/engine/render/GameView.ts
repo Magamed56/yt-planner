@@ -62,6 +62,7 @@ export class GameView {
     rc.ambient.color.set('#ffffff');
     rc.renderer.toneMappingExposure = L.exposure;
     rc.setSunDirection(L.sunDir[0], L.sunDir[1], L.sunDir[2]);
+    this.root.name = 'game';
     rc.scene.add(this.root);
     if (!rc.camera.parent) rc.scene.add(rc.camera);
 
@@ -167,6 +168,7 @@ export class GameView {
     this.effects.dispose();
     this.levelView.dispose();
     this.charView.dispose();
+    this.enemyView?.dispose();
     this.particles.dispose();
     this.ambient.dispose();
     this.backdrop.dispose();

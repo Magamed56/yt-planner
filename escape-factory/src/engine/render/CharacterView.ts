@@ -7,11 +7,12 @@ import * as THREE from 'three';
 import type { CharacterDef } from '../character/CharacterDef';
 import { clamp, damp, lerp } from '../core/math';
 import type { Player } from '../sim/Player';
+import { disposeUnshared } from './geometry';
 import { buildModel, type BuiltModel } from './ModelBuilder';
 import type { MaterialLibrary } from './materials';
 
 export class CharacterView {
-  readonly root = new THREE.Group();
+  readonly root = Object.assign(new THREE.Group(), { name: 'character' });
   /** animation layer (squash, bob, lean) between root and model */
   private readonly anim = new THREE.Group();
   private model: BuiltModel;
@@ -42,6 +43,7 @@ export class CharacterView {
   setCharacter(def: CharacterDef): void {
     this.anim.remove(this.model.root);
     for (const m of this.tintMats) m.dispose();
+    disposeUnshared(this.model.root);
     this.def = def;
     this.model = buildModel(def.model, this.mats);
     this.anim.add(this.model.root);
@@ -200,6 +202,8 @@ export class CharacterView {
 
   dispose(): void {
     for (const m of this.tintMats) m.dispose();
+    disposeUnshared(this.model.root);
+    this.root.removeFromParent();
   }
 }
 

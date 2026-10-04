@@ -4,6 +4,7 @@
  * are always in sync (telegraphs included).
  */
 import * as THREE from 'three';
+import { mergeRigid } from './merge';
 import type { HazardPiece } from '../level/types';
 import type { HazardSpec } from '../obstacle/hazardTypes';
 import { crusherState, fallerState, laserState, rollerForEach, slamLaneState, spinnerAngle } from '../obstacle/hazardEval';
@@ -140,11 +141,16 @@ function spinnerView(h: Extract<HazardSpec, { kind: 'spinner' }>, ctx: LevelView
     arm.rotation.y = (i * Math.PI * 2) / h.arms;
     arms.add(arm);
   }
+  // the arms rotate as one: bars, stripes and tips become 3 draw calls
+  const owned = mergeRigid(arms);
   root.add(g);
   return {
     update(world, t) {
       const lt = localTime(world, h, t) ?? 0;
       arms.rotation.y = spinnerAngle(h, lt);
+    },
+    dispose() {
+      for (const g of owned) g.dispose();
     },
   };
 }
@@ -183,6 +189,7 @@ function crusherView(h: Extract<HazardSpec, { kind: 'crusher' }>, ctx: LevelView
   lamp.scale.setScalar(0.18);
   lamp.position.set(0, 1.7, 0);
   head.add(lamp);
+  const ownedHead = mergeRigid(head, [lamp]);
   g.add(head);
   const shadow = telegraphDisc(mats, '#000000', Math.max(w, d) * 0.62);
   shadow.position.set(cx, h.floorY + 0.03, cz);
@@ -205,6 +212,7 @@ function crusherView(h: Extract<HazardSpec, { kind: 'crusher' }>, ctx: LevelView
     },
     dispose() {
       lampMat.dispose();
+      for (const g of ownedHead) g.dispose();
     },
   };
 }
@@ -427,7 +435,9 @@ export const hazardViewsExtension: LevelViewExtension = {
     const parts: ViewPart[] = [];
     for (const p of ctx.level.pieces) {
       if (p.type !== 'hazard') continue;
+      const before = ctx.root.children.length;
       const v = buildHazardView(p, ctx);
+      for (let i = before; i < ctx.root.children.length; i++) ctx.root.children[i].name ||= `hazard:${p.hazard.kind}`;
       if (v) parts.push(v);
     }
     return parts;

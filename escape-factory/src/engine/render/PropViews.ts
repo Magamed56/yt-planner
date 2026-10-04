@@ -51,6 +51,7 @@ export const propViewsExtension: LevelViewExtension = {
       const ring = new THREE.Mesh(torusGeo(1.4, 0.08), ringMat);
       ring.rotation.x = Math.PI / 2;
       ring.position.set(cp.x, cp.y + 0.06, cp.z);
+      ring.name ||= 'checkpoint';
       root.add(ring);
       const green = new THREE.Color(theme.palette.checkpoint);
       parts.push({
@@ -80,6 +81,7 @@ export const propViewsExtension: LevelViewExtension = {
       obj.rotation.set(0, d.rotY, 0);
       obj.scale.setScalar(d.scale);
       if (built.animate) {
+        obj.name = `decor:${d.kind}`;
         root.add(obj);
         animated.push({ obj, fn: built.animate });
       } else {

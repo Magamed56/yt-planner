@@ -3,14 +3,58 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 const cache = new Map<string, THREE.BufferGeometry>();
+/**
+ * Geometry scopes: sized primitives created while a level view is being built
+ * belong to that level and are evicted when it is disposed (otherwise every
+ * level's unique platform sizes would pile up in the cache forever). Entries
+ * reused by a newer scope move to it; entries created outside any scope
+ * (character models, fixed primitives) are global.
+ */
+const owner = new Map<string, number | null>();
+let currentScope: number | null = null;
+let nextScope = 1;
 
-function cached(key: string, make: () => THREE.BufferGeometry): THREE.BufferGeometry {
+export function openGeometryScope(): number {
+  currentScope = nextScope++;
+  return currentScope;
+}
+
+export function closeGeometryScope(): void {
+  currentScope = null;
+}
+
+export function releaseGeometryScope(id: number): number {
+  let n = 0;
+  for (const [k, o] of owner) {
+    if (o !== id) continue;
+    cache.get(k)?.dispose();
+    cache.delete(k);
+    owner.delete(k);
+    n++;
+  }
+  return n;
+}
+
+function cached(key: string, make: () => THREE.BufferGeometry, scoped = true): THREE.BufferGeometry {
   let g = cache.get(key);
   if (!g) {
     g = make();
+    g.userData.shared = true;
     cache.set(key, g);
-  }
+    owner.set(key, scoped ? currentScope : null);
+  } else if (scoped && currentScope !== null && owner.get(key) != null) owner.set(key, currentScope);
   return g;
+}
+
+/** Disposes every non-shared geometry below `root` (shared cache entries live forever). */
+export function disposeUnshared(root: THREE.Object3D): number {
+  const seen = new Set<THREE.BufferGeometry>();
+  root.traverse((o) => {
+    const g = (o as THREE.Mesh).geometry as THREE.BufferGeometry | undefined;
+    if (g && !g.userData.shared) seen.add(g);
+  });
+  for (const g of seen) g.dispose();
+  return seen.size;
 }
 
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
@@ -27,7 +71,7 @@ export function roundBoxGeo(w: number, h: number, d: number, radius = 0.08, segs
 }
 
 export function sphereGeo(segs = 20): THREE.BufferGeometry {
-  return cached(`sphere:${segs}`, () => new THREE.SphereGeometry(1, segs, Math.max(8, Math.floor(segs * 0.6))));
+  return cached(`sphere:${segs}`, () => new THREE.SphereGeometry(1, segs, Math.max(8, Math.floor(segs * 0.6))), false);
 }
 
 export function capsuleGeo(radius: number, length: number): THREE.BufferGeometry {

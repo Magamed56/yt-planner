@@ -7,13 +7,14 @@ import * as THREE from 'three';
 import { clamp, lerp } from '../core/math';
 import type { Enemy } from '../enemy/Enemy';
 import type { EnemyDef } from '../enemy/EnemyDef';
+import { disposeUnshared } from './geometry';
 import { buildModel, type BuiltModel } from './ModelBuilder';
 import type { MaterialLibrary } from './materials';
 
 const UP = new THREE.Vector3(0, 1, 0);
 
 export class EnemyView {
-  readonly root = new THREE.Group();
+  readonly root = Object.assign(new THREE.Group(), { name: 'enemy' });
   private readonly anim = new THREE.Group();
   private readonly model: BuiltModel;
   private phase = 0;
@@ -200,5 +201,10 @@ export class EnemyView {
       arm.updateWorldMatrix(true, false);
       this.hand.set(0, -2.0, 0.2).applyMatrix4(arm.matrixWorld);
     }
+  }
+
+  dispose(): void {
+    disposeUnshared(this.model.root);
+    this.root.removeFromParent();
   }
 }

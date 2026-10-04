@@ -13,6 +13,8 @@ export interface MatOpts {
   opacity?: number;
   flat?: boolean;
   side?: THREE.Side;
+  /** per-vertex colours (merged multi-colour meshes); `color` then tints */
+  vertexColors?: boolean;
 }
 
 export class MaterialLibrary {
@@ -22,7 +24,7 @@ export class MaterialLibrary {
   get(color: string, o: MatOpts = {}): THREE.MeshStandardMaterial {
     const key = `${color}|${o.roughness ?? 0.7}|${o.metalness ?? 0.05}|${o.emissive ?? ''}|${o.emissiveIntensity ?? 1}|${
       o.transparent ? o.opacity ?? 1 : 1
-    }|${o.flat ? 1 : 0}|${o.side ?? 0}`;
+    }|${o.flat ? 1 : 0}|${o.side ?? 0}|${o.vertexColors ? 1 : 0}`;
     let m = this.cache.get(key);
     if (!m) {
       m = new THREE.MeshStandardMaterial({
@@ -31,6 +33,7 @@ export class MaterialLibrary {
         metalness: o.metalness ?? 0.05,
         flatShading: o.flat ?? false,
         side: o.side ?? THREE.FrontSide,
+        vertexColors: o.vertexColors ?? false,
       });
       if (o.emissive) {
         m.emissive = new THREE.Color(o.emissive);

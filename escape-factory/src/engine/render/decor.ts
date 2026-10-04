@@ -8,6 +8,7 @@ import type { ThemeDef } from '../theme/ThemeDef';
 import type { World } from '../sim/World';
 import { boxGeo, coneGeo, cylinderGeo, planeGeo, roundBoxGeo, sphereGeo, torusGeo } from './geometry';
 import type { MaterialLibrary } from './materials';
+import { mergeRigid } from './merge';
 
 export interface DecorBuildCtx {
   mats: MaterialLibrary;
@@ -164,6 +165,7 @@ decorRegistry.register('gear', ({ mats, theme, variant }) => {
   }
   inner.add(mesh(cylinderGeo(R * 0.25, R * 0.25, 0.5, 12), mats.get('#2b2d42', { metalness: 0.6 })).rotateX(Math.PI / 2));
   inner.position.y = R + 1;
+  mergeRigid(inner); // ~16 teeth + disc → 2 draw calls (geometries owned by the decor object)
   g.add(inner);
   const dir = variant % 2 ? 1 : -1;
   return {
@@ -377,7 +379,9 @@ decorRegistry.register('exitGate', ({ mats, theme }) => {
     b.rotation.z = -0.35 + i * 0.17;
     beams.add(b);
   }
+  mergeRigid(beams);
   g.add(beams);
+  mergeRigid(g, beams.children.slice());
   return {
     object: g,
     animate: (t) => {
