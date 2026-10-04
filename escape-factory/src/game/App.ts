@@ -7,7 +7,7 @@ import { CINEMATIC_PLAY_STYLE, GAMEPLAY_STYLE, VIDEO_STYLE } from '@engine/camer
 import { characters } from '@engine/character/CharacterRegistry';
 import { GameSession } from '@engine/core/GameSession';
 import { enemies } from '@engine/enemy/EnemyDef';
-import type { InputSource, InputState } from '@engine/input/InputState';
+import type { InputSource } from '@engine/input/InputState';
 import { KeyboardInput } from '@engine/input/KeyboardInput';
 import { generateLevel } from '@engine/level/LevelGenerator';
 import type { LevelData } from '@engine/level/types';
@@ -20,19 +20,12 @@ import { allCampaignLevels, campaignLevel, campaignParams, CAMPAIGN_SIZE } from 
 import { registerContent } from './content';
 import { UI } from './ui/UI';
 import { DebugOverlay } from '@engine/debug/DebugOverlay';
+import { ProxyInput } from '@engine/input/ProxyInput';
+import { BotController } from '@engine/bot/BotController';
+import { BOT_PROFILES } from '@engine/bot/BotProfile';
 
 type AppState = 'menu' | 'play' | 'paused' | 'complete';
 
-class IdleInput implements InputSource {
-  sample(out: InputState): void {
-    out.moveX = out.moveZ = 0;
-    out.jump = out.jumpPressed = false;
-  }
-}
-
-export interface AttractFactory {
-  (level: LevelData): InputSource;
-}
 
 export class App {
   readonly rc: RenderContext;
@@ -51,8 +44,6 @@ export class App {
   private readonly offs: Array<() => void> = [];
   private fpsAcc = 0;
   private fpsFrames = 0;
-  /** optional bot factory for the attract-mode background (set by main) */
-  attractInput: AttractFactory | null = null;
 
   constructor(parent: HTMLElement) {
     registerContent();
@@ -129,9 +120,11 @@ export class App {
   menu(): void {
     this.state = 'menu';
     this.finishTimer = -1;
+    // attract mode: the bot plays a level behind the menu with cinematic cameras
     const lvl = generateLevel(campaignParams(Math.min(this.save.highestUnlocked, CAMPAIGN_SIZE)));
-    const input = this.attractInput ? this.attractInput(lvl) : new IdleInput();
-    this.makeSession(lvl, input, VIDEO_STYLE, false);
+    const proxy = new ProxyInput();
+    const s = this.makeSession(lvl, proxy, VIDEO_STYLE, false);
+    proxy.target = new BotController(s.world, BOT_PROFILES.SKILLED, lvl.seed);
     this.ui.showMenu(this.save.data);
   }
 

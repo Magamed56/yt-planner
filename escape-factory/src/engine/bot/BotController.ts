@@ -144,6 +144,8 @@ export class BotController implements InputSource {
     this.learn *= 0.6;
     // a short, human-like pause before trying again (also breaks deterministic loops)
     this.respawnWaitUntil = this.world.time + this.rng.range(0.05, 0.9);
+    // a scripted mistake that already happened is not repeated on the retry
+    if (this.stopUntil !== 0 && this.forced[0]?.kind === 'stop') this.forced.shift();
     this.jumpDecision.clear();
     this.choiceLane.clear();
     this.gateState.clear();

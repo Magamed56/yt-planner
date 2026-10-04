@@ -53,8 +53,15 @@
   platforms, spinner pads, chase-friendly jumps, always-on lasers as jump barriers, boss arena
   roller spawn, door-block fairness.
 
+- PHASE 10 — Video Mode: VideoConfig schema + validation (videos/*.json), 7 scenarios
+  (CHASE, NEAR_DEATH, PERFECT_RUN, FAIL, IMPOSSIBLE, BOSS_ESCAPE, CHAOS), 6 takes (PERFECT,
+  ONE_FAIL, NEAR_DEATH, FAST_RUN, CHAOS, ENEMY_ALMOST_CATCHES), resolveVideo (clean-take search,
+  automatic dramatic forced mistake), simulateTake (headless), VideoSession (bot + director +
+  in-frame captions + scripted events), ?mode=video URL params, Video Studio (?mode=studio),
+  12 title recipes, bot-driven attract mode behind the main menu.
+
 ## CURRENT
-- PHASE 10 — Video Mode (bot + director + no UI + URL params + studio).
+- PHASE 11 — Shorts recording (deterministic frame capture → ffmpeg, highlight window, audio).
 
 ## NEXT
 - PHASE 3 enemy → 4 obstacles → 5 level generator → 6 first level → 7 chase → 8 camera director →

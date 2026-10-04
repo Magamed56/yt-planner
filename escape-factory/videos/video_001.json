@@ -1,0 +1,23 @@
+{
+  "id": "video_001",
+  "title": "Can I Escape The Factory?",
+  "recipe": "CAN_I_ESCAPE",
+  "level": 1,
+  "seed": 1001,
+  "difficulty": "EASY",
+  "theme": "FACTORY",
+  "character": "pip",
+  "enemy": "grumbo",
+  "scenario": "CHASE",
+  "take": 1,
+  "cameraStyle": "shorts",
+  "duration": 35,
+  "format": "short",
+  "fps": 30,
+  "music": "auto",
+  "voice": { "enabled": true, "voice": "en-US-AnaNeural", "lines": [{ "at": 0.2, "text": "Can I escape the factory?" }, { "at": 28, "text": "I made it!" }] },
+  "captions": [{ "at": 0, "duration": 1.8, "text": "CAN I ESCAPE?!", "style": "hook" }],
+  "events": [],
+  "highlight": "auto",
+  "meta": { "tags": ["escape", "obby", "chase"], "description": "Pip wakes up inside a giant factory… and Grumbo is coming." }
+}
