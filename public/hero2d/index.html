@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mansurov 2D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@400;500;600&family=Caveat:wght@600&display=swap">
+<style>
+/* Layout: an animator's cut-out sheet. The rigged 2D hero stands on construction-grid paper on the left;
+   the right column holds actions, emotions and the character bible. Red pencil marks annotations. */
+:root {
+  --paper: #EEF1F5;
+  --paper-2: #E2E7EE;
+  --grid: rgba(64, 104, 168, 0.12);
+  --grid-strong: rgba(64, 104, 168, 0.22);
+  --ink: #18213B;
+  --ink-2: #4E5874;
+  --line: rgba(24, 33, 59, 0.14);
+  --pencil: #C4452D;
+  --chip: #FFFFFF;
+  --f-display: "Unbounded", "Arial Black", "Helvetica Neue", system-ui, sans-serif;
+  --f-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-hand: "Caveat", "Comic Sans MS", "Segoe Print", cursive;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121722; --paper-2: #1A2131; --grid: rgba(120, 160, 230, 0.09); --grid-strong: rgba(120, 160, 230, 0.18);
+    --ink: #E7EBF3; --ink-2: #9DA8BF; --line: rgba(231, 235, 243, 0.14); --pencil: #F0806A; --chip: #1E2639; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121722; --paper-2: #1A2131; --grid: rgba(120, 160, 230, 0.09); --grid-strong: rgba(120, 160, 230, 0.18);
+  --ink: #E7EBF3; --ink-2: #9DA8BF; --line: rgba(231, 235, 243, 0.14); --pencil: #F0806A; --chip: #1E2639; color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--paper-2); color: var(--ink); font: 15px/1.5 var(--f-body);
+  padding-inline: 16px; padding-block: 16px; box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+.app { height: 100%; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); }
+.stage {
+  position: relative; min-height: 0; border-radius: var(--r); overflow: hidden; border: 1px solid var(--line);
+  display: grid; place-items: center;
+}
+.stage[data-bg="grid"] {
+  background:
+    linear-gradient(var(--grid-strong) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    var(--paper);
+}
+/* chroma and scene backgrounds keep fixed colours in both themes on purpose */
+.stage[data-bg="green"] { background: #00B140; }
+.stage[data-bg="scene"] {
+  background:
+    radial-gradient(30% 22% at 20% 24%, rgba(255, 236, 170, 0.7), transparent 70%),
+    radial-gradient(20% 16% at 82% 20%, rgba(255, 255, 255, 0.4), transparent 70%),
+    linear-gradient(180deg, #7FB3E8 0%, #B9D6F2 55%, #8DBA7A 55.2%, #6E9E5E 100%);
+}
+#hero { height: 100%; max-height: 100%; width: auto; max-width: 100%; display: block; }
+.stamp { position: absolute; left: 16px; top: 12px; font: 600 22px/1 var(--f-hand); color: var(--pencil); transform: rotate(-2deg); pointer-events: none; }
+.stage[data-bg="green"] .stamp, .stage[data-bg="scene"] .stamp { color: #fff; }
+.panel { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; padding: 4px 2px 24px; }
+.name { display: flex; flex-direction: column; gap: 4px; }
+.name h1 { margin: 0; font: 800 clamp(26px, 3.4vw, 34px)/1.05 var(--f-display); text-wrap: balance; }
+.name p { margin: 0; color: var(--ink-2); font-size: 14px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+legend, .label { padding: 0; margin-bottom: 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  font: 500 14px/1 var(--f-body); color: var(--ink); background: var(--chip);
+  border: 1px solid var(--line); border-radius: 999px; padding: 9px 13px; cursor: pointer;
+}
+.seg button:hover { border-color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.seg button:focus-visible { outline: 2px solid var(--pencil); outline-offset: 2px; }
+.bible { display: flex; flex-direction: column; border-top: 1px solid var(--line); margin: 0; }
+.row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.row dt { font-size: 12px; color: var(--ink-2); padding-top: 2px; }
+.row dd { margin: 0; font-size: 14px; }
+.uses { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { height: auto; grid-template-columns: minmax(0, 1fr); }
+  .stage { height: 64svh; min-height: 420px; }
+  .panel { overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) { .stamp { transform: none; } }
+body.export { padding: 0; background: transparent; }
+body.export .app { display: block; }
+body.export .panel, body.export .stamp { display: none; }
+body.export .stage { position: fixed; inset: 0; height: auto; min-height: 0; border: 0; border-radius: 0; }
+body.export .stage[data-bg="none"] { background: transparent; }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="stage" id="stage" data-bg="grid" aria-label="2D-персонаж">
+    <svg id="hero" viewBox="0 0 600 1000" role="img" aria-label="Mansurov в полный рост"></svg>
+    <div class="stamp" id="stamp">2D · стоит</div>
+  </section>
+
+  <aside class="panel">
+    <header class="name">
+      <h1>Mansurov N.N.</h1>
+      <p>2D-персонаж · 25 лет · программист и учитель</p>
+    </header>
+
+    <fieldset>
+      <legend>Действие</legend>
+      <div class="seg" data-key="anim">
+        <button type="button" id="a-idle" data-val="idle" aria-pressed="true">Стоит</button>
+        <button type="button" id="a-talk" data-val="talk" aria-pressed="false">Говорит</button>
+        <button type="button" id="a-wave" data-val="wave" aria-pressed="false">Машет</button>
+        <button type="button" id="a-walk" data-val="walk" aria-pressed="false">Идёт</button>
+        <button type="button" id="a-think" data-val="think" aria-pressed="false">Думает</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Эмоция</legend>
+      <div class="seg" data-key="emotion">
+        <button type="button" id="e-neutral" data-val="neutral" aria-pressed="false">Нейтральный</button>
+        <button type="button" id="e-smile" data-val="smile" aria-pressed="true">Улыбка</button>
+        <button type="button" id="e-serious" data-val="serious" aria-pressed="false">Серьёзный</button>
+        <button type="button" id="e-surprise" data-val="surprise" aria-pressed="false">Удивление</button>
+        <button type="button" id="e-angry" data-val="angry" aria-pressed="false">Злость</button>
+        <button type="button" id="e-confident" data-val="confident" aria-pressed="false">Уверенность</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Очки</legend>
+      <div class="seg" data-key="glasses">
+        <button type="button" id="g-off" data-val="off" aria-pressed="true">Без очков</button>
+        <button type="button" id="g-on" data-val="on" aria-pressed="false">В очках</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Фон</legend>
+      <div class="seg" data-key="bg">
+        <button type="button" id="b-grid" data-val="grid" aria-pressed="true">Сетка</button>
+        <button type="button" id="b-green" data-val="green" aria-pressed="false">Зелёный экран</button>
+        <button type="button" id="b-scene" data-val="scene" aria-pressed="false">Сцена</button>
+      </div>
+    </fieldset>
+
+    <section>
+      <div class="label">Паспорт героя</div>
+      <dl class="bible">
+        <div class="row"><dt>Возраст и рост</dt><dd>25 лет, 178 см, стройный</dd></div>
+        <div class="row"><dt>Кто он</dt><dd>Кыргыз, программист и учитель</dd></div>
+        <div class="row"><dt>Характер</dt><dd>Спокойный, уверенный, целеустремлённый, ответственный, с аналитическим складом ума</dd></div>
+        <div class="row"><dt>Образ</dt><dd>Чёрное поло на молнии, тёмные карго-брюки, белые кроссовки, чёрные часы на левой руке. Очки по желанию.</dd></div>
+      </dl>
+    </section>
+
+    <section>
+      <div class="label">Как использовать</div>
+      <ul class="uses">
+        <li><b>Видео:</b> ролик на зелёном фоне кладёте поверх любой сцены в CapCut, рот двигается под речь.</li>
+        <li><b>Игры:</b> спрайт-листы PNG на прозрачном фоне подходят для Unity, Godot и Construct.</li>
+        <li><b>Spine 2D:</b> части тела лежат отдельными файлами, к ним приложен файл с точками вращения.</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<script>
+(() => {
+const NS = 'http://www.w3.org/2000/svg';
+const C = {
+  skin: '#D49A73', skinSh: '#BC8059', skinDeep: '#A66B49', ear: '#C88A63',
+  hair: '#1A1512', hairHi: '#3C322B', fade: '#2A2422',
+  polo: '#1F222B', poloSh: '#15171E', poloHi: '#2D313D', rib: '#262A34',
+  pants: '#272B36', pantsSh: '#1C1F28', pantsHi: '#343a49',
+  shoe: '#EEEFF2', shoeGrey: '#BABEC7', shoeSole: '#FFFFFF', shoeLine: '#9AA0AB',
+  watch: '#111216', watchFace: '#2C313B', zip: '#BAC0CA',
+  eyeW: '#FBF8F3', iris: '#3B2518', irisHi: '#6A452E', pupil: '#120B08', lash: '#15100D', brow: '#17110E',
+  lip: '#B96E5D', lipLine: '#7A3A30', mouth: '#3A1417', teeth: '#FFFDF8', tongue: '#C9636A',
+  mole: '#6E4632', blush: '#E07A62', glassDark: '#121317', glassSilver: '#AEB4BE',
+};
+const el = (tag, attrs = {}, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+};
+const P = (d, fill, parent, extra = {}) => el('path', { d, fill, ...extra }, parent);
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const f = n => Math.round(n * 100) / 100;
+
+const svg = document.getElementById('hero');
+const defs = el('defs', {}, svg);
+// gradient for the faded sides of the haircut
+const fadeGrad = el('linearGradient', { id: 'fadeGrad', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+el('stop', { offset: '0', 'stop-color': C.fade, 'stop-opacity': '0.95' }, fadeGrad);
+el('stop', { offset: '1', 'stop-color': C.fade, 'stop-opacity': '0' }, fadeGrad);
+
+/* ---------- rig ---------- */
+const char = el('g', { id: 'char', transform: 'translate(300,0)' }, svg);
+const root = el('g', { id: 'root' }, char);
+const bones = {};
+const bone = (name, parent, x, y) => {
+  const g = el('g', { 'data-bone': name }, parent);
+  bones[name] = { g, x, y, rot: 0, sx: 1, sy: 1, dx: 0, dy: 0 };
+  return g;
+};
+
+// legs first so the polo hem overlaps the trousers
+for (const s of [-1, 1]) {
+  const side = s < 0 ? 'R' : 'L';
+  const thigh = bone('thigh' + side, root, s * 47, 12);
+  P('M -31,-14 C -33,50 -30,118 -26,176 L 24,176 C 28,118 31,50 31,-14 Z', C.pants, thigh);
+  P(s < 0 ? 'M -31,-14 C -33,50 -30,118 -26,176 L -14,176 C -18,118 -20,50 -18,-14 Z' : 'M 31,-14 C 31,50 28,118 24,176 L 12,176 C 16,118 19,50 18,-14 Z', C.pantsSh, thigh);
+  // cargo pocket on the outer thigh
+  const px = s * 18;
+  P(`M ${px - 13},62 L ${px + 13},62 L ${px + 13},104 Q ${px},110 ${px - 13},104 Z`, C.pantsHi, thigh, { opacity: 0.55 });
+  P(`M ${px - 14},58 L ${px + 14},58 L ${px + 14},70 L ${px - 14},70 Z`, C.pantsSh, thigh);
+  const shin = bone('shin' + side, thigh, 0, 172);
+  P('M -26,-10 C -25,60 -23,118 -23,166 L 23,166 C 23,118 25,60 26,-10 Z', C.pants, shin);
+  P(s < 0 ? 'M -26,-10 C -25,60 -23,118 -23,166 L -12,166 C -13,118 -15,60 -15,-10 Z' : 'M 26,-10 C 25,60 23,118 23,166 L 12,166 C 13,118 15,60 15,-10 Z', C.pantsSh, shin);
+  P('M -24,150 Q 0,158 24,150 L 23,166 L -23,166 Z', C.pantsSh, shin, { opacity: 0.6 });
+  const foot = bone('foot' + side, shin, 0, 164);
+  // white sneaker seen from the front
+  P('M -30,-6 C -38,8 -41,24 -38,32 L 38,32 C 41,24 38,8 30,-6 Q 0,-13 -30,-6 Z', C.shoe, foot);
+  P('M -39,25 L 39,25 L 39,35 Q 0,39 -39,35 Z', C.shoeSole, foot, { stroke: C.shoeLine, 'stroke-width': 1.5 });
+  P(`M ${s * 6},-8 C ${s * 20},-4 ${s * 30},10 ${s * 34},24 L ${s * 14},24 C ${s * 11},12 ${s * 7},2 ${s * 6},-8 Z`, C.shoeGrey, foot);
+  el('path', { d: 'M -10,2 L 10,2 M -11,8 L 11,8 M -11,14 L 11,14', stroke: C.shoeLine, 'stroke-width': 2, 'stroke-linecap': 'round', fill: 'none' }, foot);
+}
+// trousers seat between the legs
+P('M -100,-12 L 100,-12 L 96,26 Q 52,40 8,44 L 0,52 L -8,44 Q -52,40 -96,26 Z', C.pants, root);
+el('path', { d: 'M 0,10 L 0,48', stroke: C.pantsSh, 'stroke-width': 2, fill: 'none' }, root);
+
+const torso = bone('torso', root, 0, 0);
+const torsoShape = el('g', {}, torso);
+P('M -24,-283 C -46,-278 -78,-274 -93,-265 C -106,-256 -108,-232 -106,-205 L -95,-120 C -92,-70 -94,-25 -97,6 Q 0,16 97,6 C 94,-25 92,-70 95,-120 L 106,-205 C 108,-232 106,-256 93,-265 C 78,-274 46,-278 24,-283 Z', C.polo, torsoShape);
+P('M 60,-271 C 80,-263 94,-250 98,-205 L 88,-120 C 85,-70 88,-25 90,8 L 97,6 C 94,-25 92,-70 95,-120 L 106,-205 C 108,-232 106,-256 93,-265 Z', C.poloSh, torsoShape);
+P('M -97,6 Q 0,16 97,6 L 96,-8 Q 0,2 -96,-8 Z', C.rib, torsoShape);
+// soft fold lines
+el('path', { d: 'M -60,-90 Q -48,-60 -56,-30 M 52,-130 Q 40,-100 50,-70', stroke: C.poloSh, 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round', opacity: 0.8 }, torsoShape);
+// open zip collar: skin V, placket, collar flaps
+P('M -20,-283 L 0,-246 L 20,-283 Z', C.skin, torsoShape);
+P('M -20,-283 L 0,-246 L 20,-283 L 12,-283 L 0,-258 L -12,-283 Z', C.skinSh, torsoShape, { opacity: 0.6 });
+P('M -8,-252 L 8,-252 L 8,-196 L -8,-196 Z', C.poloSh, torsoShape);
+el('path', { d: 'M 0,-250 L 0,-198', stroke: C.zip, 'stroke-width': 2.2, 'stroke-dasharray': '2 2', fill: 'none' }, torsoShape);
+P('M -3,-254 L 3,-254 L 4,-232 Q 0,-228 -4,-232 Z', C.zip, torsoShape);
+P('M -26,-290 C -36,-284 -48,-274 -54,-262 L -30,-250 L -2,-246 L -18,-282 Z', C.poloHi, torsoShape);
+P('M 26,-290 C 36,-284 48,-274 54,-262 L 30,-250 L 2,-246 L 18,-282 Z', C.polo, torsoShape);
+el('path', { d: 'M -54,-262 L -30,-250 L -2,-246 M 54,-262 L 30,-250 L 2,-246', stroke: C.poloSh, 'stroke-width': 2, fill: 'none' }, torsoShape);
+
+/* ---------- head ---------- */
+const head = bone('head', torso, 0, -280);
+P('M -23,8 L -24,-60 L 24,-60 L 23,8 Z', C.skin, head);
+P('M -24,-60 L 24,-60 L 23,-30 Q 0,-20 -23,-30 Z', C.skinSh, head);
+// ears
+for (const s of [-1, 1]) {
+  P(`M ${s * 74},-142 C ${s * 94},-148 ${s * 98},-116 ${s * 91},-100 C ${s * 87},-90 ${s * 80},-88 ${s * 73},-93 Z`, C.ear, head);
+  P(`M ${s * 78},-134 C ${s * 89},-136 ${s * 90},-116 ${s * 86},-106 C ${s * 83},-100 ${s * 80},-100 ${s * 78},-102`, 'none', head, { stroke: C.skinDeep, 'stroke-width': 2.5, 'stroke-linecap': 'round' });
+}
+// face: broad cheekbones, soft jaw, defined chin
+const FACE = 'M 0,-224 C 45,-224 75,-197 78,-158 C 81,-128 83,-104 77,-86 C 70,-65 50,-46 24,-40 Q 0,-34 -24,-40 C -50,-46 -70,-65 -77,-86 C -83,-104 -81,-128 -78,-158 C -75,-197 -45,-224 0,-224 Z';
+P(FACE, C.skin, head);
+// light from the upper left: shadow side and under-cheekbone plane
+P('M 52,-206 C 70,-190 77,-170 78,-158 C 81,-128 83,-104 77,-86 C 70,-65 50,-46 24,-40 Q 12,-37 2,-37 C 30,-44 52,-60 62,-82 C 70,-100 70,-130 66,-160 C 63,-180 58,-196 52,-206 Z', C.skinSh, head, { opacity: 0.55 });
+// broad nose
+P('M -4,-116 C -8,-104 -10,-96 -12,-88 L -4,-90 Z', C.skinSh, head, { opacity: 0.55 });
+P('M -18,-82 C -22,-74 -14,-69 -8,-71 Q 0,-66 8,-71 C 14,-69 22,-74 18,-82', 'none', head, { stroke: C.skinDeep, 'stroke-width': 2.6, 'stroke-linecap': 'round' });
+P('M -6,-86 Q 0,-82 6,-86', 'none', head, { stroke: '#E7B591', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.7 });
+// moles from the photos
+for (const [x, y, r] of [[-24, -198, 1.5], [-32, -94, 1.6]]) el('circle', { cx: x, cy: y, r, fill: C.mole }, head);
+// blush (emotion driven)
+const blush = [-1, 1].map(s => el('ellipse', { cx: s * 50, cy: -86, rx: 14, ry: 6.5, fill: C.blush, opacity: 0 }, head));
+
+// eyes, brows, mouth are rebuilt every frame from emotion parameters
+const eyeG = [-1, 1].map(s => {
+  const g = el('g', {}, head);
+  const clipId = 'eyeClip' + (s < 0 ? 'R' : 'L');
+  const cp = el('clipPath', { id: clipId }, defs);
+  const clipPath = el('path', {}, cp);
+  const white = el('path', { fill: C.eyeW }, g);
+  const irisG = el('g', { 'clip-path': `url(#${clipId})` }, g);
+  const iris = el('circle', { r: 9.6, fill: C.iris }, irisG);
+  const irisRing = el('circle', { r: 6.4, fill: C.irisHi, opacity: 0.55 }, irisG);
+  const pupil = el('circle', { r: 4.4, fill: C.pupil }, irisG);
+  const hi = el('circle', { r: 2.4, fill: '#fff' }, irisG);
+  const lidShade = el('path', { fill: C.lash, opacity: 0.14 }, irisG);
+  const lower = el('path', { fill: 'none', stroke: C.skinDeep, 'stroke-width': 1.5, 'stroke-linecap': 'round', opacity: 0.55 }, g);
+  const lash = el('path', { fill: 'none', stroke: C.lash, 'stroke-width': 3.6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+  return { s, white, clipPath, iris, irisRing, pupil, hi, lidShade, lower, lash };
+});
+const browEls = [-1, 1].map(() => el('path', { fill: C.brow }, head));
+const mouthG = el('g', {}, head);
+const mouthClip = el('path', {}, el('clipPath', { id: 'mouthClip' }, defs));
+const mouthInner = el('path', { fill: C.mouth }, mouthG);
+const mouthBits = el('g', { 'clip-path': 'url(#mouthClip)' }, mouthG);
+const teethTop = el('path', { fill: C.teeth }, mouthBits);
+const teethBot = el('path', { fill: C.teeth }, mouthBits);
+const tongue = el('ellipse', { fill: C.tongue }, mouthBits);
+const mouthLine = el('path', { fill: 'none', stroke: C.lipLine, 'stroke-width': 2.6, 'stroke-linecap': 'round' }, mouthG);
+const lowerLip = el('path', { fill: C.lip, opacity: 0.8 }, mouthG);
+
+// hair: textured crop with a short spiky fringe and faded sides
+for (const s of [-1, 1]) {
+  P(`M ${s * 79},-168 C ${s * 82},-150 ${s * 81},-136 ${s * 79},-124 L ${s * 70},-126 C ${s * 70},-140 ${s * 70},-156 ${s * 68},-172 Z`, 'url(#fadeGrad)', head);
+}
+(function hair() {
+  // smooth dome with a few short tufts swept up and forward, as in the reference sheet
+  const N = 16, base = [];
+  for (let i = 0; i <= N; i++) {
+    const a = Math.PI * (1.03 + 0.94 * (i / N));
+    const lift = 1 + 0.06 * Math.exp(-Math.pow((i / N - 0.55) / 0.25, 2));
+    base.push([Math.cos(a) * 84, -158 + Math.sin(a) * 84 * lift]);
+  }
+  const tuft = new Set([4, 6, 7, 9, 10, 12]);
+  let d = `M ${f(base[0][0])},${f(base[0][1])}`;
+  for (let i = 1; i <= N; i++) {
+    const [x0, y0] = base[i - 1], [x1, y1] = base[i];
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, ny = my + 158, len = Math.hypot(mx, ny) || 1, ux = mx / len, uy = ny / len;
+    if (tuft.has(i)) {
+      const h = 8 + 3 * Math.sin(i * 1.7);
+      // pointed lock leaning to the right
+      d += ` L ${f(mx + ux * h + 7)},${f(my + uy * h - 3)} L ${f(x1)},${f(y1)}`;
+    } else {
+      d += ` Q ${f(mx + ux * 3)},${f(my + uy * 3)} ${f(x1)},${f(y1)}`;
+    }
+  }
+  // fringe: short locks, forehead stays open
+  const fr = [[79, -158], [70, -174], [58, -170], [46, -182], [32, -176], [18, -186], [4, -179], [-10, -187], [-24, -179], [-38, -186], [-52, -175], [-64, -180], [-75, -165], [-80, -156]];
+  for (let i = 1; i < fr.length; i++) d += ` L ${fr[i][0]},${fr[i][1]}`;
+  d += ' Z';
+  P(d, C.hair, head, { 'stroke-linejoin': 'round', stroke: C.hair, 'stroke-width': 2.5 });
+  el('path', { d: 'M -50,-224 Q -38,-220 -30,-204 M -18,-236 Q -4,-230 0,-212 M 18,-236 Q 32,-228 34,-208 M 48,-224 Q 58,-214 60,-198', stroke: C.hairHi, 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, head);
+})();
+
+// glasses: black browline top, thin silver lower rim
+const glasses = el('g', { opacity: 1 }, head);
+for (const s of [-1, 1]) {
+  const cx = s * 35;
+  el('rect', { x: cx - 28, y: -134, width: 56, height: 30, rx: 6, fill: '#ffffff', 'fill-opacity': 0.12, stroke: C.glassSilver, 'stroke-width': 2 }, glasses);
+  el('path', { d: `M ${cx - 29},-124 L ${cx - 29},-130 Q ${cx - 29},-135 ${cx - 23},-135 L ${cx + 23},-135 Q ${cx + 29},-135 ${cx + 29},-130 L ${cx + 29},-124`, fill: 'none', stroke: C.glassDark, 'stroke-width': 5, 'stroke-linejoin': 'round' }, glasses);
+  el('path', { d: `M ${s * 63},-131 L ${s * 79},-128`, stroke: C.glassDark, 'stroke-width': 4, 'stroke-linecap': 'round' }, glasses);
+}
+el('path', { d: 'M -7,-128 Q 0,-133 7,-128', fill: 'none', stroke: C.glassSilver, 'stroke-width': 2.4 }, glasses);
+
+/* ---------- arms (drawn last so gestures pass in front of the body) ---------- */
+const hands = {};
+for (const s of [-1, 1]) {
+  const side = s < 0 ? 'R' : 'L';
+  const ua = bone('upperArm' + side, torso, s * 91, -256);
+  P('M -15,64 L -14,138 Q 0,146 14,138 L 15,64 Z', C.skin, ua);
+  P(s < 0 ? 'M -15,64 L -14,138 Q -8,142 -4,142 L -6,64 Z' : 'M 15,64 L 14,138 Q 8,142 4,142 L 6,64 Z', C.skinSh, ua, { opacity: 0.5 });
+  P('M -25,-16 C -28,20 -26,50 -24,80 L 24,80 C 26,50 28,20 25,-16 C 12,-27 -12,-27 -25,-16 Z', C.polo, ua);
+  P(s < 0 ? 'M -25,-16 C -28,20 -26,50 -24,80 L -12,80 C -14,50 -15,20 -13,-20 Z' : 'M 25,-16 C 28,20 26,50 24,80 L 12,80 C 14,50 15,20 13,-20 Z', s < 0 ? C.poloHi : C.poloSh, ua, { opacity: 0.8 });
+  P('M -24,72 L 24,72 L 24,82 Q 0,86 -24,82 Z', C.rib, ua);
+  const fa = bone('foreArm' + side, ua, 0, 136);
+  P('M -14,-8 C -16,40 -13,90 -11,120 L 11,120 C 13,90 16,40 14,-8 Z', C.skin, fa);
+  P(s < 0 ? 'M -14,-8 C -16,40 -13,90 -11,120 L -4,120 C -6,90 -8,40 -6,-8 Z' : 'M 14,-8 C 16,40 13,90 11,120 L 4,120 C 6,90 8,40 6,-8 Z', C.skinSh, fa, { opacity: 0.45 });
+  if (s > 0) {
+    // black watch on the left wrist
+    P('M -13,98 L 13,98 L 13,114 L -13,114 Z', C.watch, fa);
+    el('circle', { cx: 0, cy: 106, r: 9.5, fill: C.watch }, fa);
+    el('circle', { cx: 0, cy: 106, r: 6.5, fill: C.watchFace }, fa);
+  }
+  const hd = bone('hand' + side, fa, 0, 118);
+  const relaxed = el('g', {}, hd);
+  P('M -12,-2 C -15,10 -16,26 -14,38 C -13,48 -8,56 -1,57 C 6,58 12,52 13,43 C 15,30 14,12 12,-2 Z', C.skin, relaxed);
+  el('path', { d: 'M -6,44 L -6,54 M 1,46 L 1,56 M 7,44 L 7,52', stroke: C.skinDeep, 'stroke-width': 1.6, 'stroke-linecap': 'round', opacity: 0.7 }, relaxed);
+  P(`M ${-s * 9},6 C ${-s * 19},12 ${-s * 21},26 ${-s * 16},33 C ${-s * 13},37 ${-s * 9},33 ${-s * 9},28 Z`, C.skinSh, relaxed);
+  const open = el('g', {}, hd);
+  P('M -15,-2 L -16,30 Q 0,38 16,30 L 15,-2 Z', C.skin, open);
+  [-11, -4, 3, 10].forEach((x, i) => {
+    const len = [20, 25, 24, 19][i];
+    el('rect', { x: x - 3.6, y: 24, width: 7.2, height: len, rx: 3.6, fill: C.skin }, open);
+  });
+  P(`M ${-s * 13},4 C ${-s * 26},6 ${-s * 32},14 ${-s * 30},20 C ${-s * 28},24 ${-s * 20},20 ${-s * 14},16 Z`, C.skin, open);
+  el('path', { d: 'M -10,14 Q 0,20 10,14', stroke: C.skinDeep, 'stroke-width': 1.4, fill: 'none', opacity: 0.6 }, open);
+  hands[side] = { relaxed, open };
+}
+
+/* ---------- expressions ---------- */
+const EMO = {
+  neutral:   { eye: { t: 8.5, b: 5, sq: 0, drop: 0 }, brow: [{ i: 0, o: 0 }, { i: 0, o: 0 }], mouth: { w: 1, open: 0, sl: 0.15, sr: 0.15 }, blush: 0 },
+  smile:     { eye: { t: 8, b: 3.2, sq: 2.6, drop: 0 }, brow: [{ i: 3, o: 2 }, { i: 3, o: 2 }], mouth: { w: 1.28, open: 0.42, sl: 1, sr: 1, teeth: 1 }, blush: 0.9 },
+  serious:   { eye: { t: 6.6, b: 4.6, sq: 0, drop: 1.6 }, brow: [{ i: -3, o: 0 }, { i: -3, o: 0 }], mouth: { w: 0.95, open: 0, sl: -0.25, sr: -0.25 }, blush: 0 },
+  surprise:  { eye: { t: 11.5, b: 7.5, sq: 0, drop: 0 }, brow: [{ i: 10, o: 8 }, { i: 10, o: 8 }], mouth: { w: 0.55, open: 0.8, round: 1 }, blush: 0 },
+  angry:     { eye: { t: 6, b: 4.6, sq: 0, drop: 4.5 }, brow: [{ i: -9, o: 2 }, { i: -9, o: 2 }], mouth: { w: 1.1, open: 0.4, sl: -0.9, sr: -0.9, teeth: 1, clench: 1 }, blush: 0 },
+  confident: { eye: { t: 7, b: 4, sq: 1.2, drop: 0 }, brow: [{ i: 0, o: 0 }, { i: 3, o: 7 }], mouth: { w: 1.05, open: 0, sl: 0.05, sr: 1.0 }, blush: 0 },
+};
+const VIS = { rest: { open: 0 }, A: { open: 0.62, w: 1.0 }, E: { open: 0.3, w: 1.2, teeth: 1 }, O: { open: 0.55, w: 0.62, round: 1 }, M: { open: 0, w: 0.9 } };
+
+function setEyes(E, blink, gx, gy) {
+  for (const e of eyeG) {
+    const s = e.s, cx = s * 35, cy = -120;
+    const ix = cx - s * 22, iy = cy + 1, ox = cx + s * 22, oy = cy - 2.5;
+    const t = lerp(E.t, -E.b + E.sq + 0.6, blink), drop = E.drop * (1 - blink);
+    const c1 = [cx - s * 12, cy - t * 1.28 + drop], c2 = [cx + s * 10, cy - t * 1.2];
+    const b1 = [cx + s * 9, cy + E.b * 1.3 - E.sq], b2 = [cx - s * 10, cy + E.b * 1.22 - E.sq];
+    const top = `M ${f(ix)},${f(iy)} C ${f(c1[0])},${f(c1[1])} ${f(c2[0])},${f(c2[1])} ${f(ox)},${f(oy)}`;
+    const shape = `${top} C ${f(b1[0])},${f(b1[1])} ${f(b2[0])},${f(b2[1])} ${f(ix)},${f(iy)} Z`;
+    e.white.setAttribute('d', shape); e.clipPath.setAttribute('d', shape);
+    const icx = cx + gx * 5, icy = cy - 0.8 + gy * 3;
+    for (const [n, dx, dy] of [[e.iris, 0, 0], [e.irisRing, 0, 0], [e.pupil, 0, 0], [e.hi, -3.2, -3.4]]) { n.setAttribute('cx', f(icx + dx)); n.setAttribute('cy', f(icy + dy)); }
+    e.lidShade.setAttribute('d', `${top} L ${f(ox)},${f(oy - 6)} L ${f(ix)},${f(iy - 6)} Z`);
+    e.lower.setAttribute('d', `M ${f(ox)},${f(oy)} C ${f(b1[0])},${f(b1[1])} ${f(b2[0])},${f(b2[1])} ${f(ix)},${f(iy)}`);
+    e.lower.setAttribute('opacity', blink > 0.7 ? 0 : 0.55);
+    e.lash.setAttribute('d', `${top} L ${f(ox + s * 5)},${f(oy - 3)}`);
+  }
+}
+function setBrows(B) {
+  [-1, 1].forEach((s, k) => {
+    const b = B[k], y = -146;
+    const i = [s * 13, y - b.i], o = [s * 60, y - b.o + 1], m = [s * 36, y - (b.i + b.o) / 2 - 2.5];
+    const ti = 5.5, to = 3.4;
+    const d = `M ${f(i[0])},${f(i[1] + ti)} Q ${f(m[0])},${f(m[1] + 5)} ${f(o[0])},${f(o[1] + to * 0.7)} Q ${f(o[0] + s * 4)},${f(o[1])} ${f(o[0])},${f(o[1] - to)} Q ${f(m[0])},${f(m[1] - 5.5)} ${f(i[0])},${f(i[1] - ti)} Q ${f(i[0] - s * 3)},${f(i[1])} ${f(i[0])},${f(i[1] + ti)} Z`;
+    browEls[k].setAttribute('d', d);
+  });
+}
+function setMouth(Mo) {
+  const y0 = -58, w = 19 * (Mo.w ?? 1), sl = Mo.sl ?? 0, sr = Mo.sr ?? 0, open = Mo.open ?? 0;
+  const L = [-w, y0 - sl * 5.5], R = [w, y0 - sr * 5.5];
+  if (open < 0.04) {
+    const mid = y0 + 1.5 + (sl + sr) * 0.6;
+    mouthInner.setAttribute('d', ''); mouthClip.setAttribute('d', '');
+    teethTop.setAttribute('d', ''); teethBot.setAttribute('d', ''); tongue.setAttribute('rx', 0);
+    mouthLine.setAttribute('d', `M ${f(L[0])},${f(L[1])} Q 0,${f(mid)} ${f(R[0])},${f(R[1])}`);
+    lowerLip.setAttribute('d', `M ${f(-w * 0.7)},${y0 + 3} Q 0,${y0 + 11} ${f(w * 0.7)},${y0 + 3} Q 0,${y0 + 6} ${f(-w * 0.7)},${y0 + 3} Z`);
+    return;
+  }
+  let d;
+  if (Mo.round) {
+    const ry = 6 + open * 12, rx = w;
+    d = `M ${f(-rx)},${y0 + 2} C ${f(-rx)},${f(y0 + 2 - ry)} ${f(rx)},${f(y0 + 2 - ry)} ${f(rx)},${y0 + 2} C ${f(rx)},${f(y0 + 2 + ry * 1.25)} ${f(-rx)},${f(y0 + 2 + ry * 1.25)} ${f(-rx)},${y0 + 2} Z`;
+  } else {
+    const topMid = y0 - 1 + (sl + sr) * 1.2, botMid = y0 + 4 + open * 26;
+    d = `M ${f(L[0])},${f(L[1])} Q 0,${f(topMid)} ${f(R[0])},${f(R[1])} Q 0,${f(botMid + 8)} ${f(L[0])},${f(L[1])} Z`;
+  }
+  mouthInner.setAttribute('d', d); mouthClip.setAttribute('d', d);
+  mouthLine.setAttribute('d', '');
+  const tt = Mo.teeth ? 7.5 : 4;
+  teethTop.setAttribute('d', `M ${-w - 2},${y0 - 16} L ${w + 2},${y0 - 16} L ${w + 2},${f(y0 - 1 + tt + (sl + sr) * 1.2)} Q 0,${f(y0 + tt + 1)} ${-w - 2},${f(y0 - 1 + tt + (sl + sr) * 1.2)} Z`);
+  teethBot.setAttribute('d', Mo.clench ? `M ${-w - 2},${y0 + 40} L ${w + 2},${y0 + 40} L ${w + 2},${y0 + 9} Q 0,${y0 + 7} ${-w - 2},${y0 + 9} Z` : '');
+  tongue.setAttribute('cx', 0); tongue.setAttribute('cy', f(y0 + 6 + open * 22)); tongue.setAttribute('rx', Mo.clench ? 0 : f(w * 0.62)); tongue.setAttribute('ry', 7);
+  lowerLip.setAttribute('d', Mo.round
+    ? `M ${f(-w * 0.8)},${f(y0 + 8 + open * 14)} Q 0,${f(y0 + 16 + open * 15)} ${f(w * 0.8)},${f(y0 + 8 + open * 14)} Q 0,${f(y0 + 12 + open * 14)} ${f(-w * 0.8)},${f(y0 + 8 + open * 14)} Z`
+    : `M ${f(-w * 0.6)},${f(y0 + 8 + open * 26)} Q 0,${f(y0 + 15 + open * 26)} ${f(w * 0.6)},${f(y0 + 8 + open * 26)} Q 0,${f(y0 + 11 + open * 26)} ${f(-w * 0.6)},${f(y0 + 8 + open * 26)} Z`);
+}
+
+/* ---------- animation ---------- */
+const ANIM = {
+  idle: { dur: 2.4 }, talk: { dur: 2.0 }, wave: { dur: 1.2 }, walk: { dur: 0.96 }, think: { dur: 3.2 },
+};
+const REST = { upperArmR: 7, upperArmL: -7, foreArmR: -4, foreArmL: 4, handR: 0, handL: 0 };
+const TALK_SEQ = ['A', 'E', 'M', 'O', 'A', 'rest', 'E', 'A', 'M', 'O', 'E', 'rest', 'A', 'M', 'E', 'O'];
+
+function pose(anim, t, emotion, opts = {}) {
+  const dur = ANIM[anim].dur, ph = (t % dur) / dur, TAU = Math.PI * 2;
+  const R = { ...REST, torso: 0, head: 0, thighR: 0, thighL: 0, shinR: 0, shinL: 0, footR: 0, footL: 0 };
+  let bob = 0, breath = Math.sin(TAU * (t % 2.4) / 2.4), gx = 0, gy = 0, handOpen = { R: false, L: false };
+  let mouth = { ...EMO[emotion].mouth };
+  const E = { ...EMO[emotion].eye };
+  const lift = { R: 0, L: 0 };
+  if (anim === 'idle') {
+    R.head = Math.sin(TAU * ph) * 1.2;
+    R.upperArmR += breath * 1.2; R.upperArmL -= breath * 1.2;
+  } else if (anim === 'talk') {
+    R.head = Math.sin(TAU * ph * 2) * 2.2; R.torso = Math.sin(TAU * ph) * 0.8;
+    R.upperArmL = -9 + Math.sin(TAU * ph) * 3; R.foreArmL = -88 + Math.sin(TAU * ph * 2) * 10; R.handL = -14 + Math.sin(TAU * ph * 2) * 8;
+    handOpen.L = true;
+    const k = Math.floor(ph * TALK_SEQ.length), v = VIS[TALK_SEQ[k]];
+    mouth = { ...mouth, ...v, sl: (mouth.sl ?? 0) * 0.6, sr: (mouth.sr ?? 0) * 0.6, round: v.round ? 1 : 0, clench: 0 };
+    if (TALK_SEQ[k] === 'rest' || TALK_SEQ[k] === 'M') mouth.open = 0;
+  } else if (anim === 'wave') {
+    R.upperArmR = 152; R.foreArmR = 18 + Math.sin(TAU * ph * 2) * 22; R.handR = 0; handOpen.R = true;
+    R.head = -3; R.torso = -1.5;
+  } else if (anim === 'walk') {
+    const c = Math.sin(TAU * ph);
+    lift.R = Math.max(0, c) * 0.7; lift.L = Math.max(0, -c) * 0.7;
+    bob = -Math.abs(Math.cos(TAU * ph)) * 6;
+    R.upperArmR = 7 - c * 9; R.upperArmL = -7 - c * 9; R.foreArmR = -4 - Math.max(0, -c) * 14; R.foreArmL = 4 + Math.max(0, c) * 14;
+    R.head = c * 1.5; R.torso = c * 1.2;
+  } else if (anim === 'think') {
+    R.upperArmR = -38; R.foreArmR = -140 + Math.sin(TAU * ph) * 2; R.handR = 8;
+    R.upperArmL = -4; R.foreArmL = 2;
+    R.head = 5 + Math.sin(TAU * ph) * 1; gx = 0.55; gy = -0.7;
+  }
+  // blink roughly every 3 s, never while thinking upwards
+  const bt = (t + (opts.blinkShift ?? 0)) % (opts.blinkPeriod ?? 3.1), blink = anim === 'think' && bt > 0.3 ? 0 : bt < 0.06 ? bt / 0.06 : bt < 0.12 ? 1 : bt < 0.18 ? 1 - (bt - 0.12) / 0.06 : 0;
+  const b = opts.noBlink ? 0 : blink;
+  // apply
+  const set = (name, rot, extra = '') => { const B = bones[name]; B.g.setAttribute('transform', `translate(${f(B.x)},${f(B.y)}) rotate(${f(rot)})${extra}`); };
+  root.setAttribute('transform', `translate(0,${f(585 + bob)})`);
+  set('torso', R.torso);
+  torsoShape.setAttribute('transform', `scale(1,${f(1 + breath * 0.006)})`);
+  const B = bones;
+  B.head.y = -280 * (1 + breath * 0.006); B.upperArmR.y = B.upperArmL.y = -256 * (1 + breath * 0.006);
+  set('head', R.head, ' scale(1.1)');
+  for (const side of ['R', 'L']) {
+    const s = side === 'R' ? -1 : 1;
+    set('upperArm' + side, R['upperArm' + side]); set('foreArm' + side, R['foreArm' + side]); set('hand' + side, R['hand' + side]);
+    hands[side].open.style.display = handOpen[side] ? '' : 'none';
+    hands[side].relaxed.style.display = handOpen[side] ? 'none' : '';
+    const l = lift[side];
+    set('thigh' + side, s * l * 3, ` scale(1,${f(1 - l * 0.1)})`);
+    set('shin' + side, -s * l * 2, ` translate(0,${f(-l * 4)})`);
+    set('foot' + side, 0, ` scale(${f(1 + l * 0.06)},${f(1 + l * 0.06)})`);
+  }
+  setEyes(E, b, gx, gy);
+  setBrows(EMO[emotion].brow);
+  setMouth(mouth);
+  blush.forEach(n => n.setAttribute('opacity', f(EMO[emotion].blush * 0.32)));
+  glasses.style.display = opts.glasses ? '' : 'none';
+}
+
+/* ---------- UI ---------- */
+const state = { anim: 'idle', emotion: 'smile', glasses: 'off', bg: 'grid' };
+const exportMode = location.hash.startsWith('#export') ? location.hash.slice(1) : null;
+const stage = document.getElementById('stage'), stamp = document.getElementById('stamp');
+const NAMES = { idle: 'стоит', talk: 'говорит', wave: 'машет', walk: 'идёт', think: 'думает' };
+function sync() {
+  document.querySelectorAll('.seg[data-key]').forEach(seg => seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(state[seg.dataset.key] === b.dataset.val))));
+  stage.dataset.bg = state.bg;
+  stamp.textContent = `2D · ${NAMES[state.anim]}`;
+}
+document.querySelectorAll('.seg[data-key]').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  state[seg.dataset.key] = b.dataset.val; t0 = performance.now();
+  try { localStorage.setItem('mansurov-2d', JSON.stringify(state)); } catch (_) {}
+  sync();
+}));
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let t0 = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const t = reduce && state.anim === 'idle' ? 0 : (now - t0) / 1000;
+  pose(state.anim, t, state.emotion, { glasses: state.glasses === 'on' });
+}
+if (exportMode) {
+  document.body.classList.add('export');
+  stage.dataset.bg = 'none';
+  window.__pose = (anim, t, emotion, opts) => pose(anim, t, emotion, opts || {});
+  window.__parts = { bones, svg, hands, glasses, eyeG, browEls, mouthG, blush };
+  window.__ANIM = ANIM;
+  pose('idle', 0, 'smile', { noBlink: true });
+  window.__ready = true;
+} else {
+  try { const saved = JSON.parse(localStorage.getItem('mansurov-2d') || 'null'); if (saved) Object.assign(state, saved); } catch (_) {}
+  sync();
+  requestAnimationFrame(frame);
+}
+})();
+</script>
+</body>
+</html>
