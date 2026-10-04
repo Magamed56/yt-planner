@@ -88,7 +88,8 @@ export class MusicEngine {
   scheduleRange(until: number, intensityAt: (t: number) => number): void {
     while (this.startTime + this.nextStep * this.stepDur < until) {
       const t = this.startTime + this.nextStep * this.stepDur;
-      if (t >= this.ctx.currentTime - 0.01) this.step(this.nextStep, t, intensityAt(t));
+      // (never negative: offline chunks start the engine before time 0 for their pre-roll)
+      if (t >= this.ctx.currentTime - 0.01 && t >= 0) this.step(this.nextStep, t, intensityAt(t));
       this.nextStep++;
     }
   }
@@ -102,13 +103,28 @@ export class MusicEngine {
     // bass
     const b = this.bass[s];
     if (b >= 0) this.voice(t, this.m.bass, midi(b), this.stepDur * 1.6, 0.11 + 0.06 * k, 600 + 1800 * k);
-    // drums
+    // drums (the theme's kit flavours the same groove)
+    const kit = this.m.kit;
     if (k > 0.15) {
-      if (inBar % 4 === 0 || (k > 0.8 && inBar % 8 === 6)) this.kick(t, 0.5);
-      const hatEvery = k > 0.75 ? 1 : 2;
-      if (inBar % hatEvery === 0) this.hat(t, inBar % 4 === 2 ? 0.06 : 0.035);
+      if (inBar % 4 === 0 || (k > 0.8 && inBar % 8 === 6)) this.kick(t, kit === 'soft' ? 0.35 : 0.5);
+      const hatEvery = k > 0.75 || kit === 'electro' ? 1 : 2;
+      if (inBar % hatEvery === 0) {
+        const pk = inBar % 4 === 2 ? 0.06 : 0.035;
+        if (kit === 'jingle') this.bell(t, pk * 1.2, inBar % 4 === 2 ? 1 : 0);
+        else if (kit === 'spooky') {
+          if (inBar % 2 === 0) this.voice(t, 'triangle', inBar % 4 === 2 ? 1760 : 1320, 0.04, pk * 0.9, 4000);
+        } else if (kit === 'tribal') {
+          if (inBar % 4 === 2) this.tom(t, inBar % 8 === 2 ? 150 : 115, 0.3);
+          else if (inBar % 2 === 0) this.hat(t, pk * 0.6);
+        } else this.hat(t, kit === 'soft' ? pk * 0.45 : pk);
+      }
     }
-    if (k > 0.45 && inBar % 8 === 4) this.snare(t, 0.22);
+    if (k > 0.45 && inBar % 8 === 4) {
+      if (kit === 'electro') for (let i = 0; i < 3; i++) this.snare(t + i * 0.012, 0.12);
+      else if (kit === 'soft') this.voice(t, 'triangle', 820, 0.05, 0.12, 3000);
+      else if (kit === 'tribal') this.tom(t, 90, 0.42);
+      else this.snare(t, kit === 'spooky' ? 0.16 : 0.22);
+    }
     // lead
     if (k > 0.45) {
       const n = this.lead[s];
@@ -197,6 +213,38 @@ export class MusicEngine {
     g.connect(this.bus);
     src.start(t);
     src.stop(t + 0.06);
+  }
+
+  /** sleigh-bell style shimmer (jingle kit) */
+  private bell(t: number, peak: number, accent: number): void {
+    for (const f of [2637, 3520 + accent * 440]) this.voice(t, 'sine', f, 0.09, peak * 0.6, 9000);
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noise();
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 8000;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(peak, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(this.bus);
+    src.start(t);
+    src.stop(t + 0.13);
+  }
+
+  private tom(t: number, f: number, peak: number): void {
+    const o = this.ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f * 1.6, t);
+    o.frequency.exponentialRampToValueAtTime(f, t + 0.08);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(peak, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    o.connect(g);
+    g.connect(this.bus);
+    o.start(t);
+    o.stop(t + 0.3);
   }
 
   private snare(t: number, peak: number): void {

@@ -41,6 +41,11 @@ test('record mode renders frame-exact JPEG frames and an offline soundtrack', as
   });
   expect(pcm.bytes).toBe(48000 * 4);
   expect(pcm.peak).toBeGreaterThan(100);
+  // a later chunk (pre-roll starts the music before the chunk's time 0)
+  const more = await page.evaluate(() => (window as unknown as { __recorder: Rec }).__recorder.next(170));
+  expect(more.frames.length).toBe(170);
+  const chunk = await page.evaluate(async () => (await (window as unknown as { __recorder: Rec }).__recorder.audio(4.63, 5.5)).length);
+  expect(chunk).toBeGreaterThan(1000);
   const meta = await page.evaluate(() => (window as unknown as { __recorder: Rec }).__recorder.meta());
   expect(meta.captions[0].text).toBe('CAN I ESCAPE?!');
 });

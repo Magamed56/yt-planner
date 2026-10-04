@@ -8,28 +8,28 @@ Render with `npm run record -- videos/<id>.json` (or a whole folder).
 |---|---|---|---|---|---|---|---|---|---|
 | video_001 | Can I Escape The Factory? | 1 | CHASE | 1 | pip | FACTORY | 28.9 | finish | 0 |
 | video_002 | Can I Escape The Factory? | 9 | CHASE | 1 | pip | FACTORY | 37.6 | finish | 0 |
-| video_003 | The Monster Got Faster! | 12 | CHASE | 6 | robot | FACTORY | 39.8 | finish | 0 |
-| video_004 | I Almost Died! | 35 | NEAR_DEATH | 3 | cat | WINTER | 30.9 | escape | 1 |
-| video_005 | Only One Jump Saved Me! | 21 | NEAR_DEATH | 3 | toy | NIGHT | 33.6 | finish | 0 |
-| video_006 | The Floor Disappeared! | 50 | CHAOS | 5 | cookie | CANDY | 28.3 | escape | 0 |
-| video_007 | Impossible Factory Escape! | 83 | IMPOSSIBLE | 4 | pumpkin | HALLOWEEN | 32.2 | loop | 0 |
-| video_008 | The Monster Was RIGHT Behind Me! | 42 | CHASE | 6 | alien | CANDY | 36.0 | finish | 0 |
-| video_009 | Everything Went Wrong! | 43 | CHAOS | 2 | pip | CANDY | 38.8 | escape | 1 |
-| video_010 | I Escaped The Factory Boss! | 80 | BOSS_ESCAPE | 1 | robot | SPACE | 30.1 | finish | 0 |
-| video_011 | Perfect Run — No Deaths! | 33 | PERFECT_RUN | 1 | cat | WINTER | 34.6 | finish | 0 |
-| video_012 | He Caught Me… | 54 | FAIL | 2 | toy | UNDERWATER | 29.2 | fail | 1 |
-| video_013 | Pick The Right Door! | 44 | CHASE | 2 | cookie | CANDY | 32.8 | loop | 1 |
-| video_014 | Can I Escape The Factory? | 4 | CHASE | 1 | pumpkin | FACTORY | 29.6 | finish | 0 |
-| video_015 | The Monster Got Faster! | 23 | CHASE | 6 | alien | NIGHT | 38.8 | finish | 0 |
+| video_003 | The Monster Got Faster! | 12 | CHASE | 6 | robot | FACTORY | 39.6 | finish | 0 |
+| video_004 | I Almost Died! | 35 | NEAR_DEATH | 3 | cat | WINTER | 30.7 | finish | 0 |
+| video_005 | Only One Jump Saved Me! | 12 | NEAR_DEATH | 3 | toy | FACTORY | 30.5 | finish | 0 |
+| video_006 | The Floor Disappeared! | 50 | CHAOS | 5 | cookie | CANDY | 28.2 | escape | 0 |
+| video_007 | Impossible Factory Escape! | 83 | IMPOSSIBLE | 4 | pumpkin | HALLOWEEN | 33.1 | escape | 0 |
+| video_008 | The Monster Was RIGHT Behind Me! | 42 | CHASE | 6 | alien | CANDY | 35.0 | escape | 0 |
+| video_009 | Everything Went Wrong! | 43 | CHAOS | 2 | pip | CANDY | 39.3 | finish | 1 |
+| video_010 | I Escaped The Factory Boss! | 80 | BOSS_ESCAPE | 1 | robot | SPACE | 29.8 | escape | 0 |
+| video_011 | Perfect Run — No Deaths! | 33 | PERFECT_RUN | 1 | cat | WINTER | 34.3 | finish | 0 |
+| video_012 | He Caught Me… | 54 | FAIL | 2 | toy | UNDERWATER | 28.5 | fail | 5 |
+| video_013 | Pick The Right Door! | 44 | CHASE | 2 | cookie | CANDY | 32.5 | loop | 1 |
+| video_014 | Can I Escape The Factory? | 4 | CHASE | 1 | pumpkin | FACTORY | 29.3 | finish | 0 |
+| video_015 | The Monster Got Faster! | 23 | CHASE | 6 | alien | NIGHT | 39.6 | finish | 0 |
 | video_016 | I Almost Died! | 19 | NEAR_DEATH | 3 | pip | FACTORY | 30.1 | finish | 0 |
-| video_017 | Only One Jump Saved Me! | 12 | NEAR_DEATH | 3 | robot | FACTORY | 31.5 | finish | 0 |
-| video_018 | The Floor Disappeared! | 59 | CHAOS | 5 | cat | UNDERWATER | 28.3 | loop | 1 |
-| video_019 | Impossible Factory Escape! | 92 | IMPOSSIBLE | 4 | toy | CHRISTMAS | 32.5 | loop | 1 |
-| video_020 | The Monster Was RIGHT Behind Me! | 33 | CHASE | 6 | cookie | WINTER | 35.2 | finish | 0 |
-| video_021 | Everything Went Wrong! | 22 | CHAOS | 2 | pumpkin | NIGHT | 37.9 | loop | 1 |
-| video_022 | I Escaped The Factory Boss! | 30 | BOSS_ESCAPE | 1 | alien | NIGHT | 30.5 | escape | 0 |
-| video_023 | Perfect Run — No Deaths! | 38 | PERFECT_RUN | 1 | pip | WINTER | 33.7 | escape | 0 |
-| video_024 | He Caught Me… | 37 | FAIL | 2 | robot | WINTER | 26.7 | fail | 1 |
+| video_017 | Only One Jump Saved Me! | 18 | NEAR_DEATH | 3 | robot | FACTORY | 33.6 | finish | 0 |
+| video_018 | The Floor Disappeared! | 45 | CHAOS | 5 | cat | CANDY | 28.9 | finish | 0 |
+| video_019 | Impossible Factory Escape! | 92 | IMPOSSIBLE | 4 | toy | CHRISTMAS | 32.5 | escape | 5 |
+| video_020 | The Monster Was RIGHT Behind Me! | 33 | CHASE | 6 | cookie | WINTER | 35.3 | finish | 0 |
+| video_021 | Everything Went Wrong! | 22 | CHAOS | 2 | pumpkin | NIGHT | 38.6 | loop | 1 |
+| video_022 | I Escaped The Factory Boss! | 30 | BOSS_ESCAPE | 1 | alien | NIGHT | 30.7 | finish | 0 |
+| video_023 | Perfect Run — No Deaths! | 79 | PERFECT_RUN | 1 | pip | SPACE | 33.6 | escape | 0 |
+| video_024 | He Caught Me… | 37 | FAIL | 2 | robot | WINTER | 29.5 | fail | 1 |
 | video_025 | Pick The Right Door! | 30 | CHASE | 2 | cat | NIGHT | 32.5 | loop | 1 |
 
 ## Long videos (1920×1080)

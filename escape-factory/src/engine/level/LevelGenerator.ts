@@ -164,6 +164,8 @@ export function generateLevel(p: LevelGenParams): LevelData {
   let frame: Frame = { x: 0, y: 0, z: 0, dir: 0 };
   let estStart = 0;
   const decor = theme?.decorations ?? [];
+  const phys = theme?.physics;
+  const rangeScale = (phys?.speedMul ?? 1) / Math.sqrt(phys?.gravityScale ?? 1);
   const floorSurface =
     theme?.special.floorSurface === 'ice' || theme?.special.floorSurface === 'jelly'
       ? { surface: theme.special.floorSurface, chance: theme.special.floorSurfaceChance ?? 0.3 }
@@ -180,7 +182,7 @@ export function generateLevel(p: LevelGenParams): LevelData {
       if (def.type === 'TURN') opts.turn = decideTurn(frame, genRng, attempt);
       mark = b.mark();
       b.begin(frame, i);
-      const ctx: ModuleContext = { b, rng: genRng, diff, index: i, count: plan.length, opts, decor, floorSurface, enemy };
+      const ctx: ModuleContext = { b, rng: genRng, diff, index: i, count: plan.length, opts, decor, floorSurface, enemy, rangeScale };
       result = def.generate(ctx);
       fp = b.footprintSince(mark);
       if (!fp || !overlapsAny(fp, footprints, 2)) {
@@ -194,7 +196,7 @@ export function generateLevel(p: LevelGenParams): LevelData {
       if (attempt === 3) {
         // give up: accept the overlap (rare, validated by tests)
         b.begin(frame, i);
-        result = def.generate({ b, rng: genRng, diff, index: i, count: plan.length, opts: { ...slot.opts }, decor, floorSurface, enemy });
+        result = def.generate({ b, rng: genRng, diff, index: i, count: plan.length, opts: { ...slot.opts }, decor, floorSurface, enemy, rangeScale });
         fp = b.footprintSince(mark);
       }
     }

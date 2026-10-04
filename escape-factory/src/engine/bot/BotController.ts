@@ -140,13 +140,20 @@ export class BotController implements InputSource {
   /** Resets per-attempt state after a respawn (mistakes are re-rolled). */
   private respawnWaitUntil = 0;
 
+  /** deaths inside each arena (boss fights restart their clock on every attempt) */
+  private readonly arenaDeaths = new Map<ArenaHint, number>();
+  private lastArena: ArenaHint | null = null;
+
   private onRespawn(): void {
     this.learn *= 0.6;
+    if (this.lastArena) this.arenaDeaths.set(this.lastArena, (this.arenaDeaths.get(this.lastArena) ?? 0) + 1);
+    this.lastArena = null;
     // a short, human-like pause before trying again (also breaks deterministic loops)
     this.respawnWaitUntil = this.world.time + this.rng.range(0.05, 0.9);
     // a scripted mistake that already happened is not repeated on the retry
     if (this.stopUntil !== 0 && this.forced[0]?.kind === 'stop') this.forced.shift();
     this.jumpDecision.clear();
+    this.jumped.clear();
     this.choiceLane.clear();
     this.gateState.clear();
     this.aim = null;
@@ -228,6 +235,7 @@ export class BotController implements InputSource {
 
     // ---- arenas (boss, falling objects)
     const arena = this.arenas.find((h) => s >= h.s0 - 1 && s <= h.s1);
+    this.lastArena = arena ?? null;
     if (arena) {
       if (t >= this.arenaNext) this.decideArena(arena, s, t);
       lateral = this.arenaLane ?? lateral;
@@ -245,7 +253,11 @@ export class BotController implements InputSource {
     if (ride && ground) {
       rideTarget = { x: (ground.minX + ground.maxX) / 2, z: (ground.minZ + ground.maxZ) / 2 };
       const exit = this.jumps.find((j) => j.s > ride.s0 && j.targetId !== ride.pieceId);
-      if (exit && this.canLand(exit)) wantJump = true;
+      if (exit && this.canLand(exit)) {
+        wantJump = true;
+        // steer the flight onto the exit target (air control needs an aim)
+        this.aim = { landS: exit.landS, lateral: exit.lateral, targetId: exit.targetId };
+      }
     }
 
     // ---- jumps
@@ -324,9 +336,12 @@ export class BotController implements InputSource {
       const box = this.aim.targetId >= 0 ? w.solids.predictBox(this.aim.targetId, w.time + tLeft, this.tmpBox) : null;
       const d = w.solids.get(this.aim.targetId);
       if (box && !(d && d.piece.motion)) {
-        const sp = Math.max(Math.hypot(b.vx, b.vz), st.runSpeed * 0.9);
-        const dirx = tx - b.x;
-        const dirz = tz - b.z;
+        // natural landing from the current velocity (direction-to-target flips once
+        // we fly past the aim point, which used to make the bot brake to a halt)
+        const vh = Math.hypot(b.vx, b.vz);
+        const sp = Math.max(vh, st.runSpeed * 0.9);
+        const dirx = vh > 1 ? b.vx : tx - b.x;
+        const dirz = vh > 1 ? b.vz : tz - b.z;
         const dl = Math.hypot(dirx, dirz) || 1;
         const nx = b.x + (dirx / dl) * sp * tLeft;
         const nz = b.z + (dirz / dl) * sp * tLeft;
@@ -386,9 +401,13 @@ export class BotController implements InputSource {
   }
 
   private nextJumpHint(s: number): JumpHint | null {
-    for (const j of this.jumps) if (j.s > s - 0.6) return j;
+    // a takeoff point we were carried past (bounce, push, late landing) still counts
+    // while the gap is ahead of us and we have not jumped for it yet
+    for (const j of this.jumps) if (j.s > s - 0.6 || (j.s > s - 2 && j.landS > s + 1.5 && !this.jumped.has(j))) return j;
     return null;
   }
+
+  private readonly jumped = new Set<JumpHint>();
 
   private aimPoint(a: { landS: number; lateral: number; targetId: number }): { x: number; y: number; z: number } {
     const w = this.world;
@@ -482,6 +501,7 @@ export class BotController implements InputSource {
       if (s >= j.s - 1.6) {
         if (this.canLand(j)) {
           this.aim = { landS: j.landS, lateral: j.lateral, targetId: j.targetId };
+          this.jumped.add(j);
           return { jump: true, stopS: Infinity };
         }
         this.stats.waits++;
@@ -492,6 +512,7 @@ export class BotController implements InputSource {
     const takeoff = j.s + dec.offsetS;
     if (s >= takeoff) {
       this.aim = { landS: j.landS, lateral: j.lateral, targetId: j.targetId };
+      this.jumped.add(j);
       return { jump: true, stopS: Infinity };
     }
     return { jump: false, stopS: Infinity };
@@ -649,17 +670,22 @@ export class BotController implements InputSource {
     let bestScore = -UNSAFE;
     let bestLane = cur;
     let bestSpeed = 1;
-    const speeds = this.profile.aggression > 0.95 ? [1] : [1, 0.55, 0];
+    // aggressive bots still consider holding back when full speed is unsafe (score prefers speed)
+    const speeds = [1, 0.55, 0];
     let bestJump: number | null = null;
     const grounded = w.player.body.grounded;
+    // learning: after dying here, demand more clearance and explore other options
+    const tries = this.arenaDeaths.get(a) ?? 0;
+    const margin = Math.min(0.2, this.margin()) + Math.min(0.3, tries * 0.07);
     for (const lane of a.lanes) {
       for (const sp of speeds) {
         for (const jt of grounded ? [null, 0, 0.12, 0.25] : [null]) {
           const res = this.pred.check(
             { startDelay: 0, lateral: lane, speed: sp, jumpS: [], jumpT: jt === null ? [] : [jt] },
-            { hazardIds: a.hazardIds, blockerIds: [], supportIds: [], margin: Math.min(0.2, this.margin()), untilS: s + 9, horizon: 1.4 },
+            { hazardIds: a.hazardIds, blockerIds: [], supportIds: [], margin, untilS: s + 9, horizon: 1.4 + Math.min(0.6, tries * 0.15) },
           );
           let score = res.safe ? 100 + sp * 10 : res.failT * 10;
+          if (tries) score += this.rng.range(0, Math.min(8, tries * 2));
           if (lane === cur) score += 3;
           if (jt !== null) score -= 2; // prefer running when equally safe
           score -= Math.abs(lane - w.playerLateral) * 0.5;

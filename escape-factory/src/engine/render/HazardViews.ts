@@ -300,6 +300,7 @@ function zoneView(h: Extract<HazardSpec, { kind: 'zone' }>, ctx: LevelViewContex
     void: ['#1b1030', '#4b2a80'],
     water: ['#3fb6ff', '#0b4f8a'],
     electric: ['#7df9ff', '#2b59ff'],
+    syrup: ['#ff6fae', '#b8326f'],
   };
   const [c1, c2] = colors[style] ?? colors.acid;
   const mat = new THREE.MeshStandardMaterial({ color: c2, emissive: new THREE.Color(c1), emissiveIntensity: 0.8, roughness: 0.3 });

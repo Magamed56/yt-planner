@@ -1,8 +1,8 @@
 {
   "id": "video_017",
   "title": "Only One Jump Saved Me!",
-  "seed": 1012,
-  "difficulty": 1.39,
+  "seed": 1018,
+  "difficulty": 1.89,
   "theme": "FACTORY",
   "character": "robot",
   "enemy": "grumbo",
@@ -33,13 +33,13 @@
   "events": [],
   "highlight": "auto",
   "recipe": "ONE_JUMP",
-  "level": 12,
+  "level": 18,
   "specialEvents": [
     "more:JUMP",
     "more:MOVING_PLATFORM"
   ],
   "meta": {
-    "description": "One perfectly timed jump was the only thing between Pip and Grumbo. (Level 12: The Steamy Factory Floor · Bolt)",
+    "description": "One perfectly timed jump was the only thing between Pip and Grumbo. (Level 18: The Bouncy Control Room · Bolt)",
     "tags": [
       "parkour",
       "jump",

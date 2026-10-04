@@ -1,9 +1,9 @@
 {
   "id": "video_005",
   "title": "Only One Jump Saved Me!",
-  "seed": 1021,
-  "difficulty": 1.74,
-  "theme": "NIGHT",
+  "seed": 1012,
+  "difficulty": 1.39,
+  "theme": "FACTORY",
   "character": "toy",
   "enemy": "grumbo",
   "scenario": "NEAR_DEATH",
@@ -33,13 +33,13 @@
   "events": [],
   "highlight": "auto",
   "recipe": "ONE_JUMP",
-  "level": 21,
+  "level": 12,
   "specialEvents": [
     "more:JUMP",
     "more:MOVING_PLATFORM"
   ],
   "meta": {
-    "description": "One perfectly timed jump was the only thing between Pip and Grumbo. (Level 21: The Greasy Gear Works · Tick-Tock)",
+    "description": "One perfectly timed jump was the only thing between Pip and Grumbo. (Level 12: The Steamy Factory Floor · Tick-Tock)",
     "tags": [
       "parkour",
       "jump",

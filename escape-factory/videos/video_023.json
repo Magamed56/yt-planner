@@ -1,9 +1,9 @@
 {
   "id": "video_023",
   "title": "Perfect Run — No Deaths!",
-  "seed": 1038,
-  "difficulty": 2.71,
-  "theme": "WINTER",
+  "seed": 1079,
+  "difficulty": 4.35,
+  "theme": "SPACE",
   "character": "pip",
   "enemy": "grumbo",
   "scenario": "PERFECT_RUN",
@@ -33,10 +33,10 @@
   "events": [],
   "highlight": "auto",
   "recipe": "PERFECT_RUN",
-  "level": 38,
+  "level": 79,
   "specialEvents": [],
   "meta": {
-    "description": "Not a single mistake from start to finish. (Level 38: The Bouncy Control Room · Pip)",
+    "description": "Not a single mistake from start to finish. (Level 79: The Speedy Laser Lab · Pip)",
     "tags": [
       "perfect run",
       "no death",

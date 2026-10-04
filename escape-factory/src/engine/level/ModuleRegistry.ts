@@ -63,6 +63,8 @@ export interface ModuleContext {
   floorSurface?: { surface: 'ice' | 'jelly'; chance: number };
   /** look of falling objects / zones (for naming only — visuals come from the theme) */
   enemy: string;
+  /** theme physics: jump range relative to the reference character (≥ 1 = floatier) */
+  rangeScale?: number;
 }
 
 export interface ModuleResult {

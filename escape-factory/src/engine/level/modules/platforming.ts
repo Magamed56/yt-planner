@@ -32,7 +32,8 @@ export const JUMP: ModuleDef = {
       let plat = last ? PAD + 0.5 : r.range(d.platformMin, d.platformMax);
       if (dy < 0) plat = Math.max(plat, 3.0);
       // during chases keep platforms long enough to land at full speed
-      if (chase && !last) plat = Math.max(plat, 4.6);
+      // (floaty themes fly further, so their chase platforms are longer too)
+      if (chase && !last) plat = Math.max(plat, 4.6 * Math.max(1, ctx.rangeScale ?? 1));
       const hwP = last ? hw : hw * r.range(0.45, 0.9);
       const lat = last ? 0 : r.range(-(hw - hwP), hw - hwP);
       gapSpine(ctx, lz, lz + gap, y, y + dy, hw);
@@ -216,8 +217,13 @@ export const NARROW_BRIDGE: ModuleDef = {
       for (let i = 0; i < 3; i++) {
         const o = offs[i];
         b.floor(o - w / 2, o + w / 2, lz, lz + seg, 0, { style: 'bridge' });
-        b.spinePoint(o, 0, lz + seg / 2, w / 2);
-        b.hint({ kind: 'lane', s0: b.sAt(lz), s1: b.sAt(lz + seg), lateral: o });
+        // the spine runs straight down each segment and jogs diagonally across
+        // the joining squares, so "lateral 0" (bot, camera) is always on the planks
+        const a = i === 0 ? lz : lz + w / 2;
+        const e = i === 2 ? lz + seg : lz + seg - w / 2;
+        b.spinePoint(o, 0, a, w / 2);
+        b.spinePoint(o, 0, e, w / 2);
+        b.hint({ kind: 'lane', s0: b.sAt(a), s1: b.sAt(e), lateral: 0 });
         if (i < 2) {
           const o2 = offs[i + 1];
           b.floor(Math.min(o, o2) - w / 2, Math.max(o, o2) + w / 2, lz + seg - w / 2, lz + seg + w / 2, 0, { style: 'bridge' });

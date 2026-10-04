@@ -26,6 +26,8 @@ export interface EnemyTuning {
   nearGapOffset: number;
   /** if true the enemy never catches (cinematic takes) */
   mercy: boolean;
+  /** environment speed factor (theme physics, e.g. slower underwater) */
+  speedScale?: number;
 }
 
 export class Enemy {
@@ -367,9 +369,10 @@ export class Enemy {
 
     // --- speed: never slower than the hunt speed, rubber band toward desired gap
     const gap = ctx.playerS - this.s;
-    const hunt = d.enemyHunt * this.def.stats.speedMul * (0.92 + 0.16 * this.intensity);
+    const env = this.tuning.speedScale ?? 1;
+    const hunt = d.enemyHunt * this.def.stats.speedMul * env * (0.92 + 0.16 * this.intensity);
     let target = Math.max(hunt, ctx.playerSpeedS + 2.2 * (gap - this.desiredGap));
-    let maxSpeed = d.enemyMax;
+    let maxSpeed = d.enemyMax * env;
     if (gap > 22) maxSpeed = 22;
     if (this.graceLeft > 0) {
       this.graceLeft -= dt;

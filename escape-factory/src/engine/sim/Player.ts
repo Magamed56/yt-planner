@@ -208,8 +208,9 @@ export class Player {
       }
       this.jumping = false;
       this.airTime = 0;
-      if (b.ground && b.ground.surface === 'jelly' && -prevVy > 4) {
-        b.vy = Math.min(16, -prevVy * 0.85);
+      // jelly: one comic "boing" after a real jump or drop (no endless chains)
+      if (b.ground && b.ground.surface === 'jelly' && -prevVy > 8) {
+        b.vy = Math.min(9, -prevVy * 0.6);
         b.grounded = false;
       }
     }

@@ -79,14 +79,33 @@
   late forced jumps override an earlier timing decision, lateJump only on static targets;
   edge landings emit PLAYER_NEAR_DEATH (cause 'edge').
 
+- PHASE 14 — Themes: NORMAL (Sunny Factory), NIGHT (Night Shift), WINTER (Frozen Plant),
+  CANDY (Candy Works), UNDERWATER (Sunken Factory), VOLCANO (Lava Foundry), SPACE (Orbital
+  Plant), HALLOWEEN (Haunted Factory), CHRISTMAS (Toy Workshop) + FACTORY. Each changes palette,
+  lighting, fog, particles (snow/embers/bubbles/stars/leaves/sparkles), music (scale, tempo,
+  timbre + kit: soft/electro/jingle/tribal/spooky), 26 new themed decorations (game layer,
+  merged static), Grumbo costume, falling-object look, lethal-zone look (new 'syrup'), module
+  weights, special surfaces (ice in WINTER, one-boing jelly in CANDY) and physics (floaty
+  UNDERWATER, low-gravity SPACE). Fairness rule: theme physics keep jump range ≤ +12 % and
+  floaty themes get longer chase platforms (`ModuleContext.rangeScale`); Grumbo's speed scales
+  with the environment. Backdrop silhouettes are kept clear of the whole (turning) track.
+  Gallery: docs/img/themes.jpg.
+- PHASE 15 — 100 levels: campaign test plays all 100 levels with the SKILLED bot in the unit
+  suite (~8 s); validation: PERFECT/SKILLED/AVERAGE/CLUMSY/DAREDEVIL/CAUTIOUS 100/100 and all 7
+  characters 100/100 (SKILLED). Bot fixes found by themed levels: ride exits now set an aim,
+  air control projects from real velocity (no mid-air braking past the aim point), missed
+  takeoff points recoverable, per-arena learning (boss clocks restart each attempt), aggressive
+  bots may hold back in arenas; zigzag bridge spine follows the planks.
+
 ## CURRENT
 - PHASE 12 — Long videos (5/10/15/20 min): LongPlanner implemented (cold open, one chapter per
   level with rotating scenario program, boss levels, long-run trimming, chapters, outro teaser,
-  ±3 % length fit); rendering verification pending.
+  ±3 % length fit). First 5-min render produced all 8 809 frames but the soundtrack failed
+  (music step scheduled at a negative time in a later chunk) → fixed + unit test; re-render
+  in progress.
 
 ## NEXT
-- 12 long video verification → 13 scenario polish → 14 themes → 15 100 levels → 16 optimisation →
-  17 QA + docs.
+- 12 long video verification → 16 optimisation (character mesh merging, draw calls) → 17 QA + docs.
 
 ## BUGS
 - Google Fonts blocked in the cloud container (falls back to Arial Black) — fine for users.
@@ -107,3 +126,5 @@
   filmed again exactly, and planning/measuring runs headless in Node.
 - ADR-006: Recording renders frames in the browser but encodes in Node/ffmpeg; audio is
   synthesised offline from an event timeline (no realtime capture, no drift).
+- ADR-007: Themes may change physics only within the jump-range fairness budget (≤ +12 %);
+  generator compensates floatiness via `rangeScale`. Keeps one generator valid for all themes.

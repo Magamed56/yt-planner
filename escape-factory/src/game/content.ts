@@ -8,6 +8,7 @@ import { themes } from '@engine/theme/ThemeDef';
 import { ROSTER } from './characters/roster';
 import { GRUMBO } from './enemies/grumbo';
 import { ALL_THEMES } from './themes';
+import { registerThemeDecor } from './themes/decor';
 
 let registered = false;
 
@@ -17,6 +18,7 @@ export function registerContent(): void {
   ROSTER.forEach((c, i) => characters.register(c, i === 0));
   enemies.register(GRUMBO, true);
   ALL_THEMES.forEach((t, i) => themes.register(t, i === 0));
+  registerThemeDecor();
 }
 
 export const GAME_TITLE = 'ESCAPE FACTORY';

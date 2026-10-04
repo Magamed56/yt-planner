@@ -11,13 +11,14 @@ import { World } from '../src/engine/sim/World';
 import { emptyInput } from '../src/engine/input/InputState';
 import { campaignParams } from '../src/game/campaign';
 import { registerContent } from '../src/game/content';
+import { themes } from '../src/engine/theme/ThemeDef';
 
 registerContent();
 const [n = '2', prof = 'PERFECT', secs = '30'] = process.argv.slice(2);
 const level = generateLevel(campaignParams(Number(n)));
 console.log(level.modules.map((m) => `${m.index}:${m.type}[${m.s0.toFixed(1)}-${m.s1.toFixed(1)}] ${m.tags.join(',')}`).join('\n'));
 const near = (s: number) => level.hints.filter((h) => ('s' in h ? Math.abs(h.s - s) < 3 : 's0' in h && s > h.s0 - 3 && s < h.s1 + 1));
-const world = new World({ level, character: characters.get('pip'), enemy: enemies.get(level.enemy) });
+const world = new World({ level, character: characters.get(process.env.CHAR ?? 'pip'), enemy: enemies.get(level.enemy), physicsMods: themes.get(level.theme).physics });
 const bot = new BotController(world, botProfile(prof), 1234 + Number(n));
 const inp = emptyInput();
 let deaths = 0;

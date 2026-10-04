@@ -73,6 +73,8 @@ export class Backdrop {
     const spine = level.spine;
     const total = spine[spine.length - 1].s;
     const stepS = 26;
+    // widest silhouette radius per backdrop style (mountains and volcanoes are huge)
+    const footprint = ({ snow: 30, xmas: 30, volcano: 30, underwater: 16, space: 14, candy: 9, spooky: 6 } as Record<string, number>)[theme.backdrop] ?? 16;
     let idx = 0;
     for (let s = -40; s < total + 60; s += stepS) {
       // find spine point near s
@@ -86,9 +88,12 @@ export class Backdrop {
       const rz = fx / l;
       for (const side of [-1, 1]) {
         if (!rng.chance(0.8)) continue;
-        const dist = rng.range(38, 95);
+        const dist = rng.range(38, 95) + footprint;
         const x = a.x + rx * dist * side + rng.range(-8, 8);
         const z = a.z + rz * dist * side + rng.range(-8, 8);
+        // the track turns: keep every silhouette clear of ALL of it, not just this stretch
+        const clear = footprint + 26;
+        if (spine.some((q) => (q.x - x) * (q.x - x) + (q.z - z) * (q.z - z) < clear * clear)) continue;
         this.silhouette(theme, rng, add, x, minY - 30, z, p);
       }
     }

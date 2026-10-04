@@ -117,7 +117,7 @@ export class World implements SimContext {
           this.diff,
           this.track,
           this.rng.fork('enemy'),
-          { aggression: 1, nearGapOffset: 0, mercy: false, ...opts.enemyTuning },
+          { aggression: 1, nearGapOffset: 0, mercy: false, speedScale: opts.physicsMods?.speedMul ?? 1, ...opts.enemyTuning },
           opts.level,
         )
       : null;

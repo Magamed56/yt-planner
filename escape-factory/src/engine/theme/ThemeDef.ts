@@ -98,7 +98,7 @@ export interface ThemeDef {
     /** look of falling objects */
     fallerStyle: string;
     /** look of lethal zones */
-    zoneStyle: 'acid' | 'lava' | 'void' | 'water' | 'electric';
+    zoneStyle: 'acid' | 'lava' | 'void' | 'water' | 'electric' | 'syrup';
     /** module weight multipliers */
     moduleWeights?: Record<string, number>;
   };
