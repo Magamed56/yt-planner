@@ -1,0 +1,424 @@
+{
+  "canvas": {
+    "width": 848,
+    "height": 1264,
+    "note": "x, y = top-left corner of each image on this canvas; pivot = joint on the same canvas, y grows downwards"
+  },
+  "bones": {
+    "root": {
+      "parent": null,
+      "pivot": [
+        424,
+        640
+      ]
+    },
+    "torso": {
+      "parent": "root",
+      "pivot": [
+        424,
+        590
+      ]
+    },
+    "head": {
+      "parent": "torso",
+      "pivot": [
+        424,
+        262
+      ]
+    },
+    "upperArmR": {
+      "parent": "torso",
+      "pivot": [
+        298,
+        335
+      ]
+    },
+    "foreArmR": {
+      "parent": "upperArmR",
+      "pivot": [
+        260,
+        535
+      ]
+    },
+    "handR": {
+      "parent": "foreArmR",
+      "pivot": [
+        232,
+        650
+      ]
+    },
+    "upperArmL": {
+      "parent": "torso",
+      "pivot": [
+        550,
+        335
+      ]
+    },
+    "foreArmL": {
+      "parent": "upperArmL",
+      "pivot": [
+        590,
+        535
+      ]
+    },
+    "handL": {
+      "parent": "foreArmL",
+      "pivot": [
+        614,
+        650
+      ]
+    },
+    "thighR": {
+      "parent": "root",
+      "pivot": [
+        362,
+        700
+      ]
+    },
+    "shinR": {
+      "parent": "thighR",
+      "pivot": [
+        346,
+        915
+      ]
+    },
+    "footR": {
+      "parent": "shinR",
+      "pivot": [
+        322,
+        1140
+      ]
+    },
+    "thighL": {
+      "parent": "root",
+      "pivot": [
+        490,
+        700
+      ]
+    },
+    "shinL": {
+      "parent": "thighL",
+      "pivot": [
+        508,
+        915
+      ]
+    },
+    "footL": {
+      "parent": "shinL",
+      "pivot": [
+        527,
+        1140
+      ]
+    }
+  },
+  "draw_order": [
+    "thighR",
+    "shinR",
+    "footR",
+    "thighL",
+    "shinL",
+    "footL",
+    "pelvis",
+    "head (one of the head_* images)",
+    "head_mouth_* (optional, for speech)",
+    "torso",
+    "upperArmR",
+    "foreArmR",
+    "handR",
+    "upperArmL",
+    "foreArmL",
+    "handL"
+  ],
+  "attachments": {
+    "upperArmR": {
+      "x": 225,
+      "y": 299,
+      "w": 93,
+      "h": 254,
+      "file": "parts/upperArmR.png",
+      "bone": "upperArmR"
+    },
+    "foreArmR": {
+      "x": 214,
+      "y": 501,
+      "w": 79,
+      "h": 156,
+      "file": "parts/foreArmR.png",
+      "bone": "foreArmR"
+    },
+    "handR": {
+      "x": 205,
+      "y": 632,
+      "w": 56,
+      "h": 127,
+      "file": "parts/handR.png",
+      "bone": "handR"
+    },
+    "upperArmL": {
+      "x": 531,
+      "y": 300,
+      "w": 92,
+      "h": 253,
+      "file": "parts/upperArmL.png",
+      "bone": "upperArmL"
+    },
+    "foreArmL": {
+      "x": 556,
+      "y": 501,
+      "w": 84,
+      "h": 156,
+      "file": "parts/foreArmL.png",
+      "bone": "foreArmL"
+    },
+    "handL": {
+      "x": 588,
+      "y": 632,
+      "w": 55,
+      "h": 127,
+      "file": "parts/handL.png",
+      "bone": "handL"
+    },
+    "torso": {
+      "x": 284,
+      "y": 240,
+      "w": 281,
+      "h": 361,
+      "file": "parts/torso.png",
+      "bone": "torso"
+    },
+    "pelvis": {
+      "x": 303,
+      "y": 588,
+      "w": 242,
+      "h": 121,
+      "file": "parts/pelvis.png",
+      "bone": "root"
+    },
+    "thighR": {
+      "x": 294,
+      "y": 660,
+      "w": 133,
+      "h": 273,
+      "file": "parts/thighR.png",
+      "bone": "thighR"
+    },
+    "shinR": {
+      "x": 284,
+      "y": 879,
+      "w": 105,
+      "h": 268,
+      "file": "parts/shinR.png",
+      "bone": "shinR"
+    },
+    "footR": {
+      "x": 258,
+      "y": 1118,
+      "w": 111,
+      "h": 116,
+      "file": "parts/footR.png",
+      "bone": "footR"
+    },
+    "thighL": {
+      "x": 424,
+      "y": 660,
+      "w": 132,
+      "h": 273,
+      "file": "parts/thighL.png",
+      "bone": "thighL"
+    },
+    "shinL": {
+      "x": 463,
+      "y": 879,
+      "w": 103,
+      "h": 268,
+      "file": "parts/shinL.png",
+      "bone": "shinL"
+    },
+    "footL": {
+      "x": 484,
+      "y": 1118,
+      "w": 112,
+      "h": 116,
+      "file": "parts/footL.png",
+      "bone": "footL"
+    }
+  },
+  "head_images": {
+    "head_neutral": {
+      "x": 352,
+      "y": 59,
+      "w": 145,
+      "h": 245,
+      "file": "parts/head_neutral.png",
+      "bone": "head"
+    },
+    "head_neutral_blink": {
+      "x": 352,
+      "y": 59,
+      "w": 145,
+      "h": 245,
+      "file": "parts/head_neutral_blink.png",
+      "bone": "head"
+    },
+    "head_smile": {
+      "x": 352,
+      "y": 59,
+      "w": 145,
+      "h": 245,
+      "file": "parts/head_smile.png",
+      "bone": "head"
+    },
+    "head_smile_blink": {
+      "x": 352,
+      "y": 59,
+      "w": 145,
+      "h": 245,
+      "file": "parts/head_smile_blink.png",
+      "bone": "head"
+    },
+    "head_displeased": {
+      "x": 352,
+      "y": 59,
+      "w": 145,
+      "h": 245,
+      "file": "parts/head_displeased.png",
+      "bone": "head"
+    },
+    "head_displeased_blink": {
+      "x": 352,
+      "y": 59,
+      "w": 145,
+      "h": 245,
+      "file": "parts/head_displeased_blink.png",
+      "bone": "head"
+    },
+    "head_surprise": {
+      "x": 353,
+      "y": 59,
+      "w": 144,
+      "h": 245,
+      "file": "parts/head_surprise.png",
+      "bone": "head"
+    },
+    "head_surprise_blink": {
+      "x": 353,
+      "y": 59,
+      "w": 144,
+      "h": 245,
+      "file": "parts/head_surprise_blink.png",
+      "bone": "head"
+    },
+    "head_shock": {
+      "x": 350,
+      "y": 53,
+      "w": 148,
+      "h": 251,
+      "file": "parts/head_shock.png",
+      "bone": "head"
+    },
+    "head_shock_blink": {
+      "x": 350,
+      "y": 53,
+      "w": 148,
+      "h": 251,
+      "file": "parts/head_shock_blink.png",
+      "bone": "head"
+    },
+    "head_angry": {
+      "x": 350,
+      "y": 55,
+      "w": 148,
+      "h": 249,
+      "file": "parts/head_angry.png",
+      "bone": "head"
+    },
+    "head_angry_blink": {
+      "x": 350,
+      "y": 55,
+      "w": 148,
+      "h": 249,
+      "file": "parts/head_angry_blink.png",
+      "bone": "head"
+    },
+    "head_serious": {
+      "x": 350,
+      "y": 55,
+      "w": 148,
+      "h": 249,
+      "file": "parts/head_serious.png",
+      "bone": "head"
+    },
+    "head_serious_blink": {
+      "x": 350,
+      "y": 55,
+      "w": 148,
+      "h": 249,
+      "file": "parts/head_serious_blink.png",
+      "bone": "head"
+    },
+    "head_confident": {
+      "x": 350,
+      "y": 54,
+      "w": 148,
+      "h": 250,
+      "file": "parts/head_confident.png",
+      "bone": "head"
+    },
+    "head_confident_blink": {
+      "x": 350,
+      "y": 54,
+      "w": 148,
+      "h": 250,
+      "file": "parts/head_confident_blink.png",
+      "bone": "head"
+    },
+    "head_mouth_rest": {
+      "x": 380,
+      "y": 189,
+      "w": 89,
+      "h": 64,
+      "file": "parts/head_mouth_rest.png",
+      "bone": "head"
+    },
+    "head_mouth_E": {
+      "x": 380,
+      "y": 189,
+      "w": 89,
+      "h": 64,
+      "file": "parts/head_mouth_E.png",
+      "bone": "head"
+    },
+    "head_mouth_O": {
+      "x": 380,
+      "y": 189,
+      "w": 89,
+      "h": 64,
+      "file": "parts/head_mouth_O.png",
+      "bone": "head"
+    },
+    "head_mouth_A": {
+      "x": 380,
+      "y": 189,
+      "w": 89,
+      "h": 64,
+      "file": "parts/head_mouth_A.png",
+      "bone": "head"
+    }
+  },
+  "emotions": {
+    "neutral": "нейтральный",
+    "smile": "улыбка",
+    "serious": "серьёзный",
+    "displeased": "недоволен",
+    "surprise": "удивление",
+    "shock": "шок",
+    "angry": "злость",
+    "confident": "уверенность"
+  },
+  "speech_mouths": {
+    "rest": "рот закрыт",
+    "E": "и / э, зубы видны",
+    "O": "о / у",
+    "A": "а, рот широко открыт"
+  }
+}

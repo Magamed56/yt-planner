@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mansurov 2D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@400;500;600&family=Caveat:wght@600&display=swap">
+<style>
+/* Layout: an animator's cut-out sheet. The rigged hero (cut from the user's own artwork) stands on
+   construction-grid paper on the left; the right column holds actions, emotions and the character bible. */
+:root {
+  --paper: #EEF1F5;
+  --paper-2: #E2E7EE;
+  --grid: rgba(64, 104, 168, 0.12);
+  --grid-strong: rgba(64, 104, 168, 0.22);
+  --ink: #18213B;
+  --ink-2: #4E5874;
+  --line: rgba(24, 33, 59, 0.14);
+  --pencil: #C4452D;
+  --chip: #FFFFFF;
+  --f-display: "Unbounded", "Arial Black", "Helvetica Neue", system-ui, sans-serif;
+  --f-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-hand: "Caveat", "Comic Sans MS", "Segoe Print", cursive;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121722; --paper-2: #1A2131; --grid: rgba(120, 160, 230, 0.09); --grid-strong: rgba(120, 160, 230, 0.18);
+    --ink: #E7EBF3; --ink-2: #9DA8BF; --line: rgba(231, 235, 243, 0.14); --pencil: #F0806A; --chip: #1E2639; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121722; --paper-2: #1A2131; --grid: rgba(120, 160, 230, 0.09); --grid-strong: rgba(120, 160, 230, 0.18);
+  --ink: #E7EBF3; --ink-2: #9DA8BF; --line: rgba(231, 235, 243, 0.14); --pencil: #F0806A; --chip: #1E2639; color-scheme: dark;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--paper-2); color: var(--ink); font: 15px/1.5 var(--f-body); padding-inline: 16px; padding-block: 16px; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+.app { height: 100%; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); }
+.stage { position: relative; min-height: 0; border-radius: var(--r); overflow: hidden; border: 1px solid var(--line); display: grid; place-items: center; }
+.stage[data-bg="grid"] {
+  background:
+    linear-gradient(var(--grid-strong) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    var(--paper);
+}
+/* chroma and scene backgrounds keep fixed colours in both themes on purpose */
+.stage[data-bg="green"] { background: #00B140; }
+.stage[data-bg="scene"] {
+  background:
+    radial-gradient(30% 22% at 20% 24%, rgba(255, 236, 170, 0.7), transparent 70%),
+    linear-gradient(180deg, #7FB3E8 0%, #B9D6F2 58%, #8DBA7A 58.2%, #6E9E5E 100%);
+}
+#hero { height: 98%; max-height: 98%; width: auto; max-width: 100%; display: block; }
+.stamp { position: absolute; left: 16px; top: 12px; font: 600 22px/1 var(--f-hand); color: var(--pencil); transform: rotate(-2deg); pointer-events: none; }
+.stage[data-bg="green"] .stamp, .stage[data-bg="scene"] .stamp { color: #fff; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; font: 600 24px/1.2 var(--f-hand); color: var(--pencil); }
+.panel { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; padding: 4px 2px 24px; }
+.name { display: flex; flex-direction: column; gap: 4px; }
+.name h1 { margin: 0; font: 800 clamp(26px, 3.4vw, 34px)/1.05 var(--f-display); text-wrap: balance; }
+.name p { margin: 0; color: var(--ink-2); font-size: 14px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+legend, .label { padding: 0; margin-bottom: 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { font: 500 14px/1 var(--f-body); color: var(--ink); background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 9px 13px; cursor: pointer; }
+.seg button:hover { border-color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.seg button:focus-visible { outline: 2px solid var(--pencil); outline-offset: 2px; }
+.bible { display: flex; flex-direction: column; border-top: 1px solid var(--line); margin: 0; }
+.row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.row dt { font-size: 12px; color: var(--ink-2); padding-top: 2px; }
+.row dd { margin: 0; font-size: 14px; }
+.uses { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { height: auto; grid-template-columns: minmax(0, 1fr); }
+  .stage { height: 66svh; min-height: 440px; }
+  .panel { overflow: visible; }
+}
+body.export { padding: 0; background: transparent; }
+body.export .app { display: block; }
+body.export .panel, body.export .stamp { display: none; }
+body.export .stage { position: fixed; inset: 0; height: auto; min-height: 0; border: 0; border-radius: 0; background: transparent; }
+body.export #hero { height: 100%; max-height: 100%; }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="stage" id="stage" data-bg="grid" aria-label="2D-персонаж">
+    <svg id="hero" viewBox="-62 -110 972 1374" role="img" aria-label="Mansurov в полный рост"></svg>
+    <div class="stamp" id="stamp">2D · стоит</div>
+    <div class="loading" id="loading">Собираю героя…</div>
+  </section>
+
+  <aside class="panel">
+    <header class="name">
+      <h1>Mansurov N.N.</h1>
+      <p>2D-персонаж · 25 лет · программист и учитель</p>
+    </header>
+
+    <fieldset>
+      <legend>Действие</legend>
+      <div class="seg" data-key="anim">
+        <button type="button" id="a-idle" data-val="idle" aria-pressed="true">Стоит</button>
+        <button type="button" id="a-talk" data-val="talk" aria-pressed="false">Говорит</button>
+        <button type="button" id="a-wave" data-val="wave" aria-pressed="false">Машет</button>
+        <button type="button" id="a-walk" data-val="walk" aria-pressed="false">Идёт</button>
+        <button type="button" id="a-present" data-val="present" aria-pressed="false">Показывает</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Эмоция</legend>
+      <div class="seg" data-key="emotion">
+        <button type="button" id="e-neutral" data-val="neutral" aria-pressed="true">Нейтральный</button>
+        <button type="button" id="e-smile" data-val="smile" aria-pressed="false">Улыбка</button>
+        <button type="button" id="e-serious" data-val="serious" aria-pressed="false">Серьёзный</button>
+        <button type="button" id="e-displeased" data-val="displeased" aria-pressed="false">Недоволен</button>
+        <button type="button" id="e-surprise" data-val="surprise" aria-pressed="false">Удивление</button>
+        <button type="button" id="e-shock" data-val="shock" aria-pressed="false">Шок</button>
+        <button type="button" id="e-angry" data-val="angry" aria-pressed="false">Злость</button>
+        <button type="button" id="e-confident" data-val="confident" aria-pressed="false">Уверенность</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Фон</legend>
+      <div class="seg" data-key="bg">
+        <button type="button" id="b-grid" data-val="grid" aria-pressed="true">Сетка</button>
+        <button type="button" id="b-green" data-val="green" aria-pressed="false">Зелёный экран</button>
+        <button type="button" id="b-scene" data-val="scene" aria-pressed="false">Сцена</button>
+      </div>
+    </fieldset>
+
+    <section>
+      <div class="label">Паспорт героя</div>
+      <dl class="bible">
+        <div class="row"><dt>Возраст и рост</dt><dd>25 лет, 178 см, стройный</dd></div>
+        <div class="row"><dt>Кто он</dt><dd>Кыргыз, программист и учитель</dd></div>
+        <div class="row"><dt>Характер</dt><dd>Спокойный, уверенный, целеустремлённый, ответственный, с аналитическим складом ума</dd></div>
+        <div class="row"><dt>Образ</dt><dd>Чёрное поло на молнии, серые карго-брюки, белые кроссовки, чёрные часы на левой руке</dd></div>
+      </dl>
+    </section>
+
+    <section>
+      <div class="label">Как использовать</div>
+      <ul class="uses">
+        <li><b>Видео:</b> ролик на зелёном фоне кладёте поверх любой сцены в CapCut, рот двигается в такт речи.</li>
+        <li><b>Игры:</b> спрайт-листы PNG на прозрачном фоне подходят для Unity, Godot и Construct.</li>
+        <li><b>Spine 2D:</b> части тела лежат отдельными файлами, к ним приложен файл с точками суставов.</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<script>
+(() => {
+const RIG = {"pivots": {"root": [424, 640], "torso": [424, 590], "head": [424, 262], "upperArmR": [298, 335], "foreArmR": [260, 535], "handR": [232, 650], "upperArmL": [550, 335], "foreArmL": [590, 535], "handL": [614, 650], "thighR": [362, 700], "shinR": [346, 915], "footR": [322, 1140], "thighL": [490, 700], "shinL": [508, 915], "footL": [527, 1140]}, "parts": {"upperArmR": {"x": 225, "y": 299, "w": 93, "h": 254}, "foreArmR": {"x": 214, "y": 501, "w": 79, "h": 156}, "handR": {"x": 205, "y": 632, "w": 56, "h": 127}, "upperArmL": {"x": 531, "y": 300, "w": 92, "h": 253}, "foreArmL": {"x": 556, "y": 501, "w": 84, "h": 156}, "handL": {"x": 588, "y": 632, "w": 55, "h": 127}, "torso": {"x": 284, "y": 240, "w": 281, "h": 361}, "pelvis": {"x": 303, "y": 588, "w": 242, "h": 121}, "thighR": {"x": 294, "y": 660, "w": 133, "h": 273}, "shinR": {"x": 284, "y": 879, "w": 105, "h": 268}, "footR": {"x": 258, "y": 1118, "w": 111, "h": 116}, "thighL": {"x": 424, "y": 660, "w": 132, "h": 273}, "shinL": {"x": 463, "y": 879, "w": 103, "h": 268}, "footL": {"x": 484, "y": 1118, "w": 112, "h": 116}}, "heads": {"head_neutral": {"x": 352, "y": 59, "w": 145, "h": 245}, "head_neutral_blink": {"x": 352, "y": 59, "w": 145, "h": 245}, "head_smile": {"x": 352, "y": 59, "w": 145, "h": 245}, "head_smile_blink": {"x": 352, "y": 59, "w": 145, "h": 245}, "head_displeased": {"x": 352, "y": 59, "w": 145, "h": 245}, "head_displeased_blink": {"x": 352, "y": 59, "w": 145, "h": 245}, "head_surprise": {"x": 353, "y": 59, "w": 144, "h": 245}, "head_surprise_blink": {"x": 353, "y": 59, "w": 144, "h": 245}, "head_shock": {"x": 350, "y": 53, "w": 148, "h": 251}, "head_shock_blink": {"x": 350, "y": 53, "w": 148, "h": 251}, "head_angry": {"x": 350, "y": 55, "w": 148, "h": 249}, "head_angry_blink": {"x": 350, "y": 55, "w": 148, "h": 249}, "head_serious": {"x": 350, "y": 55, "w": 148, "h": 249}, "head_serious_blink": {"x": 350, "y": 55, "w": 148, "h": 249}, "head_confident": {"x": 350, "y": 54, "w": 148, "h": 250}, "head_confident_blink": {"x": 350, "y": 54, "w": 148, "h": 250}, "head_mouth_rest": {"x": 380, "y": 189, "w": 89, "h": 64}, "head_mouth_E": {"x": 380, "y": 189, "w": 89, "h": 64}, "head_mouth_O": {"x": 380, "y": 189, "w": 89, "h": 64}, "head_mouth_A": {"x": 380, "y": 189, "w": 89, "h": 64}}};
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('hero');
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (parent) parent.appendChild(e); return e; };
+const f = n => Math.round(n * 100) / 100;
+const PIV = RIG.pivots;
+const img = (name, parent, set = 'parts') => { const p = RIG[set][name]; return el('image', { href: `parts/${name}.png`, x: p.x, y: p.y, width: p.w, height: p.h }, parent); };
+
+// bone groups: each rotates about its own joint, children follow
+const G = {};
+const bone = (name, parent) => (G[name] = el('g', { 'data-bone': name }, parent));
+const root = bone('root', svg);
+for (const s of ['R', 'L']) {
+  const th = bone('thigh' + s, root); img('thigh' + s, th);
+  const sh = bone('shin' + s, th); img('shin' + s, sh);
+  const ft = bone('foot' + s, sh); img('foot' + s, ft);
+}
+img('pelvis', root);
+const torso = bone('torso', root);
+const head = bone('head', torso);                 // the neck sits behind the collar
+const HEADS = {}, BLINKS = {}, MOUTHS = {};
+for (const k of Object.keys(RIG.heads)) {
+  const n = k.slice(5);
+  const node = img(k, head, 'heads'); node.style.display = 'none';
+  if (n.startsWith('mouth_')) MOUTHS[n.slice(6)] = node;
+  else if (n.endsWith('_blink')) BLINKS[n.slice(0, -6)] = node;
+  else HEADS[n] = node;
+}
+const torsoImg = img('torso', torso);
+for (const s of ['R', 'L']) {
+  const ua = bone('upperArm' + s, torso); img('upperArm' + s, ua);
+  const fa = bone('foreArm' + s, ua); img('foreArm' + s, fa);
+  const hd = bone('hand' + s, fa); img('hand' + s, hd);
+}
+
+/* ---------- animation ---------- */
+const ANIM = { idle: { dur: 2.4 }, talk: { dur: 2.0 }, wave: { dur: 1.2 }, walk: { dur: 0.96 }, present: { dur: 2.4 } };
+const TALK_SEQ = ['A', 'E', 'rest', 'O', 'A', 'rest', 'E', 'A', 'rest', 'O', 'E', 'rest', 'A', 'rest', 'E', 'O'];
+function pose(anim, t, emotion, opts = {}) {
+  const dur = ANIM[anim].dur, ph = (t % dur) / dur, TAU = Math.PI * 2;
+  const R = { torso: 0, head: 0, upperArmR: 0, upperArmL: 0, foreArmR: 0, foreArmL: 0, handR: 0, handL: 0, thighR: 0, thighL: 0, shinR: 0, shinL: 0, footR: 0, footL: 0 };
+  const breath = Math.sin(TAU * (t % 2.4) / 2.4);
+  let bob = 0, mouth = null;
+  if (anim === 'idle') {
+    R.head = Math.sin(TAU * ph) * 1.2; R.upperArmR = breath * 1.2; R.upperArmL = -breath * 1.2;
+  } else if (anim === 'talk') {
+    R.head = Math.sin(TAU * ph * 2) * 2; R.torso = Math.sin(TAU * ph) * 0.6;
+    R.upperArmL = -8 + Math.sin(TAU * ph) * 3; R.foreArmL = -58 + Math.sin(TAU * ph * 2) * 10; R.handL = -18 + Math.sin(TAU * ph * 2) * 8;
+    R.upperArmR = 2;
+    mouth = TALK_SEQ[Math.floor(ph * TALK_SEQ.length)];
+  } else if (anim === 'wave') {
+    R.upperArmR = 148; R.foreArmR = 22 + Math.sin(TAU * ph * 2) * 22; R.handR = 6; R.head = -3; R.torso = -1.2;
+  } else if (anim === 'walk') {
+    const c = Math.sin(TAU * ph);
+    bob = -Math.abs(Math.cos(TAU * ph)) * 7;
+    R.thighR = c * 4; R.shinR = -Math.max(0, c) * 6; R.thighL = c * 4; R.shinL = Math.max(0, -c) * 6;
+    R.upperArmR = -c * 8; R.upperArmL = -c * 8; R.foreArmR = -Math.max(0, -c) * 10; R.foreArmL = Math.max(0, c) * 10;
+    R.head = c * 1.2; R.torso = c * 1;
+  } else if (anim === 'present') {
+    // opens the left arm towards the side of the frame, as if showing a slide
+    R.upperArmL = -32 + Math.sin(TAU * ph) * 3; R.foreArmL = -34 + Math.sin(TAU * ph) * 4; R.handL = -14;
+    R.head = 2 + Math.sin(TAU * ph) * 0.8; R.torso = 0.8; R.upperArmR = breath;
+  }
+  const bt = (t + (opts.blinkShift ?? 0)) % (opts.blinkPeriod ?? 3.1);
+  const blink = !opts.noBlink && bt < 0.14;
+  root.setAttribute('transform', `translate(0,${f(bob)})`);
+  const rot = (name, a, extra = '') => { const p = PIV[name]; G[name].setAttribute('transform', `rotate(${f(a)},${p[0]},${p[1]})${extra}`); };
+  rot('torso', R.torso);
+  const p = PIV.torso;
+  torsoImg.setAttribute('transform', `translate(0,${f(p[1])}) scale(1,${f(1 + breath * 0.004)}) translate(0,${f(-p[1])})`);
+  rot('head', R.head);
+  for (const n of ['upperArmR', 'foreArmR', 'handR', 'upperArmL', 'foreArmL', 'handL', 'thighR', 'shinR', 'footR', 'thighL', 'shinL', 'footL']) rot(n, R[n]);
+  for (const [k, node] of Object.entries(HEADS)) node.style.display = k === emotion && !blink ? '' : 'none';
+  for (const [k, node] of Object.entries(BLINKS)) node.style.display = k === emotion && blink ? '' : 'none';
+  for (const [k, node] of Object.entries(MOUTHS)) node.style.display = mouth && mouth !== 'rest' && k === mouth ? '' : 'none';
+}
+
+/* ---------- UI ---------- */
+const state = { anim: 'idle', emotion: 'neutral', bg: 'grid' };
+const exportMode = location.hash.startsWith('#export');
+const stage = document.getElementById('stage'), stamp = document.getElementById('stamp');
+const NAMES = { idle: 'стоит', talk: 'говорит', wave: 'машет', walk: 'идёт', present: 'показывает' };
+function sync() {
+  document.querySelectorAll('.seg[data-key]').forEach(seg => seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(state[seg.dataset.key] === b.dataset.val))));
+  stage.dataset.bg = state.bg; stamp.textContent = `2D · ${NAMES[state.anim]}`;
+}
+let t0 = performance.now();
+document.querySelectorAll('.seg[data-key]').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  state[seg.dataset.key] = b.dataset.val; t0 = performance.now();
+  try { localStorage.setItem('mansurov-2d-art', JSON.stringify(state)); } catch (_) {}
+  sync();
+}));
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const t = reduce && state.anim === 'idle' ? 0 : (now - t0) / 1000;
+  pose(state.anim, t, state.emotion);
+}
+// wait until every layer has loaded so nothing flickers in or out
+const urls = [...svg.querySelectorAll('image')].map(n => n.getAttribute('href'));
+Promise.all(urls.map(u => new Promise(res => { const i = new Image(); i.onload = i.onerror = () => (i.decode ? i.decode().catch(() => {}).then(res) : res()); i.src = u; }))).then(() => {
+  document.getElementById('loading').hidden = true;
+  if (exportMode) {
+    document.body.classList.add('export'); stage.dataset.bg = 'none';
+    svg.setAttribute('viewBox', '-62 -110 972 1374');
+    window.__pose = (a, t, e, o) => pose(a, t, e, o || {});
+    window.__G = G; window.__ANIM = ANIM; window.__RIG = RIG;
+    pose('idle', 0, 'neutral', { noBlink: true });
+    requestAnimationFrame(() => requestAnimationFrame(() => { window.__ready = true; }));
+  } else {
+    try { const saved = JSON.parse(localStorage.getItem('mansurov-2d-art') || 'null'); if (saved) Object.assign(state, saved); } catch (_) {}
+    sync(); requestAnimationFrame(frame);
+  }
+});
+})();
+</script>
+</body>
+</html>

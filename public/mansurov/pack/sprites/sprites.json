@@ -1,0 +1,37 @@
+{
+  "frame_width": 436,
+  "frame_height": 720,
+  "fps": 12.5,
+  "animations": {
+    "idle": {
+      "file": "idle.png",
+      "frames": 30,
+      "columns": 8,
+      "rows": 4
+    },
+    "talk": {
+      "file": "talk.png",
+      "frames": 25,
+      "columns": 8,
+      "rows": 4
+    },
+    "wave": {
+      "file": "wave.png",
+      "frames": 15,
+      "columns": 8,
+      "rows": 2
+    },
+    "walk": {
+      "file": "walk.png",
+      "frames": 12,
+      "columns": 8,
+      "rows": 2
+    },
+    "present": {
+      "file": "present.png",
+      "frames": 30,
+      "columns": 8,
+      "rows": 4
+    }
+  }
+}
