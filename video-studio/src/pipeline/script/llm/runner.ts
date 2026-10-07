@@ -57,6 +57,7 @@ export interface StructuredRequest<T> {
 }
 
 const MAX_LENGTH_RETRIES = 2;
+const BUSY_RETRIES = 1; // повторов той же модели при 503
 
 // Платные вызовы — в лог сразу: если генерация потом упадёт, человек всё
 // равно видит, сколько уже ушло (бесплатные не шумят).
@@ -75,6 +76,7 @@ export async function generateStructured<T>(r: StructuredRequest<T>): Promise<{ 
     let compat = 0;
     let maxTokens = Math.min(r.maxTokens ?? target.defaultMaxTokens, target.maxTokensCap);
     let lengthRetries = 0;
+    let busyRetries = 0;
     let repaired = false;
     const turns: ChatTurn[] = [{ role: "user", content: r.user }];
     r.log.info(`[сценарий] ${r.what}: ${target.label}…`);
@@ -105,6 +107,15 @@ export async function generateStructured<T>(r: StructuredRequest<T>): Promise<{ 
           continue;
         }
         if (err.kind === "auth") skipProviders.add(target.provider);
+        // 503 «high demand» у Gemini проходит за секунды, а следующая модель
+        // цепочки (Flash-Lite) пишет заметно слабее — сначала ждём и повторяем ту же.
+        if (err.kind === "unavailable" && err.status === 503 && busyRetries < BUSY_RETRIES && !r.signal?.aborted) {
+          busyRetries += 1;
+          const waitMs = Number(process.env.LLM_BUSY_WAIT_MS ?? 10_000) * busyRetries;
+          r.log.warn(`[сценарий] ${target.label}: сервис перегружен (HTTP 503) — жду ${Math.round(waitMs / 1000)} с и повторяю…`);
+          await new Promise((res) => setTimeout(res, waitMs));
+          continue;
+        }
         r.log.warn(`[сценарий] ${err.message}`);
         failures.push(err.message);
         break;

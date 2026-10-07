@@ -66,7 +66,9 @@ function shortsValidator(req: ScriptRequest, seconds: number): (raw: unknown) =>
     // Правила конкретного запроса: объём и число сцен под длительность.
     const words = narrationWords(scenes);
     const target = seconds * WORDS_PER_SECOND;
-    if (scenes.length && (words < target * 0.6 || words > target * 1.6)) {
+    // Нижняя граница 0.75: короче — ролик выходит заметно короче заказанного
+    // (запасная Flash-Lite любит сжимать), один ремонтный ход это исправляет.
+    if (scenes.length && (words < target * 0.75 || words > target * 1.6)) {
       problems.push(`общий объём narration ${words} слов — для ~${seconds} с нужно ${t.wordsMin}–${t.wordsMax} слов`);
     }
     if (scenes.length && (scenes.length < 4 || scenes.length > t.scenesMax + 5)) {

@@ -1,4 +1,6 @@
-// Gemini TTS (Google AI Studio, бесплатный тариф ≈ 100 запросов/сутки на модель).
+// Gemini TTS (Google AI Studio). Бесплатный тариф — около 10 запросов в сутки
+// на модель (проверено 07.10.2026: «limit: 10 requests per day»), поэтому сцены
+// ролика озвучиваются одним запросом и режутся по паузам (batchMaxChars, split.ts).
 // Новые модели gemini-3.8-flash-tts / -lite-tts работают через POST
 // /v1beta/interactions (стиль — в speech_metadata.style, ответ — готовый WAV);
 // старые (*-preview-tts) — через generateContent и отдают сырой PCM 24 кГц.
@@ -15,7 +17,7 @@ import type { RawAudio, RawContext, RawProvider } from "../provider";
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 export const GEMINI_DEFAULT_MODEL = "gemini-3.8-flash-tts";
-export const GEMINI_DEFAULT_VOICE = "Puck"; // «бодрый» мужской; Kore, Charon, Aoede, Fenrir… — см. README
+export const GEMINI_DEFAULT_VOICE = "Charon"; // глубокий спокойный мужской (выбор автора); Puck, Fenrir, Kore, Aoede, Zephyr… — см. README
 export const GEMINI_DEFAULT_STYLE = "Энергично и тепло, как ведущий научпоп-канала. Чёткая дикция, живые интонации, без пауз в начале.";
 
 const isLegacy = (model: string) => /preview|^gemini-2\.|^gemini-3\.[01]-/.test(model);
@@ -48,20 +50,23 @@ export function geminiAudioToPcm(b64: string, mime: string, sampleRateHint?: num
 export function geminiProvider(): RawProvider {
   const key = (process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? "").trim();
   const model = process.env.GEMINI_TTS_MODEL?.trim() || GEMINI_DEFAULT_MODEL;
-  const style = process.env.GEMINI_TTS_STYLE?.trim() || GEMINI_DEFAULT_STYLE;
+  const baseStyle = process.env.GEMINI_TTS_STYLE?.trim() || GEMINI_DEFAULT_STYLE;
   const timeoutMs = envInt("TTS_TIMEOUT_MS", 120_000);
   const chain = geminiModelChain(model);
+  // Шорт ≈ 700–900 символов — один запрос; длинный ролик — по ~2500 символов.
+  const batchMaxChars = envInt("GEMINI_TTS_BATCH_CHARS", 2500);
   let start = 0; // с какой модели цепочки начинать (после перехода — с запасной)
   return {
     name: "gemini",
     output: "wav",
+    batchMaxChars,
     resolveVoice: (v) => {
       const own = process.env.GEMINI_TTS_VOICE?.trim();
       // Голоса Gemini — одно слово с заглавной (Kore, Puck); edge/piper-имена из TTS_VOICE игнорируем.
       const cand = own || v;
       return cand && /^[A-Z][a-z]+$/.test(cand) ? cand : GEMINI_DEFAULT_VOICE;
     },
-    configKey: () => `gemini:${model}:${style}`,
+    configKey: () => `gemini:${model}:${baseStyle}`,
     async synthesizeRaw(text, ctx) {
       if (!key) throw new TtsError("Gemini TTS: не задан GEMINI_API_KEY (ключ бесплатно: https://aistudio.google.com/apikey).");
       let lastErr: TtsError | null = null;
@@ -95,6 +100,9 @@ export function geminiProvider(): RawProvider {
   };
 
   async function callModel(m: string, text: string, ctx: RawContext): Promise<RawAudio> {
+    // Несколько сцен в одном запросе (абзацы) — просим явную паузу между ними:
+    // по ней звук потом режется на сцены.
+    const style = text.includes("\n\n") ? `${baseStyle.replace(/[.!?…\s]+$/u, "")}. Между абзацами — пауза около секунды.` : baseStyle;
     const headers = { "x-goog-api-key": key, "Content-Type": "application/json" };
     if (!isLegacy(m)) {
       const r = await httpRequest(`Gemini TTS (${m})`, `${BASE}/interactions`, {

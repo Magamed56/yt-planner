@@ -4,7 +4,7 @@
 // (например "voice/s1.mp3"), абсолютные пути — только внутри Node.
 //
 // Переменные окружения (единый список, документируется в .env.example):
-//   TTS_PROVIDER      edge | piper | gemini | elevenlabs | openai | fish   (по умолчанию edge)
+//   TTS_PROVIDER      auto | gemini | edge | piper | elevenlabs | openai | fish   (auto: gemini при ключе, иначе edge)
 //   TTS_VOICE         голос провайдера (edge: ru-RU-DmitryNeural, piper: ru_RU-dmitri-medium, …)
 //   TTS_RATE          темп для edge, например "+5%"
 //   GEMINI_API_KEY    общий ключ AI Studio — и для сценариев, и для Gemini TTS
@@ -44,6 +44,9 @@ export interface VoiceProvider {
   readonly name: string;
   // outFileBase — абсолютный путь БЕЗ расширения; провайдер сам добавляет .mp3/.wav.
   synthesize(text: string, outFileBase: string, opts?: VoiceOptions): Promise<VoiceResult>;
+  // Есть у провайдеров с квотой «на запросы» (Gemini): все сцены одним-двумя
+  // запросами, результат — по сцене на элемент, в том же порядке.
+  synthesizeMany?(items: { text: string; outFileBase: string }[], opts?: VoiceOptions): Promise<VoiceResult[]>;
 }
 
 // voice/index.ts: export function getVoiceProvider(name?: string): VoiceProvider

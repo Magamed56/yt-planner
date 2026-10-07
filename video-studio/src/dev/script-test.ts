@@ -13,6 +13,9 @@ import type { AnthropicLike } from "../pipeline/script/llm/claude";
 import { claudeCostUsd } from "../pipeline/script/pricing";
 import type { VideoScript } from "../types";
 
+// Пауза перед повтором при 503 — в тестах без ожидания.
+process.env.LLM_BUSY_WAIT_MS = "1";
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const demo = JSON.parse(readFileSync(path.join(root, "examples", "demo-ru.json"), "utf8")) as VideoScript;
 
@@ -258,7 +261,9 @@ await test("finish_reason=length → повтор с удвоенным max_toke
 await test("Таймаут и 503 у всех Gemini → запасной Groq", async () => {
   const hang: Reply = (_c, signal) =>
     new Promise<Response>((_, reject) => signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
-  const { fn, calls } = mockFetch([hang, json(503, { error: { message: "overloaded" } }), json(500, {}), chat(JSON.stringify(demo))]);
+  // 503 «high demand» — сначала один повтор той же модели, потом следующая.
+  const busy = json(503, { error: { message: "overloaded" } });
+  const { fn, calls } = mockFetch([hang, busy, busy, json(500, {}), chat(JSON.stringify(demo))]);
   const started = Date.now();
   const { usage } = await generateScript(
     { topic: "Память", format: "shorts" },
@@ -266,11 +271,13 @@ await test("Таймаут и 503 у всех Gemini → запасной Groq",
   );
   assert.ok(Date.now() - started < 5000, "не висим");
   assert.ok(logs.some((l) => l.includes("нет ответа за")), "сообщение о таймауте");
-  assert.equal(calls.length, 4);
-  assert.ok(calls[3].url.startsWith("https://api.groq.com/openai/v1/"));
-  assert.equal(calls[3].body.model, "qwen/qwen3.8-27b");
-  assert.equal(calls[3].body.max_completion_tokens, 4000);
-  assert.equal(calls[3].body.reasoning_effort, "none");
+  assert.equal(calls.length, 5);
+  assert.equal(calls[1].body.model, calls[2].body.model, "503 → повтор той же модели");
+  assert.ok(logs.some((l) => l.includes("перегружен (HTTP 503)")), "сообщение о повторе");
+  assert.ok(calls[4].url.startsWith("https://api.groq.com/openai/v1/"));
+  assert.equal(calls[4].body.model, "qwen/qwen3.8-27b");
+  assert.equal(calls[4].body.max_completion_tokens, 4000);
+  assert.equal(calls[4].body.reasoning_effort, "none");
   assert.equal(usage.find((u) => u.provider === "groq")?.attempts, 1);
 });
 

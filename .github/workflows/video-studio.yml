@@ -31,10 +31,14 @@ on:
         options: [auto, shorts, landscape]
         default: auto
       voice:
-        description: "Озвучка (edge — бесплатно; при сбое автоматически piper)"
+        description: "Озвучка: auto — Gemini, если есть секрет GEMINI_API_KEY, иначе Edge (при сбое — Edge/Piper)"
         type: choice
-        options: [edge, piper, gemini, elevenlabs]
-        default: edge
+        options: [auto, gemini, edge, piper, elevenlabs]
+        default: auto
+      voice_name:
+        description: "Голос (необязательно): Charon, Puck, Kore… (gemini) · ru-RU-SvetlanaNeural (edge) · ru_RU-irina-medium (piper)"
+        type: string
+        required: false
       theme:
         description: "Палитра"
         type: choice
@@ -89,8 +93,8 @@ jobs:
       UPLOAD: ${{ inputs.upload || 'none' }}
       PRIVACY: ${{ inputs.privacy || 'private' }}
       # Несекретные настройки — Settings → Secrets and variables → Actions → Variables.
-      TTS_PROVIDER: ${{ inputs.voice || vars.TTS_PROVIDER || 'edge' }}
-      TTS_VOICE: ${{ vars.TTS_VOICE }}
+      TTS_PROVIDER: ${{ inputs.voice || vars.TTS_PROVIDER || 'auto' }}
+      TTS_VOICE: ${{ inputs.voice_name || vars.TTS_VOICE }}
       TTS_RATE: ${{ vars.TTS_RATE }}
       LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
       LLM_MODEL: ${{ vars.LLM_MODEL }}
@@ -100,7 +104,7 @@ jobs:
       # Остальные несекретные настройки из .env.example; пустое значение = умолчание.
       TTS_FALLBACK: ${{ vars.TTS_FALLBACK }}
       GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL }}
-      GEMINI_TTS_VOICE: ${{ vars.GEMINI_TTS_VOICE }}
+      GEMINI_TTS_VOICE: ${{ inputs.voice_name || vars.GEMINI_TTS_VOICE }}
       GEMINI_TTS_STYLE: ${{ vars.GEMINI_TTS_STYLE }}
       ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID }}
       ELEVENLABS_MODEL: ${{ vars.ELEVENLABS_MODEL }}
@@ -154,7 +158,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: video-studio/models
-          key: tts-models-${{ runner.os }}-${{ vars.TTS_VOICE || 'default' }}-v1
+          key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-v1
 
       - name: Системные библиотеки для Chrome Headless Shell
         if: env.MODE == 'render'

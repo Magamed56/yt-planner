@@ -1,4 +1,4 @@
-// Озвучка сцен. Провайдер выбирается TTS_PROVIDER (по умолчанию edge).
+// Озвучка сцен. Провайдер выбирается TTS_PROVIDER (по умолчанию auto: Gemini при ключе, иначе Edge).
 // Все провайдеры возвращают одно и то же: файл (.mp3 или .wav), длительность
 // и тайминги слов (родные или оценённые по звуку) — см. VoiceResult.
 
@@ -22,7 +22,7 @@ interface ProviderInfo {
 export const VOICE_PROVIDERS: Record<VoiceProviderName, ProviderInfo> = {
   edge: { make: () => edgeProvider(), requires: [], about: "Microsoft Edge, бесплатно, без ключа, родные тайминги слов (TTS_VOICE, TTS_RATE)" },
   piper: { make: () => piperProvider(), requires: [], about: "локально и офлайн, модель скачается сама в MODELS_DIR (TTS_VOICE=ru_RU-dmitri-medium | irina | denis | ruslan)" },
-  gemini: { make: () => geminiProvider(), requires: ["GEMINI_API_KEY"], about: "Google AI Studio, бесплатный лимит ~100 запросов/сутки (GEMINI_TTS_MODEL, GEMINI_TTS_VOICE, GEMINI_TTS_STYLE)" },
+  gemini: { make: () => geminiProvider(), requires: ["GEMINI_API_KEY"], about: "Google AI Studio, бесплатно ≈ 10 запросов/сутки на модель, ролик = 1 запрос (GEMINI_TTS_VOICE=Charon…, GEMINI_TTS_STYLE)" },
   elevenlabs: { make: () => elevenLabsProvider(), requires: ["ELEVENLABS_API_KEY"], about: "лучшее качество, бесплатный план — без коммерческих прав (ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL)" },
   openai: { make: () => openAiProvider(), requires: [], about: "любой OpenAI-совместимый сервер /audio/speech: Qwen3-TTS (vLLM-Omni), Chatterbox (OPENAI_TTS_BASE_URL, OPENAI_TTS_VOICE, OPENAI_TTS_MODEL)" },
   fish: { make: () => fishProvider(), requires: [], about: "локальный Fish Speech, некоммерческая лицензия весов (FISH_TTS_BASE_URL, FISH_TTS_REFERENCE_ID)" },
@@ -49,7 +49,10 @@ function providerHelp(): string {
 }
 
 export function getVoiceProvider(name?: string): VoiceProvider {
-  const raw = (name ?? process.env.TTS_PROVIDER ?? "edge").trim().toLowerCase() || "edge";
+  // auto (или пусто): Gemini, если есть ключ AI Studio — самый живой из бесплатных;
+  // иначе Edge (без ключа). Явное имя провайдера всегда важнее.
+  let raw = (name ?? process.env.TTS_PROVIDER ?? "auto").trim().toLowerCase() || "auto";
+  if (raw === "auto") raw = process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim() ? "gemini" : "edge";
   const key = (raw in VOICE_PROVIDERS ? raw : ALIASES[raw]) as VoiceProviderName | undefined;
   if (!key) {
     throw new Error(`Неизвестный TTS_PROVIDER="${raw}". Доступные провайдеры озвучки:\n${providerHelp()}`);

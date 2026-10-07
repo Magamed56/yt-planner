@@ -51,7 +51,7 @@ const HELP = `Сборка ролика одной командой.
 Параметры:
   --format shorts|landscape    формат (по умолчанию из сценария, для --topic — shorts)
   --theme  midnight|sunset|emerald|mono   палитра (по умолчанию из сценария)
-  --voice  edge|piper|gemini|elevenlabs|openai|fish   провайдер озвучки (иначе TTS_PROVIDER)
+  --voice  auto|gemini|edge|piper|elevenlabs|openai|fish   провайдер озвучки (иначе TTS_PROVIDER; auto — Gemini при ключе, иначе Edge)
   --notes  "..."               пожелания к сценарию (только с --topic)
   --seconds N                  желаемая длительность (только с --topic)
   --mood   calm|inspiring|upbeat|tech|dark   настроение музыки (иначе MUSIC_MOOD)
@@ -159,6 +159,13 @@ function parse(): Args {
 // ---- Озвучка ----
 
 async function synthesizeAll(provider: VoiceProvider, script: VideoScript, publicDir: string): Promise<VoiceResult[]> {
+  if (provider.synthesizeMany) {
+    // Квота «на запросы» (Gemini): весь ролик одним-двумя запросами, а не по сцене.
+    const items = script.scenes.map((scene) => ({ text: scene.narration, outFileBase: path.join(publicDir, "voice", safeId(scene.id)) }));
+    const results = await provider.synthesizeMany(items);
+    for (const [i, r] of results.entries()) logVoice(script.scenes[i]!, r);
+    return results;
+  }
   const out: VoiceResult[] = [];
   for (const [i, scene] of script.scenes.entries()) {
     const base = path.join(publicDir, "voice", safeId(scene.id));
@@ -174,11 +181,15 @@ async function synthesizeAll(provider: VoiceProvider, script: VideoScript, publi
         await sleep(5000);
       }
     }
-    const src = result.wordsSource === "provider" ? "тайминги от провайдера" : "тайминги оценены по звуку";
-    console.log(`  ${scene.id} (${scene.kind}): ${(result.durationMs / 1000).toFixed(2)} с, ${result.words.length} слов, ${src}`);
+    logVoice(scene, result);
     out.push(result);
   }
   return out;
+}
+
+function logVoice(scene: VideoScript["scenes"][number], result: VoiceResult): void {
+  const src = result.wordsSource === "provider" ? "тайминги от провайдера" : "тайминги оценены по звуку";
+  console.log(`  ${scene.id} (${scene.kind}): ${(result.durationMs / 1000).toFixed(2)} с, ${result.words.length} слов, ${src}`);
 }
 
 // Имя голоса для описания — только там, где оно понятно зрителю.
@@ -189,14 +200,17 @@ function voiceLabel(provider: string): string | null {
   return null;
 }
 
-function fallbackProviderName(primary: string): string | null {
+function fallbackProviderNames(primary: string): string[] {
   const raw = process.env.TTS_FALLBACK?.trim().toLowerCase();
-  if (raw === "none" || raw === "off" || raw === "0") return null;
-  if (raw) return raw === primary ? null : raw;
+  if (raw === "none" || raw === "off" || raw === "0") return [];
+  if (raw) return raw.split(",").map((v) => v.trim()).filter((v) => v && v !== primary);
   // Edge — неофициальный API, его могут закрыть или ограничить для IP
-  // датацентров; Piper работает офлайн везде. Другие провайдеры выбирают
-  // осознанно — их молча не подменяем.
-  return primary === "edge" ? "piper" : null;
+  // датацентров; Piper работает офлайн везде. У Gemini маленькая суточная
+  // квота — кончилась, значит весь ролик озвучит Edge (а если и он недоступен — Piper).
+  // Платные (ElevenLabs) и локальные серверы выбирают осознанно — их молча не подменяем.
+  if (primary === "gemini") return ["edge", "piper"];
+  if (primary === "edge") return ["piper"];
+  return [];
 }
 
 // ---- main ----
@@ -267,17 +281,20 @@ async function main() {
   let voices: VoiceResult[] = [];
   voices = await steps.run("Озвучка", async () => {
     console.log(`  провайдер: ${voice.name}`);
-    try {
-      return await synthesizeAll(voice, script, publicDir);
-    } catch (e) {
-      const fb = fallbackProviderName(voice.name);
-      if (!fb) {
-        const alt = voice.name === "piper" ? "--voice edge" : "--voice piper (офлайн)";
-        throw new UserError(`Озвучка через ${voice.name} не удалась: ${errText(e)}\n  Попробуйте другой провайдер: ${alt}. Все варианты — npm run make -- --help.`);
+    const fallbacks = fallbackProviderNames(voice.name);
+    for (;;) {
+      try {
+        return await synthesizeAll(voice, script, publicDir);
+      } catch (e) {
+        const fb = fallbacks.shift();
+        if (!fb) {
+          const alt = voice.name === "piper" ? "--voice edge" : "--voice piper (офлайн)";
+          throw new UserError(`Озвучка через ${voice.name} не удалась: ${errText(e)}\n  Попробуйте другой провайдер: ${alt}. Все варианты — npm run make -- --help.`);
+        }
+        // Весь ролик заново — чтобы в нём был один голос, а не два.
+        console.warn(`  ⚠ ${voice.name} не работает: ${errText(e).split("\n")[0]}\n  Озвучиваю весь ролик запасным провайдером ${fb} (TTS_FALLBACK=none — отключить).`);
+        voice = getVoiceProvider(fb);
       }
-      console.warn(`  ⚠ ${voice.name} не работает: ${errText(e).split("\n")[0]}\n  Озвучиваю весь ролик запасным провайдером ${fb} (TTS_FALLBACK=none — отключить).`);
-      voice = getVoiceProvider(fb);
-      return await synthesizeAll(voice, script, publicDir);
     }
   });
   const voiceDurationMs = voices.reduce((a, v) => a + v.durationMs, 0);
@@ -468,7 +485,7 @@ function buildCost(usage: LlmUsage[], voiceProvider: string, script: VideoScript
   const voiceNotes: Record<string, string> = {
     edge: "бесплатно (Microsoft Edge TTS)",
     piper: "бесплатно (локально)",
-    gemini: "бесплатно в пределах суточной квоты AI Studio (~100 запросов, 1 сцена = 1 запрос)",
+    gemini: "бесплатно в пределах суточной квоты AI Studio (~10 запросов на модель; шорт = 1 запрос)",
     elevenlabs: `списывается ≈${chars} кредитов из месячного лимита плана`,
     openai: "локальный сервер — бесплатно",
     fish: "локальный сервер — бесплатно",

@@ -13,6 +13,7 @@ import { applyFades, normalizeLoudness, removeDc } from "../audio/dsp";
 import { encodeWav16, toMono, type PcmAudio } from "../audio/wav";
 import { audioFileDurationMs } from "./duration";
 import { TtsError, sleep } from "./http";
+import { findSplitPoints, splitAudio } from "./split";
 import { normalizeText, rateMultiplier } from "./text";
 import { alignToTokens, analyzeSpeech, estimateWordTimings, estimateWordsUniform, finalize } from "./timing";
 
@@ -36,6 +37,10 @@ export interface RawProvider {
   configKey(): string; // всё, что влияет на звук, кроме текста и голоса (модель, стиль, темп)
   synthesizeRaw(text: string, ctx: RawContext): Promise<RawAudio>;
   maxAttempts?: number; // по умолчанию 2 (один повтор)
+  // > 0: несколько сцен (до стольки символов) озвучиваются ОДНИМ запросом и
+  // режутся по паузам (split.ts). Для провайдеров, у которых квота считает
+  // запросы (Gemini ≈ 10 в сутки на модель), а не символы.
+  batchMaxChars?: number;
 }
 
 // Громкость голоса после обработки — одинаковая для всех провайдеров с WAV.
@@ -55,27 +60,68 @@ interface CacheEntry {
 }
 
 export function wrapProvider(raw: RawProvider): VoiceProvider {
-  return {
-    name: raw.name,
-    async synthesize(text: string, outFileBase: string, opts: VoiceOptions = {}): Promise<VoiceResult> {
-      const clean = normalizeText(text);
-      const voice = raw.resolveVoice(opts.voice ?? defaultVoiceFromEnv());
-      await mkdir(path.dirname(outFileBase), { recursive: true });
+  const keyOf = (voice: string, clean: string) => `${raw.name}|${voice}|${raw.configKey()}|${clean}`;
 
-      if (!clean) {
-        // Пустая реплика: полсекунды тишины, чтобы сцена всё равно имела звук и длину.
-        const file = outFileBase + ".wav";
-        await writeFile(file, encodeWav16({ sampleRate: 24000, channels: [new Float32Array(12000)] }));
-        return { file, durationMs: 500, words: [], wordsSource: "estimated" };
+  async function synthesize(text: string, outFileBase: string, opts: VoiceOptions = {}): Promise<VoiceResult> {
+    const clean = normalizeText(text);
+    const voice = raw.resolveVoice(opts.voice ?? defaultVoiceFromEnv());
+    await mkdir(path.dirname(outFileBase), { recursive: true });
+    if (!clean) return writeSilence(outFileBase);
+
+    const key = keyOf(voice, clean);
+    const cached = await readCache(outFileBase, key);
+    if (cached) return cached;
+
+    const ctx: RawContext = { voice, rate: rateMultiplier(process.env.TTS_RATE), signal: opts.signal };
+    const result = await withRetry(raw, () => raw.synthesizeRaw(clean, ctx), opts.signal);
+    return finish(result, clean, outFileBase, key);
+  }
+
+  async function synthesizeMany(items: { text: string; outFileBase: string }[], opts: VoiceOptions = {}): Promise<VoiceResult[]> {
+    const voice = raw.resolveVoice(opts.voice ?? defaultVoiceFromEnv());
+    const maxChars = raw.batchMaxChars ?? 0;
+    const prepared = items.map((it) => ({ ...it, clean: normalizeText(it.text) }));
+    const out: (VoiceResult | null)[] = [];
+    for (const p of prepared) {
+      await mkdir(path.dirname(p.outFileBase), { recursive: true });
+      out.push(!p.clean ? await writeSilence(p.outFileBase) : await readCache(p.outFileBase, keyOf(voice, p.clean)));
+    }
+
+    // Подряд идущие неозвученные сцены — в группы не длиннее maxChars.
+    const groups: number[][] = [];
+    for (let i = 0; i < prepared.length; i++) {
+      if (out[i]) continue;
+      const last = groups.at(-1);
+      const len = last ? last.reduce((a, j) => a + prepared[j]!.clean.length + 2, 0) : Infinity;
+      if (last && last.at(-1) === i - 1 && len + prepared[i]!.clean.length <= maxChars) last.push(i);
+      else groups.push([i]);
+    }
+
+    for (const g of groups) {
+      if (g.length === 1) {
+        out[g[0]!] = await synthesize(items[g[0]!]!.text, items[g[0]!]!.outFileBase, opts);
+        continue;
       }
-
-      const key = `${raw.name}|${voice}|${raw.configKey()}|${clean}`;
-      const cached = await readCache(outFileBase, key);
-      if (cached) return cached;
-
+      const texts = g.map((i) => prepared[i]!.clean);
+      // Абзацы — подсказка модели сделать паузу между сценами.
       const ctx: RawContext = { voice, rate: rateMultiplier(process.env.TTS_RATE), signal: opts.signal };
-      const result = await withRetry(raw, () => raw.synthesizeRaw(clean, ctx), opts.signal);
+      const result = await withRetry(raw, () => raw.synthesizeRaw(texts.join("\n\n"), ctx), opts.signal);
+      const cuts = result.kind === "pcm" ? findSplitPoints(result.audio, texts) : null;
+      if (result.kind !== "pcm" || !cuts) {
+        console.warn(`[озвучка] ${raw.name}: не удалось разрезать общий звук сцен ${g.map((i) => i + 1).join(", ")} по паузам — озвучиваю их по одной.`);
+        for (const i of g) out[i] = await synthesize(items[i]!.text, items[i]!.outFileBase, opts);
+        continue;
+      }
+      const parts = splitAudio(result.audio, cuts);
+      for (const [k, i] of g.entries()) {
+        const p = prepared[i]!;
+        out[i] = await finish({ kind: "pcm", audio: parts[k]!, fallback: result.fallback }, p.clean, p.outFileBase, keyOf(voice, p.clean));
+      }
+    }
+    return out as VoiceResult[];
+  }
 
+  async function finish(result: RawAudio, clean: string, outFileBase: string, key: string): Promise<VoiceResult> {
       let file: string;
       let durationMs: number;
       let words: WordTiming[] | null = null;
@@ -113,8 +159,16 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       const out: VoiceResult = { file, durationMs, words, wordsSource };
       await writeCache(outFileBase, key, out, result.fallback);
       return out;
-    },
-  };
+  }
+
+  return raw.batchMaxChars ? { name: raw.name, synthesize, synthesizeMany } : { name: raw.name, synthesize };
+}
+
+// Пустая реплика: полсекунды тишины, чтобы сцена всё равно имела звук и длину.
+async function writeSilence(outFileBase: string): Promise<VoiceResult> {
+  const file = outFileBase + ".wav";
+  await writeFile(file, encodeWav16({ sampleRate: 24000, channels: [new Float32Array(12000)] }));
+  return { file, durationMs: 500, words: [], wordsSource: "estimated" };
 }
 
 function defaultVoiceFromEnv(): string | undefined {

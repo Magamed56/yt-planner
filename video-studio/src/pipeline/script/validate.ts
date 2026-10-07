@@ -279,6 +279,24 @@ export function lintScript(script: VideoScript, opts: Partial<LintOptions> = {})
   const descBytes = Buffer.byteLength(script.description, "utf8");
   if (descBytes > 3500) out.push(`description ${descBytes} байт — YouTube принимает до 5000 байт вместе с источниками; сократи до ~1500 символов`);
   if (script.tags.length < 5) out.push("мало тегов (нужно 8–15)");
+  out.push(...factChecks(script));
+  return out;
+}
+
+// Модели (особенно лёгкие) уверенно выдумывают проценты и приписывают цитаты
+// учёным. Автоматически это не проверить, поэтому явно показываем человеку,
+// что сверить перед рендером, — это и защита от «неаутентичного контента» YouTube.
+const ATTRIBUTION = /(?:говорил|говорит|писал|пишет|сказал|сказала|утверждал|по словам|как отмечал|цитата)\s+[А-ЯЁA-Z]/u;
+export function factChecks(script: VideoScript): string[] {
+  const out: string[] = [];
+  for (const sc of script.scenes) {
+    if (sc.kind === "stat" && sc.stat) {
+      out.push(`проверь факт ${sc.id}: «${sc.stat.prefix ?? ""}${sc.stat.value}${sc.stat.suffix ?? ""} ${sc.stat.label}» — есть ли источник? Не уверен — замени на сцену statement без цифры.`);
+    }
+    if (ATTRIBUTION.test(sc.narration) || (sc.kind === "quote" && /[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+/u.test(sc.narration))) {
+      out.push(`проверь цитату ${sc.id}: «${sc.narration.slice(0, 90)}${sc.narration.length > 90 ? "…" : ""}» — действительно ли автор так говорил?`);
+    }
+  }
   return out;
 }
 
