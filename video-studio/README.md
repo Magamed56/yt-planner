@@ -6,7 +6,8 @@
 тема ──LLM──▶ сценарий (JSON) ──TTS──▶ озвучка + тайминги слов
                                    ──стоки/AI──▶ визуал сцен
                                    ──▶ музыка, звук переходов
-                    ──Remotion (моушен-графика)──▶ video.mp4 + обложка + субтитры + описание ──▶ YouTube
+                    ──Remotion (моушен-графика)──▶ video.mp4 + обложки + субтитры + описание
+                                                   ──▶ YouTube (в слоты 12:00/19:00) + Instagram Reels
 ```
 
 - **Основной формат — Shorts 1080×1920**, есть и горизонтальный 1920×1080.
@@ -18,6 +19,15 @@
   браузер для рендера скачивается сам при первом запуске.
 
 Проект отдельный от Next.js-приложения в родительской папке и ничего у него не берёт.
+
+**Канал «Суть за минуту».** Название, голос (Gemini Charon), палитра, хэштеги, призывы, ссылки,
+дисклеймер и время выхода (2 ролика в день: 12:00 и 19:00 по Москве) записаны в `channel.json`.
+Конвейер берёт их оттуда сам. Переменные окружения (`CHANNEL_NAME`, `GEMINI_TTS_VOICE`,
+`PUBLISH_TIMES`…) сильнее файла. Пошаговые инструкции для человека:
+
+- [docs/youtube-setup.md](docs/youtube-setup.md) — оформить канал в YouTube Studio и публиковать по расписанию;
+- [docs/instagram-setup.md](docs/instagram-setup.md) — Reels через официальный API или вручную;
+- [brand/README.md](brand/README.md) — аватар, баннер, водяной знак, обложки «Актуального».
 
 ---
 
@@ -82,15 +92,19 @@ npm run make -- --topic "Почему мы забываем выученное"
 | `npm run make -- --topic "тема" [--format landscape] [--notes "…"] [--seconds 60]` | Полный автомат: сценарий от LLM → видео |
 | `npm run script -- --topic "тема" [--format …] [--notes "…"]` | Только черновик сценария → `scripts/<имя>.json` |
 | `npm run make -- --script scripts/<имя>.json` | Видео по вашему (отредактированному) сценарию |
-| `npm run upload -- out/<имя> [--privacy unlisted]` | Загрузить готовый ролик на YouTube |
+| `npm run upload -- out/<имя> [--privacy unlisted] [--schedule]` | Загрузить готовый ролик на YouTube (`--schedule` — в ближайший слот 12:00/19:00 МСК) |
+| `npm run upload -- out/<имя> --to instagram` | Опубликовать Reels в Instagram (`--to youtube,instagram` — в оба) |
 | `npm run youtube-auth` | Разовая настройка входа в YouTube (печатает `YT_REFRESH_TOKEN`) |
+| `npm run instagram-token [-- --exchange --page --save]` | Токен Instagram: проверить срок, продлить, узнать `IG_USER_ID` |
 | `npm run studio` | Remotion Studio — посмотреть композицию в браузере на демо-данных |
 | `npm run browser` | Заранее скачать браузер для рендера |
 | `npm run typecheck` | Проверка типов |
 
 Другие параметры `make`: `--theme midnight|sunset|emerald|mono`, `--voice edge|piper|gemini|…`,
 `--mood calm|inspiring|upbeat|tech|dark`, `--out папка`, `--no-render` (всё, кроме рендера),
-`--concurrency N`, `--upload youtube --privacy private|unlisted|public`. Справка: `npm run make -- --help`.
+`--concurrency N`, `--upload youtube|instagram|youtube,instagram`, `--privacy private|unlisted|public`,
+расписание YouTube: `--schedule` (ближайший свободный слот), `--schedule-slot N` (N-й слот подряд),
+`--schedule-start 2026-10-14`, `--publish-at <ISO-время>`. Справка: `npm run make -- --help`.
 
 **Что получается** в `out/<имя-ролика>/`:
 
@@ -99,7 +113,10 @@ npm run make -- --topic "Почему мы забываем выученное"
 | `video.mp4` | Ролик (H.264 + AAC, BT.709, громкость выровнена к ≈ −14 LUFS — как ориентир YouTube) |
 | `thumbnail.png` | Обложка 1280×720 (для YouTube при размере больше 2 МБ дополнительно `thumbnail.jpg`) |
 | `captions.srt` | Субтитры для YouTube (в само видео субтитры уже вшиты) |
-| `description.txt` | Название, описание с источниками (стоки, музыка, голос), теги — для вставки в YouTube Studio |
+| `description.txt` | Название, описание (призыв, ссылки, хэштеги канала, источники, дисклеймер), теги — для вставки в YouTube Studio |
+| `instagram.txt` | Подпись для Reels: хук, суть, призыв, 5–8 хэштегов из `channel.json`, без ссылок, ≤ 2200 символов. Можно править перед публикацией |
+| `cover.jpg` | Обложка Reels 1080×1920 — кадр конца хука без субтитров (тот же кадр API ставит обложкой) |
+| `youtube-result.json`, `instagram-result.json` | Что и когда опубликовано (защита от повторной публикации) |
 | `cost.json` | Сколько стоил запуск: токены и деньги LLM, символы озвучки |
 | `script.json`, `props.json` | Сценарий и полная таймлиния — чтобы пересобрать или разобраться |
 | `public/` | Озвучка, визуал и музыка запуска. Повторная сборка того же сценария не озвучивает сцены заново и берёт уже найденные клипы для сцен, у которых не менялись `visualQuery`/`imagePrompt` (подобрать заново — удалите `public/visuals`) |
@@ -160,13 +177,15 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    | `ANTHROPIC_API_KEY` | Claude (платно) | platform.claude.com |
    | `ELEVENLABS_API_KEY` | ElevenLabs | elevenlabs.io |
    | `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN` | Загрузка на YouTube | см. «Загрузка на YouTube» |
+   | `IG_USER_ID`, `IG_ACCESS_TOKEN` | Публикация Reels в Instagram | [docs/instagram-setup.md](docs/instagram-setup.md) |
 
 3. **Variables** (вкладка рядом, необязательно): `CHANNEL_NAME` (имя канала в финальной сцене),
    `LLM_PROVIDER`, `LLM_MODEL`, `LLM_FALLBACKS`, `LLM_EFFORT`, `VISUALS`, `VISUALS_PREFER`,
    `TTS_PROVIDER` (только для расписания — при ручном запуске провайдер и голос выбираются кнопкой: поля «Озвучка» и «Голос»), `TTS_VOICE`,
    `TTS_RATE`, `TTS_FALLBACK`, `GEMINI_TTS_MODEL`, `GEMINI_TTS_VOICE`, `GEMINI_TTS_STYLE`,
    `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL`, `MUSIC`, `MUSIC_MOOD`, `LOUDNESS_TARGET`,
-   `RENDER_CONCURRENCY`, `YT_CATEGORY_ID`, `YT_SYNTHETIC_MEDIA`, `SCHEDULED_TOPIC` (тема для запуска
+   `RENDER_CONCURRENCY`, `YT_CATEGORY_ID`, `YT_SYNTHETIC_MEDIA`, `PUBLISH_TIMES`, `PUBLISH_TZ`,
+   `IG_API_VERSION`, `IG_AI_GENERATED`, `SCHEDULED_TOPIC` (тема для запуска
    по расписанию). Других имён из `.env.example` workflow не читает. Секрет `GOOGLE_API_KEY`
    принимается вместо `GEMINI_API_KEY`.
 4. Если черновик не пушится (ошибка 403): **Settings → Actions → General → Workflow permissions →
@@ -184,12 +203,24 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    - **upload = none** — ролик в артефакте запуска (Summary → Artifacts, zip, хранится 7 дней);
    - **upload = release** — ещё и в релизе GitHub: mp4 можно скачать и посмотреть прямо с телефона,
      хранится, пока вы не удалите релиз. **Удобнее всего с телефона;**
-   - **upload = youtube** — сразу на YouTube с выбранной видимостью (см. ограничения ниже).
+   - **upload = youtube** — на YouTube с выбранной видимостью (см. ограничения ниже); с
+     **schedule = slots** — приватно до ближайшего свободного слота 12:00/19:00 МСК, потом YouTube
+     опубликует сам;
+   - **upload = instagram** — сразу в Instagram Reels (варианты `youtube+instagram`, `release+…` —
+     в несколько мест сразу).
+3. **mode = batch**, **script** = `video-studio/scripts/sut-01*.json` (маска или список через запятую) →
+   ролики собираются по очереди в одном запуске. С **schedule = slots** каждый встаёт в свой слот
+   подряд: 12:00, 19:00, завтра 12:00… (**schedule_start** = `2026-10-14` — считать слоты с этой
+   даты). С `instagram` в **upload** ролики ложатся в очередь (релизы GitHub с `instagram.json`), а
+   публикует их по одному workflow **«video-studio: Instagram по расписанию»** — вручную или по
+   расписанию (раскомментируйте `schedule` в `.github/workflows/video-studio-instagram.yml`).
+   Пакет — до 8–10 роликов: на больше не хватит суточной квоты голоса Gemini. Подробно:
+   [docs/youtube-setup.md](docs/youtube-setup.md), [docs/instagram-setup.md](docs/instagram-setup.md).
 
 Без `script`, но с `topic` render делает всё сам; без обоих — демо-ролик. **format = auto** берёт формат
 из сценария (для темы без сценария — Shorts); горизонтальный ролик по теме — **format = landscape**.
 Лимит времени: черновик — 40 минут, сборка — 2 часа (8-минутный горизонтальный ролик на 2 ядрах
-рендерится около получаса).
+рендерится около получаса), пакет — почти 6 часов (≈ 8 минут на Shorts).
 
 ### Лимиты бесплатного плана
 
@@ -220,6 +251,9 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    В терминале появится `YT_REFRESH_TOKEN=…`: добавьте его в `.env` (или запустите с `--save`)
    и в секреты GitHub.
 5. Загрузка: `npm run upload -- out/<имя> --privacy unlisted` или `npm run make -- … --upload youtube`.
+6. По расписанию: `--schedule` (ближайший свободный слот из `channel.json`), `--schedule-slot N`,
+   `--publish-at 2026-10-10T12:00:00+03:00`. Видео загружается приватным с `publishAt`, и YouTube
+   сам публикует его в это время. Как это выглядит в Studio: [docs/youtube-setup.md](docs/youtube-setup.md).
 
 Важно знать:
 
@@ -230,7 +264,35 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
   (`YT_CATEGORY_ID`), «не для детей», отметка о синтетическом контенте.
 - Свою обложку API ставит только на канал, подтверждённый по телефону. У Shorts обложку выбирают в
   приложении YouTube. Если поставить её не удалось, загрузка всё равно считается успешной.
-- Суточная квота YouTube Data API ограничена (10 000 единиц, загрузка — одна из самых «дорогих» операций), так что десятки роликов в день не загрузить. При превышении будет понятная ошибка; квота обновляется в полночь по тихоокеанскому времени.
+- Суточная квота YouTube Data API — 10 000 единиц; с декабря 2025 года загрузка стоит ≈ 100 единиц
+  (раньше 1600), так что двух роликов в день квота не замечает. При превышении будет понятная
+  ошибка; квота обновляется в полночь по тихоокеанскому времени.
+- **Расписание и непроверенный проект Google.** Пока проект не прошёл аудит API, YouTube запирает
+  загруженные через API ролики как приватные, и `publishAt` может не сработать (в логе будет
+  предупреждение). Тогда время ставится в Studio вручную, около 10 секунд на ролик: см.
+  [docs/youtube-setup.md](docs/youtube-setup.md), «Важно: проверка проекта Google».
+
+---
+
+## Instagram Reels
+
+Официальный API Meta, вариант **«Instagram API with Facebook Login for Business»**
+(`graph.facebook.com`): только он загружает **локальный файл** (resumable upload на
+`rupload.facebook.com`) без публичной ссылки на видео. Нужны профессиональный аккаунт Instagram,
+связанная страница Facebook и токен с `instagram_basic`, `instagram_content_publish`,
+`pages_read_engagement`, `pages_show_list`. Все шаги для человека:
+[docs/instagram-setup.md](docs/instagram-setup.md).
+
+- `npm run upload -- out/<имя> --to instagram` — контейнер Reels → загрузка файла → ожидание
+  обработки → публикация. Подпись — `instagram.txt`, обложка — тот же кадр, что `cover.jpg`
+  (`thumb_offset`), пометка «создано с ИИ» (`IG_AI_GENERATED=0` — без неё). Звук перед отправкой
+  перекодируется в AAC 128 кбит/с: так требует Meta.
+- Повторная публикация того же ролика блокируется (`instagram-result.json`, ещё раз — `--force`),
+  а перед публикацией подпись сверяется с последними постами: после обрыва связи дубля не будет.
+- Отложенной публикации в API Instagram нет. Расписание делает workflow «video-studio: Instagram
+  по расписанию» (очередь в релизах GitHub), или ставьте время сами в приложении Instagram.
+- Токен пользователя живёт ~60 дней: `npm run instagram-token -- --exchange`. Токен страницы
+  (`--page`) не истекает.
 
 ---
 
@@ -274,9 +336,13 @@ src/pipeline/visuals/     Pexels, Pixabay, Cloudflare, Pollinations
 src/pipeline/audio/       музыка (библиотека или генерация) и звук перехода
 src/pipeline/props.ts     сборка props композиции
 src/pipeline/render.ts    бандл Remotion → MP4 + обложка
-src/pipeline/youtube.ts   загрузка на YouTube (resumable)
+src/pipeline/youtube.ts   загрузка на YouTube (resumable, publishAt)
+src/pipeline/channel.ts   channel.json → умолчания конвейера, слоты расписания (DST-безопасно)
+src/pipeline/instagram.ts Reels через Graph API (resumable на rupload), подпись instagram.txt
+src/pipeline/cover.ts     обложка Reels cover.jpg (кадр композиции Video)
 src/remotion/             композиция «Video» и обложка «Thumbnail»
-src/cli/                  make, script, upload, youtube-auth
+src/cli/                  make, script, upload, youtube-auth, instagram-token, brand
+docs/                     инструкции для человека: YouTube Studio, Instagram
 src/dev/                  dev-скрипты (кадры, предпросмотр, тесты модулей)
 assets/                   шрифты (OFL), копируются в каждый рендер
 examples/demo-ru.json     пример сценария
@@ -301,6 +367,9 @@ out/                      результаты (в git не попадают)
 | В логе `Detected differing memory amounts` | Предупреждение Remotion в Docker и облачных контейнерах, на результат не влияет |
 | YouTube: `invalid_grant` | Токен отозван или истёк (приложение в статусе Testing). Переведите в In production и выполните `npm run youtube-auth` |
 | YouTube: видео приватное, хотя просили public | Ограничение для непроверенных проектов Google — смените видимость в Studio |
+| YouTube: `время публикации … уже прошло` | Слот наступил раньше, чем закончилась сборка: `npm run upload -- out/<имя> --schedule` возьмёт следующий |
+| Instagram: `токен IG_ACCESS_TOKEN истёк` | `npm run instagram-token -- --exchange --page --save`, затем обновите секрет в GitHub ([docs/instagram-setup.md](docs/instagram-setup.md)) |
+| Instagram: `нет нужного разрешения` / `IG_USER_ID` | Токен без галочек или в `IG_USER_ID` ник вместо числа — `npm run instagram-token` покажет, чего не хватает |
 | Странные ошибки путей на Windows | Перенесите проект в путь без пробелов и кириллицы (`C:\video\…`) |
 
 Подробный лог любой ошибки: запустите с `DEBUG=1` (PowerShell: `$env:DEBUG=1`).

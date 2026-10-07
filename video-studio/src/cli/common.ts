@@ -59,7 +59,7 @@ export function fail(e: unknown): never {
   const msg = e instanceof Error ? e.message : String(e);
   console.error(`\n✖ Ошибка: ${msg}`);
   if (process.env.DEBUG && e instanceof Error && e.stack) console.error(e.stack);
-  else if (!(e instanceof UserError)) console.error("  (подробности: запустите с DEBUG=1)");
+  else if (!(e instanceof UserError) && !(e as { userFacing?: unknown } | null)?.userFacing) console.error("  (подробности: запустите с DEBUG=1)");
   process.exit(1);
 }
 

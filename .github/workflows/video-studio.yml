@@ -4,7 +4,10 @@
 #   1. mode = draft, topic = «тема» → сценарий scripts/<имя>.json коммитится в эту ветку.
 #      Проверьте и поправьте его на github.com (карандаш ✏️ в файле).
 #   2. mode = render, script = video-studio/scripts/<имя>.json → готовое видео в артефакте,
-#      по желанию — в релизе GitHub или сразу на YouTube.
+#      по желанию — в релизе GitHub, на YouTube (сразу или в слот 12:00/19:00 МСК) и в Instagram.
+#   3. mode = batch, script = video-studio/scripts/sut-01*.json (маска или список через запятую) →
+#      ролики по очереди, на YouTube — каждый в свой слот подряд (schedule = slots), в Instagram —
+#      в очередь: её публикует workflow «video-studio: Instagram по расписанию».
 # Кнопка «Run workflow» появляется, только когда этот файл лежит в ветке по умолчанию.
 
 name: "video-studio: ролик"
@@ -13,16 +16,16 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "draft — только сценарий на проверку; render — собрать видео"
+        description: "draft — только сценарий на проверку; render — собрать видео; batch — несколько сценариев подряд"
         type: choice
-        options: [draft, render]
+        options: [draft, render, batch]
         default: draft
       topic:
         description: "Тема ролика (draft; для render без script — полный автомат)"
         type: string
         required: false
       script:
-        description: "render: путь к сценарию, например video-studio/scripts/xxx.json (пусто и нет темы — демо)"
+        description: "render: путь к сценарию (пусто и нет темы — демо); batch: список через запятую или маска video-studio/scripts/sut-01*.json"
         type: string
         required: false
       format:
@@ -45,15 +48,24 @@ on:
         options: [auto, midnight, sunset, emerald, mono]
         default: auto
       upload:
-        description: "Куда ещё отдать результат (артефакт на 7 дней есть всегда)"
+        description: "Куда отдать результат. instagram: render — публикует сразу, batch — ставит в очередь (релиз)"
         type: choice
-        options: [none, release, youtube]
+        options: [none, release, youtube, instagram, youtube+instagram, release+youtube, release+youtube+instagram]
         default: none
       privacy:
-        description: "Видимость на YouTube"
+        description: "Видимость на YouTube (при schedule = slots — приватно до времени публикации)"
         type: choice
         options: [private, unlisted, public]
         default: private
+      schedule:
+        description: "YouTube по расписанию: slots — слоты 12:00/19:00 МСК из channel.json (render — ближайший свободный, batch — по одному подряд)"
+        type: choice
+        options: [none, slots]
+        default: none
+      schedule_start:
+        description: "Необязательно: считать слоты от даты, например 2026-10-14 (иначе — от момента запуска)"
+        type: string
+        required: false
   # Запуск по расписанию (раскомментируйте): черновик на тему из переменной
   # репозитория SCHEDULED_TOPIC, например по понедельникам и четвергам в 05:17 UTC.
   # schedule:
@@ -72,12 +84,13 @@ concurrency:
 
 jobs:
   video:
-    name: ${{ (inputs.mode || 'draft') == 'render' && 'Рендер ролика' || 'Черновик сценария' }}
+    name: ${{ inputs.mode == 'batch' && 'Пакет роликов' || ((inputs.mode || 'draft') == 'render' && 'Рендер ролика' || 'Черновик сценария') }}
     # Явная версия: ubuntu-latest переезжает на 26.04 с 2026-10-19.
     runs-on: ubuntu-24.04
     # Сборке — всегда 2 ч: черновик landscape рендерится с format = auto (формат берётся из
     # сценария), и 40 минут на ~8-минутный ролик не хватает. Лимит ничего не стоит, пока не достигнут.
-    timeout-minutes: ${{ (inputs.mode || 'draft') == 'render' && 120 || 40 }}
+    # Пакет: ~8 минут на Shorts, максимум раннера — 6 ч (≈ 40 роликов).
+    timeout-minutes: ${{ inputs.mode == 'batch' && 350 || ((inputs.mode || 'draft') == 'render' && 120 || 40) }}
     defaults:
       run:
         working-directory: video-studio
@@ -92,6 +105,8 @@ jobs:
       THEME: ${{ inputs.theme || 'auto' }}
       UPLOAD: ${{ inputs.upload || 'none' }}
       PRIVACY: ${{ inputs.privacy || 'private' }}
+      SCHEDULE: ${{ inputs.schedule || 'none' }}
+      SCHEDULE_START: ${{ inputs.schedule_start }}
       # Несекретные настройки — Settings → Secrets and variables → Actions → Variables.
       TTS_PROVIDER: ${{ inputs.voice || vars.TTS_PROVIDER || 'auto' }}
       TTS_VOICE: ${{ inputs.voice_name || vars.TTS_VOICE }}
@@ -115,6 +130,11 @@ jobs:
       LOUDNESS_TARGET: ${{ vars.LOUDNESS_TARGET }}
       YT_CATEGORY_ID: ${{ vars.YT_CATEGORY_ID }}
       YT_SYNTHETIC_MEDIA: ${{ vars.YT_SYNTHETIC_MEDIA }}
+      # Расписание и Instagram (умолчания — в channel.json и .env.example).
+      PUBLISH_TIMES: ${{ vars.PUBLISH_TIMES }}
+      PUBLISH_TZ: ${{ vars.PUBLISH_TZ }}
+      IG_API_VERSION: ${{ vars.IG_API_VERSION }}
+      IG_AI_GENERATED: ${{ vars.IG_AI_GENERATED }}
       MODELS_DIR: ${{ github.workspace }}/video-studio/models
       # На 2 vCPU (приватный репозиторий) 2 потока быстрее авто-значения (1) на ~12 %.
       RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
@@ -143,7 +163,7 @@ jobs:
 
       # После npm ci: он удаляет node_modules целиком.
       - name: Кэш браузера Remotion и webpack
-        if: env.MODE == 'render'
+        if: env.MODE != 'draft'
         uses: actions/cache@v6
         with:
           path: |
@@ -154,14 +174,14 @@ jobs:
             remotion-${{ runner.os }}-${{ hashFiles('video-studio/package-lock.json') }}-
 
       - name: Кэш голосовых моделей Piper
-        if: env.MODE == 'render'
+        if: env.MODE != 'draft'
         uses: actions/cache@v6
         with:
           path: video-studio/models
           key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-v1
 
       - name: Системные библиотеки для Chrome Headless Shell
-        if: env.MODE == 'render'
+        if: env.MODE != 'draft'
         # Список — из документации Remotion (Linux Dependencies, Ubuntu 24.04), с t64-именами пакетов Noble.
         run: |
           sudo apt-get update -qq
@@ -171,7 +191,7 @@ jobs:
             libpango-1.0-0 libatk-bridge2.0-0t64
 
       - name: Браузер для рендера
-        if: env.MODE == 'render'
+        if: env.MODE != 'draft'
         run: npx remotion browser ensure
 
       # ---------- draft: сценарий на проверку ----------
@@ -281,7 +301,7 @@ jobs:
           name: video-${{ steps.render.outputs.slug }}-${{ github.run_number }}-${{ github.run_attempt }}
           # Бесплатный план: 500 МБ хранилища, и считаются ГБ·часы за месяц — храним
           # недолго и без props/public; если ролик уходит в релиз, артефакт — на сутки.
-          retention-days: ${{ env.UPLOAD == 'release' && 1 || 7 }}
+          retention-days: ${{ contains(env.UPLOAD, 'release') && 1 || 7 }}
           compression-level: 0
           if-no-files-found: error
           path: |
@@ -289,6 +309,8 @@ jobs:
             video-studio/${{ steps.render.outputs.run_dir }}/thumbnail.png
             video-studio/${{ steps.render.outputs.run_dir }}/captions.srt
             video-studio/${{ steps.render.outputs.run_dir }}/description.txt
+            video-studio/${{ steps.render.outputs.run_dir }}/instagram.txt
+            video-studio/${{ steps.render.outputs.run_dir }}/cover.jpg
             video-studio/${{ steps.render.outputs.run_dir }}/cost.json
             video-studio/${{ steps.render.outputs.run_dir }}/script.json
 
@@ -296,7 +318,7 @@ jobs:
         if: steps.artifact.outcome == 'success'
         env:
           ARTIFACT_URL: ${{ steps.artifact.outputs.artifact-url }}
-          DAYS: ${{ env.UPLOAD == 'release' && 1 || 7 }}
+          DAYS: ${{ contains(env.UPLOAD, 'release') && 1 || 7 }}
         run: |
           echo "📦 **Скачать:** [видео, обложка, субтитры, описание]($ARTIFACT_URL) — хранится дней: $DAYS." >> "$GITHUB_STEP_SUMMARY"
 
@@ -307,7 +329,8 @@ jobs:
           echo "⚠️ **Артефакт не сохранился** (вероятно, кончилась квота хранилища артефактов). Выберите upload = release — релизы в эту квоту не входят." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Релиз GitHub
-        if: env.MODE == 'render' && env.UPLOAD == 'release' && steps.render.outcome == 'success'
+        id: release
+        if: env.MODE == 'render' && contains(env.UPLOAD, 'release') && steps.render.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_DIR: ${{ steps.render.outputs.run_dir }}
@@ -317,19 +340,219 @@ jobs:
           # run_attempt: при «Re-run» номер запуска тот же, и тег уже занят.
           tag="video-${SLUG:0:60}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
           files=("$RUN_DIR/video.mp4" "$RUN_DIR/captions.srt" "$RUN_DIR/description.txt")
-          [ -f "$RUN_DIR/thumbnail.png" ] && files+=("$RUN_DIR/thumbnail.png")
+          # instagram.txt и cover.jpg — для ручной публикации Reels с телефона.
+          for f in thumbnail.png cover.jpg instagram.txt; do
+            [ -f "$RUN_DIR/$f" ] && files+=("$RUN_DIR/$f")
+          done
           gh release create "$tag" "${files[@]}" --prerelease --target "$GITHUB_SHA" --title "$TITLE" --notes-file "$RUN_DIR/description.txt"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
           url=$(gh release view "$tag" --json url -q .url)
           echo "🏷️ **Релиз:** [$tag]($url) — файлы хранятся, пока вы не удалите релиз." >> "$GITHUB_STEP_SUMMARY"
 
+      # Раннер каждый раз чистый: какие слоты уже заняты прошлыми запусками, узнаём из
+      # youtube-result.json в релизах. Без npm-кода — токен GitHub ему не достаётся.
+      - name: Занятые слоты YouTube (из релизов)
+        id: slots
+        if: env.SCHEDULE == 'slots' && contains(env.UPLOAD, 'youtube') && (env.MODE == 'batch' || steps.render.outcome == 'success')
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p out
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq '.[] | select([.assets[].name] | index("youtube-result.json")) | .tag_name' > "$RUNNER_TEMP/yt-tags"
+          mapfile -t tags < <(head -n 40 "$RUNNER_TEMP/yt-tags")
+          for t in "${tags[@]}"; do
+            d="out/_slot-${t:0:80}"
+            mkdir -p "$d"
+            gh release download "$t" --pattern youtube-result.json --dir "$d" --clobber || true
+          done
+          now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          last=""
+          if compgen -G "out/_slot-*/youtube-result.json" > /dev/null; then
+            last=$(jq -r --arg now "$now" 'select(.publishAt != null and .publishAt > $now) | .publishAt' out/_slot-*/youtube-result.json | LC_ALL=C sort | tail -n 1)
+          fi
+          echo "last=$last" >> "$GITHUB_OUTPUT"
+          [ -n "$last" ] && echo "Последний запланированный ролик: $last"
+          echo "Занятых слотов найдено: ${#tags[@]} релизов просмотрено"
+
       - name: Загрузка на YouTube
-        if: env.MODE == 'render' && env.UPLOAD == 'youtube' && steps.render.outcome == 'success'
+        id: youtube
+        if: env.MODE == 'render' && contains(env.UPLOAD, 'youtube') && steps.render.outcome == 'success'
         env:
           RUN_DIR: ${{ steps.render.outputs.run_dir }}
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-        run: npm run upload -- "$RUN_DIR" --privacy "$PRIVACY"
+        run: |
+          args=("$RUN_DIR" --privacy "$PRIVACY")
+          if [ "$SCHEDULE" = "slots" ]; then
+            args+=(--schedule)
+            [ -n "$SCHEDULE_START" ] && args+=(--schedule-start "$SCHEDULE_START")
+          fi
+          npm run upload -- "${args[@]}"
+
+      - name: Время публикации — в релиз
+        if: steps.youtube.outcome == 'success' && steps.release.outputs.tag != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_DIR: ${{ steps.render.outputs.run_dir }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: gh release upload "$TAG" "$RUN_DIR/youtube-result.json" --clobber
+
+      # Instagram публикует сразу: у API нет отложенной публикации (по расписанию —
+      # mode = batch + workflow «video-studio: Instagram по расписанию»).
+      - name: Публикация в Instagram
+        id: instagram
+        if: env.MODE == 'render' && contains(env.UPLOAD, 'instagram') && steps.render.outcome == 'success'
+        env:
+          RUN_DIR: ${{ steps.render.outputs.run_dir }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: npx tsx src/cli/upload.ts "$RUN_DIR" --to instagram
+
+      # Отдельным шагом: токен записи не попадает в процесс с npm-зависимостями.
+      - name: Отметить релиз как опубликованный в Instagram
+        if: steps.instagram.outcome == 'success' && steps.release.outputs.tag != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_DIR: ${{ steps.render.outputs.run_dir }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          cp "$RUN_DIR/instagram-result.json" "$RUN_DIR/instagram-published.json"
+          gh release upload "$TAG" "$RUN_DIR/instagram-published.json" --clobber
+
+      # ---------- batch: несколько сценариев подряд ----------
+      - name: Пакет роликов
+        id: batch
+        if: env.MODE == 'batch'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          # Токен записи — только для gh release; процессу make (npm-зависимости) он не передаётся.
+          GH_TOKEN: ${{ github.token }}
+          LAST_TAKEN: ${{ steps.slots.outputs.last }}
+        run: |
+          # Список сценариев: через запятую, маски можно; пути — от корня репозитория или от video-studio.
+          files=()
+          IFS=',' read -r -a pats <<< "$SCRIPT_PATH"
+          for pat in "${pats[@]}"; do
+            pat="${pat#"${pat%%[![:space:]]*}"}"
+            pat="${pat%"${pat##*[![:space:]]}"}"
+            [ -z "$pat" ] && continue
+            pat="${pat#./}"
+            pat="${pat#video-studio/}"
+            found=0
+            while IFS= read -r f; do
+              files+=("$f")
+              found=1
+            done < <(compgen -G "$pat" | LC_ALL=C sort)
+            if [ "$found" = 0 ]; then
+              echo "::error::Сценарий не найден: $pat (путь от корня репозитория, например video-studio/scripts/sut-01*.json)"
+              exit 1
+            fi
+          done
+          n=${#files[@]}
+          if [ "$n" = 0 ]; then
+            echo "::error::Для mode=batch укажите сценарии в поле script: список через запятую или маску video-studio/scripts/sut-01*.json"
+            exit 1
+          fi
+          [ "$n" -gt 10 ] && echo "::warning::$n роликов за раз: бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные озвучит Edge. Надёжнее по 8–10 за запуск."
+          # Точка отсчёта слотов фиксируется один раз: пока идёт пакет, номера слотов не сдвигаются.
+          # Без schedule_start — сразу после последнего уже запланированного ролика (или от «сейчас»).
+          start="${SCHEDULE_START:-${LAST_TAKEN:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}}"
+          [ "$SCHEDULE" = "slots" ] && echo "Слоты считаются от: $start"
+          release=""
+          if [[ "$UPLOAD" == *release* || "$UPLOAD" == *instagram* ]]; then release=1; fi
+          failed=()
+          {
+            echo "## 📦 Пакет: $n роликов"
+            echo ""
+            echo "| № | Сценарий | Результат |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for i in "${!files[@]}"; do
+            f="${files[$i]}"
+            slot=$((i + 1))
+            args=(--script "$f")
+            [ "$FORMAT" != "auto" ] && args+=(--format "$FORMAT")
+            [ "$THEME" != "auto" ] && args+=(--theme "$THEME")
+            if [[ "$UPLOAD" == *youtube* ]]; then
+              args+=(--upload youtube --privacy "$PRIVACY")
+              [ "$SCHEDULE" = "slots" ] && args+=(--schedule-slot "$slot" --schedule-start "$start")
+            fi
+            out="$RUNNER_TEMP/make-$slot.out"
+            : > "$out"
+            echo "::group::[$slot/$n] $f"
+            # Свой GITHUB_OUTPUT на ролик: отсюда берём папку, slug и заголовок; сводку make пишет сам.
+            if env -u GH_TOKEN GITHUB_OUTPUT="$out" npm run make -- "${args[@]}"; then
+              status="✅"
+            else
+              status="❌"
+              failed+=("$f")
+            fi
+            echo "::endgroup::"
+            run_dir=$(sed -n 's/^run_dir=//p' "$out" | tail -n 1)
+            slug=$(sed -n 's/^slug=//p' "$out" | tail -n 1)
+            title=$(sed -n 's/^title=//p' "$out" | tail -n 1)
+            yt=$(sed -n 's/^youtube_url=//p' "$out" | tail -n 1)
+            at=$(sed -n 's/^youtube_publish_at=//p' "$out" | tail -n 1)
+            note="$status${yt:+ $yt}${at:+, выйдет $at}"
+            if [ -n "$release" ] && [ -n "$run_dir" ] && [ -f "$run_dir/video.mp4" ]; then
+              tag="video-${slug:0:50}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}-${slot}"
+              rfiles=("$run_dir/video.mp4" "$run_dir/captions.srt" "$run_dir/description.txt")
+              for x in thumbnail.png cover.jpg instagram.txt youtube-result.json; do
+                [ -f "$run_dir/$x" ] && rfiles+=("$run_dir/$x")
+              done
+              # instagram.json в релизе = ролик в очереди Instagram (её разбирает отдельный workflow).
+              [[ "$UPLOAD" == *instagram* ]] && [ -f "$run_dir/instagram.json" ] && rfiles+=("$run_dir/instagram.json")
+              if gh release create "$tag" "${rfiles[@]}" --prerelease --target "$GITHUB_SHA" --title "${title:-$slug}" --notes-file "$run_dir/description.txt"; then
+                note="$note, релиз \`$tag\`"
+              else
+                note="$note, ⚠ релиз не создан"
+                failed+=("$f (релиз)")
+              fi
+            fi
+            echo "| $slot | \`$f\` | $note |" >> "$GITHUB_STEP_SUMMARY"
+          done
+          if [[ "$UPLOAD" == *instagram* ]]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "📸 Ролики стоят в очереди Instagram: их по одному публикует workflow «video-studio: Instagram по расписанию» (включите в нём расписание или запускайте вручную)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${#failed[@]}" -gt 0 ]; then
+            printf '::error::Не удалось: %s\n' "${failed[@]}"
+            exit 1
+          fi
+
+      # Без релиза пакет живёт только в артефакте — на 3 дня (квота хранилища артефактов мала).
+      - name: Артефакт пакета
+        if: always() && env.MODE == 'batch' && !contains(env.UPLOAD, 'release') && !contains(env.UPLOAD, 'instagram')
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: batch-${{ github.run_number }}-${{ github.run_attempt }}
+          retention-days: 3
+          compression-level: 0
+          if-no-files-found: ignore
+          path: |
+            video-studio/out/*/video.mp4
+            video-studio/out/*/thumbnail.png
+            video-studio/out/*/cover.jpg
+            video-studio/out/*/instagram.txt
+            video-studio/out/*/description.txt
+            video-studio/out/*/captions.srt
 
       # Сборка упала или вышло время — сохраняем хотя бы сценарий (написанный LLM
       # стоил квоты или денег), props и стоимость: run_dir известен с первого шага make.

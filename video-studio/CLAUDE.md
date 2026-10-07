@@ -19,6 +19,15 @@
 - Сетевой код — с таймаутами и понятной деградацией (визуал → без визуала, Edge → Piper).
 - Не используй `@remotion/google-fonts`: без доступа к хосту шрифтов рендер висит до таймаута.
   Шрифты лежат в `assets/fonts` и подключаются через webpack.
+- **Канал — `channel.json`** («Суть за минуту»): имя, голос, тема, хэштеги, призывы, ссылки,
+  дисклеймер, слоты 12:00/19:00 Europe/Moscow. Читает только `src/pipeline/channel.ts`
+  (`loadChannel`, `applyChannelDefaults`); переменные окружения сильнее файла. Название канала
+  не хардкодь — бери из `channel.json`.
+- **Публикация — только официальные API.** YouTube: Data API v3, `status.publishAt` только с
+  `privacyStatus: private`, `containsSyntheticMedia` всегда. Instagram: «Instagram API with Facebook
+  Login for Business» (`graph.facebook.com` + resumable на `rupload.facebook.com`) — только он
+  грузит локальный файл без публичного URL; у API нет отложенной публикации (расписание — workflow
+  с очередью в релизах). Никаких неофициальных библиотек и логинов по паролю.
 
 ## Где что
 
@@ -27,13 +36,23 @@
 - `src/pipeline/contracts.ts` — интерфейсы модулей и **полный список переменных окружения**
   (их же документирует `.env.example`). Меняй контракты только аддитивно.
 - `src/pipeline/{script,voice,visuals,audio}/` — модули конвейера; `props.ts` (сборка props),
-  `render.ts` (bundle → renderMedia/renderStill), `youtube.ts` (resumable-загрузка),
-  `srt.ts`, `meta.ts` (описание/теги), `slug.ts`.
+  `render.ts` (bundle → renderMedia/renderStill), `youtube.ts` (resumable-загрузка, publishAt),
+  `srt.ts`, `meta.ts` (описание/теги, подвал канала), `slug.ts`, `channel.ts` (channel.json, слоты
+  расписания через Intl — DST-безопасно), `instagram.ts` (Reels: контейнер → rupload → статус →
+  media_publish; подпись `instagram.txt`), `cover.ts` (обложка Reels `cover.jpg` — renderStill
+  композиции Video в конце хука, тот же кадр → `thumb_offset`).
 - `src/remotion/` — композиции `Video` и `Thumbnail` (`Root.tsx`); ассеты — `staticFile()`
   относительно publicDir запуска (`out/<slug>/public`).
-- `src/cli/` — `make.ts` (всё одной командой), `script.ts` (черновик), `upload.ts`, `youtube-auth.ts`.
-- `src/dev/` — dev-скрипты: `stills.ts`, `preview.ts`, `voice-test.ts`, `script-test.ts`, `visuals-test.ts`.
-- `.github/workflows/video-studio.yml` (в корне репозитория) — draft/render в GitHub Actions.
+- `src/cli/` — `make.ts` (всё одной командой), `script.ts` (черновик), `upload.ts` (`--to youtube,instagram`,
+  `--schedule`), `publish-options.ts` (общие флаги `--upload`/`--schedule*`), `youtube-auth.ts`,
+  `instagram-token.ts` (проверка/продление токена, IG_USER_ID), `brand.ts`.
+- `src/dev/` — dev-скрипты: `stills.ts`, `preview.ts`, `voice-test.ts`, `script-test.ts`, `visuals-test.ts`,
+  `publish-test.ts` (канал, слоты, описание, publishAt, Instagram на подменённом fetch).
+- `docs/` — инструкции для человека: `youtube-setup.md` (Studio, расписание), `instagram-setup.md`.
+- `.github/workflows/video-studio.yml` (в корне репозитория) — draft / render / batch в GitHub Actions
+  (batch: ролик i → слот i через `--schedule-slot i --schedule-start <старт>`, релиз на ролик);
+  `video-studio-instagram.yml` — публикует самый старый релиз с `instagram.json` без
+  `instagram-published.json` (расписание закомментировано).
 - `.claude/skills/` — официальные скиллы Remotion (skills@1.7.1, версия 4.0.534, `skills-lock.json`).
   Обновить: `DISABLE_TELEMETRY=1 npx -y skills@1.7.1 update -p -y`.
 
@@ -46,7 +65,8 @@ TTS_PROVIDER=piper VISUALS=none npm run make -- --demo   # офлайн (без 
 npm run make -- --script scripts/x.json --no-render      # всё, кроме рендера
 npm run script -- --topic "тема"            # черновик сценария → scripts/<slug>.json
 npx tsx src/dev/stills.ts                   # кадры композиции → out/dev/stills
-npx tsx src/dev/script-test.ts && npx tsx src/dev/visuals-test.ts   # тесты без сети
+npx tsx src/dev/script-test.ts && npx tsx src/dev/visuals-test.ts && npx tsx src/dev/publish-test.ts   # тесты без сети
+npm run upload -- out/<slug> --to youtube,instagram --schedule      # публикация готового ролика
 ```
 
 В песочнице без доступа к remotion.media браузер задаётся явно:

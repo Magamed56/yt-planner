@@ -1,0 +1,108 @@
+{
+  "title": "На Венере день длиннее года — и это правда",
+  "description": "Венера оборачивается вокруг оси за 243 земных дня, а вокруг Солнца — за 225. Разбираем, почему Солнце там встаёт на западе и сколько на самом деле длится венерианский день от рассвета до рассвета.\n#сутьзаминуту #shorts #космос #венера",
+  "tags": [
+    "космос",
+    "венера",
+    "планеты",
+    "солнечная система",
+    "астрономия",
+    "наука",
+    "факты",
+    "интересно",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "На Венере день длиннее года. И это не ошибка.",
+      "onScreen": "День *длиннее* года",
+      "icon": "orbit",
+      "visualQuery": "planet venus space",
+      "imagePrompt": "planet venus glowing pale yellow in deep space, thick swirling clouds, soft sunlight from one side, ultra detailed, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Вокруг своей оси Венера поворачивается за двести сорок три земных дня. Это самое медленное вращение среди планет.",
+      "onScreen": "Оборот вокруг оси — *243* дня",
+      "stat": {
+        "value": 243,
+        "suffix": " дня",
+        "label": "один оборот вокруг оси"
+      },
+      "icon": "rotate-ccw",
+      "visualQuery": "spinning globe dark",
+      "imagePrompt": "slowly rotating planet with motion trails around its axis, black space, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "А вокруг Солнца она пролетает всего за двести двадцать пять дней. Год заканчивается раньше, чем один оборот.",
+      "onScreen": "Год — всего *225* дней",
+      "icon": "sun",
+      "visualQuery": "sun solar flare",
+      "imagePrompt": "the sun with a small bright planet on a curved orbital path, glowing orbit line, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Ещё Венера крутится в обратную сторону. Поэтому Солнце там встаёт на западе, а садится на востоке.",
+      "onScreen": "Солнце встаёт на *западе*",
+      "icon": "sunrise",
+      "visualQuery": "sunrise horizon clouds",
+      "imagePrompt": "alien sunrise over a rocky horizon under a thick hazy orange sky, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "И вот хитрость: из-за обратного вращения от рассвета до рассвета проходит около ста семнадцати земных дней.",
+      "onScreen": "Рассвет раз в *117* дней",
+      "stat": {
+        "value": 117,
+        "prefix": "≈",
+        "suffix": " дней",
+        "label": "от рассвета до рассвета"
+      },
+      "icon": "clock",
+      "visualQuery": "hourglass sand timer",
+      "imagePrompt": "giant hourglass standing on a volcanic plain, dim yellow light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Правда, самого Солнца ты бы там не увидел. Небо закрывают плотные облака из капель серной кислоты.",
+      "onScreen": "Облака из *серной* кислоты",
+      "icon": "cloud",
+      "visualQuery": "thick yellow clouds",
+      "imagePrompt": "dense layered yellow clouds seen from inside an alien atmosphere, oppressive haze, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "stat",
+      "narration": "А у поверхности больше четырёхсот шестидесяти градусов. Жарче, чем на Меркурии, хотя он ближе к Солнцу.",
+      "onScreen": "Жарче, чем на *Меркурии*",
+      "stat": {
+        "value": 460,
+        "prefix": ">",
+        "suffix": " °C",
+        "label": "у поверхности Венеры"
+      },
+      "icon": "thermometer-sun",
+      "visualQuery": "volcanic lava rocks",
+      "imagePrompt": "scorching volcanic surface with glowing cracks under a heavy orange sky, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Подпишись — каждый день новая суть за минуту.",
+      "onScreen": "*Подпишись* — новая суть каждый день",
+      "icon": "bell-ring"
+    }
+  ]
+}

@@ -3,6 +3,8 @@
 // npm run youtube-auth). Видео грузим протоколом resumable частями по 8 МБ:
 // обрыв связи в CI не начинает загрузку заново (у googleapis только
 // multipart одним куском). Обложку ставим через googleapis thumbnails.set.
+// Отложенная публикация — status.publishAt (RFC 3339): YouTube принимает его
+// только у приватного видео и сам делает его публичным в это время.
 
 import fs from "node:fs";
 import { google } from "googleapis";
@@ -31,6 +33,7 @@ export interface UploadResult {
   url: string;
   studioUrl: string;
   privacy: string;
+  publishAt: string | null; // когда YouTube опубликует видео сам (отложенная публикация)
   thumbnailSet: boolean;
   uploadStatus: string | null;
 }
@@ -100,6 +103,7 @@ function explainApiError(status: number, body: string): string {
   if (reason === "invalidTitle") return "YouTube отклонил заголовок (пустой, длиннее 100 символов или с «<», «>»).";
   if (reason === "invalidDescription") return "YouTube отклонил описание (больше 5000 байт — у кириллицы 2 байта на букву — или с «<», «>»).";
   if (reason === "invalidTags") return "YouTube отклонил теги (суммарно больше 500 символов).";
+  if (reason === "invalidPublishAt") return "YouTube отклонил время публикации (оно в прошлом или в неверном формате) — выберите слот позже: --schedule или --publish-at <ISO-время>.";
   if (status === 403 && /insufficient|scope/i.test(message)) return "у токена нет права youtube.upload — получите его заново: npm run youtube-auth.";
   return `HTTP ${status}${reason ? ` ${reason}` : ""}: ${message}`;
 }
@@ -124,16 +128,25 @@ export async function uploadToYoutube(input: UploadInput): Promise<UploadResult>
   const chunkBytes = input.chunkBytes ?? CHUNK;
   if (!fs.existsSync(input.videoFile)) throw new Error(`Файл видео не найден: ${input.videoFile}`);
   const size = fs.statSync(input.videoFile).size;
+  let publishAt: string | null = null;
+  if (input.publishAt) {
+    const ms = Date.parse(input.publishAt);
+    if (!Number.isFinite(ms)) throw new Error(`YouTube: время публикации «${input.publishAt}» не похоже на дату ISO 8601 (пример: 2026-10-10T09:00:00Z).`);
+    // В прошлом YouTube отвергнет весь запрос (invalidPublishAt) — проверяем заранее.
+    if (ms <= Date.now() + 60_000) throw new Error(`YouTube: время публикации ${input.publishAt} уже прошло — выберите время в будущем (--schedule возьмёт ближайший слот).`);
+    publishAt = new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
+  }
   const auth = input.auth ?? youtubeAuth();
 
   const status: Record<string, unknown> = {
-    privacyStatus: input.publishAt ? "private" : input.privacy,
+    // publishAt работает только у приватного видео (так в документации API).
+    privacyStatus: publishAt ? "private" : input.privacy,
     selfDeclaredMadeForKids: false,
     embeddable: true,
     license: "youtube",
     containsSyntheticMedia: input.meta.containsSyntheticMedia,
   };
-  if (input.publishAt) status.publishAt = input.publishAt;
+  if (publishAt) status.publishAt = publishAt;
   const resource = {
     snippet: {
       title: input.meta.title,
@@ -255,7 +268,11 @@ export async function uploadToYoutube(input: UploadInput): Promise<UploadResult>
   }
   const videoId = video?.id;
   if (!videoId) throw new Error("YouTube не вернул id загруженного видео.");
-  log(`[youtube] видео загружено: https://youtu.be/${videoId}`);
+  log(`[youtube] видео загружено: https://youtu.be/${videoId}${publishAt ? ` — опубликуется само в ${publishAt}` : ""}`);
+  if (publishAt && video?.status && !video.status.publishAt) {
+    // Так бывает у непроверенного проекта Google Cloud: видео заперто как приватное.
+    log("[youtube] ⚠ YouTube не подтвердил время публикации — проверьте ролик в Studio («Контент»); если он не «Запланирован», поставьте время вручную (docs/youtube-setup.md, «Расписание»).");
+  }
 
   // 3) Обложка: для Shorts и неподтверждённых каналов API часто отказывает —
   // это не ошибка конвейера.
@@ -278,6 +295,7 @@ export async function uploadToYoutube(input: UploadInput): Promise<UploadResult>
     url: `https://youtu.be/${videoId}`,
     studioUrl: `https://studio.youtube.com/video/${videoId}/edit`,
     privacy: video?.status?.privacyStatus ?? String(status.privacyStatus),
+    publishAt: video?.status?.publishAt ?? publishAt,
     thumbnailSet,
     uploadStatus: video?.status?.uploadStatus ?? null,
   };
@@ -285,7 +303,7 @@ export async function uploadToYoutube(input: UploadInput): Promise<UploadResult>
 
 interface UploadedVideo {
   id?: string;
-  status?: { privacyStatus?: string; uploadStatus?: string };
+  status?: { privacyStatus?: string; uploadStatus?: string; publishAt?: string };
 }
 
 // Сколько байт сервер уже получил (после обрыва); если файл уже целиком

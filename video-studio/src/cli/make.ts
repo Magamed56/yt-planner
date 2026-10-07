@@ -1,10 +1,12 @@
 // Одна команда → готовый ролик:
 //   тема (LLM) или готовый JSON → озвучка → визуал → музыка → props →
-//   субтитры/описание/стоимость → рендер MP4 + обложка → (YouTube).
+//   субтитры/описание/стоимость → рендер MP4 + обложки → (YouTube, Instagram).
+// Умолчания канала (имя, голос, хэштеги, подвал описания, слоты) — из channel.json.
 //
 //   npm run make -- --demo
 //   npm run make -- --topic "Почему мы забываем" --format shorts
 //   npm run make -- --script scripts/pochemu-my-zabyvaem.json --upload youtube --privacy private
+//   npm run make -- --script scripts/x.json --upload youtube,instagram --schedule
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -12,6 +14,9 @@ import { parseArgs } from "node:util";
 import { FPS, THEME_NAMES, type Format, type ThemeName, type VideoScript } from "../types";
 import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult } from "../pipeline/contracts";
 import { makeWhoosh, prepareMusic } from "../pipeline/audio/index";
+import { applyChannelDefaults, loadChannel, type ChannelConfig } from "../pipeline/channel";
+import { coverFrame, frameToMs, renderCover } from "../pipeline/cover";
+import { buildInstagramCaption, instagramEnvHelp, missingInstagramEnv, publishRunDir, writeInstagramAssets, type InstagramMeta, type RunDirPublishResult } from "../pipeline/instagram";
 import { buildYoutubeMeta, descriptionTxt } from "../pipeline/meta";
 import { buildVideoProps, estimateDurationMs } from "../pipeline/props";
 import { checkBrowserEnv, preparePublicDir, renderVideo, type RenderResult } from "../pipeline/render";
@@ -40,6 +45,7 @@ import {
   writeJson,
   writeYoutubeResult,
 } from "./common";
+import { SCHEDULE_HELP, describePublishAt, parseUploadTargets, resolvePublishAt, scheduleArgsFrom, wantsSchedule, type ScheduleArgs, type UploadTarget } from "./publish-options";
 import { loadScriptFile } from "./scriptFile";
 
 const HELP = `Сборка ролика одной командой.
@@ -58,8 +64,12 @@ const HELP = `Сборка ролика одной командой.
   --out    out/                куда класть папку ролика (по умолчанию out/)
   --no-render                  только подготовить звук, визуал и props.json
   --concurrency N              сколько кадров рендерить параллельно (иначе RENDER_CONCURRENCY / авто)
-  --upload youtube             загрузить на YouTube после рендера
+  --upload youtube|instagram|youtube,instagram   опубликовать после рендера
   --privacy private|unlisted|public   видимость на YouTube (по умолчанию private)
+${SCHEDULE_HELP}
+
+Instagram публикуется сразу (у API нет отложенной публикации); по расписанию —
+через workflow, см. docs/instagram-setup.md. Настройки канала — channel.json.
 `;
 
 const safeId = (id: string) => id.replace(/[^a-zA-Z0-9_-]/g, "_") || "scene";
@@ -79,8 +89,9 @@ interface Args {
   out: string;
   render: boolean;
   concurrency?: number;
-  upload?: "youtube";
+  upload: Set<UploadTarget>;
   privacy: Privacy;
+  schedule: ScheduleArgs;
 }
 
 function parse(): Args {
@@ -103,6 +114,10 @@ function parse(): Args {
         concurrency: { type: "string" },
         upload: { type: "string" },
         privacy: { type: "string" },
+        "publish-at": { type: "string" },
+        schedule: { type: "boolean", default: false },
+        "schedule-slot": { type: "string" },
+        "schedule-start": { type: "string" },
         help: { type: "boolean", short: "h", default: false },
       },
       strict: true,
@@ -127,8 +142,9 @@ function parse(): Args {
   if (format && format !== "shorts" && format !== "landscape") throw new UserError(`--format: shorts или landscape, а не «${format}».`);
   const theme = str("theme");
   if (theme && theme !== "auto" && !THEME_NAMES.includes(theme as ThemeName)) throw new UserError(`--theme: одна из ${THEME_NAMES.join(", ")}.`);
-  const upload = str("upload");
-  if (upload && upload !== "youtube" && upload !== "none") throw new UserError(`--upload: пока поддерживается только youtube (релизы GitHub делает workflow).`);
+  const upload = parseUploadTargets(str("upload"));
+  const schedule = scheduleArgsFrom(values);
+  if (wantsSchedule(schedule) && !upload.has("youtube")) throw new UserError("Расписание (--schedule, --schedule-slot, --publish-at) — для YouTube: добавьте --upload youtube.");
   const privacy = (str("privacy") ?? "private") as Privacy;
   if (!PRIVACY_VALUES.includes(privacy)) throw new UserError(`--privacy: ${PRIVACY_VALUES.join(" | ")}.`);
   const num = (k: string) => {
@@ -151,8 +167,9 @@ function parse(): Args {
     out: path.resolve(str("out") ?? path.join(ROOT, "out")),
     render: !values["no-render"],
     concurrency: num("concurrency"),
-    upload: upload === "youtube" ? "youtube" : undefined,
+    upload,
     privacy,
+    schedule,
   };
 }
 
@@ -223,16 +240,29 @@ async function main() {
 
   console.log("video-studio · сборка ролика");
   if (envFile) console.log(`  настройки: ${rel(envFile)}`);
+  let channel: ChannelConfig;
+  try {
+    channel = loadChannel();
+  } catch (e) {
+    throw new UserError(errText(e));
+  }
+  // Голос Gemini, его манера и подпись «облачка» — из канала, если не заданы в окружении.
+  const applied = applyChannelDefaults(channel);
+  if (channel.file) console.log(`  канал: «${channel.name ?? "без названия"}» (${rel(channel.file)})${applied.length ? `, умолчания: ${applied.join(", ")}` : ""}`);
 
   // Проверки до долгих шагов: ключи и браузер.
   let voice = getVoiceProvider(args.voice);
-  if (args.upload === "youtube") {
+  if (args.upload.has("youtube")) {
     const missing = missingYoutubeEnv();
     if (missing.length) throw new UserError(`--upload youtube: не заданы ${missing.join(", ")}.\n${youtubeEnvHelp()}`);
   }
+  if (args.upload.has("instagram")) {
+    const missing = missingInstagramEnv();
+    if (missing.length) throw new UserError(`--upload instagram: не заданы ${missing.join(", ")}.\n${instagramEnvHelp()}`);
+  }
   if (args.render) checkBrowserEnv();
 
-  const steps = new Steps(7 + (args.upload ? 1 : 0));
+  const steps = new Steps(7 + args.upload.size);
   const usage: LlmUsage[] = [];
 
   // 1. Сценарий
@@ -263,6 +293,7 @@ async function main() {
   });
   if (args.format && args.format !== script.format) script = { ...script, format: args.format };
   if (args.theme) script = { ...script, theme: args.theme };
+  else if (!script.theme && channel.theme) script = { ...script, theme: channel.theme };
   const format = script.format;
   const slug = slugify(script.title);
   const source = runSource(args, script);
@@ -350,7 +381,7 @@ async function main() {
 
   // 5. Props композиции
   const props = await steps.run("Сборка таймлинии (props.json)", async () => {
-    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, format, theme: script.theme });
+    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, format, theme: script.theme, channelName: channel.name });
     writeJson(path.join(runDir, "props.json"), p);
     console.log(`  длительность ${(p.durationInFrames / FPS).toFixed(1)} с (${p.durationInFrames} кадров), голос ${(voiceDurationMs / 1000).toFixed(1)} с, слов в субтитрах: ${p.captions.length}`);
     return p;
@@ -367,36 +398,63 @@ async function main() {
       musicCredit: music?.credit ?? null,
       voiceProvider: voice.name,
       voiceName: voiceLabel(voice.name),
+      channel,
     });
     const description = path.join(runDir, "description.txt");
     fs.writeFileSync(description, descriptionTxt(meta));
     writeJson(path.join(runDir, "youtube.json"), meta);
+    // Instagram: подпись (правится руками в instagram.txt) и кадр обложки — тот же, что в cover.jpg.
+    const igMeta: InstagramMeta = { caption: buildInstagramCaption(script, channel), thumbOffsetMs: frameToMs(coverFrame(props)), shareToFeed: true, cover: null };
+    const ig = writeInstagramAssets(runDir, igMeta);
     const cost = buildCost(usage, voice.name, script, visuals.map((v) => v.credit));
     writeJson(path.join(runDir, "cost.json"), cost);
     console.log(`  стоимость запуска: $${cost.totalUsd.toFixed(4)}${cost.totalUsd === 0 ? " (всё бесплатно)" : ""}`);
-    return { srt, description, meta, cost };
+    return { srt, description, meta, cost, igMeta, igCaption: ig.captionFile };
   });
 
   // 7. Рендер
   let render: RenderResult | null = null;
+  let cover: string | null = null;
   if (args.render) {
-    render = await steps.run("Рендер видео и обложки", () => renderVideo({ runDir, props, concurrency: args.concurrency }));
+    render = await steps.run("Рендер видео и обложки", async () => {
+      const r = await renderVideo({ runDir, props, concurrency: args.concurrency });
+      // Обложка Reels 1080×1920 — кадр конца хука без субтитров.
+      try {
+        const c = await renderCover({ runDir, props });
+        cover = c.file;
+        writeInstagramAssets(runDir, { ...files.igMeta, cover: path.basename(c.file), thumbOffsetMs: c.ms });
+        console.log(`  обложка Reels: ${rel(c.file)} (кадр ${c.frame}, ${(c.ms / 1000).toFixed(1)} с)`);
+      } catch (e) {
+        console.warn(`  ⚠ обложку Reels сделать не удалось: ${errText(e).split("\n")[0]} — Instagram возьмёт кадр по thumb_offset`);
+      }
+      return r;
+    });
   } else steps.skip("Рендер видео и обложки", "--no-render");
 
   // 8. YouTube
   let youtube: UploadResult | null = null;
-  if (args.upload === "youtube") {
+  if (args.upload.has("youtube")) {
     if (!render) steps.skip("Загрузка на YouTube", "нет видео: указан --no-render");
     else {
       const r = render;
-      youtube = await steps.run("Загрузка на YouTube", () =>
-        uploadToYoutube({ videoFile: r.videoFile, thumbnailFile: r.thumbnailJpg ?? r.thumbnailFile, meta: files.meta, privacy: args.privacy }),
-      );
+      youtube = await steps.run("Загрузка на YouTube", () => {
+        // Слот считаем сейчас, а не до рендера: за время рендера ближайший мог пройти.
+        const publishAt = resolvePublishAt(args.schedule, channel, args.out);
+        if (publishAt) console.log(`  отложенная публикация: ${describePublishAt(publishAt, channel)} — до этого видео приватное`);
+        return uploadToYoutube({ videoFile: r.videoFile, thumbnailFile: r.thumbnailJpg ?? r.thumbnailFile, meta: files.meta, privacy: args.privacy, publishAt });
+      });
       writeYoutubeResult(runDir, youtube);
-      if (args.privacy !== "private" && youtube.privacy === "private") {
+      if (!youtube.publishAt && args.privacy !== "private" && youtube.privacy === "private") {
         console.warn("  ⚠ YouTube оставил видео приватным: загрузки из непроверенных проектов Google Cloud всегда приватные — смените видимость в YouTube Studio.");
       }
     }
+  }
+
+  // 9. Instagram
+  let instagram: RunDirPublishResult | null = null;
+  if (args.upload.has("instagram")) {
+    if (!render) steps.skip("Публикация в Instagram", "нет видео: указан --no-render");
+    else instagram = await steps.run("Публикация в Instagram", () => publishRunDir(runDir, { log: (m) => console.log(`  ${m}`) }));
   }
 
   const totalMs = Date.now() - tStart;
@@ -416,6 +474,8 @@ async function main() {
       props: rel(path.join(runDir, "props.json")),
       script: rel(path.join(runDir, "script.json")),
       cost: rel(path.join(runDir, "cost.json")),
+      instagramCaption: rel(files.igCaption),
+      cover: cover ? rel(cover) : null,
     },
     costUsd: files.cost.totalUsd,
     renderSec: render ? Number((render.renderMs / 1000).toFixed(1)) : null,
@@ -423,6 +483,7 @@ async function main() {
     totalSec: Number((totalMs / 1000).toFixed(1)),
     timings: steps.timings.map((t) => ({ step: t.name, sec: Number((t.ms / 1000).toFixed(1)) })),
     youtube,
+    instagram: instagram ? { mediaId: instagram.mediaId, permalink: instagram.permalink, publishedAt: instagram.publishedAt, duplicate: instagram.duplicate } : null,
   };
   writeJson(path.join(runDir, "result.json"), result);
 
@@ -438,6 +499,10 @@ async function main() {
     duration_sec: result.durationSec,
     cost_usd: result.costUsd.toFixed(4),
     youtube_url: youtube?.url,
+    youtube_publish_at: youtube?.publishAt,
+    instagram_caption: result.files.instagramCaption,
+    cover: result.files.cover,
+    instagram_url: instagram?.permalink ?? instagram?.mediaId,
   });
   ghSummary(summaryMarkdown(result, render, script));
 }
@@ -514,6 +579,7 @@ type Result = {
   totalSec: number;
   timings: { step: string; sec: number }[];
   youtube: UploadResult | null;
+  instagram: { mediaId: string; permalink: string | null; publishedAt: string; duplicate: boolean } | null;
 };
 
 function printSummary(r: Result, render: RenderResult | null) {
@@ -524,11 +590,13 @@ function printSummary(r: Result, render: RenderResult | null) {
     const loud = render.loudness ? `, ${render.loudness.outputLufs.toFixed(1)} LUFS` : "";
     console.log(`  видео:     ${r.files.video}  (${render.width}×${render.height}, ${(fs.statSync(render.videoFile).size / 1048576).toFixed(1)} МБ${loud})`);
     if (r.files.thumbnail) console.log(`  обложка:   ${r.files.thumbnail}`);
+    if (r.files.cover) console.log(`  Reels:     ${r.files.cover} + ${r.files.instagramCaption}`);
   } else console.log(`  props:     ${r.files.props}  (рендер: npm run make -- --script ${r.files.script})`);
   console.log(`  субтитры:  ${r.files.captions}`);
   console.log(`  описание:  ${r.files.description}`);
   console.log(`  стоимость: ${r.files.cost}`);
-  if (r.youtube) console.log(`  YouTube:   ${r.youtube.url} (${r.youtube.privacy}) · редактировать: ${r.youtube.studioUrl}`);
+  if (r.youtube) console.log(`  YouTube:   ${r.youtube.url} (${r.youtube.privacy}${r.youtube.publishAt ? `, выйдет ${r.youtube.publishAt}` : ""}) · редактировать: ${r.youtube.studioUrl}`);
+  if (r.instagram) console.log(`  Instagram: ${r.instagram.permalink ?? r.instagram.mediaId}${r.instagram.duplicate ? " (уже был опубликован)" : ""}`);
   console.log(`  общее время: ${fmtDuration(r.totalSec * 1000)}  (${r.timings.map((t) => `${t.step.split(" (")[0].toLowerCase()} ${t.sec} с`).join(", ")})`);
 }
 
@@ -545,7 +613,8 @@ function summaryMarkdown(r: Result, render: RenderResult | null, script: VideoSc
     `| Время сборки | ${fmtDuration(r.totalSec * 1000)}${render ? ` (рендер ${fmtDuration(render.renderMs)})` : ""} |`,
     `| Папка | \`video-studio/${r.runDir}\` |`,
   ];
-  if (r.youtube) lines.push(`| YouTube | ${r.youtube.url} (${r.youtube.privacy}) |`);
+  if (r.youtube) lines.push(`| YouTube | ${r.youtube.url} (${r.youtube.privacy}${r.youtube.publishAt ? `, выйдет ${r.youtube.publishAt}` : ""}) |`);
+  if (r.instagram) lines.push(`| Instagram | ${r.instagram.permalink ?? r.instagram.mediaId} |`);
   lines.push("", "<details><summary>Этапы</summary>", "", ...r.timings.map((t) => `- ${escapeMd(t.step)}: ${t.sec} с`), "", "</details>", "");
   return lines.join("\n");
 }

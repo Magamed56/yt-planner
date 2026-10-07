@@ -1,0 +1,102 @@
+{
+  "title": "Клеопатра ближе к нам, чем к строителям пирамид",
+  "description": "Великую пирамиду построили около 2560 года до н. э., Клеопатра умерла в 30 году до н. э., а люди высадились на Луну в 1969-м. Считаем годы и понимаем, насколько длинна история Египта.\n#сутьзаминуту #shorts #история #египет",
+  "tags": [
+    "история",
+    "клеопатра",
+    "пирамиды",
+    "древний египет",
+    "пирамида хеопса",
+    "египет",
+    "интересно",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Клеопатра жила ближе к тебе, чем к строителям пирамид.",
+      "onScreen": "Клеопатра ближе к *тебе*, чем к пирамидам",
+      "icon": "crown",
+      "visualQuery": "egyptian queen statue",
+      "imagePrompt": "cinematic portrait of an ancient egyptian queen statue in golden light, pyramid silhouettes in the far background at dusk, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Великую пирамиду фараона Хеопса в Гизе построили около двух тысяч пятисот шестидесятого года до нашей эры.",
+      "onScreen": "Пирамида Хеопса: *≈2560* до н. э.",
+      "icon": "pyramid",
+      "visualQuery": "giza pyramid desert",
+      "imagePrompt": "great pyramid of giza at dawn, low sun, long shadows, fine sand haze, epic wide shot, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Больше трёх тысяч восьмисот лет она оставалась самым высоким сооружением, построенным людьми.",
+      "onScreen": "Рекорд высоты — *3800* лет",
+      "stat": {
+        "value": 3800,
+        "prefix": ">",
+        "suffix": " лет",
+        "label": "самое высокое сооружение мира"
+      },
+      "icon": "building-2",
+      "visualQuery": "pyramid stone blocks",
+      "imagePrompt": "close-up of massive weathered limestone blocks of an ancient pyramid, dramatic side light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "А Клеопатра умерла в тридцатом году до нашей эры. Между ней и пирамидой — около двух с половиной тысяч лет.",
+      "onScreen": "Клеопатра — *30* год до н. э.",
+      "icon": "hourglass",
+      "visualQuery": "ancient papyrus scroll",
+      "imagePrompt": "ancient papyrus scroll and an hourglass on a stone table, candle light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Зато от Клеопатры до высадки людей на Луну в тысяча девятьсот шестьдесят девятом — меньше двух тысяч лет.",
+      "onScreen": "До Луны — *меньше* 2000 лет",
+      "stat": {
+        "value": 1998,
+        "suffix": " лет",
+        "label": "от Клеопатры до первых шагов на Луне"
+      },
+      "icon": "moon",
+      "visualQuery": "moon surface footprint",
+      "imagePrompt": "astronaut boot print on grey lunar dust, earth glowing on the black horizon, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Для самой Клеопатры пирамиды уже были глубокой древностью. О них за четыре века до неё писал ещё Геродот.",
+      "onScreen": "Для неё пирамиды — *древность*",
+      "icon": "scroll-text",
+      "visualQuery": "ancient ruins sunset",
+      "imagePrompt": "ancient greek traveler in a cloak looking up at the pyramids, sunset, dust in the air, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Получается, история Египта настолько длинная, что Клеопатра — скорее наша современница, чем современница пирамид.",
+      "onScreen": "Клеопатра — почти *наша* современница",
+      "icon": "landmark",
+      "visualQuery": "egyptian hieroglyphs wall",
+      "imagePrompt": "carved egyptian hieroglyphs on a temple wall lit by a moving beam of light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Подпишись — каждый день новая суть за минуту.",
+      "onScreen": "*Подпишись* — новая суть каждый день",
+      "icon": "bell-ring"
+    }
+  ]
+}

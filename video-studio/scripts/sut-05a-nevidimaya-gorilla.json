@@ -1,0 +1,102 @@
+{
+  "title": "Невидимая горилла: почему ты не видишь очевидное",
+  "description": "Знаменитый эксперимент Саймонса и Шабри 1999 года: примерно половина зрителей не заметила человека в костюме гориллы. Разбираем слепоту невнимания и почему от неё не спасает даже профессиональный опыт.\n#сутьзаминуту #shorts #психология #внимание",
+  "tags": [
+    "психология",
+    "внимание",
+    "невидимая горилла",
+    "слепота невнимания",
+    "мозг",
+    "эксперимент",
+    "наука",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Половина зрителей не заметила гориллу прямо у себя перед глазами.",
+      "onScreen": "Гориллу не заметила *половина*",
+      "icon": "eye-off",
+      "visualQuery": "gorilla face close",
+      "imagePrompt": "close-up of a gorilla face emerging from deep shadow, intense eyes, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "В тысяча девятьсот девяносто девятом году психологи показали людям короткое видео. Игроки в белом и чёрном передают мячи.",
+      "onScreen": "1999. Видео с *мячом*",
+      "icon": "eye",
+      "visualQuery": "basketball players passing",
+      "imagePrompt": "young people passing a basketball in a hallway, motion blur, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Задача простая: внимательно сосчитать, сколько раз пасуют игроки в белых футболках.",
+      "onScreen": "Считай пасы *белых*",
+      "icon": "target",
+      "visualQuery": "white t-shirts team",
+      "imagePrompt": "players in white t-shirts passing a ball, focus on the ball, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "И тут посреди площадки проходит человек в костюме гориллы. Останавливается, бьёт себя в грудь и уходит.",
+      "onScreen": "Через кадр идёт *горилла*",
+      "icon": "footprints",
+      "visualQuery": "gorilla costume person",
+      "imagePrompt": "person in a gorilla costume walking between ball players, beating its chest, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Примерно половина зрителей её просто не увидела. Они были слишком заняты подсчётом пасов.",
+      "onScreen": "Не заметили *гориллу*",
+      "stat": {
+        "value": 50,
+        "prefix": "≈",
+        "suffix": "%",
+        "label": "зрителей не заметили гориллу"
+      },
+      "icon": "eye-off",
+      "visualQuery": "audience watching screen",
+      "imagePrompt": "silhouettes of an audience staring at a bright screen in a dark room, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Опыт не спасает. В две тысячи тринадцатом году гориллу вставили в снимки лёгких — и её пропустили восемьдесят три процента радиологов.",
+      "onScreen": "Даже *врачи* не видят",
+      "stat": {
+        "value": 83,
+        "suffix": "%",
+        "label": "радиологов пропустили гориллу на снимке"
+      },
+      "icon": "scan-eye",
+      "visualQuery": "doctor xray screen",
+      "imagePrompt": "radiologist examining lung scans on monitors in a dark reading room, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Это называют слепотой невнимания. Внимание работает как прожектор: всё, что вне луча, мозг может просто не показать тебе.",
+      "onScreen": "Внимание — это *прожектор*",
+      "icon": "flashlight",
+      "visualQuery": "spotlight dark stage",
+      "imagePrompt": "single spotlight beam on an empty dark stage, everything else in darkness, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Подпишись — каждый день новая суть за минуту.",
+      "onScreen": "*Подпишись* — новая суть каждый день",
+      "icon": "bell-ring"
+    }
+  ]
+}

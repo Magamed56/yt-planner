@@ -1,0 +1,101 @@
+{
+  "title": "Три сердца и голубая кровь: как устроен осьминог",
+  "description": "У осьминога три сердца, кровь на основе меди и около 500 миллионов нейронов, большая часть которых — в щупальцах. Коротко о том, почему говорят, что осьминог «думает руками».\n#сутьзаминуту #shorts #природа #осьминог",
+  "tags": [
+    "осьминог",
+    "животные",
+    "природа",
+    "океан",
+    "биология",
+    "морские животные",
+    "наука",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "У осьминога три сердца. И это даже не самое странное.",
+      "onScreen": "*Три* сердца у осьминога",
+      "icon": "heart",
+      "visualQuery": "octopus coral reef",
+      "imagePrompt": "underwater shot of an octopus spreading its arms over a coral reef, light rays from above, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "list",
+      "narration": "Два сердца качают кровь через жабры. А третье, главное, разгоняет её по всему телу.",
+      "onScreen": "Зачем осьминогу *три* сердца",
+      "items": [
+        "Два — для жабр",
+        "Одно — для всего тела"
+      ],
+      "icon": "heart-pulse",
+      "visualQuery": "octopus tentacles closeup",
+      "imagePrompt": "close-up of an octopus mantle and tentacles in dark water, bioluminescent glow, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "При этом кровь у него голубая. Кислород в ней переносит не железо, как у нас, а белок с медью — гемоцианин.",
+      "onScreen": "Кровь *голубая* — из-за меди",
+      "icon": "droplet",
+      "visualQuery": "blue liquid drop",
+      "imagePrompt": "a single glowing blue drop falling into dark water, macro, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Когда осьминог плывёт, главное сердце останавливается. Возможно, поэтому он чаще ползает по дну, чем плавает.",
+      "onScreen": "Плывёт — сердце *замирает*",
+      "icon": "waves",
+      "visualQuery": "octopus crawling seabed",
+      "imagePrompt": "octopus crawling across a sandy sea floor, soft caustic light patterns, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Но самое удивительное — нервная система. Нейронов у осьминога около пятисот миллионов — это одна из самых сложных нервных систем среди беспозвоночных.",
+      "onScreen": "≈500 млн *нейронов*",
+      "stat": {
+        "value": 500,
+        "prefix": "≈",
+        "suffix": " млн",
+        "label": "нейронов у осьминога"
+      },
+      "icon": "brain",
+      "visualQuery": "neurons microscope glow",
+      "imagePrompt": "glowing neural network shaped like octopus arms, dark background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "И примерно две трети из них находятся не в голове, а прямо в щупальцах.",
+      "onScreen": "2/3 нейронов — в *щупальцах*",
+      "icon": "network",
+      "visualQuery": "octopus swimming ocean",
+      "imagePrompt": "octopus arms with faint glowing nerve lines inside them, deep blue water, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Каждое щупальце во многом само ощупывает и хватает предметы и даже пробует их на вкус присосками. Осьминог отчасти думает руками.",
+      "onScreen": "Осьминог «думает» *руками*",
+      "icon": "hand",
+      "visualQuery": "octopus suckers macro",
+      "imagePrompt": "macro of octopus suckers gripping a seashell, crisp detail, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Подпишись — каждый день новая суть за минуту.",
+      "onScreen": "*Подпишись* — новая суть каждый день",
+      "icon": "bell-ring"
+    }
+  ]
+}
