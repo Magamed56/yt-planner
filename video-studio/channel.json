@@ -1,41 +1,42 @@
 {
-  "name": "Нейрофакт",
-  "handle": "neurofakt",
-  "handleFallbacks": ["neurofakt.ru", "neuro_fakt", "neurofakt.media"],
-  "tagline": "Как работает твой мозг — за минуту",
-  "niche": "Научпоп о мозге и мышлении: память, сон, фокус, привычки, эмоции, мифы о мозге. Только проверяемые факты из исследований — без эзотерики и кликбейтной лжи.",
-  "audience": "Русскоязычные 16–35 лет: студенты и молодые специалисты, которые хотят учиться быстрее, лучше спать, меньше прокрастинировать и понимать себя.",
+  "name": "Суть за минуту",
+  "handle": "sutzaminutu",
+  "handleFallbacks": ["sut.za.minutu", "sut_za_minutu", "sutzaminutu.ru"],
+  "tagline": "Сложное — просто. Каждый день",
+  "niche": "Познавательный канал обо всём: наука, космос, тело, психология, история, технологии, деньги и повседневные «почему». Один ролик — одна понятная суть за минуту, только проверяемые факты, без эзотерики и кликбейтной лжи.",
+  "audience": "Русскоязычные 14–45 лет, которые любят узнавать новое: школьники и студенты, молодые специалисты, все, кто смотрит познавательные Shorts и Reels.",
   "language": "ru",
   "theme": "midnight",
-  "voice": { "provider": "gemini", "name": "Charon", "style": "Спокойно и уверенно, как умный друг-учёный: тёплый тембр, чёткая дикция, живые интонации, без пафоса." },
+  "voice": { "provider": "gemini", "name": "Charon", "style": "Живо и уверенно, как увлечённый рассказчик: тёплый тембр, чёткая дикция, лёгкая интрига в голосе, без пафоса." },
   "pillars": [
-    { "id": "memory", "title": "Память и учёба", "icon": "brain" },
-    { "id": "sleep", "title": "Сон и энергия", "icon": "moon" },
-    { "id": "focus", "title": "Фокус и продуктивность", "icon": "target" },
-    { "id": "habits", "title": "Привычки и дофамин", "icon": "repeat" },
-    { "id": "emotions", "title": "Эмоции и стресс", "icon": "heart" },
-    { "id": "myths", "title": "Мифы о мозге", "icon": "circle-x" },
-    { "id": "perception", "title": "Странности восприятия", "icon": "eye" }
+    { "id": "mind", "title": "Мозг и психология", "icon": "brain" },
+    { "id": "body", "title": "Тело и здоровье", "icon": "heart-pulse" },
+    { "id": "space", "title": "Космос", "icon": "rocket" },
+    { "id": "nature", "title": "Природа и животные", "icon": "leaf" },
+    { "id": "history", "title": "История", "icon": "landmark" },
+    { "id": "tech", "title": "Технологии и ИИ", "icon": "cpu" },
+    { "id": "money", "title": "Деньги и экономика", "icon": "coins" },
+    { "id": "why", "title": "Почему так?", "icon": "lightbulb" }
   ],
   "schedule": {
-    "perDay": 1,
-    "publishTimeLocal": "19:00",
+    "perDay": 2,
+    "publishTimesLocal": ["12:00", "19:00"],
     "timezone": "Europe/Moscow",
-    "note": "1 Shorts/Reels в день: укладывается в бесплатные лимиты (Gemini TTS ≈ 10 запросов/сутки, GitHub Actions 2000 мин/мес)."
+    "note": "2 Shorts/Reels в день (обед и вечер): укладывается в бесплатные лимиты (Gemini TTS ≈ 10 запросов/сутки, 1 ролик = 1 запрос; GitHub Actions 2000 мин/мес ≈ 420 мин на 60 роликов)."
   },
   "hashtags": {
-    "brand": ["#нейрофакт"],
-    "core": ["#мозг", "#психология", "#наука", "#саморазвитие"],
+    "brand": ["#сутьзаминуту"],
+    "core": ["#факты", "#наука", "#интересно", "#познавательно"],
     "youtubeShorts": ["#shorts"],
-    "instagram": ["#reels", "#научпоп", "#фактыомозге"]
+    "instagram": ["#reels", "#научпоп", "#знаешьли"]
   },
   "cta": {
-    "subscribe": "Подпишись — каждый день один факт о твоём мозге",
-    "comment": "Напиши в комментариях, что проверишь на себе"
+    "subscribe": "Подпишись — каждый день новая суть за минуту",
+    "comment": "Напиши в комментариях, что тебя удивило больше всего"
   },
   "links": {
-    "youtube": "https://youtube.com/@neurofakt",
-    "instagram": "https://instagram.com/neurofakt"
+    "youtube": "https://youtube.com/@sutzaminutu",
+    "instagram": "https://instagram.com/sutzaminutu"
   },
-  "disclaimer": "Ролики — научно-популярные и не заменяют консультацию врача."
+  "disclaimer": "Ролики — научно-популярные и не заменяют консультацию специалиста (врача, юриста, финансиста)."
 }
