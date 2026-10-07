@@ -7,7 +7,7 @@ import { BRAND } from "./data";
 // Водяной знак YouTube 150×150, прозрачный фон. Плеер показывает его ~40–60 px
 // в правом нижнем углу, при наведении YouTube сам добавляет кнопку «Подписаться».
 // Поэтому никакого текста: залитый акцентом круг + тёмный знак + белый «плюс»
-// (подписка). Тёмная окантовка — чтобы знак не терялся на светлом видео.
+// (знак «подписаться»). Тёмная окантовка — чтобы знак не терялся на светлом видео.
 export const WatermarkArt: React.FC<{ size: number; id: string }> = ({ size, id }) => {
   const t = BRAND.theme;
   const s = size;
@@ -30,7 +30,7 @@ export const WatermarkArt: React.FC<{ size: number; id: string }> = ({ size, id 
           justifyContent: "center",
         }}
       >
-        <BrandMark size={disc * 0.66} theme={t} id={id} color={t.accentInk} />
+        <BrandMark size={disc * 0.8} theme={t} id={id} color={t.accentInk} style={{ marginTop: disc * 0.012, marginLeft: disc * 0.04 }} />
       </div>
       <div
         style={{

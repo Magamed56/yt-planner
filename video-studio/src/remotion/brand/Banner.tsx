@@ -1,18 +1,19 @@
 import React from "react";
 import { AbsoluteFill, useVideoConfig } from "remotion";
 import { Background } from "../components/Background";
-import { Icon } from "../components/Icon";
+import { Icon, IconGradientDefs } from "../components/Icon";
 import { FONT_BODY, FONT_DISPLAY, FontGate } from "../fonts";
 import { withAlpha } from "../theme";
-import { Pill, Wordmark } from "./atoms";
+import { GlassTile, Pill, Wordmark } from "./atoms";
 import { BrandMark } from "./BrandMark";
 import { BRAND } from "./data";
-import { NeuralField } from "./NeuralField";
+import { Dial } from "./Dial";
 
 // Баннер YouTube 2560×1440. Телевизор показывает всё изображение, компьютер —
 // полосу 2560×423 по центру, планшет — 1855×423, телефон — 1546×423.
-// Поэтому весь текст и знак — строго в центральной зоне 1546×423, а за её
-// пределами только атмосфера: свечение и «нейросеть».
+// Поэтому весь текст и знак — строго в центральной зоне 1546×423, иконки
+// рубрик — в боковых «крыльях» полосы (видны на компьютере, на телефоне
+// обрезаются без потерь), а за пределами полосы только атмосфера.
 
 // Зоны показа баннера при исходнике 2560×1440 (по справке YouTube).
 export const BANNER_ZONES = [
@@ -30,31 +31,66 @@ export const Banner: React.FC<{ guides?: boolean }> = ({ guides = false }) => {
   // Масштаб от эталонных 2560×1440 — если кто-то зарегистрирует баннер другого размера.
   const u = width / 2560;
   const safe = { w: SAFE.w * u, h: SAFE.h * u, x: (width - SAFE.w * u) / 2, y: (height - SAFE.h * u) / 2 };
-  const markSize = 300 * u;
+  const markSize = 330 * u;
+  const cx = width / 2;
+  const cy = height / 2;
+  // Иконки рубрик: по 4 на «крыло» сеткой 2×2, по центру между краем кадра и безопасной зоной.
+  const tile = 112 * u;
+  const tileGap = 30 * u;
+  const wingCx = [safe.x / 2 - 12 * u, width - safe.x / 2 + 12 * u];
+  const half = Math.ceil(BRAND.pillars.length / 2);
+  const wings = [BRAND.pillars.slice(0, half), BRAND.pillars.slice(half)];
 
   return (
     <AbsoluteFill style={{ backgroundColor: t.bgFrom }}>
       <FontGate>
-        <Background theme={t} seed="neurofakt-banner" frameOverride={18} particles={false} />
+        <Background theme={t} seed="sut-banner" frameOverride={18} particles={false} />
         {/* Горизонтальная световая полоса — фокус на ту часть, что видна на компьютере */}
         <AbsoluteFill
           style={{
             background: [
-              `radial-gradient(ellipse 46% 26% at 50% 50%, ${withAlpha(t.blobA, 0.42)} 0%, ${withAlpha(t.blobA, 0)} 100%)`,
-              `radial-gradient(ellipse 22% 16% at 31% 50%, ${withAlpha(t.accent, 0.16)} 0%, ${withAlpha(t.accent, 0)} 100%)`,
+              `radial-gradient(ellipse 48% 22% at 50% 50%, ${withAlpha(t.blobA, 0.45)} 0%, ${withAlpha(t.blobA, 0)} 100%)`,
+              `radial-gradient(ellipse 16% 22% at ${(safe.x + markSize / 2) / width * 100}% 50%, ${withAlpha(t.accent, 0.16)} 0%, ${withAlpha(t.accent, 0)} 100%)`,
             ].join(", "),
           }}
         />
-        <NeuralField
-          width={width}
-          height={height}
-          theme={t}
-          seed="banner-net"
-          cell={150 * u}
-          lineWidth={2.2 * u}
-          nodeSize={5 * u}
-          clear={{ cx: width / 2, cy: height / 2, rx: safe.w * 0.52, ry: safe.h * 0.62, feather: 0.55 }}
+        {/* Циферблат вокруг всего содержимого: видно целиком на ТВ, на компьютере — «скобки» по бокам */}
+        <Dial cx={cx} cy={cy} r={880 * u} theme={t} tick={22 * u} width={4 * u} alpha={0.13} progress={0} />
+        <Dial cx={cx} cy={cy} r={1180 * u} theme={t} tick={14 * u} width={3 * u} alpha={0.07} ticks={120} />
+        <div
+          style={{
+            position: "absolute",
+            left: cx - 960 * u,
+            top: cy - 960 * u,
+            width: 1920 * u,
+            height: 1920 * u,
+            borderRadius: "50%",
+            border: `${3 * u}px solid ${withAlpha(t.text, 0.06)}`,
+          }}
         />
+
+        {/* Крылья полосы: иконки рубрик */}
+        <IconGradientDefs id="banner-icon" from={t.accent} to={t.accent2} />
+        {wings.map((list, w) => (
+          <div
+            key={w}
+            style={{
+              position: "absolute",
+              left: wingCx[w] - (tile * 2 + tileGap) / 2,
+              top: cy - (tile * 2 + tileGap) / 2,
+              width: tile * 2 + tileGap,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: tileGap,
+            }}
+          >
+            {list.map((p) => (
+              <GlassTile key={p.id} size={tile}>
+                <Icon name={p.icon} size={tile * 0.52} color="url(#banner-icon)" strokeWidth={2.1} />
+              </GlassTile>
+            ))}
+          </div>
+        ))}
 
         {/* Содержимое — в безопасной зоне */}
         <div
@@ -67,25 +103,16 @@ export const Banner: React.FC<{ guides?: boolean }> = ({ guides = false }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: 64 * u,
+            gap: 56 * u,
           }}
         >
-          <div style={{ position: "relative", width: markSize, height: markSize, flex: "none" }}>
-            <div
-              style={{
-                position: "absolute",
-                inset: -markSize * 0.35,
-                background: `radial-gradient(closest-side, ${withAlpha(t.accent, 0.3)} 0%, ${withAlpha(t.accent2, 0.1)} 50%, ${withAlpha(t.accent2, 0)} 100%)`,
-              }}
-            />
-            <BrandMark size={markSize} theme={t} id="banner" glow={1} style={{ position: "relative" }} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 26 * u }}>
-            <Wordmark fontSize={150 * u} />
-            <div style={{ fontFamily: FONT_BODY, fontWeight: 700, fontSize: 58 * u, lineHeight: 1.15, color: t.text, opacity: 0.92, whiteSpace: "nowrap" }}>
+          <BrandMark size={markSize} theme={t} id="banner" glow={1} style={{ flex: "none" }} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 24 * u }}>
+            <Wordmark fontSize={118 * u} />
+            <div style={{ fontFamily: FONT_BODY, fontWeight: 700, fontSize: 54 * u, lineHeight: 1.15, color: t.text, opacity: 0.94, whiteSpace: "nowrap", marginTop: 6 * u }}>
               {BRAND.tagline}
             </div>
-            <Pill fontSize={40 * u} filled icon={<Icon name="clock" size={44 * u} color={t.accentInk} strokeWidth={2.6} />} style={{ marginTop: 10 * u }}>
+            <Pill fontSize={38 * u} filled icon={<Icon name="clock" size={42 * u} color={t.accentInk} strokeWidth={2.6} />} style={{ marginTop: 8 * u }}>
               {BRAND.schedule}
             </Pill>
           </div>
