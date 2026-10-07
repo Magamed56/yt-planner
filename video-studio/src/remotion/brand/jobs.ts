@@ -24,6 +24,8 @@ export interface BrandJob {
   compositionId: string;
   file: string; // путь внутри brand/, через «/»
   inputProps?: Record<string, unknown>;
+  // false — не сжимать в 256 цветов (водяной знак: прозрачность и мелкие детали).
+  compress?: boolean;
 }
 
 // highlights — по одной обложке на рубрику из channel.json.
@@ -34,7 +36,7 @@ export function brandJobs(pillarIds: string[]): BrandJob[] {
     { group: "avatar", compositionId: S.avatarInstagram.id, file: "avatar-instagram.png" },
     { group: "banner", compositionId: S.banner.id, file: "banner-youtube.png" },
     { group: "banner", compositionId: S.bannerPreview.id, file: "banner-safe-preview.png" },
-    { group: "watermark", compositionId: S.watermark.id, file: "watermark-youtube.png" },
+    { group: "watermark", compositionId: S.watermark.id, file: "watermark-youtube.png", compress: false },
     ...pillarIds.map((id) => ({ group: "highlights", compositionId: S.highlight.id, file: `highlights/${id}.png`, inputProps: { pillar: id } })),
     { group: "post", compositionId: S.introPost.id, file: "instagram-post-intro.png" },
     { group: "preview", compositionId: S.smallPreview.id, file: "avatar-preview.png" },

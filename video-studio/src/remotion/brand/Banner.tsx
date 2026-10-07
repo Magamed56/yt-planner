@@ -1,11 +1,11 @@
 import React from "react";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill, random, useVideoConfig } from "remotion";
 import { Background } from "../components/Background";
 import { Icon, IconGradientDefs } from "../components/Icon";
 import { FONT_BODY, FONT_DISPLAY, FontGate } from "../fonts";
 import { withAlpha } from "../theme";
 import { GlassTile, Pill, Wordmark } from "./atoms";
-import { BrandMark } from "./BrandMark";
+import { BrandMark, sparkPath } from "./BrandMark";
 import { BRAND } from "./data";
 import { Dial } from "./Dial";
 
@@ -31,13 +31,15 @@ export const Banner: React.FC<{ guides?: boolean }> = ({ guides = false }) => {
   // Масштаб от эталонных 2560×1440 — если кто-то зарегистрирует баннер другого размера.
   const u = width / 2560;
   const safe = { w: SAFE.w * u, h: SAFE.h * u, x: (width - SAFE.w * u) / 2, y: (height - SAFE.h * u) / 2 };
-  const markSize = 330 * u;
+  const markSize = 300 * u;
   const cx = width / 2;
   const cy = height / 2;
-  // Иконки рубрик: по 4 на «крыло» сеткой 2×2, по центру между краем кадра и безопасной зоной.
-  const tile = 112 * u;
-  const tileGap = 30 * u;
-  const wingCx = [safe.x / 2 - 12 * u, width - safe.x / 2 + 12 * u];
+  // Иконки рубрик: по 4 на «крыло» сеткой 2×2. Крыло целиком снаружи зоны
+  // планшета (1855): на планшете его нет совсем, а не обрезанная половина плитки.
+  const tile = 108 * u;
+  const tileGap = 28 * u;
+  const tabletX = (width - 1855 * u) / 2;
+  const wingCx = [tabletX / 2, width - tabletX / 2];
   const half = Math.ceil(BRAND.pillars.length / 2);
   const wings = [BRAND.pillars.slice(0, half), BRAND.pillars.slice(half)];
 
@@ -55,8 +57,9 @@ export const Banner: React.FC<{ guides?: boolean }> = ({ guides = false }) => {
           }}
         />
         {/* Циферблат вокруг всего содержимого: видно целиком на ТВ, на компьютере — «скобки» по бокам */}
-        <Dial cx={cx} cy={cy} r={880 * u} theme={t} tick={22 * u} width={4 * u} alpha={0.13} progress={0} />
-        <Dial cx={cx} cy={cy} r={1180 * u} theme={t} tick={14 * u} width={3 * u} alpha={0.07} ticks={120} />
+        <Dial cx={cx} cy={cy} r={880 * u} theme={t} tick={22 * u} width={4 * u} alpha={0.17} progress={0} />
+        <Dial cx={cx} cy={cy} r={1180 * u} theme={t} tick={14 * u} width={3 * u} alpha={0.08} ticks={120} />
+        <Sparkles width={width} height={height} band={safe} u={u} />
         <div
           style={{
             position: "absolute",
@@ -108,11 +111,11 @@ export const Banner: React.FC<{ guides?: boolean }> = ({ guides = false }) => {
         >
           <BrandMark size={markSize} theme={t} id="banner" glow={1} style={{ flex: "none" }} />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 24 * u }}>
-            <Wordmark fontSize={118 * u} />
-            <div style={{ fontFamily: FONT_BODY, fontWeight: 700, fontSize: 54 * u, lineHeight: 1.15, color: t.text, opacity: 0.94, whiteSpace: "nowrap", marginTop: 6 * u }}>
+            <Wordmark fontSize={106 * u} />
+            <div style={{ fontFamily: FONT_BODY, fontWeight: 700, fontSize: 52 * u, lineHeight: 1.15, color: t.text, opacity: 0.94, whiteSpace: "nowrap", marginTop: 6 * u }}>
               {BRAND.tagline}
             </div>
-            <Pill fontSize={38 * u} filled icon={<Icon name="clock" size={42 * u} color={t.accentInk} strokeWidth={2.6} />} style={{ marginTop: 8 * u }}>
+            <Pill fontSize={36 * u} filled icon={<Icon name="clock" size={40 * u} color={t.accentInk} strokeWidth={2.6} />} style={{ marginTop: 8 * u }}>
               {BRAND.schedule}
             </Pill>
           </div>
@@ -121,6 +124,27 @@ export const Banner: React.FC<{ guides?: boolean }> = ({ guides = false }) => {
         {guides ? <BannerGuides /> : null}
       </FontGate>
     </AbsoluteFill>
+  );
+};
+
+// Россыпь бледных искр (та же искра, что в знаке) — только вне полосы
+// 423 px: атмосфера для ТВ, которая не мешает тексту на остальных экранах.
+const Sparkles: React.FC<{ width: number; height: number; band: { y: number; h: number }; u: number }> = ({ width, height, band, u }) => {
+  const t = BRAND.theme;
+  const items: { x: number; y: number; r: number; a: number; warm: boolean }[] = [];
+  for (let i = 0; items.length < 26 && i < 400; i++) {
+    const x = random(`sp-x-${i}`) * width;
+    const y = random(`sp-y-${i}`) * height;
+    if (y > band.y - 60 * u && y < band.y + band.h + 60 * u) continue;
+    if (items.some((o) => Math.hypot(o.x - x, o.y - y) < 230 * u)) continue;
+    items.push({ x, y, r: (9 + random(`sp-r-${i}`) * 22) * u, a: 0.12 + random(`sp-a-${i}`) * 0.3, warm: random(`sp-w-${i}`) < 0.35 });
+  }
+  return (
+    <svg width={width} height={height} style={{ position: "absolute", left: 0, top: 0 }}>
+      {items.map((o, i) => (
+        <path key={i} d={sparkPath(o.x, o.y, o.r)} fill={o.warm ? t.accent : t.text} opacity={o.a} />
+      ))}
+    </svg>
   );
 };
 

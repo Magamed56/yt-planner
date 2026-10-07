@@ -64,8 +64,9 @@ export const IntroPost: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: t.bgFrom }}>
       <FontGate>
         <Background theme={t} seed="sut-intro" frameOverride={30} particles={false} />
-        {/* Циферблат справа за слоганом — фоновый мотив бренда */}
-        <Dial cx={width * 0.9} cy={height * 0.3} r={430 * u} theme={t} tick={14 * u} width={3.5 * u} alpha={0.12} progress={0} />
+        {/* Циферблат справа за слоганом — фоновый мотив бренда; низ круга выше
+            плашек рубрик, иначе риски просвечивают сквозь «стекло» */}
+        <Dial cx={width * 0.93} cy={height * 0.29} r={330 * u} theme={t} tick={14 * u} width={3.5 * u} alpha={0.15} progress={0} />
         <IconGradientDefs id="intro-icon" from={t.accent} to={t.accent2} />
         <AbsoluteFill style={{ padding: pad, display: "flex", flexDirection: "column" }}>
           {/* Шапка: знак + название */}

@@ -5,19 +5,23 @@
 //   npm run brand
 //   npm run brand -- --only=avatar,banner   (группы: avatar, banner, watermark, highlights, post, preview)
 //   npm run brand -- --out=out/brand-test   (в другую папку, brand/ не трогать)
+//   npm run brand -- --raw                  (без сжатия PNG до 256 цветов)
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { bundle } from "@remotion/bundler";
-import { openBrowser, renderStill, selectComposition } from "@remotion/renderer";
+import { RenderInternals, openBrowser, renderStill, selectComposition } from "@remotion/renderer";
 import { getBrowserOptions } from "../pipeline/render";
 import { brandJobs } from "../remotion/brand/jobs";
 import { ROOT, UserError, argsError, fail, fmtDuration, loadEnv, rel } from "./common";
 
 const HELP = `Бренд-кит канала → brand/ (PNG для YouTube Studio и Instagram).
 
-  npm run brand [-- --only=avatar,banner,watermark,highlights,post,preview] [--out=папка]
+  npm run brand [-- --only=avatar,banner,watermark,highlights,post,preview] [--out=папка] [--raw]
+
+  --raw   не сжимать PNG (по умолчанию — палитра 256 цветов с дизерингом:
+          на глаз то же самое, а файлы в 3–6 раз меньше)
 
 Тексты и рубрики — из channel.json. Что куда загружать — brand/README.md.
 `;
@@ -30,6 +34,33 @@ const LIMITS: Record<string, { bytes: number; what: string }> = {
 };
 
 const fmtSize = (b: number): string => (b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(2)} МБ` : `${Math.round(b / 1024)} КБ`);
+
+// Chromium пишет PNG с шумом дизеринга в градиентах — такие файлы плохо жмутся
+// (1,6 МБ на обложку). Палитра 256 цветов + диффузия ошибки (ffmpeg, который
+// везёт сам Remotion, — работает и на Windows) даёт тот же вид в 3–6 раз легче.
+// Сжатый файл берём, только если он и правда меньше; любая ошибка — оставляем исходник.
+async function compressPng(file: string): Promise<boolean> {
+  const tmp = `${file}.pal.png`;
+  try {
+    await RenderInternals.callFf({
+      bin: "ffmpeg",
+      args: ["-y", "-loglevel", "error", "-i", file, "-filter_complex", "[0:v]split[a][b];[a]palettegen=max_colors=256:stats_mode=full[p];[b][p]paletteuse=dither=sierra2_4a", "-pix_fmt", "pal8", tmp],
+      indent: false,
+      logLevel: "error",
+      binariesDirectory: null,
+      cancelSignal: undefined,
+    });
+    if (fs.statSync(tmp).size < fs.statSync(file).size) {
+      fs.renameSync(tmp, file);
+      return true;
+    }
+    fs.rmSync(tmp, { force: true });
+    return false;
+  } catch {
+    fs.rmSync(tmp, { force: true });
+    return false;
+  }
+}
 
 function readPillarIds(): string[] {
   const file = path.join(ROOT, "channel.json");
@@ -57,6 +88,7 @@ async function main() {
       options: {
         only: { type: "string" },
         out: { type: "string" },
+        raw: { type: "boolean", default: false },
         help: { type: "boolean", short: "h", default: false },
       },
       strict: true,
@@ -102,10 +134,12 @@ async function main() {
         const output = path.join(outDir, ...job.file.split("/"));
         fs.mkdirSync(path.dirname(output), { recursive: true });
         const inputProps = job.inputProps ?? {};
-        const composition = await selectComposition({ serveUrl, id: job.compositionId, inputProps, puppeteerInstance: browser, ...browserOpts, logLevel: "warn" });
-        await renderStill({ serveUrl, composition, inputProps, output, frame: 0, imageFormat: "png", overwrite: true, puppeteerInstance: browser, ...browserOpts, logLevel: "warn" });
+        const composition = await selectComposition({ serveUrl, id: job.compositionId, inputProps, puppeteerInstance: browser, ...browserOpts, logLevel: "error" });
+        await renderStill({ serveUrl, composition, inputProps, output, frame: 0, imageFormat: "png", overwrite: true, puppeteerInstance: browser, ...browserOpts, logLevel: "error" });
+        const before = fs.statSync(output).size;
+        const packed = !values.raw && job.compress !== false && (await compressPng(output));
         const size = fs.statSync(output).size;
-        console.log(`[бренд] ${rel(output)} — ${composition.width}×${composition.height}, ${fmtSize(size)}`);
+        console.log(`[бренд] ${rel(output)} — ${composition.width}×${composition.height}, ${fmtSize(size)}${packed ? ` (было ${fmtSize(before)})` : ""}`);
         const limit = LIMITS[job.file];
         if (limit && size > limit.bytes) warnings.push(`${job.file}: ${fmtSize(size)} — больше лимита: ${limit.what}. Пережмите файл (например, в squoosh.app) перед загрузкой.`);
       }

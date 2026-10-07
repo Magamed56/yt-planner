@@ -10,12 +10,12 @@ import { Dial } from "./Dial";
 
 // Обложка «Актуального» Instagram 1080×1920. Инстаграм вырезает из центра
 // круг (по ширине кадра или меньше — как подвинет пользователь), поэтому
-// иконка и подпись — в круге ~760 px вокруг центра, фон сплошной «в край»:
+// иконка и подпись — в круге ~900 px вокруг центра, фон сплошной «в край»:
 // при любом кадрировании круг выглядит одинаково. Вокруг иконки — дуга «С»
 // из знака канала: в ряду обложек профиль узнаётся с первого взгляда.
 // Верх и низ (название и ник) видны, только если картинку выложить как сторис.
 
-export const HIGHLIGHT_CIRCLE = 760; // диаметр зоны, куда помещается всё важное
+export const HIGHLIGHT_CIRCLE = 900; // диаметр зоны, куда помещается всё важное
 
 export const Highlight: React.FC<{ pillar?: string }> = ({ pillar }) => {
   const { width, height } = useVideoConfig();
@@ -24,12 +24,15 @@ export const Highlight: React.FC<{ pillar?: string }> = ({ pillar }) => {
   const u = width / 1080;
   const cx = width / 2;
   const cy = height / 2;
-  const iconSize = 300 * u;
+  // В профиле кружок «Актуального» ≈ 70 px: читается только крупная иконка,
+  // название Instagram и так подписывает под кружком.
+  const iconSize = 400 * u;
   const ring = HIGHLIGHT_CIRCLE * u;
   const gid = `hl-${p.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const label = p.short.toUpperCase();
-  // Длинное слово чуть уменьшаем, чтобы не вылезло за дугу.
-  const labelSize = Math.min(88, 640 / Math.max(5, label.length)) * u;
+  // Подпись не шире ~480 px (хорда дуги на этой высоте ≈ 620): длинное слово
+  // уменьшаем. 0.9 em на букву — ширина капса Montserrat 900 с запасом.
+  const labelSize = Math.min(72, 480 / (0.9 * Math.max(4, label.length))) * u;
   const g = MARK_GEOMETRY;
 
   return (
@@ -50,13 +53,13 @@ export const Highlight: React.FC<{ pillar?: string }> = ({ pillar }) => {
           style={{
             position: "absolute",
             left: cx - iconSize,
-            top: cy - 60 * u - iconSize,
+            top: cy - 50 * u - iconSize,
             width: iconSize * 2,
             height: iconSize * 2,
             background: `radial-gradient(closest-side, ${withAlpha(t.accent, 0.26)} 0%, ${withAlpha(t.accent2, 0.08)} 50%, ${withAlpha(t.accent2, 0)} 100%)`,
           }}
         />
-        <Dial cx={cx} cy={cy} r={ring * 0.62} theme={t} tick={12 * u} width={3 * u} alpha={0.14} />
+        <Dial cx={cx} cy={cy} r={500 * u} theme={t} tick={12 * u} width={3 * u} alpha={0.14} />
         {/* Дуга «С» — та же геометрия, что у знака, растянутая на круг обложки */}
         <svg
           width={ring}
@@ -77,15 +80,15 @@ export const Highlight: React.FC<{ pillar?: string }> = ({ pillar }) => {
           </g>
         </svg>
         <IconGradientDefs id={gid} from={t.accent} to={t.accent2} />
-        <div style={{ position: "absolute", left: cx - iconSize / 2, top: cy - 60 * u - iconSize / 2, width: iconSize, height: iconSize }}>
-          <Icon name={p.icon} size={iconSize} color={`url(#${gid})`} strokeWidth={2.1} style={{ filter: `drop-shadow(0 ${8 * u}px ${24 * u}px rgba(0,0,0,0.4))` }} />
+        <div style={{ position: "absolute", left: cx - iconSize / 2, top: cy - 50 * u - iconSize / 2, width: iconSize, height: iconSize }}>
+          <Icon name={p.icon} size={iconSize} color={`url(#${gid})`} strokeWidth={2} style={{ filter: `drop-shadow(0 ${8 * u}px ${24 * u}px rgba(0,0,0,0.4))` }} />
         </div>
         <div
           style={{
             position: "absolute",
             left: 0,
             right: 0,
-            top: cy + 140 * u,
+            top: cy + 172 * u,
             textAlign: "center",
             fontFamily: FONT_DISPLAY,
             fontWeight: 900,
