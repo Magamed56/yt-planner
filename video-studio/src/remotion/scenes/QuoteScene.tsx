@@ -48,7 +48,9 @@ export const QuoteScene: React.FC<SceneProps> = (p) => {
     fontFamily: FONT_DISPLAY,
     fontWeight: 900,
     lineHeight: 1,
-    background: `linear-gradient(160deg, ${p.theme.accent} 20%, ${p.theme.accent2} 90%)`,
+    // backgroundImage, а не background: шорткат при обновлении стиля сбросил бы
+    // background-clip: text (см. StatScene).
+    backgroundImage: `linear-gradient(160deg, ${p.theme.accent} 20%, ${p.theme.accent2} 90%)`,
     WebkitBackgroundClip: "text",
     backgroundClip: "text",
     WebkitTextFillColor: "transparent",

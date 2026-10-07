@@ -74,7 +74,11 @@ export const StatScene: React.FC<SceneProps> = (p) => {
         letterSpacing: `${NUMBER_FONT.letterSpacingEm}em`,
         fontVariantNumeric: "tabular-nums",
         whiteSpace: "nowrap",
-        background: `linear-gradient(105deg, rgba(255,255,255,0) ${sheenX - 18}%, rgba(255,255,255,0.85) ${sheenX}%, rgba(255,255,255,0) ${sheenX + 18}%), linear-gradient(180deg, ${p.theme.text} 8%, ${p.theme.accent} 62%, ${p.theme.accent2} 100%)`,
+        // backgroundImage, а не шорткат background: React на каждом кадре
+        // переписывает только изменившееся свойство (блик меняет градиент), а
+        // шорткат сбрасывает background-clip в border-box — и вместо цифры
+        // рисовался градиентный прямоугольник.
+        backgroundImage: `linear-gradient(105deg, rgba(255,255,255,0) ${sheenX - 18}%, rgba(255,255,255,0.85) ${sheenX}%, rgba(255,255,255,0) ${sheenX + 18}%), linear-gradient(180deg, ${p.theme.text} 8%, ${p.theme.accent} 62%, ${p.theme.accent2} 100%)`,
         WebkitBackgroundClip: "text",
         backgroundClip: "text",
         WebkitTextFillColor: "transparent",
