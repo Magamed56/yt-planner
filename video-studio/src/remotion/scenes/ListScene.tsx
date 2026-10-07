@@ -27,9 +27,15 @@ export const ListScene: React.FC<SceneProps> = (p) => {
   const badge = Math.round((shorts ? 78 : 72) * unit);
   const padX = Math.round(30 * unit);
   const padY = Math.round(24 * unit);
-  const rowW = shorts ? content.w : Math.min(content.w, 1300 * unit);
-  const textW = rowW - padX * 2 - badge - Math.round(26 * unit);
-  const perItem = (content.h - titleH - gap - rowGap * (items.length - 1)) / items.length;
+  // В горизонтальном ролике 4+ пункта раскладываем в две колонки — иначе
+  // карточки получаются низкими, а текст мелким.
+  const cols = !shorts && items.length >= 4 ? 2 : 1;
+  const rows = Math.ceil(items.length / cols);
+  const colGap = Math.round(28 * unit);
+  const rowW = shorts ? content.w : cols === 2 ? content.w : Math.min(content.w, 1300 * unit);
+  const cellW = (rowW - colGap * (cols - 1)) / cols;
+  const textW = cellW - padX * 2 - badge - Math.round(26 * unit);
+  const perItem = (content.h - titleH - gap - rowGap * (rows - 1)) / rows;
   const textMaxH = Math.max(40 * unit, perItem - padY * 2);
 
   // Общий кегль для всех пунктов — разный размер выглядел бы неряшливо.
@@ -73,7 +79,7 @@ export const ListScene: React.FC<SceneProps> = (p) => {
             highlight="underline"
           />
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: rowGap, width: rowW }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, columnGap: colGap, rowGap, width: rowW }}>
           {fitted.map(({ tokens, fit }, i) => {
             const local = frame - reveal[i];
             const shown = local >= 0;

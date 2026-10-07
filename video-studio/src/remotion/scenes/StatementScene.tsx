@@ -25,7 +25,7 @@ export const StatementScene: React.FC<SceneProps> = (p) => {
       box={shorts ? { w: content.w, h: content.h - badge - gap * 2 } : { w: content.w - badge - gap, h: content.h * 0.9 }}
       font={{ fontFamily: FONT_DISPLAY, fontWeight: 800, lineHeight: 1.08, letterSpacingEm: -0.02 }}
       maxFontSize={Math.round((shorts ? 118 : 112) * unit)}
-      maxLines={shorts ? 6 : 4}
+      maxLines={shorts ? 7 : 5}
       align="left"
       scene={p.scene}
       mode="stagger"

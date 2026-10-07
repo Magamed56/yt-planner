@@ -64,7 +64,7 @@ export const QuoteScene: React.FC<SceneProps> = (p) => {
             box={{ w: textW, h: content.h - markSize * 0.5 }}
             font={{ fontFamily: FONT_DISPLAY, fontWeight: 700, lineHeight: 1.14, letterSpacingEm: -0.015 }}
             maxFontSize={Math.round((shorts ? 104 : 96) * unit)}
-            maxLines={6}
+            maxLines={7}
             align="left"
             scene={p.scene}
             mode="speech"

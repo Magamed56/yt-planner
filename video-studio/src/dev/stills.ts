@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { openBrowser, renderStill, selectComposition } from "@remotion/renderer";
 import { buildFixtureProps } from "../remotion/fixtures/buildFixture";
-import type { Format, SceneVisual, ThemeName, VideoProps } from "../types";
+import type { Format, SceneVisual, ThemeName, VideoProps, VideoScript } from "../types";
 import { OUT_DEV, bundleComposition, getBrowserOpts, parseArgs, preparePublicDir, readDemoScript } from "./devRender";
 
 const SAMPLE_IMAGE_URL = "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/starry_night.jpg"; // public domain (Ван Гог)
@@ -37,6 +37,31 @@ interface Variant {
   theme: ThemeName;
   withVisual: boolean;
   showCaptions: boolean;
+  stress?: boolean; // длинные тексты на пределе — проверка, что ничего не вылезает
+}
+
+// Стресс-сценарий: onScreen ~60 символов, длинные пункты, огромное число,
+// выдуманная иконка (должна стать Sparkles).
+function stressScript(base: VideoScript): VideoScript {
+  const long = [
+    "Через двадцать четыре часа ты *забудешь* почти всё, что учил",
+    "Исследование Эббингауза: кривая забывания и её последствия",
+    "Мозг не ленится: он просто *экономит* драгоценную энергию",
+    "Три научно доказанных способа *запомнить* надолго и без зубрёжки",
+    "Интервальные повторения: день, три дня, неделя, месяц, *квартал*",
+    "Обучая других людей, мы сами *учимся* гораздо глубже и быстрее",
+    "*Подпишись* на канал, чтобы не пропустить следующий выпуск",
+  ];
+  return {
+    ...base,
+    scenes: base.scenes.map((sc, i) => ({
+      ...sc,
+      onScreen: long[i] ?? sc.onScreen,
+      icon: i === 2 ? "definitely-not-an-icon" : sc.icon,
+      items: sc.items ? ["Повторяй материал через увеличивающиеся интервалы", "Вспоминай без подсказок и проверяй себя", "Объясняй другим простыми словами", "Высыпайся: сон закрепляет память"] : sc.items,
+      stat: sc.stat ? { value: 1250000, prefix: "≈", suffix: " млн", label: "нейронных связей перестраивается каждый день у взрослого человека" } : sc.stat,
+    })),
+  };
 }
 
 const VARIANTS: Variant[] = [
@@ -44,11 +69,13 @@ const VARIANTS: Variant[] = [
   { name: "landscape-sunset", format: "landscape", theme: "sunset", withVisual: false, showCaptions: true },
   { name: "shorts-emerald-visual", format: "shorts", theme: "emerald", withVisual: true, showCaptions: true },
   { name: "shorts-mono", format: "shorts", theme: "mono", withVisual: false, showCaptions: false },
+  { name: "shorts-stress", format: "shorts", theme: "midnight", withVisual: false, showCaptions: true, stress: true },
+  { name: "landscape-stress", format: "landscape", theme: "emerald", withVisual: false, showCaptions: true, stress: true },
 ];
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const wanted = args.variants ? args.variants.split(",") : VARIANTS.map((v) => v.name);
+  const wanted = args.variants ? args.variants.split(",") : VARIANTS.filter((v) => !v.stress).map((v) => v.name);
   const sceneFilter = args.scenes ? new Set(args.scenes.split(",").map((s) => Number(s) - 1)) : null;
   const moments = (args.frames ?? "early,mid,late").split(",");
   const thumbs = args.thumb !== "false";
@@ -59,7 +86,7 @@ async function main() {
     fs.mkdirSync(path.join(publicDir, "visuals"), { recursive: true });
     fs.copyFileSync(sample, path.join(publicDir, "visuals", "sample.jpg"));
   }
-  const serveUrl = await bundleComposition(publicDir);
+  const serveUrl = await bundleComposition(publicDir, "stills");
   const browserOpts = await getBrowserOpts();
   const browser = await openBrowser("chrome", { ...browserOpts, logLevel: "warn" });
   const script = readDemoScript();
@@ -74,10 +101,10 @@ async function main() {
         // Визуал на media-сцене (крупно) и на statement (приглушённым фоном).
         return id === "s5" || id === "s3" ? { type: "image", src: "visuals/sample.jpg" } : { type: "none" };
       };
-      const props: VideoProps = buildFixtureProps(script, { format: v.format, theme: v.theme, visual, showCaptions: v.showCaptions });
+      const props: VideoProps = buildFixtureProps(v.stress ? stressScript(script) : script, { format: v.format, theme: v.theme, visual, showCaptions: v.showCaptions });
       const inputProps = props as unknown as Record<string, unknown>;
       const dir = path.join(outRoot, v.name);
-      fs.rmSync(dir, { recursive: true, force: true });
+      // Не чистим папку: при --scenes/--frames остальные кадры остаются для сравнения.
       fs.mkdirSync(dir, { recursive: true });
       const composition = await selectComposition({ serveUrl, id: "Video", inputProps, puppeteerInstance: browser, ...browserOpts, logLevel: "warn" });
 

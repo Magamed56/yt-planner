@@ -6,7 +6,11 @@
   "description": "Автономный конвейер: тема → сценарий → озвучка → визуал → моушен-монтаж (Remotion) → MP4. Только бесплатные инструменты.",
   "scripts": {
     "make": "tsx src/cli/make.ts",
+    "script": "tsx src/cli/script.ts",
+    "upload": "tsx src/cli/upload.ts",
+    "youtube-auth": "tsx src/cli/youtube-auth.ts",
     "studio": "remotion studio src/remotion/index.ts",
+    "browser": "remotion browser ensure",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

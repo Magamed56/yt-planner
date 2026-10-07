@@ -6,8 +6,7 @@
 
 import { Communicate } from "edge-tts-universal";
 import type { WordTiming } from "../../../types";
-import { envInt, TtsError } from "../http";
-import { warnOnce } from "../http";
+import { envInt, TtsError, warnOnce } from "../http";
 import type { RawProvider } from "../provider";
 
 export const EDGE_DEFAULT_VOICE = "ru-RU-DmitryNeural";

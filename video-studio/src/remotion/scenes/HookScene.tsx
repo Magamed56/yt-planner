@@ -44,7 +44,7 @@ export const HookScene: React.FC<SceneProps> = (p) => {
           box={textBox}
           font={{ fontFamily: FONT_DISPLAY, fontWeight: 900, lineHeight: 1.04, letterSpacingEm: -0.025, uppercase: true }}
           maxFontSize={Math.round((shorts ? 148 : 150) * unit)}
-          maxLines={shorts ? 5 : 3}
+          maxLines={shorts ? 6 : 4}
           align="center"
           scene={p.scene}
           mode="speech"

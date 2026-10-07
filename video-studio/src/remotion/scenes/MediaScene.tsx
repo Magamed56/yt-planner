@@ -37,8 +37,8 @@ export const MediaScene: React.FC<SceneProps> = (p) => {
         theme={p.theme}
         box={{ w: maxW - 40 * unit, h: maxH }}
         font={{ fontFamily: FONT_DISPLAY, fontWeight: 800, lineHeight: 1.08, letterSpacingEm: -0.02 }}
-        maxFontSize={Math.round((shorts ? 100 : 92) * unit)}
-        maxLines={3}
+        maxFontSize={Math.round((shorts ? 100 : 116) * unit)}
+        maxLines={4}
         align="left"
         scene={p.scene}
         mode="stagger"
@@ -62,7 +62,8 @@ export const MediaScene: React.FC<SceneProps> = (p) => {
 
   // ---- Без визуала: панель-иллюстрация ----
   const panelW = shorts ? content.w : content.w * 0.42;
-  const panelH = shorts ? content.h * 0.56 : content.h * 0.82;
+  const longText = p.scene.onScreen.replace(/\*/g, "").length > 40;
+  const panelH = shorts ? content.h * (longText ? 0.48 : 0.56) : content.h * 0.82;
   const panelIn = spring({ frame, fps, config: { damping: 15, stiffness: 110, mass: 0.9 } });
   const t = frame / fps;
   const sheen = interpolate((frame % (fps * 3)) / (fps * 3), [0, 1], [-1.2, 1.6]);

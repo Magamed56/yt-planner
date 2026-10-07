@@ -39,7 +39,6 @@ export function useFittedTokens(text: string, font: FontSpec, box: { w: number; 
   const fit = useMemo(
     () => fitTokens(tokens, font, box, { maxFontSize, minFontSize, maxLines }),
     // font — объект-литерал у вызывающего, сравниваем по значениям
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [tokens, font.fontFamily, font.fontWeight, font.letterSpacingEm, font.lineHeight, font.uppercase, box.w, box.h, maxFontSize, minFontSize, maxLines],
   );
   return { tokens, fit };
@@ -151,6 +150,7 @@ const Word: React.FC<{
   }
 
   const hl = token.accent ? spring({ frame: frame - highlightAt, fps, config: { damping: 18, stiffness: 160, mass: 0.6 } }) : 0;
+  const shine = token.accent ? interpolate(frame - highlightAt, [10, 26], [0, 1], clamp) : 0;
   const baseShadow = shadow ? `0 ${fontSize * 0.04}px ${fontSize * 0.18}px rgba(0,0,0,0.38)` : undefined;
 
   const renderRuns = (accentColor: string) =>
@@ -177,8 +177,23 @@ const Word: React.FC<{
             transform: `scaleX(${hl}) rotate(-1.2deg)`,
             transformOrigin: "0% 50%",
             boxShadow: hl > 0.05 ? `0 ${fontSize * 0.06}px ${fontSize * 0.3}px ${withAlpha(theme.accent, 0.35)}` : undefined,
+            overflow: "hidden",
           }}
-        />
+        >
+          {/* Блик пробегает по маркеру один раз, когда тот дорисовался */}
+          {shine > 0 && shine < 1 ? (
+            <span
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                width: "40%",
+                left: `${-40 + shine * 160}%`,
+                background: "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 100%)",
+              }}
+            />
+          ) : null}
+        </span>
         <span style={{ position: "relative", textShadow: hl > 0.5 ? "none" : baseShadow }}>{renderRuns(ink)}</span>
       </>
     );

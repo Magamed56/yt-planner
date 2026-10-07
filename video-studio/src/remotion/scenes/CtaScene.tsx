@@ -51,10 +51,10 @@ export const CtaScene: React.FC<SceneProps> = (p) => {
         <KineticText
           text={p.scene.onScreen}
           theme={p.theme}
-          box={{ w: content.w, h: content.h * 0.36 }}
+          box={{ w: content.w, h: content.h * 0.42 }}
           font={{ fontFamily: FONT_DISPLAY, fontWeight: 900, lineHeight: 1.05, letterSpacingEm: -0.02 }}
           maxFontSize={Math.round((shorts ? 124 : 132) * unit)}
-          maxLines={4}
+          maxLines={5}
           scene={p.scene}
           mode="stagger"
           start={3}

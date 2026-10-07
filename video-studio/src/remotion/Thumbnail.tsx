@@ -1,13 +1,36 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { AbsoluteFill, useVideoConfig } from "remotion";
 import type { VideoProps } from "../types";
 import { Background } from "./components/Background";
 import { Icon, IconGradientDefs } from "./components/Icon";
 import { KineticText } from "./components/KineticText";
 import { FONT_DISPLAY, FONT_NUMBER, FontGate } from "./fonts";
-import { stripMarkup } from "./lib/text";
+import { fitTokens, stripMarkup, type FontSpec } from "./lib/text";
 import { formatNumber } from "./scenes/StatScene";
 import { getTheme, withAlpha } from "./theme";
+
+const BADGE_FONT: FontSpec = { fontFamily: FONT_NUMBER, fontWeight: 800, lineHeight: 1.1, letterSpacingEm: -0.04 };
+
+// Без *акцента* обложка теряет «крючок»: подсвечиваем слово с цифрой из
+// stat-сцены, иначе самое длинное слово (не первое).
+export function autoAccent(text: string, statDigits: string | null): string {
+  if (text.includes("*")) return text;
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return text;
+  let idx = statDigits ? words.findIndex((w) => w.replace(/\D/g, "") === statDigits) : -1;
+  if (idx < 0) {
+    let best = -1;
+    words.forEach((w, i) => {
+      const len = w.replace(/[^\p{L}\p{N}]/gu, "").length;
+      if (i > 0 && len >= 5 && (best < 0 || len > words[best].length)) best = i;
+    });
+    idx = best;
+  }
+  if (idx < 0) return text;
+  const m = words[idx].match(/^(.*?)([.,!?:;…]*)$/);
+  words[idx] = m ? `*${m[1]}*${m[2]}` : `*${words[idx]}*`;
+  return words.join(" ");
+}
 
 // Обложка 1280×720: 3–6 слов огромным шрифтом с акцентом из хука, крупная
 // иконка со свечением и, если в ролике есть цифра, — «плашка» с ней.
@@ -19,10 +42,15 @@ export const Thumbnail: React.FC<VideoProps & Record<string, unknown>> = (props)
   const hook = props.scenes.find((s) => s.kind === "hook") ?? props.scenes[0];
   const hookText = hook?.onScreen ?? "";
   // Хук короткий и с *акцентом* — берём его; иначе заголовок ролика.
-  const text = hookText && stripMarkup(hookText).length <= 48 ? hookText : props.title;
   const statScene = props.scenes.find((s) => s.kind === "stat" && s.stat);
   const stat = statScene?.stat;
   const statText = stat ? `${stat.prefix ?? ""}${formatNumber(stat.value, Number.isInteger(stat.value) ? 0 : 1)}${stat.suffix ?? ""}` : null;
+  const text = autoAccent(hookText && stripMarkup(hookText).length <= 48 ? hookText : props.title, stat ? String(stat.value) : null);
+  // Плашка с цифрой не шире ~1.3 иконки — иначе длинное «≈1 250 000 млн» наедет на заголовок.
+  const badgeFit = useMemo(
+    () => (statText ? fitTokens([{ text: statText }], BADGE_FONT, { w: 320 * u * 1.3 - 48 * u, h: 120 * u }, { maxFontSize: Math.round(78 * u), maxLines: 1 }) : null),
+    [statText, u],
+  );
   const icon = hook?.icon ?? statScene?.icon;
   const textW = width * 0.57;
   const iconSize = Math.round(320 * u);
@@ -88,7 +116,7 @@ export const Thumbnail: React.FC<VideoProps & Record<string, unknown>> = (props)
                 color: theme.accentInk,
                 fontFamily: FONT_NUMBER,
                 fontWeight: 800,
-                fontSize: Math.round(78 * u),
+                fontSize: badgeFit?.fontSize ?? Math.round(78 * u),
                 lineHeight: 1.1,
                 letterSpacing: "-0.04em",
                 transform: "rotate(-7deg)",

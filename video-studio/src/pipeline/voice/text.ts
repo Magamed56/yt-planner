@@ -10,7 +10,7 @@ export function normalizeText(input: string): string {
   s = s.replace(PICTO, " ");
   // Разметка акцентов из сценария (*слово*, _слово_) — не для диктора.
   s = s.replace(/[*_#`~^]+/g, "");
-  s = s.replace(/[  -​  　]/g, " ");
+  s = s.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, " "); // неразрывные и «тонкие» пробелы
   s = s.replace(/\s+/g, " ").trim();
   if (!s) return "";
   // Многоточия и тире к одному виду.

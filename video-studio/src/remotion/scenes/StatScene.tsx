@@ -83,10 +83,11 @@ export const StatScene: React.FC<SceneProps> = (p) => {
     <KineticText
       text={p.scene.onScreen}
       theme={p.theme}
-      box={{ w, h: content.h * 0.16 }}
+      box={{ w, h: content.h * (shorts ? 0.17 : 0.3) }}
       font={{ fontFamily: FONT_DISPLAY, fontWeight: 800, lineHeight: 1.1, letterSpacingEm: 0.04, uppercase: true }}
-      maxFontSize={Math.round(54 * unit)}
-      maxLines={2}
+      maxFontSize={Math.round((shorts ? 54 : 58) * unit)}
+      minFontSize={Math.round(34 * unit)}
+      maxLines={3}
       align={align}
       color={withAlpha(p.theme.text, 0.86)}
       scene={p.scene}

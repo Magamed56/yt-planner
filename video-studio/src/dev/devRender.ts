@@ -33,7 +33,27 @@ export async function getBrowserOpts(): Promise<BrowserOpts> {
   }
   if (!chromeMode) {
     console.log("[браузер] REMOTION_BROWSER_EXECUTABLE не задан — проверяю/скачиваю Chrome Headless Shell (один раз)…");
-    await ensureBrowser({ logLevel: "warn" });
+    // Ошибка скачивания у Remotion вылетает как НЕПЕРЕХВАТЫВАЕМОЕ исключение
+    // (try/catch не ловит) и оставляет download.lock — ловим глобально,
+    // убираем замок и объясняем, что делать.
+    const lock = path.join(ROOT, "node_modules", ".remotion", "chrome-headless-shell", "download.lock");
+    const onFail = (err: unknown) => {
+      fs.rmSync(lock, { force: true });
+      console.error(
+        `[браузер] не удалось скачать Chrome Headless Shell: ${err instanceof Error ? err.message.split("\n")[0] : String(err)}\n` +
+          "  Проверьте интернет (нужен remotion.media или storage.googleapis.com) или укажите свой Chrome/Chromium:\n" +
+          "  REMOTION_BROWSER_EXECUTABLE=<путь> и REMOTION_CHROME_MODE=headless-shell | chrome-for-testing",
+      );
+      process.exit(1);
+    };
+    process.once("uncaughtException", onFail);
+    try {
+      await ensureBrowser({ logLevel: "warn" });
+    } catch (e) {
+      onFail(e);
+    } finally {
+      process.removeListener("uncaughtException", onFail);
+    }
   }
   return chromeMode ? { chromeMode } : {};
 }
@@ -49,12 +69,17 @@ export function preparePublicDir(name: string): string {
   return dir;
 }
 
-export async function bundleComposition(publicDir: string): Promise<string> {
+// Бандл кладём в фиксированную папку (а не новый mkdtemp на каждый запуск):
+// иначе в temp копятся десятки папок по ~30 МБ.
+export async function bundleComposition(publicDir: string, name = "dev"): Promise<string> {
   const t0 = Date.now();
   let last = -10;
+  const outDir = path.join(os.tmpdir(), `video-studio-dev-bundle-${name}`);
+  fs.rmSync(outDir, { recursive: true, force: true });
   const serveUrl = await bundle({
     entryPoint: path.join(ROOT, "src", "remotion", "index.ts"),
     publicDir,
+    outDir,
     onProgress: (p) => {
       if (p - last >= 25 || p === 100) {
         last = p;

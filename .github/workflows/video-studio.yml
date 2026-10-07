@@ -1,0 +1,286 @@
+# video-studio: сценарий → озвучка → визуал → рендер Remotion → MP4 прямо в GitHub Actions.
+#
+# Как пользоваться (подробно — video-studio/README.md, раздел «GitHub Actions»):
+#   1. mode = draft, topic = «тема» → сценарий scripts/<имя>.json коммитится в эту ветку.
+#      Проверьте и поправьте его на github.com (карандаш ✏️ в файле).
+#   2. mode = render, script = video-studio/scripts/<имя>.json → готовое видео в артефакте,
+#      по желанию — в релизе GitHub или сразу на YouTube.
+# Кнопка «Run workflow» появляется, только когда этот файл лежит в ветке по умолчанию.
+
+name: "video-studio: ролик"
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "draft — только сценарий на проверку; render — собрать видео"
+        type: choice
+        options: [draft, render]
+        default: draft
+      topic:
+        description: "Тема ролика (draft; для render без script — полный автомат)"
+        type: string
+        required: false
+      script:
+        description: "render: путь к сценарию, например video-studio/scripts/xxx.json (пусто и нет темы — демо)"
+        type: string
+        required: false
+      format:
+        description: "auto — из сценария (для темы — shorts); landscape — ещё и лимит времени 2 ч"
+        type: choice
+        options: [auto, shorts, landscape]
+        default: auto
+      voice:
+        description: "Озвучка (edge — бесплатно; при сбое автоматически piper)"
+        type: choice
+        options: [edge, piper, gemini, elevenlabs]
+        default: edge
+      theme:
+        description: "Палитра"
+        type: choice
+        options: [auto, midnight, sunset, emerald, mono]
+        default: auto
+      upload:
+        description: "Куда ещё отдать результат (артефакт на 7 дней есть всегда)"
+        type: choice
+        options: [none, release, youtube]
+        default: none
+      privacy:
+        description: "Видимость на YouTube"
+        type: choice
+        options: [private, unlisted, public]
+        default: private
+  # Запуск по расписанию (раскомментируйте): черновик на тему из переменной
+  # репозитория SCHEDULED_TOPIC, например по понедельникам и четвергам в 05:17 UTC.
+  # schedule:
+  #   - cron: "17 5 * * 1,4"
+
+permissions:
+  contents: write # коммит черновика и релизы
+
+# Один запуск за раз: не делим квоты бесплатных API и не толкаемся при пуше черновиков.
+concurrency:
+  group: video-studio
+  cancel-in-progress: false
+
+jobs:
+  video:
+    name: ${{ (inputs.mode || 'draft') == 'render' && 'Рендер ролика' || 'Черновик сценария' }}
+    # Явная версия: ubuntu-latest переезжает на 26.04 с 2026-10-19.
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.format == 'landscape' && 120 || 40 }}
+    defaults:
+      run:
+        working-directory: video-studio
+        shell: bash
+    env:
+      MODE: ${{ inputs.mode || 'draft' }}
+      TOPIC: ${{ inputs.topic || vars.SCHEDULED_TOPIC }}
+      SCRIPT_PATH: ${{ inputs.script }}
+      FORMAT: ${{ inputs.format || 'auto' }}
+      THEME: ${{ inputs.theme || 'auto' }}
+      UPLOAD: ${{ inputs.upload || 'none' }}
+      PRIVACY: ${{ inputs.privacy || 'private' }}
+      # Несекретные настройки — Settings → Secrets and variables → Actions → Variables.
+      TTS_PROVIDER: ${{ inputs.voice || vars.TTS_PROVIDER || 'edge' }}
+      TTS_VOICE: ${{ vars.TTS_VOICE }}
+      TTS_RATE: ${{ vars.TTS_RATE }}
+      LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
+      LLM_MODEL: ${{ vars.LLM_MODEL }}
+      VISUALS: ${{ vars.VISUALS }}
+      MUSIC: ${{ vars.MUSIC }}
+      CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
+      MODELS_DIR: ${{ github.workspace }}/video-studio/models
+      # На 2 vCPU (приватный репозиторий) 2 потока быстрее авто-значения (1) на ~12 %.
+      RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
+      NO_COLOR: "1"
+    steps:
+      - name: Код репозитория
+        uses: actions/checkout@v7
+
+      - name: Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video-studio/package-lock.json
+
+      - name: Зависимости (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      # После npm ci: он удаляет node_modules целиком.
+      - name: Кэш браузера Remotion и webpack
+        if: env.MODE == 'render'
+        uses: actions/cache@v6
+        with:
+          path: |
+            video-studio/node_modules/.remotion
+            video-studio/node_modules/.cache/webpack
+          key: remotion-${{ runner.os }}-${{ hashFiles('video-studio/package-lock.json') }}-${{ hashFiles('video-studio/src/remotion/**', 'video-studio/src/types.ts') }}
+          restore-keys: |
+            remotion-${{ runner.os }}-${{ hashFiles('video-studio/package-lock.json') }}-
+
+      - name: Кэш голосовых моделей Piper
+        if: env.MODE == 'render'
+        uses: actions/cache@v6
+        with:
+          path: video-studio/models
+          key: tts-models-${{ runner.os }}-${{ vars.TTS_VOICE || 'default' }}-v1
+
+      - name: Системные библиотеки для Chrome Headless Shell
+        if: env.MODE == 'render'
+        # Список — из документации Remotion (Linux Dependencies, Ubuntu 24.04), с t64-именами пакетов Noble.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            libnss3 libdbus-1-3 libatk1.0-0t64 libasound2t64 libxrandr2 libxkbcommon0 \
+            libxfixes3 libxcomposite1 libxdamage1 libgbm1 libcups2t64 libcairo2 \
+            libpango-1.0-0 libatk-bridge2.0-0t64
+
+      - name: Браузер для рендера
+        if: env.MODE == 'render'
+        run: npx remotion browser ensure
+
+      # ---------- draft: сценарий на проверку ----------
+      - name: Черновик сценария
+        id: draft
+        if: env.MODE == 'draft'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [ -z "$TOPIC" ]; then
+            echo "::error::Для mode=draft нужна тема (поле topic)."
+            exit 1
+          fi
+          fmt="$FORMAT"; [ "$fmt" = "auto" ] && fmt=shorts
+          npm run script -- --topic "$TOPIC" --format "$fmt"
+
+      - name: Закоммитить черновик
+        if: env.MODE == 'draft'
+        env:
+          FILE: ${{ steps.draft.outputs.script_path }}
+          TITLE: ${{ steps.draft.outputs.title }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$FILE"
+          git commit -m "video-studio: черновик сценария «$TITLE»"
+          pushed=""
+          for i in 1 2 3; do
+            if git pull --rebase --quiet origin "$GITHUB_REF_NAME" && git push --quiet origin "HEAD:$GITHUB_REF_NAME"; then
+              pushed=1
+              break
+            fi
+            echo "Пуш не удался (попытка $i), повторяю…"
+            sleep $((i * 5))
+          done
+          if [ -z "$pushed" ]; then
+            echo "::error::Не удалось запушить черновик в $GITHUB_REF_NAME (ветка защищена?). Файл сохранён в артефакте запуска."
+            exit 1
+          fi
+          url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/video-studio/$FILE"
+          edit="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/edit/$GITHUB_REF_NAME/video-studio/$FILE"
+          {
+            echo ""
+            echo "**Файл:** [video-studio/$FILE]($url) · [✏️ редактировать]($edit)"
+            echo ""
+            echo "Следующий шаг: Actions → «video-studio: ролик» → Run workflow → mode = **render**, script = \`video-studio/$FILE\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Черновик в артефакте (на случай, если пуш не прошёл)
+        if: always() && env.MODE == 'draft' && steps.draft.outputs.script_path != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: script-${{ github.run_number }}
+          path: video-studio/${{ steps.draft.outputs.script_path }}
+          retention-days: 7
+
+      # ---------- render: видео ----------
+      - name: Сборка ролика
+        id: render
+        if: env.MODE == 'render'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: |
+          args=()
+          if [ -n "$SCRIPT_PATH" ]; then
+            args+=(--script "$SCRIPT_PATH")
+          elif [ -n "$TOPIC" ]; then
+            args+=(--topic "$TOPIC")
+          else
+            echo "::notice::Не задан ни script, ни topic — собираю демо-ролик."
+            args+=(--demo)
+          fi
+          [ "$FORMAT" != "auto" ] && args+=(--format "$FORMAT")
+          [ "$THEME" != "auto" ] && args+=(--theme "$THEME")
+          npm run make -- "${args[@]}"
+
+      - name: Артефакт (7 дней)
+        id: artifact
+        if: env.MODE == 'render' && steps.render.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: video-${{ steps.render.outputs.slug }}-${{ github.run_number }}
+          # Бесплатный план: 500 МБ на артефакты — храним недолго и без props/public.
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            video-studio/${{ steps.render.outputs.run_dir }}/video.mp4
+            video-studio/${{ steps.render.outputs.run_dir }}/thumbnail.png
+            video-studio/${{ steps.render.outputs.run_dir }}/captions.srt
+            video-studio/${{ steps.render.outputs.run_dir }}/description.txt
+            video-studio/${{ steps.render.outputs.run_dir }}/cost.json
+            video-studio/${{ steps.render.outputs.run_dir }}/script.json
+
+      - name: Ссылка на артефакт
+        if: steps.artifact.outcome == 'success'
+        env:
+          ARTIFACT_URL: ${{ steps.artifact.outputs.artifact-url }}
+        run: |
+          echo "📦 **Скачать:** [видео, обложка, субтитры, описание]($ARTIFACT_URL) — хранится 7 дней." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Релиз GitHub
+        if: env.MODE == 'render' && env.UPLOAD == 'release' && steps.render.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_DIR: ${{ steps.render.outputs.run_dir }}
+          SLUG: ${{ steps.render.outputs.slug }}
+          TITLE: ${{ steps.render.outputs.title }}
+        run: |
+          tag="video-${SLUG:0:60}-${GITHUB_RUN_NUMBER}"
+          files=("$RUN_DIR/video.mp4" "$RUN_DIR/captions.srt" "$RUN_DIR/description.txt")
+          [ -f "$RUN_DIR/thumbnail.png" ] && files+=("$RUN_DIR/thumbnail.png")
+          gh release create "$tag" "${files[@]}" --prerelease --target "$GITHUB_SHA" --title "$TITLE" --notes-file "$RUN_DIR/description.txt"
+          url=$(gh release view "$tag" --json url -q .url)
+          echo "🏷️ **Релиз:** [$tag]($url) — файлы хранятся, пока вы не удалите релиз." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Загрузка на YouTube
+        if: env.MODE == 'render' && env.UPLOAD == 'youtube' && steps.render.outcome == 'success'
+        env:
+          RUN_DIR: ${{ steps.render.outputs.run_dir }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: npm run upload -- "$RUN_DIR" --privacy "$PRIVACY"
+
+      - name: Сводка при ошибке
+        if: failure()
+        run: |
+          {
+            echo "## ❌ Запуск не удался"
+            echo ""
+            echo "Откройте шаг с красным крестиком — в конце его лога строка «✖ Ошибка:» с причиной и подсказкой."
+            echo "Частые причины: не задан секрет (GEMINI_API_KEY для темы), ошибка в JSON сценария, исчерпана квота API."
+          } >> "$GITHUB_STEP_SUMMARY"

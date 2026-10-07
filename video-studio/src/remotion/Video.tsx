@@ -44,13 +44,12 @@ export const Video: React.FC<VideoCompositionProps> = (props) => {
     }
   }, [scenes, T, props.durationInFrames]);
 
-  const perf = String(process.env.VS_PERF ?? "");
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bgFrom }}>
-      {perf === "empty" ? null : <FontGate>
+      <FontGate>
         <LayoutContext.Provider value={layout}>
-          {perf === "nobg" || perf === "onlybg" ? null : null}{perf === "nobg" ? null : <Background theme={theme} seed={props.title} cuts={cuts} cutFrames={Math.max(18, T + 8)} grain={perf !== "nograin"} particles={perf !== "noparticles"} />}
-          {perf === "onlybg" ? null : <TransitionSeries name="Сцены">
+          <Background theme={theme} seed={props.title} cuts={cuts} cutFrames={Math.max(18, T + 8)} />
+          <TransitionSeries name="Сцены">
             {scenes.map((scene, i) => {
               const Comp = pickScene(scene);
               return (
@@ -67,11 +66,11 @@ export const Video: React.FC<VideoCompositionProps> = (props) => {
                 </React.Fragment>
               );
             })}
-          </TransitionSeries>}
-          {props.showCaptions && perf !== "nocap" ? <Captions captions={props.captions} theme={theme} /> : null}
+          </TransitionSeries>
+          {props.showCaptions ? <Captions captions={props.captions} theme={theme} /> : null}
           {props.showProgressBar ? <ProgressBar theme={theme} /> : null}
         </LayoutContext.Provider>
-      </FontGate>}
+      </FontGate>
       <AudioLayer props={props} />
     </AbsoluteFill>
   );

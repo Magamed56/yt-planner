@@ -56,7 +56,8 @@ export const MediaLayer: React.FC<{
         style={{
           background: strong
             ? `linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.45) 65%, rgba(0,0,0,0.85) 100%)`
-            : `linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.05) 28%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.8) 82%, rgba(0,0,0,0.9) 100%)`,
+            : // soft: визуал виден ярко, но нижняя треть (подпись + субтитры) — на тёмной подложке
+              `linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.08) 24%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.66) 58%, rgba(0,0,0,0.78) 80%, rgba(0,0,0,0.9) 100%)`,
         }}
       />
       <AbsoluteFill

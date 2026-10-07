@@ -100,7 +100,7 @@ async function main() {
   const w = synthWhoosh(0.6);
   writeWav(path.join(publicDir, "sfx", "whoosh.wav"), w.samples, w.sampleRate);
 
-  const serveUrl = await bundleComposition(publicDir);
+  const serveUrl = await bundleComposition(publicDir, "preview");
   const browserOpts = await getBrowserOpts();
   const inputProps = props as unknown as Record<string, unknown>;
   const composition = await selectComposition({ serveUrl, id: "Video", inputProps, ...browserOpts, logLevel: "warn" });

@@ -1,0 +1,234 @@
+// Промпты сценариста. Системный промпт ОДИН на всю генерацию (и для Shorts,
+// и для плана/частей длинного ролика) — он стабилен, поэтому кэшируется у
+// Claude и не ломает правила «preserved thinking» при ремонтном запросе.
+// Всё, что меняется от запроса к запросу, — в user-сообщении.
+
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import type { Format, ScriptRequest } from "../contracts";
+import type { Outline } from "./schema";
+import { WORDS_PER_SECOND } from "./validate";
+
+// Пример стиля — examples/demo-ru.json (ищем вверх от этого файла, чтобы не
+// зависеть от текущей папки; на Windows CLI часто запускают «не оттуда»).
+function loadExample(): string {
+  let dir = path.dirname(fileURLToPath(import.meta.url));
+  for (let i = 0; i < 6; i++) {
+    const file = path.join(dir, "examples", "demo-ru.json");
+    if (existsSync(file)) {
+      try {
+        return JSON.stringify(JSON.parse(readFileSync(file, "utf8")));
+      } catch {
+        break;
+      }
+    }
+    const up = path.dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  return FALLBACK_EXAMPLE;
+}
+
+// Запасной короткий пример на случай, если файла нет рядом (например, код
+// скопирован без examples/).
+const FALLBACK_EXAMPLE = JSON.stringify({
+  title: "Почему ты забываешь 66% выученного за сутки",
+  description: "Кривая забывания Эббингауза и способ запоминать надолго.\n#память #учёба #shorts",
+  tags: ["память", "мозг", "учёба"],
+  language: "ru",
+  format: "shorts",
+  theme: "midnight",
+  scenes: [
+    { id: "s1", kind: "hook", narration: "Через сутки ты забудешь почти всё, что выучил сегодня.", onScreen: "Через 24 часа ты *забудешь* почти всё", icon: "brain", visualQuery: "tired student night desk", imagePrompt: "cinematic close-up of a glowing human brain fading into darkness" },
+    { id: "s2", kind: "stat", narration: "Это доказал Герман Эббингауз ещё в тысяча восемьсот восемьдесят пятом году.", onScreen: "Кривая забывания, 1885", stat: { value: 66, suffix: "%", label: "нового забывается за сутки" }, icon: "trending-down", visualQuery: "old library books", imagePrompt: "vintage scientist notebook with a declining curve, candle light" },
+    { id: "s3", kind: "cta", narration: "Подпишись, чтобы не забыть следующий лайфхак для мозга.", onScreen: "*Подпишись*, чтобы не забыть", icon: "bell-ring" },
+  ],
+});
+
+let cachedSystem: string | null = null;
+
+export function buildSystemPrompt(): string {
+  if (cachedSystem) return cachedSystem;
+  cachedSystem = `Ты — сильный сценарист и редактор русскоязычного YouTube-канала. Твои ролики досматривают до конца, потому что в них есть настоящая польза и живая подача, а не «вода».
+
+## Польза и подлинность — главное
+- У ролика одна ясная идея и развязка: к концу зритель знает конкретную вещь, которую можно применить сегодня или пересказать другу.
+- Только конкретика: имена, годы, механизмы, точные примеры из жизни, наглядные сравнения («размером с рисовое зерно», «как два футбольных поля»). Никаких пустых фраз вроде «в современном мире», «многие считают», «учёные доказали» — если ссылаешься на исследование, скажи, чьё и что именно нашли.
+- НЕ выдумывай факты, цифры, исследования, цитаты и личные истории. Пиши только то, что общеизвестно и проверяемо. Не знаешь точного числа — не делай сцену stat, скажи качественно («в разы», «почти половина»).
+- Цитата (kind "quote") — только реальная, широко известная, с настоящим автором. Сомневаешься — сделай сцену "statement".
+- Звучи как живой автор с позицией: удивляйся, разбивай мифы, давай честный совет. Но не изображай личный опыт, которого не было.
+- Без кликбейта, который ролик не оправдывает: заголовок и хук обещают ровно то, что ролик даёт.
+- YouTube понижает однотипный «массовый» ИИ-контент, поэтому каждый сценарий уникален по фактам, примерам и подаче; не используй шаблонные заходы.
+
+## Удержание внимания
+- Первая сцена (kind "hook") цепляет за первые 2 секунды: narration не длиннее 12 слов. Приёмы: неожиданный факт, разрушение мифа, конкретная цифра, прямой вызов зрителю, обещание результата. Запрещены заходы «Привет», «Сегодня я расскажу», «В этом видео», «Знаете ли вы».
+- Одна сцена — одна мысль. Каждая сцена приносит что-то новое: факт, поворот, вопрос, пример. Не пересказывай уже сказанное.
+- Pattern interrupt: регулярно меняй ритм — новый тип сцены, неожиданный вопрос зрителю, контраст «думали так — а на деле так».
+- Чередуй kind: не ставь подряд больше двух "statement"; используй "stat", "list", "quote", "media" там, где они действительно к месту.
+- Открытая петля: в начале намекни, что самое ценное будет в конце, — и обязательно это раскрой. Самая сильная мысль — ближе к концу, а не в первой сцене.
+- Последняя сцена (kind "cta") — короткий призыв, связанный с темой ролика (не просто «подпишись»), до 15 слов.
+
+## Темп
+- Shorts: сцена звучит 3–5 секунд (8–14 слов); на 45 секунд — 6–9 сцен.
+- Длинный ролик (landscape): сцена 8–14 секунд (20–35 слов), но внутри — короткие предложения; каждые 60–90 секунд — мини-развязка и новый крючок на следующий раздел.
+
+## Текст диктора (narration)
+- Живой разговорный русский, на «ты». Короткие предложения (до 12 слов), активные глаголы, без канцелярита и вводных «итак», «таким образом», «стоит отметить».
+- ВСЕ ЧИСЛА ПИШИ СЛОВАМИ, в правильном падеже: «в тысяча восемьсот восемьдесят пятом году», «шестьдесят шесть процентов», «в три раза». Никаких цифр, символов % № $ и сокращений («т.е.», «млн», «км») — диктор читает текст буквально.
+- Без эмодзи, хэштегов, звёздочек, скобок и кавычек-ёлочек вокруг целых фраз.
+- Narration всех сцен подряд — связный монолог: каждая сцена продолжает мысль предыдущей.
+
+## Текст на экране (onScreen)
+- Не дублирует narration слово в слово — это короткий заголовок сцены: ключевая мысль, цифра или контраст. Не больше 7 слов.
+- Ровно одно акцентное слово или короткая фраза в *звёздочках* (или ни одного): «Мозг не ленится. Он *экономит* энергию».
+- На экране числа пиши цифрами: «66%», «1885», «×3».
+
+## Поля сцены
+- id: "s1", "s2", … строго по порядку.
+- kind: "hook" | "statement" | "list" | "stat" | "quote" | "media" | "cta".
+- stat — только для "stat" и там обязателен: value — число без единиц (66, 1.5, 300), prefix/suffix — знаки и единицы ("≈", "%", " млн", "×"), label — подпись до 6 слов. Только реальные проверяемые числа.
+- items — только для "list" и там обязателен: 2–4 пункта по 1–5 слов в одном грамматическом стиле; narration проговаривает их в том же порядке.
+- icon — иконка Lucide в kebab-case, например: brain, rocket, clock, zap, target, lightbulb, trending-up, trending-down, shield, heart, coins, book-open, globe, flame, eye, timer, hourglass, circle-check, circle-x, triangle-alert, list-checks, calendar-check, bell-ring, quote, battery-low, dumbbell, moon, sun, users, wallet, piggy-bank, key, lock, compass, leaf, droplet, flask-conical, microscope, atom, dna, cpu, smartphone, thumbs-up, star, trophy, gift, coffee, utensils, plane, house, music, camera, graduation-cap, briefcase, smile.
+- visualQuery — НА АНГЛИЙСКОМ, 2–4 конкретных существительных: то, что реально снимают камерой и находят на фотостоке (Pexels/Pixabay): "tired student night desk", "coffee cup steam". Без абстракций (success, concept, idea), имён, брендов и текста. У каждой сцены свой запрос; у "cta" можно не указывать.
+- imagePrompt — НА АНГЛИЙСКОМ, кинематографичное описание кадра для генератора картинок: объект, окружение, свет, ракурс, настроение ("cinematic close-up of ..., soft rim light, shallow depth of field"). Без надписей и букв в кадре. Единый визуальный стиль и палитра на весь ролик.
+
+## Метаданные для YouTube
+- title — до 70 символов, по-русски, с главным поисковым запросом темы; интрига без обмана, без КАПСА и эмодзи; можно цифру.
+- description — по-русски: 2–3 предложения о том, что зритель узнает и чем это полезно (с ключевыми словами), затем с новой строки 3–5 хэштегов (для Shorts обязательно #shorts).
+- tags — 8–15 тегов по-русски (можно 2–3 английских), строчными буквами, без «#».
+- theme — "midnight" (тёмная: наука, технологии, космос), "sunset" (тёплая: эмоции, история, отношения), "emerald" (природа, здоровье, деньги), "mono" (строгая: бизнес, факты).
+- language — "ru".
+
+## Пример готового сценария Shorts на ДРУГУЮ тему
+Возьми из него стиль, ритм и формат полей. Факты и формулировки не копируй.
+${loadExample()}
+
+## Формат ответа
+Ответь ТОЛЬКО одним JSON-объектом — без markdown, без \`\`\`-блоков, без пояснений до или после.`;
+  return cachedSystem;
+}
+
+// ---- Пользовательские сообщения ----
+
+export interface ShortsTargets {
+  seconds: number;
+  wordsMin: number;
+  wordsMax: number;
+  scenesMin: number;
+  scenesMax: number;
+}
+
+export function shortsTargets(seconds: number): ShortsTargets {
+  const words = seconds * WORDS_PER_SECOND;
+  const scenesMin = Math.max(4, Math.round(seconds / 7.5));
+  return {
+    seconds,
+    wordsMin: Math.round(words * 0.9),
+    wordsMax: Math.round(words * 1.1),
+    scenesMin,
+    scenesMax: Math.max(scenesMin + 2, Math.round(seconds / 5)),
+  };
+}
+
+function header(req: ScriptRequest): string {
+  const lang = req.language && req.language !== "ru" ? `\nЯзык ролика: ${req.language} (narration, onScreen и метаданные — на этом языке; visualQuery и imagePrompt — на английском).` : "";
+  const notes = req.notes?.trim() ? `\nПожелания автора: ${req.notes.trim()}` : "";
+  return `Тема: ${req.topic.trim()}${lang}${notes}`;
+}
+
+const formatLine = (f: Format) =>
+  f === "shorts" ? 'Формат: YouTube Shorts, вертикальное видео 9:16 (поле format: "shorts").' : 'Формат: длинное горизонтальное видео 16:9 (поле format: "landscape").';
+
+export function buildShortsPrompt(req: ScriptRequest, t: ShortsTargets): string {
+  return `${header(req)}
+${formatLine("shorts")}
+Длительность: около ${t.seconds} секунд — это ${t.wordsMin}–${t.wordsMax} слов narration суммарно, ${t.scenesMin}–${t.scenesMax} сцен.
+
+Сначала про себя найди самый неожиданный и полезный факт по теме и развязку ролика, подбери 4–7 конкретных фактов, которые к ней ведут. Затем напиши сценарий целиком: первая сцена — "hook", последняя — "cta".
+Ответ — JSON-объект с полями title, description, tags, language, format, theme, scenes.`;
+}
+
+function ruPlural(n: number, one: string, few: string, many: string): string {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+
+export interface LandscapePlan {
+  seconds: number;
+  sections: number;
+}
+
+export function landscapePlan(seconds: number): LandscapePlan {
+  return { seconds, sections: Math.min(10, Math.max(3, Math.round(seconds / 80))) };
+}
+
+export function buildOutlinePrompt(req: ScriptRequest, plan: LandscapePlan): string {
+  const minutes = Math.round((plan.seconds / 60) * 10) / 10;
+  return `${header(req)}
+${formatLine("landscape")}
+Длительность: около ${plan.seconds} секунд (${minutes} мин).
+
+Сейчас нужен только ПЛАН ролика — сцены напишем потом по частям.
+Раздели ролик на ${plan.sections} ${ruPlural(plan.sections, "раздел", "раздела", "разделов")}. Первый раздел открывается хуком и обещанием ценности, последний — главной развязкой и призывом. Каждый раздел — отдельная мысль с мини-развязкой и крючком на следующий.
+Для каждого раздела: heading — заголовок, goal — что зритель поймёт, points — 2–6 конкретных фактов, примеров или шагов (реальных, проверяемых), seconds — длительность; сумма seconds ≈ ${plan.seconds}.
+Также дай title, description (для длинного ролика — 2–3 предложения и 3–5 хэштегов, без #shorts), tags и theme для всего ролика.
+Ответ — JSON-объект с полями title, description, tags, theme, sections.`;
+}
+
+export interface ChunkSpec {
+  index: number; // 0-based
+  count: number;
+  sections: Outline["sections"];
+  sectionOffset: number; // номер первого раздела части (0-based)
+  seconds: number;
+  previousTail: string[]; // последние narration предыдущей части
+}
+
+export function buildChunkPrompt(req: ScriptRequest, outline: Outline, spec: ChunkSpec): string {
+  const first = spec.index === 0;
+  const last = spec.index === spec.count - 1;
+  const words = spec.seconds * WORDS_PER_SECOND;
+  const scenesMin = Math.max(3, Math.round(spec.seconds / 14));
+  const scenesMax = Math.max(scenesMin + 2, Math.round(spec.seconds / 8));
+  const planLines = outline.sections
+    .map((s, i) => `${i + 1}. ${s.heading} — ${s.goal} (≈${Math.round(s.seconds)} с)`)
+    .join("\n");
+  const detail = spec.sections
+    .map(
+      (s, i) =>
+        `### Раздел ${spec.sectionOffset + i + 1}. ${s.heading}\nЗадача: ${s.goal}\nОпорные факты:\n${s.points.map((p) => `- ${p}`).join("\n")}`,
+    )
+    .join("\n\n");
+  const start = first
+    ? 'Это начало ролика: первая сцена — kind "hook" (narration до 12 слов), затем коротко — что зритель получит к концу.'
+    : `Не начинай с приветствия или хука — продолжи с того места, где остановилась предыдущая часть:\n${spec.previousTail.map((t) => `«${t}»`).join("\n")}`;
+  const end = last
+    ? 'Это конец ролика: подведи итог одной сильной фразой и закончи сценой kind "cta".'
+    : 'Не используй kind "hook" и "cta", не подводи итог всего ролика и не прощайся — ролик продолжится.';
+  return `${header(req)}
+${formatLine("landscape")}
+Название ролика: ${outline.title}
+
+План ролика (утверждён):
+${planLines}
+
+Сейчас напиши ЧАСТЬ ${spec.index + 1} из ${spec.count} — только эти разделы:
+${detail}
+
+Длительность части: около ${Math.round(spec.seconds)} с — это ${Math.round(words * 0.9)}–${Math.round(words * 1.1)} слов narration, ${scenesMin}–${scenesMax} сцен.
+${start}
+${end}
+Ответ — JSON-объект { "scenes": [ … ] }; поля сцен — как в инструкции; id внутри части: "s1", "s2", … (при склейке перенумеруем).`;
+}
+
+export function buildRepairPrompt(problems: string[], warnings: string[]): string {
+  const soft = warnings.length ? `\n\nТакже желательно поправить:\n- ${warnings.slice(0, 12).join("\n- ")}` : "";
+  return `Твой JSON не прошёл проверку. Исправь ВСЕ проблемы ниже и верни исправленный JSON целиком — только JSON, без пояснений.
+
+Проблемы:
+- ${problems.slice(0, 30).join("\n- ")}${soft}`;
+}
