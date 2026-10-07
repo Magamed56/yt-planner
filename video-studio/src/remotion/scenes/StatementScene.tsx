@@ -14,7 +14,7 @@ export const StatementScene: React.FC<SceneProps> = (p) => {
   const layout = useLayout();
   const { content, unit } = layout;
   const shorts = layout.format === "shorts";
-  const badge = Math.round((shorts ? 190 : 220) * unit);
+  const badge = Math.round((shorts ? 200 : 220) * unit);
   const gap = Math.round((shorts ? 56 : 72) * unit);
   const barIn = spring({ frame: frame - 14, fps, config: { damping: 200 }, durationInFrames: 20 });
 
@@ -24,7 +24,7 @@ export const StatementScene: React.FC<SceneProps> = (p) => {
       theme={p.theme}
       box={shorts ? { w: content.w, h: content.h - badge - gap * 2 } : { w: content.w - badge - gap, h: content.h * 0.9 }}
       font={{ fontFamily: FONT_DISPLAY, fontWeight: 800, lineHeight: 1.08, letterSpacingEm: -0.02 }}
-      maxFontSize={Math.round((shorts ? 118 : 112) * unit)}
+      maxFontSize={Math.round((shorts ? 128 : 118) * unit)}
       maxLines={shorts ? 7 : 5}
       align="left"
       scene={p.scene}

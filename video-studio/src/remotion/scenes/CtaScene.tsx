@@ -37,8 +37,8 @@ export const CtaScene: React.FC<SceneProps> = (p) => {
   const bellRot = frame >= bellAt ? Math.sin(bt * 0.9) * 22 * Math.exp(-bt / 14) : 0;
   const bellS = spring({ frame: frame - pillIn - 4, fps, config: { damping: 12, stiffness: 160 } });
 
-  const pillH = Math.round((shorts ? 132 : 124) * unit);
-  const pillFont = Math.round((shorts ? 50 : 46) * unit);
+  const pillH = Math.round((shorts ? 150 : 128) * unit);
+  const pillFont = Math.round((shorts ? 54 : 48) * unit);
   const pillBg = interpolateColors(doneP, [0, 1], [p.theme.accent, "#2a2a33"]);
   const pillInk = interpolateColors(doneP, [0, 1], [p.theme.accentInk, "#ffffff"]);
   const name = p.video.channelName?.trim();
@@ -53,7 +53,7 @@ export const CtaScene: React.FC<SceneProps> = (p) => {
           theme={p.theme}
           box={{ w: content.w, h: content.h * 0.42 }}
           font={{ fontFamily: FONT_DISPLAY, fontWeight: 900, lineHeight: 1.05, letterSpacingEm: -0.02 }}
-          maxFontSize={Math.round((shorts ? 124 : 132) * unit)}
+          maxFontSize={Math.round((shorts ? 132 : 132) * unit)}
           maxLines={5}
           scene={p.scene}
           mode="stagger"

@@ -15,7 +15,7 @@ import { type Theme } from "../theme";
 const COMBINE_MS = 1000;
 const HOLD_AFTER_MS = 450; // страница висит чуть после последнего слова, но не через всю паузу
 const BREAK_ON_SILENCE_MS = 300; // пауза между предложениями — новая страница
-const WORD_PAD_EM = 0.09; // поля слова: «поп»-масштаб активного слова не наезжает на соседей
+const WORD_PAD_EM = 0.05; // поля слова: «поп»-масштаб активного слова не наезжает на соседей (амплитуда ниже ограничена промежутком)
 
 const CAPTION_FONT: FontSpec = { fontFamily: FONT_DISPLAY, fontWeight: 800, lineHeight: 1.18, letterSpacingEm: -0.01 };
 
@@ -71,7 +71,7 @@ const CaptionPage: React.FC<{ page: TikTokPage; theme: Theme; durationInFrames: 
 
   const tokens = useMemo(() => page.tokens.map((t) => ({ ...t, text: t.text.trim() })), [page]);
   const fit = useMemo(
-    () => fitTokens(tokens, CAPTION_FONT, { w: c.maxWidth, h: c.fontSize * CAPTION_FONT.lineHeight * c.maxLines }, { maxFontSize: c.fontSize, minFontSize: c.fontSize * 0.6, maxLines: c.maxLines, extraEm: WORD_PAD_EM * 2, sentenceBreaks: false }),
+    () => fitTokens(tokens, CAPTION_FONT, { w: c.maxWidth, h: c.fontSize * CAPTION_FONT.lineHeight * c.maxLines }, { maxFontSize: c.fontSize, minFontSize: c.fontSize * 0.6, maxLines: c.maxLines, extraEm: WORD_PAD_EM * 2, sentenceBreaks: false, scoring: false }),
     [tokens, c.maxWidth, c.fontSize, c.maxLines],
   );
   const fs = fit.fontSize;

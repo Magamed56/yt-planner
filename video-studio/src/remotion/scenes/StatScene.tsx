@@ -39,7 +39,7 @@ export const StatScene: React.FC<SceneProps> = (p) => {
   const finalText = `${stat.prefix ?? ""}${formatNumber(stat.value, decimals)}${stat.suffix ?? ""}`;
   const shownText = `${stat.prefix ?? ""}${formatNumber(current, decimals)}${stat.suffix ?? ""}`;
 
-  const ring = Math.round(Math.min(content.w * (shorts ? 0.86 : 0.42), content.h * (shorts ? 0.56 : 0.96)));
+  const ring = Math.round(Math.min(content.w * (shorts ? 0.9 : 0.42), content.h * (shorts ? 0.6 : 0.96)));
   const numberBox = isPercent ? { w: ring * 0.74, h: ring * 0.46 } : { w: content.w * (shorts ? 0.9 : 0.46), h: content.h * (shorts ? 0.36 : 0.6) };
   // Кегль считаем по ИТОГОВОМУ значению — пока цифры бегут, размер не прыгает.
   const numFit = useMemo(
@@ -54,6 +54,15 @@ export const StatScene: React.FC<SceneProps> = (p) => {
   const ringFill = isPercent ? Math.max(0, Math.min(1, current / 100)) : 0;
   const ticks = 60;
   const gid = `sg-${p.scene.id}`;
+  const tSec = frame / fps;
+  // Блик пробегает по цифре раз в 3 с после того, как счётчик докрутился:
+  // длинная stat-сцена не «замирает».
+  const countEnd = countStart + COUNT_FRAMES;
+  const sheenPeriod = Math.round(fps * 3);
+  const sheenT = frame >= countEnd ? ((frame - countEnd) % sheenPeriod) / sheenPeriod : 1;
+  const sheenX = interpolate(sheenT, [0, 0.35], [-60, 160], clamp);
+  // Конец дуги — светящаяся «головка» прогресса.
+  const tipA = ringFill * Math.PI * 2;
 
   const number = (
     <div
@@ -65,7 +74,7 @@ export const StatScene: React.FC<SceneProps> = (p) => {
         letterSpacing: `${NUMBER_FONT.letterSpacingEm}em`,
         fontVariantNumeric: "tabular-nums",
         whiteSpace: "nowrap",
-        background: `linear-gradient(180deg, ${p.theme.text} 8%, ${p.theme.accent} 62%, ${p.theme.accent2} 100%)`,
+        background: `linear-gradient(105deg, rgba(255,255,255,0) ${sheenX - 18}%, rgba(255,255,255,0.85) ${sheenX}%, rgba(255,255,255,0) ${sheenX + 18}%), linear-gradient(180deg, ${p.theme.text} 8%, ${p.theme.accent} 62%, ${p.theme.accent2} 100%)`,
         WebkitBackgroundClip: "text",
         backgroundClip: "text",
         WebkitTextFillColor: "transparent",
@@ -83,7 +92,7 @@ export const StatScene: React.FC<SceneProps> = (p) => {
     <KineticText
       text={p.scene.onScreen}
       theme={p.theme}
-      box={{ w, h: content.h * (shorts ? 0.17 : 0.3) }}
+      box={{ w, h: content.h * (shorts ? 0.14 : 0.3) }}
       font={{ fontFamily: FONT_DISPLAY, fontWeight: 800, lineHeight: 1.1, letterSpacingEm: 0.04, uppercase: true }}
       maxFontSize={Math.round((shorts ? 54 : 58) * unit)}
       minFontSize={Math.round(34 * unit)}
@@ -101,9 +110,9 @@ export const StatScene: React.FC<SceneProps> = (p) => {
     <KineticText
       text={stat.label}
       theme={p.theme}
-      box={{ w, h: content.h * (shorts ? 0.2 : 0.4) }}
+      box={{ w, h: content.h * (shorts ? 0.17 : 0.4) }}
       font={LABEL_FONT}
-      maxFontSize={Math.round((shorts ? 58 : 72) * unit)}
+      maxFontSize={Math.round((shorts ? 64 : 72) * unit)}
       maxLines={3}
       align={align}
       color={withAlpha(p.theme.text, 0.8)}
@@ -155,6 +164,18 @@ export const StatScene: React.FC<SceneProps> = (p) => {
               />
             );
           })}
+          {/* Внутреннее пунктирное кольцо медленно вращается — фон «дышит» */}
+          <circle
+            cx={ring / 2}
+            cy={ring / 2}
+            r={r - 40 * unit}
+            fill="none"
+            stroke={withAlpha(p.theme.text, 0.14)}
+            strokeWidth={3 * unit}
+            strokeDasharray={`${2 * unit} ${16 * unit}`}
+            strokeLinecap="round"
+            transform={`rotate(${tSec * 9} ${ring / 2} ${ring / 2})`}
+          />
           <circle cx={ring / 2} cy={ring / 2} r={r} fill="none" stroke={withAlpha(p.theme.text, 0.1)} strokeWidth={18 * unit} />
           <circle
             cx={ring / 2}
@@ -167,6 +188,12 @@ export const StatScene: React.FC<SceneProps> = (p) => {
             strokeDasharray={circ}
             strokeDashoffset={circ * (1 - ringFill)}
           />
+          {ringFill > 0.01 ? (
+            <g>
+              <circle cx={ring / 2 + Math.cos(tipA) * r} cy={ring / 2 + Math.sin(tipA) * r} r={34 * unit * (0.9 + 0.1 * Math.sin(tSec * 4))} fill={withAlpha(p.theme.accent, 0.18)} />
+              <circle cx={ring / 2 + Math.cos(tipA) * r} cy={ring / 2 + Math.sin(tipA) * r} r={13 * unit} fill="#ffffff" />
+            </g>
+          ) : null}
         </svg>
       ) : null}
       {number}

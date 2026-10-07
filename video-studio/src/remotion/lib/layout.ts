@@ -30,17 +30,24 @@ export function computeLayout(format: Format, width: number, height: number, sho
     const top = Math.round(height * 0.085);
     const bottomUi = Math.round(height * 0.18);
     const safe: Box = { x: left, y: top, w: width - left - right, h: height - top - bottomUi };
-    // Субтитры — полоса над нижним интерфейсом; контент заканчивается выше неё.
+    // Субтитры — полоса над нижним интерфейсом (≈1315–1480 px при 1920);
+    // контент заканчивается в 48 px над ней. Верх контента опущен до 12%:
+    // под верхней панелью YouTube «мёртвая» зона, а блок, центрированный
+    // ниже, вместе с субтитрами собирается в одну композицию по центру кадра,
+    // без пустой полосы между ними.
+    const fontSize = Math.round(70 * unit);
     const captionsCenterY = Math.round(height * 0.728);
-    const contentBottom = showCaptions ? Math.round(height * 0.652) : height - bottomUi - Math.round(40 * unit);
+    const captionsTop = Math.round(captionsCenterY - fontSize * 1.18);
+    const contentTop = Math.round(height * 0.12);
+    const contentBottom = showCaptions ? captionsTop - Math.round(48 * unit) : height - bottomUi - Math.round(40 * unit);
     return {
       format,
       width,
       height,
       unit,
       safe,
-      content: { x: left, y: top + Math.round(20 * unit), w: safe.w, h: contentBottom - top - Math.round(20 * unit) },
-      captions: { centerX: left + safe.w / 2, centerY: captionsCenterY, maxWidth: safe.w - 20 * unit, fontSize: Math.round(70 * unit), maxLines: 2 },
+      content: { x: left, y: contentTop, w: safe.w, h: contentBottom - contentTop },
+      captions: { centerX: left + safe.w / 2, centerY: captionsCenterY, maxWidth: safe.w - 20 * unit, fontSize, maxLines: 2 },
     };
   }
   // Горизонтальный ролик: интерфейса поверх нет, субтитры в нижней трети.

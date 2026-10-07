@@ -28,11 +28,13 @@ const ZoomThrough: React.FC<TransitionPresentationComponentProps<ZoomProps>> = (
     presentationDirection === "exiting"
       ? {
           transform: `scale(${interpolate(p, [0, 1], [1, 1 + 0.35 * k], { easing: Easing.in(Easing.cubic) })})`,
-          opacity: interpolate(p, [0, 0.55], [1, 0], { extrapolateRight: "clamp" }),
+          opacity: interpolate(p, [0, 0.42], [1, 0], { extrapolateRight: "clamp" }),
         }
       : {
           transform: `scale(${interpolate(p, [0, 1], [1 - 0.22 * k, 1], { easing: Easing.out(Easing.cubic) })})`,
-          opacity: interpolate(p, [0.25, 0.8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+          // Почти без наложения: два заголовка поверх друг друга на полупрозрачности
+          // выглядят «грязно» — движение и масштаб и так связывают сцены.
+          opacity: interpolate(p, [0.36, 0.85], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         };
   return <AbsoluteFill style={style}>{children}</AbsoluteFill>;
 };
@@ -50,8 +52,8 @@ const Lift: React.FC<TransitionPresentationComponentProps<LiftProps>> = ({ child
   const d = passedProps.distance;
   const style: React.CSSProperties =
     presentationDirection === "exiting"
-      ? { transform: `translateY(${interpolate(p, [0, 1], [0, -d])}px)`, opacity: interpolate(p, [0, 0.6], [1, 0], { extrapolateRight: "clamp" }) }
-      : { transform: `translateY(${interpolate(p, [0, 1], [d, 0])}px)`, opacity: interpolate(p, [0.3, 0.85], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) };
+      ? { transform: `translateY(${interpolate(p, [0, 1], [0, -d])}px)`, opacity: interpolate(p, [0, 0.45], [1, 0], { extrapolateRight: "clamp" }) }
+      : { transform: `translateY(${interpolate(p, [0, 1], [d, 0])}px)`, opacity: interpolate(p, [0.42, 0.95], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) };
   return <AbsoluteFill style={style}>{children}</AbsoluteFill>;
 };
 export const lift = (distance: number): TransitionPresentation<LiftProps> => ({ component: Lift, props: { distance } });

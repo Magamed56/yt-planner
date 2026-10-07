@@ -50,6 +50,31 @@ export const Icon: React.FC<{
   return <C size={size} color={color} strokeWidth={strokeWidth} absoluteStrokeWidth={false} style={style} />;
 };
 
+// Иконка, которая «прорисовывается» штрихом (как от руки): progress 0..1.
+// pathLength у элементов lucide не задан, поэтому длина штриха — с запасом
+// (DRAW_LEN в единицах viewBox 24×24); короткие элементы дорисовываются
+// раньше длинных — получается естественная очерёдность. После 1 стиль
+// снимаем, чтобы очень длинные пути не остались с «дыркой».
+const DRAW_LEN = 160;
+export const DrawnIcon: React.FC<{
+  name?: string;
+  size: number;
+  color: string;
+  strokeWidth?: number;
+  progress: number;
+  id: string;
+  style?: React.CSSProperties;
+}> = ({ name, size, color, strokeWidth = 1.5, progress, id, style }) => {
+  const p = Math.max(0, Math.min(1, progress));
+  const cls = `draw-${id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  return (
+    <div className={cls} style={{ width: size, height: size, ...style }}>
+      {p < 1 ? <style>{`.${cls} svg * { stroke-dasharray: ${DRAW_LEN}; stroke-dashoffset: ${(DRAW_LEN * (1 - p)).toFixed(2)}; }`}</style> : null}
+      <Icon name={name} size={size} color={color} strokeWidth={strokeWidth} />
+    </div>
+  );
+};
+
 // Иконка в «стеклянном» круге со свечением и пульсирующим кольцом.
 export const IconBadge: React.FC<{
   name?: string;
