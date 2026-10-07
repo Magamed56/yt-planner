@@ -71,3 +71,26 @@ export const THEMES: Record<ThemeName, Theme> = {
     captionBg: "rgba(0,0,0,0.55)",
   },
 };
+
+// Неизвестное имя темы (опечатка в JSON) не должно ронять рендер.
+export function getTheme(name: ThemeName | string | undefined): Theme {
+  return THEMES[(name ?? "midnight") as ThemeName] ?? THEMES.midnight;
+}
+
+// "#rrggbb" / "#rgb" + прозрачность → rgba(). Цвета палитры храним в hex,
+// а полупрозрачные варианты (свечения, подложки) считаем на лету.
+export function withAlpha(color: string, alpha: number): string {
+  const a = Math.max(0, Math.min(1, alpha));
+  if (color.startsWith("#")) {
+    let hex = color.slice(1);
+    if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+    const n = parseInt(hex.slice(0, 6), 16);
+    if (!Number.isNaN(n)) return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+  }
+  const m = color.match(/rgba?\(([^)]+)\)/);
+  if (m) {
+    const [r, g, b] = m[1].split(",").map((p) => p.trim());
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  return color;
+}
