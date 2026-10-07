@@ -1,6 +1,7 @@
 import React from "react";
 import { Composition, Still, type CalculateMetadataFunction } from "remotion";
 import { FORMAT_SIZE, FPS } from "../types";
+import { BrandStills } from "./brand";
 import { demoProps } from "./fixtures/demoProps";
 import { Thumbnail } from "./Thumbnail";
 import { Video, type VideoCompositionProps } from "./Video";
@@ -32,5 +33,7 @@ export const Root: React.FC = () => (
       calculateMetadata={calculateMetadata}
     />
     <Still id="Thumbnail" component={Thumbnail} width={1280} height={720} defaultProps={defaults} />
+    {/* Бренд-кит канала (аватар, баннер, обложки) — `npm run brand` */}
+    <BrandStills />
   </>
 );
