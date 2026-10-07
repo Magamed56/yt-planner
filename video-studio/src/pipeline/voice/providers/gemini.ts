@@ -11,7 +11,7 @@
 
 import { decodePcm16, decodeWav, isWav } from "../../audio/wav";
 import { envInt, httpRequest, sleep, TtsError } from "../http";
-import type { RawAudio, RawProvider } from "../provider";
+import type { RawAudio, RawContext, RawProvider } from "../provider";
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 export const GEMINI_DEFAULT_MODEL = "gemini-3.8-flash-tts";
@@ -50,6 +50,8 @@ export function geminiProvider(): RawProvider {
   const model = process.env.GEMINI_TTS_MODEL?.trim() || GEMINI_DEFAULT_MODEL;
   const style = process.env.GEMINI_TTS_STYLE?.trim() || GEMINI_DEFAULT_STYLE;
   const timeoutMs = envInt("TTS_TIMEOUT_MS", 120_000);
+  const chain = geminiModelChain(model);
+  let start = 0; // с какой модели цепочки начинать (после перехода — с запасной)
   return {
     name: "gemini",
     output: "wav",
@@ -94,44 +96,40 @@ export function geminiProvider(): RawProvider {
 
   async function callModel(m: string, text: string, ctx: RawContext): Promise<RawAudio> {
     const headers = { "x-goog-api-key": key, "Content-Type": "application/json" };
-    {
-      {
-          if (!isLegacy(m)) {
-            const r = await httpRequest(`Gemini TTS (${m})`, `${BASE}/interactions`, {
-              method: "POST",
-              headers,
-              body: JSON.stringify({
-                model: m,
-                input: [{ type: "text", text, annotations: style ? [{ type: "speech_metadata", style }] : [] }],
-                response_format: { type: "audio", mime_type: "audio/wav" },
-                generation_config: { speech_config: [{ voice: ctx.voice, language: "ru" }] },
-              }),
-            }, { timeoutMs, signal: ctx.signal });
-            const j = JSON.parse(r.body.toString("utf8")) as InteractionsResponse;
-            const audio = (j.steps ?? [])
-              .filter((s) => s.type === "model_output")
-              .flatMap((s) => s.content ?? [])
-              .reverse()
-              .find((c) => c.type === "audio" && c.data);
-            if (!audio?.data) throw new TtsError(`Gemini TTS (${m}): в ответе нет аудио.`, { retryable: true });
-            return geminiAudioToPcm(audio.data, audio.mime_type ?? "audio/wav", audio.sample_rate);
-          }
-          // Старый путь: режиссура — фразой перед текстом в форме «Как читать: текст»,
-          // как в примерах Google (модель выполняет указание, а не озвучивает его).
-          const r = await httpRequest(`Gemini TTS (${m})`, `${BASE}/models/${m}:generateContent`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: style ? `${style.replace(/[.!?…\s]+$/u, "")}:\n${text}` : text }] }],
-              generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: ctx.voice } } } },
-            }),
-          }, { timeoutMs, signal: ctx.signal });
-          const j = JSON.parse(r.body.toString("utf8")) as GenerateContentResponse;
-          const part = j.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData;
-          if (!part?.data) throw new TtsError(`Gemini TTS (${m}): в ответе нет аудио.`, { retryable: true });
-          return geminiAudioToPcm(part.data, part.mimeType ?? "audio/L16;codec=pcm;rate=24000");
-      }
+    if (!isLegacy(m)) {
+      const r = await httpRequest(`Gemini TTS (${m})`, `${BASE}/interactions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model: m,
+          input: [{ type: "text", text, annotations: style ? [{ type: "speech_metadata", style }] : [] }],
+          response_format: { type: "audio", mime_type: "audio/wav" },
+          generation_config: { speech_config: [{ voice: ctx.voice, language: "ru" }] },
+        }),
+      }, { timeoutMs, signal: ctx.signal });
+      const j = JSON.parse(r.body.toString("utf8")) as InteractionsResponse;
+      const audio = (j.steps ?? [])
+        .filter((s) => s.type === "model_output")
+        .flatMap((s) => s.content ?? [])
+        .reverse()
+        .find((c) => c.type === "audio" && c.data);
+      if (!audio?.data) throw new TtsError(`Gemini TTS (${m}): в ответе нет аудио.`, { retryable: true });
+      return geminiAudioToPcm(audio.data, audio.mime_type ?? "audio/wav", audio.sample_rate);
     }
+    // Старый путь: режиссура — фразой перед текстом в форме «Как читать: текст»,
+    // как в примерах Google (модель выполняет указание, а не озвучивает его).
+    const r = await httpRequest(`Gemini TTS (${m})`, `${BASE}/models/${m}:generateContent`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: style ? `${style.replace(/[.!?…\s]+$/u, "")}:\n${text}` : text }] }],
+        generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: ctx.voice } } } },
+      }),
+    }, { timeoutMs, signal: ctx.signal });
+    const j = JSON.parse(r.body.toString("utf8")) as GenerateContentResponse;
+    const part = j.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData;
+    if (!part?.data) throw new TtsError(`Gemini TTS (${m}): в ответе нет аудио.`, { retryable: true });
+    return geminiAudioToPcm(part.data, part.mimeType ?? "audio/L16;codec=pcm;rate=24000");
   }
 }
 
