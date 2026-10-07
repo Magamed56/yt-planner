@@ -63,10 +63,12 @@ export interface VisualProvider {
 export class VisualError extends Error {
   readonly status: number | null;
   readonly disable: boolean;
-  constructor(message: string, opts: { status?: number | null; disable?: boolean; cause?: unknown } = {}) {
+  readonly network: boolean; // таймаут / нет связи — считаются подряд, см. index.ts
+  constructor(message: string, opts: { status?: number | null; disable?: boolean; network?: boolean; cause?: unknown } = {}) {
     super(message, opts.cause !== undefined ? { cause: opts.cause } : undefined);
     this.name = "VisualError";
     this.status = opts.status ?? null;
     this.disable = opts.disable ?? false;
+    this.network = opts.network ?? false;
   }
 }

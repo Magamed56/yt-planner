@@ -5,6 +5,9 @@
 import { createWriteStream } from "node:fs";
 import { mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { VisualError, type FetchLike } from "./types";
 
 export function linkedAbort(timeoutMs: number, outer?: AbortSignal): { signal: AbortSignal; cleanup: () => void; timedOut: () => boolean } {
@@ -53,11 +56,18 @@ function statusError(what: string, status: number, body: string): VisualError {
   return new VisualError(`${what}: HTTP ${status}.${tail}`, { status });
 }
 
+// network: true — таймаут или нет связи (не ответ сервера): такие сбои
+// подряд выключают источник (index.ts), чтобы не ждать таймаут на каждой сцене.
 function networkError(what: string, url: string, e: unknown, timedOut: boolean, timeoutMs: number): VisualError {
   if (e instanceof VisualError) return e;
-  if (timedOut) return new VisualError(`${what}: нет ответа за ${Math.round(timeoutMs / 1000)} с (${hostOf(url)}).`, { cause: e });
+  if (timedOut) return new VisualError(`${what}: нет ответа за ${Math.round(timeoutMs / 1000)} с (${hostOf(url)}).`, { cause: e, network: true });
+  // Ошибка файловой системы (нет места, нет прав) — это не сеть.
+  const sys = (e as { syscall?: unknown })?.syscall;
+  if (typeof sys === "string" && /^(open|write|close|rename|unlink|mkdir|fsync)$/.test(sys)) {
+    return new VisualError(`${what}: не удалось записать файл (${(e as Error).message}) — проверьте свободное место на диске и права на папку.`, { cause: e });
+  }
   const code = (e as { cause?: { code?: string } }).cause?.code ?? (e as Error)?.message ?? String(e);
-  return new VisualError(`${what}: не удалось подключиться к ${hostOf(url)} (${code}).`, { cause: e });
+  return new VisualError(`${what}: не удалось подключиться к ${hostOf(url)} (${code}).`, { cause: e, network: true });
 }
 
 export async function getJson<T>(f: FetchLike, what: string, url: string, init: RequestInit, timeoutMs: number): Promise<T> {
@@ -125,19 +135,19 @@ export async function downloadToFile(
     if (!res.body) throw new VisualError(`${what}: пустой ответ.`);
     const stream = createWriteStream(part);
     out = stream;
-    const reader = res.body.getReader();
     let bytes = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      bytes += value.byteLength;
-      if (bytes > maxBytes) {
-        await reader.cancel().catch(() => undefined);
-        throw new VisualError(`${what}: файл больше лимита ${(maxBytes / 1e6).toFixed(0)} МБ — скачивание прервано.`);
-      }
-      if (!stream.write(value)) await new Promise<void>((resolve) => stream.once("drain", resolve));
-    }
-    await new Promise<void>((resolve, reject) => stream.end((err?: Error | null) => (err ? reject(err) : resolve())));
+    const limit = new Transform({
+      transform(chunk: Buffer, _enc, cb) {
+        bytes += chunk.length;
+        if (bytes > maxBytes) cb(new VisualError(`${what}: файл больше лимита ${(maxBytes / 1e6).toFixed(0)} МБ — скачивание прервано.`));
+        else cb(null, chunk);
+      },
+    });
+    // pipeline, а не ручной цикл write/drain: ошибки записи на диск (нет места,
+    // EPERM/EBUSY на Windows) приходят событием 'error' потока — без
+    // слушателя это неперехватываемое исключение, которое роняло весь make.
+    // pipeline превращает их в обычный reject и сам закрывает все потоки.
+    await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream<Uint8Array>), limit, stream);
     out = null;
     if (bytes === 0) throw new VisualError(`${what}: скачан пустой файл.`);
     await rm(dest, { force: true });

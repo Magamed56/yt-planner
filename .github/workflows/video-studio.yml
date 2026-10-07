@@ -59,23 +59,30 @@ permissions:
   contents: write # коммит черновика и релизы
 
 # Один запуск за раз: не делим квоты бесплатных API и не толкаемся при пуше черновиков.
+# queue: max — ждать могут до 100 запусков; по умолчанию (single) ждёт только один,
+# а третий запуск молча отменял бы второй.
 concurrency:
   group: video-studio
   cancel-in-progress: false
+  queue: max
 
 jobs:
   video:
     name: ${{ (inputs.mode || 'draft') == 'render' && 'Рендер ролика' || 'Черновик сценария' }}
     # Явная версия: ubuntu-latest переезжает на 26.04 с 2026-10-19.
     runs-on: ubuntu-24.04
-    timeout-minutes: ${{ inputs.format == 'landscape' && 120 || 40 }}
+    # Сборке — всегда 2 ч: черновик landscape рендерится с format = auto (формат берётся из
+    # сценария), и 40 минут на ~8-минутный ролик не хватает. Лимит ничего не стоит, пока не достигнут.
+    timeout-minutes: ${{ (inputs.mode || 'draft') == 'render' && 120 || 40 }}
     defaults:
       run:
         working-directory: video-studio
         shell: bash
     env:
       MODE: ${{ inputs.mode || 'draft' }}
-      TOPIC: ${{ inputs.topic || vars.SCHEDULED_TOPIC }}
+      # SCHEDULED_TOPIC — только для расписания: ручной запуск без темы — это демо (render)
+      # или понятная ошибка (draft), а не чужая тема.
+      TOPIC: ${{ github.event_name == 'schedule' && vars.SCHEDULED_TOPIC || inputs.topic }}
       SCRIPT_PATH: ${{ inputs.script }}
       FORMAT: ${{ inputs.format || 'auto' }}
       THEME: ${{ inputs.theme || 'auto' }}
@@ -90,6 +97,20 @@ jobs:
       VISUALS: ${{ vars.VISUALS }}
       MUSIC: ${{ vars.MUSIC }}
       CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
+      # Остальные несекретные настройки из .env.example; пустое значение = умолчание.
+      TTS_FALLBACK: ${{ vars.TTS_FALLBACK }}
+      GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL }}
+      GEMINI_TTS_VOICE: ${{ vars.GEMINI_TTS_VOICE }}
+      GEMINI_TTS_STYLE: ${{ vars.GEMINI_TTS_STYLE }}
+      ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID }}
+      ELEVENLABS_MODEL: ${{ vars.ELEVENLABS_MODEL }}
+      LLM_FALLBACKS: ${{ vars.LLM_FALLBACKS }}
+      LLM_EFFORT: ${{ vars.LLM_EFFORT }}
+      VISUALS_PREFER: ${{ vars.VISUALS_PREFER }}
+      MUSIC_MOOD: ${{ vars.MUSIC_MOOD }}
+      LOUDNESS_TARGET: ${{ vars.LOUDNESS_TARGET }}
+      YT_CATEGORY_ID: ${{ vars.YT_CATEGORY_ID }}
+      YT_SYNTHETIC_MEDIA: ${{ vars.YT_SYNTHETIC_MEDIA }}
       MODELS_DIR: ${{ github.workspace }}/video-studio/models
       # На 2 vCPU (приватный репозиторий) 2 потока быстрее авто-значения (1) на ~12 %.
       RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
@@ -97,6 +118,14 @@ jobs:
     steps:
       - name: Код репозитория
         uses: actions/checkout@v7
+        with:
+          # Черновику — свежий конец ветки, а не коммит момента запуска: иначе
+          # повторный/ждавший в очереди запуск не видит уже запушенные черновики,
+          # даёт файлу то же имя и ловит конфликт при пуше.
+          ref: ${{ env.MODE == 'draft' && github.ref_name || '' }}
+          # Токен с правом записи не оставляем в .git/config: его увидел бы любой
+          # код зависимостей npm. Пушу черновика токен дают явно (см. ниже).
+          persist-credentials: false
 
       - name: Node.js 22
         uses: actions/setup-node@v7
@@ -146,7 +175,7 @@ jobs:
         id: draft
         if: env.MODE == 'draft'
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -163,22 +192,30 @@ jobs:
         env:
           FILE: ${{ steps.draft.outputs.script_path }}
           TITLE: ${{ steps.draft.outputs.title }}
+          DRAFT_FORMAT: ${{ steps.draft.outputs.format }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Токен — только в этом шаге (checkout его не сохраняет).
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          gitauth() { git -c "http.$GITHUB_SERVER_URL/.extraheader=$auth" "$@"; }
           git add -- "$FILE"
           git commit -m "video-studio: черновик сценария «$TITLE»"
           pushed=""
           for i in 1 2 3; do
-            if git pull --rebase --quiet origin "$GITHUB_REF_NAME" && git push --quiet origin "HEAD:$GITHUB_REF_NAME"; then
+            if gitauth pull --rebase --quiet origin "$GITHUB_REF_NAME" && gitauth push --quiet origin "HEAD:$GITHUB_REF_NAME"; then
               pushed=1
               break
             fi
+            # Конфликт оставляет rebase незавершённым — без abort все следующие
+            # попытки падали бы сразу («unmerged files»).
+            git rebase --abort 2>/dev/null || true
             echo "Пуш не удался (попытка $i), повторяю…"
             sleep $((i * 5))
           done
           if [ -z "$pushed" ]; then
-            echo "::error::Не удалось запушить черновик в $GITHUB_REF_NAME (ветка защищена?). Файл сохранён в артефакте запуска."
+            echo "::error::Не удалось запушить черновик в $GITHUB_REF_NAME (конфликт с изменениями в ветке или ветка защищена). Файл сохранён в артефакте запуска."
             exit 1
           fi
           url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/video-studio/$FILE"
@@ -187,7 +224,9 @@ jobs:
             echo ""
             echo "**Файл:** [video-studio/$FILE]($url) · [✏️ редактировать]($edit)"
             echo ""
-            echo "Следующий шаг: Actions → «video-studio: ролик» → Run workflow → mode = **render**, script = \`video-studio/$FILE\`."
+            hint=""
+            [ "$DRAFT_FORMAT" = "landscape" ] && hint=", format = **landscape**"
+            echo "Следующий шаг: Actions → «video-studio: ролик» → Run workflow → mode = **render**, script = \`video-studio/$FILE\`$hint."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Черновик в артефакте (на случай, если пуш не прошёл)
@@ -203,7 +242,7 @@ jobs:
         id: render
         if: env.MODE == 'render'
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -226,14 +265,19 @@ jobs:
           [ "$THEME" != "auto" ] && args+=(--theme "$THEME")
           npm run make -- "${args[@]}"
 
-      - name: Артефакт (7 дней)
+      # continue-on-error: когда квота хранилища артефактов исчерпана, загрузка падает —
+      # но релиз и YouTube всё равно должны получить готовое видео, иначе оно пропадёт
+      # вместе с раннером.
+      - name: Артефакт
         id: artifact
         if: env.MODE == 'render' && steps.render.outcome == 'success'
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: video-${{ steps.render.outputs.slug }}-${{ github.run_number }}
-          # Бесплатный план: 500 МБ на артефакты — храним недолго и без props/public.
-          retention-days: 7
+          name: video-${{ steps.render.outputs.slug }}-${{ github.run_number }}-${{ github.run_attempt }}
+          # Бесплатный план: 500 МБ хранилища, и считаются ГБ·часы за месяц — храним
+          # недолго и без props/public; если ролик уходит в релиз, артефакт — на сутки.
+          retention-days: ${{ env.UPLOAD == 'release' && 1 || 7 }}
           compression-level: 0
           if-no-files-found: error
           path: |
@@ -248,8 +292,15 @@ jobs:
         if: steps.artifact.outcome == 'success'
         env:
           ARTIFACT_URL: ${{ steps.artifact.outputs.artifact-url }}
+          DAYS: ${{ env.UPLOAD == 'release' && 1 || 7 }}
         run: |
-          echo "📦 **Скачать:** [видео, обложка, субтитры, описание]($ARTIFACT_URL) — хранится 7 дней." >> "$GITHUB_STEP_SUMMARY"
+          echo "📦 **Скачать:** [видео, обложка, субтитры, описание]($ARTIFACT_URL) — хранится дней: $DAYS." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Артефакт не сохранился
+        if: steps.artifact.outcome == 'failure'
+        run: |
+          echo "::warning::Артефакт не сохранился — чаще всего исчерпана квота хранилища артефактов (бесплатный план, сбрасывается только с новым расчётным периодом). Чтобы ролик не пропал, запускайте с upload = release."
+          echo "⚠️ **Артефакт не сохранился** (вероятно, кончилась квота хранилища артефактов). Выберите upload = release — релизы в эту квоту не входят." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Релиз GitHub
         if: env.MODE == 'render' && env.UPLOAD == 'release' && steps.render.outcome == 'success'
@@ -259,7 +310,8 @@ jobs:
           SLUG: ${{ steps.render.outputs.slug }}
           TITLE: ${{ steps.render.outputs.title }}
         run: |
-          tag="video-${SLUG:0:60}-${GITHUB_RUN_NUMBER}"
+          # run_attempt: при «Re-run» номер запуска тот же, и тег уже занят.
+          tag="video-${SLUG:0:60}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
           files=("$RUN_DIR/video.mp4" "$RUN_DIR/captions.srt" "$RUN_DIR/description.txt")
           [ -f "$RUN_DIR/thumbnail.png" ] && files+=("$RUN_DIR/thumbnail.png")
           gh release create "$tag" "${files[@]}" --prerelease --target "$GITHUB_SHA" --title "$TITLE" --notes-file "$RUN_DIR/description.txt"
@@ -274,6 +326,22 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
         run: npm run upload -- "$RUN_DIR" --privacy "$PRIVACY"
+
+      # Сборка упала или вышло время — сохраняем хотя бы сценарий (написанный LLM
+      # стоил квоты или денег), props и стоимость: run_dir известен с первого шага make.
+      - name: Сценарий и стоимость (сборка не удалась)
+        if: (failure() || cancelled()) && env.MODE == 'render' && steps.render.outputs.run_dir != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: failed-${{ steps.render.outputs.slug }}-${{ github.run_number }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            video-studio/${{ steps.render.outputs.run_dir }}/script.json
+            video-studio/${{ steps.render.outputs.run_dir }}/props.json
+            video-studio/${{ steps.render.outputs.run_dir }}/cost.json
+            video-studio/${{ steps.render.outputs.run_dir }}/description.txt
 
       - name: Сводка при ошибке
         if: failure()

@@ -186,14 +186,17 @@ export interface ChunkSpec {
   sectionOffset: number; // номер первого раздела части (0-based)
   seconds: number;
   previousTail: string[]; // последние narration предыдущей части
+  scenesBudget?: number; // доля общего лимита сцен ролика (LIMITS.scenesMax) на эту часть
 }
 
 export function buildChunkPrompt(req: ScriptRequest, outline: Outline, spec: ChunkSpec): string {
   const first = spec.index === 0;
   const last = spec.index === spec.count - 1;
   const words = spec.seconds * WORDS_PER_SECOND;
-  const scenesMin = Math.max(3, Math.round(spec.seconds / 14));
-  const scenesMax = Math.max(scenesMin + 2, Math.round(spec.seconds / 8));
+  const base = Math.max(3, Math.round(spec.seconds / 14));
+  const scenesMax = Math.min(spec.scenesBudget ?? Infinity, Math.max(base + 2, Math.round(spec.seconds / 8)));
+  // Упёрлись в долю общего лимита сцен — сцены просто длиннее.
+  const scenesMin = base < scenesMax ? base : Math.max(1, scenesMax - 2);
   const planLines = outline.sections
     .map((s, i) => `${i + 1}. ${s.heading} — ${s.goal} (≈${Math.round(s.seconds)} с)`)
     .join("\n");

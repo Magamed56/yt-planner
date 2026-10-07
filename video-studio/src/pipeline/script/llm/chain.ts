@@ -93,7 +93,7 @@ function makeTarget(p: LlmProviderName, model: string, deps: ChainDeps, primary:
         model,
         // low — быстрее и бережёт бюджет вывода (мысли входят в max_tokens).
         // Gemma reasoning_effort не понимает — не шлём, чтобы не ловить 400.
-        extraBody: /^gemma/.test(model) ? {} : { reasoning_effort: "low" },
+        reasoningBody: /^gemma/.test(model) ? {} : { reasoning_effort: "low" },
         defaultMaxTokens: 8192,
         maxTokensCap: 32768,
         timeoutMs: timeout(90_000),
@@ -106,7 +106,7 @@ function makeTarget(p: LlmProviderName, model: string, deps: ChainDeps, primary:
         baseUrl: "https://api.groq.com/openai/v1",
         apiKey: nonEmpty(env.GROQ_API_KEY),
         model,
-        extraBody: /qwen/.test(model) ? { reasoning_effort: "none" } : {},
+        reasoningBody: /qwen/.test(model) ? { reasoning_effort: "none" } : {},
         maxTokensField: "max_completion_tokens",
         // бесплатный лимит — 8K токенов в минуту на запрос+ответ, а системный
         // промпт с примером уже ~4K: просим немного, при обрыве — до 6000

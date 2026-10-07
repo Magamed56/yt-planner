@@ -213,7 +213,7 @@ await test("Gemini: 429 → следующая модель, 400 → json_object
   assert.ok(!JSON.stringify(schema).includes('"pattern"') && !("$schema" in schema), "схема упрощена");
   assert.equal(calls[1].body.model, "gemini-3.5-flash-lite");
   assert.equal((calls[2].body.response_format as { type: string }).type, "json_object");
-  assert.equal(calls[2].body.reasoning_effort, undefined);
+  assert.equal(calls[2].body.reasoning_effort, "low", "бюджет размышлений не снимается вместе с json_schema");
   assert.ok(msgs(calls[2])[0].content.includes("JSON-схема ответа"), "схема в системном промпте при json_object");
   const repair = msgs(calls[3]);
   assert.equal(repair.length, 4); // system, user, assistant, user(ремонт)

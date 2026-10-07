@@ -36,10 +36,28 @@ const NONE: VisualResult = { visual: { type: "none" }, credit: null };
 // выключены (кончилась квота, неверный ключ).
 const noticed = new Set<string>();
 const disabled = new Map<string, string>();
+// Сбои связи подряд (таймаут, нет соединения) по источнику: API и скачивание
+// отдельно. Недоступный или «чёрная дыра»-хост иначе стоил бы полный таймаут
+// на КАЖДОЙ сцене (до ~4 мин на сцену) — после NETWORK_STRIKES подряд источник
+// выключается до конца запуска. Любой успех обнуляет счётчик.
+const strikes = new Map<string, number>();
+const NETWORK_STRIKES = 3;
 
 export function resetVisualsState(): void {
   noticed.clear();
   disabled.clear();
+  strikes.clear();
+}
+
+function networkStrike(provider: VisualProvider, what: "api" | "download", e: unknown, log: VisualDeps["log"]): void {
+  if (!(e instanceof VisualError) || !e.network) return;
+  const key = `${provider.name}:${what}`;
+  const n = (strikes.get(key) ?? 0) + 1;
+  strikes.set(key, n);
+  if (n >= NETWORK_STRIKES && !disabled.has(provider.name)) {
+    disabled.set(provider.name, e.message);
+    log.warn(`[визуал] ${provider.title}: ${n} раза подряд нет связи${what === "download" ? " при скачивании" : ""} — источник выключен до конца запуска.`);
+  }
 }
 
 function once(key: string, fn: () => void): void {
@@ -156,23 +174,30 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext, overrid
       let candidates: Candidate[];
       try {
         candidates = await step.stage.run({ scene, ctx, queries, deps, key: step.key });
+        strikes.delete(`${provider.name}:api`);
       } catch (e) {
         const msg = (e as Error)?.message ?? String(e);
         if (e instanceof VisualError && e.disable) {
           disabled.set(provider.name, msg);
           deps.log.warn(`[визуал] ${msg} — ${provider.title} выключен до конца запуска.`);
-        } else deps.log.warn(`${tag}: ${msg}`);
+        } else {
+          deps.log.warn(`${tag}: ${msg}`);
+          networkStrike(provider, "api", e, deps.log);
+        }
         continue;
       }
       // Пробуем не больше двух кандидатов: битая ссылка CDN — не повод сдаваться.
       for (const c of candidates.filter((x) => !ctx.usedIds.has(x.id)).slice(0, 2)) {
+        if (disabled.has(provider.name)) break;
         try {
           const visual = await save(c, scene, ctx, deps, provider.title);
+          strikes.delete(`${provider.name}:download`);
           ctx.usedIds.add(c.id);
           deps.log.info(`${tag}: ${c.type === "video" ? "видео" : "картинка"} — ${creditText(c.credit)}${c.type === "video" ? `, ${c.durationSec} с` : ""}`);
           return { visual, credit: c.credit };
         } catch (e) {
           deps.log.warn(`${tag}: ${(e as Error)?.message ?? String(e)}`);
+          networkStrike(provider, "download", e, deps.log);
         }
       }
     }

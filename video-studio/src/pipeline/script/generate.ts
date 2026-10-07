@@ -18,7 +18,7 @@ import {
   shortsTargets,
   type ChunkSpec,
 } from "./prompt";
-import { OutlineSchema, SceneChunkSchema, VideoScriptSchema, toCompatJsonSchema, type Outline } from "./schema";
+import { LIMITS, OutlineSchema, SceneChunkSchema, VideoScriptSchema, toCompatJsonSchema, type Outline } from "./schema";
 import {
   coerceMeta,
   coerceScene,
@@ -122,6 +122,12 @@ function chunkValidator(spec: ChunkSpec): (raw: unknown) => Verdict<ScriptScene[
     } catch (e) {
       if (!(e instanceof ScriptValidationError)) throw e;
       problems.push(...e.problems);
+    }
+    // Общий лимит сцен ролика (90) делится между частями заранее: иначе у
+    // ролика от ~16 мин части в сумме перебирали лимит, и всё падало только
+    // на финальной склейке — после того как все запросы к LLM уже потрачены.
+    if (spec.scenesBudget !== undefined && list.length > spec.scenesBudget) {
+      problems.push(`в части ${list.length} сцен — нужно не больше ${spec.scenesBudget} (общий лимит ролика — ${LIMITS.scenesMax} сцен): объедини соседние короткие сцены`);
     }
     const words = narrationWords(list);
     const target = spec.seconds * WORDS_PER_SECOND;
@@ -232,15 +238,22 @@ async function generateWith(req: ScriptRequest, chain: LlmTarget[], usage: Usage
     const groups = groupSections(outline.sections);
     const scenes: ScriptScene[] = [];
     let previousTail: string[] = [];
+    let secondsLeft = groups.reduce((a, g) => a + g.items.reduce((b, s) => b + s.seconds, 0), 0);
     for (let k = 0; k < groups.length; k++) {
       const g = groups[k];
+      const chunkSeconds = g.items.reduce((a, s) => a + s.seconds, 0);
+      // Доля оставшегося лимита сцен пропорционально длительности части.
+      const budgetLeft = LIMITS.scenesMax - scenes.length;
+      const scenesBudget = Math.max(1, Math.floor((budgetLeft * chunkSeconds) / Math.max(chunkSeconds, secondsLeft)));
+      secondsLeft -= chunkSeconds;
       const spec: ChunkSpec = {
         index: k,
         count: groups.length,
         sections: g.items,
         sectionOffset: g.from,
-        seconds: g.items.reduce((a, s) => a + s.seconds, 0),
+        seconds: chunkSeconds,
         previousTail,
+        scenesBudget,
       };
       const res = await generateStructured({
         ...base,

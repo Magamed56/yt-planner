@@ -3,11 +3,15 @@
 // так меньше зависимостей и проще подменить fetch в тестах.
 //
 // Уровни совместимости (compat) — на случай 400 от капризной модели:
-//   0 — response_format json_schema + доп. параметры (reasoning_effort и т.п.)
-//   1 — json_object, без доп. параметров, схема — текстом в системном промпте
+//   0 — response_format json_schema + доп. параметры (extraBody)
+//   1 — json_object, без extraBody, схема — текстом в системном промпте
 //   2 — без response_format вовсе
 //   3 — то же, но системный промпт вклеен в первое сообщение (Gemma на
-//       Gemini API в прошлом отвергала system)
+//       Gemini API в прошлом отвергала system), и без reasoningBody
+// reasoningBody (reasoning_effort) держим на уровнях 0–2: это бюджет
+// размышлений, а не формат ответа. Если его снять вместе с json_schema,
+// модель начинает думать «по умолчанию» и выедает max_tokens (у Groq —
+// ещё и лимит 8K токенов в минуту) — ответ обрезается.
 
 import { LlmError, linkedAbort, type CompletionRequest, type CompletionResult, type FetchLike, type LlmTarget } from "./types";
 
@@ -19,6 +23,7 @@ export interface CompatConfig {
   model: string;
   headers?: Record<string, string>;
   extraBody?: Record<string, unknown>; // только на compat 0
+  reasoningBody?: Record<string, unknown>; // compat 0–2 (см. выше)
   maxTokensField?: "max_tokens" | "max_completion_tokens";
   defaultMaxTokens: number;
   maxTokensCap: number;
@@ -116,6 +121,7 @@ export function buildBody(cfg: CompatConfig, req: CompletionRequest): Record<str
   } else if (req.compat === 1) {
     body.response_format = { type: "json_object" };
   }
+  if (req.compat <= 2) Object.assign(body, cfg.reasoningBody ?? {});
   return body;
 }
 

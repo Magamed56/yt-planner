@@ -62,13 +62,21 @@ const TYPE_RU: Record<string, string> = {
   boolean: "true/false",
 };
 
-// Размер items и пустой narration точнее описывают правила структуры ниже —
-// одинаковые сообщения от zod не дублируем.
-const coveredByRules = (issue: z.core.$ZodIssue): boolean =>
-  (issue.path[issue.path.length - 1] === "items" && (issue.code === "too_small" || issue.code === "too_big"));
+// Размер items у сцены kind "list" точнее описывает правило структуры ниже —
+// одинаковое сообщение от zod не дублируем. У других kind правило items не
+// проверяет, поэтому там сообщение zod оставляем: иначе ошибка терялась бы
+// совсем (сцена молча выпадала из части длинного ролика).
+const coveredByRules = (issue: z.core.$ZodIssue, root: unknown): boolean =>
+  issue.path[issue.path.length - 1] === "items" &&
+  (issue.code === "too_small" || issue.code === "too_big") &&
+  getAt(root, [...issue.path.slice(0, -1), "kind"]) === "list";
+
+// Сырые сообщения zod с путём — запасной вариант, если ни одно не
+// перевелось: «неизвестная ошибка» без места модели ничего не говорит.
+const rawIssues = (error: z.ZodError): string[] => error.issues.map((x) => `${x.path.map(String).join(".") || "корень"}: ${x.message}`);
 
 export function formatZodIssues(error: z.ZodError, root: unknown, scenesKey = "scenes"): string[] {
-  return error.issues.filter((i) => !coveredByRules(i)).map((issue) => {
+  return error.issues.filter((i) => !coveredByRules(i, root)).map((issue) => {
     const where = describePath(root, issue.path, scenesKey);
     const value = getAt(root, issue.path);
     switch (issue.code) {
@@ -180,7 +188,7 @@ export function validateScript(json: unknown): VideoScript {
   const problems = parsed.success ? [] : formatZodIssues(parsed.error, input);
   problems.push(...checkScriptRules(input));
   const unique = [...new Set(problems)];
-  if (unique.length > 0 || !parsed.success) throw new ScriptValidationError(unique.length ? unique : ["неизвестная ошибка схемы"]);
+  if (unique.length > 0 || !parsed.success) throw new ScriptValidationError(unique.length ? unique : parsed.success ? ["неизвестная ошибка схемы"] : rawIssues(parsed.error));
   return parsed.data;
 }
 
@@ -192,7 +200,15 @@ export function validateScenes(scenes: unknown, opts: SceneRuleOptions, what: st
   scenes.forEach((s, i) => {
     const r = ScriptSceneSchema.safeParse(s);
     if (r.success) out.push(r.data);
-    else problems.push(...formatZodIssues(r.error, { scenes }, "scenes").map((m) => m.replace(/^сцена №\d+/, `сцена №${i + 1}`)));
+    else {
+      // Сцена не прошла схему — это ВСЕГДА проблема (иначе часть принималась
+      // бы без неё). Если перевод сообщений пуст — даём сырые с путём.
+      const msgs = formatZodIssues(r.error, s, "scenes");
+      const label = `сцена №${i + 1}${isObj(s) && str(s.id) ? ` (${str(s.id)})` : ""}`;
+      const place = (m: string) => (m.startsWith("поле ") ? `${label}, ${m}` : m.startsWith("корень JSON") ? m.replace("корень JSON", label) : `${label}: ${m}`);
+      if (msgs.length) problems.push(...msgs.map(place));
+      else problems.push(`${label}: ${rawIssues(r.error).join("; ")}`);
+    }
   });
   problems.push(...checkSceneRules(scenes, opts));
   if (scenes.length === 0) problems.push("scenes пустой");
@@ -330,13 +346,21 @@ function toKebab(icon: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function parseLooseNumber(v: unknown): { value: number; percent: boolean } | null {
+// Только однозначные записи: «66%», «1 000 000», «2,5», «≈ 40», «$12».
+// «1,000,000», «1.000.000», «10–20%», «$1.5 млн» — null: строка остаётся,
+// zod скажет «stat.value: должно быть числом», и модель исправит сама.
+// Угадывать нельзя — «10–20%» раньше превращалось в уверенные «1020%» на экране.
+function parseLooseNumber(v: unknown): { value: number; percent: boolean; prefix?: string } | null {
   if (typeof v === "number" && Number.isFinite(v)) return { value: v, percent: false };
   if (typeof v !== "string") return null;
-  const percent = v.includes("%");
-  const cleaned = v.replace(/[\s ]/g, "").replace(/[^\d.,-]/g, "").replace(",", ".");
-  const n = Number.parseFloat(cleaned);
-  return Number.isFinite(n) ? { value: n, percent } : null;
+  let t = v.replace(/[\s\u00A0\u202F]/g, "").replace(/\u2212/g, "-");
+  const percent = t.endsWith("%");
+  if (percent) t = t.slice(0, -1);
+  const pre = /^(≈|~|\+|\$|€|£|₽)/.exec(t)?.[1];
+  if (pre) t = t.slice(pre.length);
+  if (!/^-?\d+(?:[.,]\d+)?$/.test(t)) return null;
+  const n = Number(t.replace(",", "."));
+  return Number.isFinite(n) ? { value: n, percent, ...(pre ? { prefix: pre === "~" ? "≈" : pre } : {}) } : null;
 }
 
 function fixAccents(s: string): string {
@@ -370,6 +394,13 @@ export function coerceScene(raw: unknown, index: number): unknown {
   if (typeof s.narration === "string") s.narration = s.narration.replace(/\*+/g, "");
   if (typeof s.icon === "string") s.icon = toKebab(s.icon) || undefined;
   if (typeof s.items === "string") s.items = s.items.split(/\n|;|•/);
+  // items/stat у «чужого» kind (частая вольность бесплатных моделей в режиме
+  // json_object) — просто лишние поля: композиция их не покажет, а схема
+  // отвергла бы всю сцену из-за размера массива.
+  if ((SCENE_KINDS as string[]).includes(String(s.kind))) {
+    if (s.kind !== "list") delete s.items;
+    if (s.kind !== "stat") delete s.stat;
+  }
   if (Array.isArray(s.items)) {
     s.items = s.items
       .map((it) => (typeof it === "string" ? it.replace(/^\s*(\d+[.)]|[-–—•])\s*/, "").trim() : it))
@@ -381,6 +412,7 @@ export function coerceScene(raw: unknown, index: number): unknown {
     if (num) {
       st.value = num.value;
       if (num.percent && !st.suffix) st.suffix = "%";
+      if (num.prefix && !st.prefix) st.prefix = num.prefix;
     }
     for (const f of ["prefix", "suffix"]) if (typeof st[f] === "string" && !st[f]) delete st[f];
     s.stat = st;
