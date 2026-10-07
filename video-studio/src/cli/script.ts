@@ -7,9 +7,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import type { Format } from "../types";
-import { generateScript, lintScript } from "../pipeline/script/index";
+import { generateScript, lintScript, ScriptGenerationError } from "../pipeline/script/index";
 import { slugify } from "../pipeline/slug";
-import { ROOT, UserError, argsError, escapeMd, fail, fmtDuration, ghOutput, ghSummary, loadEnv, rel, writeJson } from "./common";
+import { ROOT, UserError, argsError, escapeMd, fail, fmtDuration, ghOutput, ghSummary, loadEnv, rel, reportFailedLlmUsage, writeJson } from "./common";
 
 const HELP = `Черновик сценария для проверки перед рендером.
 
@@ -58,13 +58,20 @@ async function main() {
   const outDir = path.resolve(typeof values.out === "string" ? values.out : path.join(ROOT, "scripts"));
 
   console.log(`video-studio · черновик сценария\n  тема: «${topic}», формат: ${format}`);
-  const { script, usage } = await generateScript({
-    topic,
-    format,
-    language: "ru",
-    notes: typeof values.notes === "string" ? values.notes : undefined,
-    targetSeconds: seconds,
-  });
+  let generated: Awaited<ReturnType<typeof generateScript>>;
+  try {
+    generated = await generateScript({
+      topic,
+      format,
+      language: "ru",
+      notes: typeof values.notes === "string" ? values.notes : undefined,
+      targetSeconds: seconds,
+    });
+  } catch (e) {
+    if (e instanceof ScriptGenerationError) reportFailedLlmUsage(e.usage, outDir);
+    throw e;
+  }
+  const { script, usage } = generated;
   const warnings = lintScript(script);
   const file = uniquePath(outDir, slugify(script.title));
   writeJson(file, script);
@@ -79,7 +86,10 @@ async function main() {
   console.log(`\nПроверьте факты и формулировки, затем:\n  npm run make -- --script ${rel(file)}`);
 
   const relPath = rel(file);
-  ghOutput({ script_path: relPath, repo_path: `video-studio/${relPath}`, title: script.title, cost_usd: cost.toFixed(4) });
+  // Формат — в подсказку следующего шага: длинному ролику в Actions нужен
+  // лимит времени 2 ч (workflow даёт его рендеру) и format = landscape.
+  const landscape = script.format === "landscape";
+  ghOutput({ script_path: relPath, repo_path: `video-studio/${relPath}`, title: script.title, cost_usd: cost.toFixed(4), format: script.format });
   ghSummary(
     [
       `## 📝 Черновик: ${escapeMd(script.title)}`,
@@ -91,7 +101,7 @@ async function main() {
       ...script.scenes.map((s) => `| ${s.id} | ${s.kind} | ${escapeMd(s.narration)} | ${escapeMd(s.onScreen)} |`),
       "",
       warnings.length ? `**Замечания:**\n${warnings.map((w) => `- ${escapeMd(w)}`).join("\n")}\n` : "",
-      "Проверьте текст и факты (можно прямо на github.com → файл → ✏️), затем запустите workflow ещё раз: **mode = render**, **script** = путь выше.",
+      `Проверьте текст и факты (можно прямо на github.com → файл → ✏️), затем запустите workflow ещё раз: **mode = render**, **script** = путь выше${landscape ? ", **format = landscape**" : ""}.`,
       "",
     ].join("\n"),
   );

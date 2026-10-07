@@ -5,6 +5,7 @@
 //   npm run make -- --demo
 //   npm run make -- --topic "Почему мы забываем" --format shorts
 //   npm run make -- --script scripts/pochemu-my-zabyvaem.json --upload youtube --privacy private
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -14,14 +15,31 @@ import { makeWhoosh, prepareMusic } from "../pipeline/audio/index";
 import { buildYoutubeMeta, descriptionTxt } from "../pipeline/meta";
 import { buildVideoProps, estimateDurationMs } from "../pipeline/props";
 import { checkBrowserEnv, preparePublicDir, renderVideo, type RenderResult } from "../pipeline/render";
-import { generateScript, lintScript } from "../pipeline/script/index";
+import { generateScript, lintScript, ScriptGenerationError } from "../pipeline/script/index";
 import { slugify } from "../pipeline/slug";
 import { captionsToSrt } from "../pipeline/srt";
 import { findVisual } from "../pipeline/visuals/index";
+import { readVisualsManifest, reusableEntry, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { getVoiceProvider, resolvePiperVoice } from "../pipeline/voice/index";
 import { EDGE_DEFAULT_VOICE } from "../pipeline/voice/providers/edge";
 import { PRIVACY_VALUES, missingYoutubeEnv, uploadToYoutube, youtubeEnvHelp, type Privacy, type UploadResult } from "../pipeline/youtube";
-import { ROOT, Steps, UserError, argsError, escapeMd, fail, fmtDuration, ghOutput, ghSummary, loadEnv, rel, writeJson } from "./common";
+import {
+  ROOT,
+  Steps,
+  UserError,
+  argsError,
+  escapeMd,
+  fail,
+  fmtDuration,
+  ghOutput,
+  ghSummary,
+  loadEnv,
+  rel,
+  reportFailedLlmUsage,
+  resolveInputPath,
+  writeJson,
+  writeYoutubeResult,
+} from "./common";
 import { loadScriptFile } from "./scriptFile";
 
 const HELP = `Сборка ролика одной командой.
@@ -209,7 +227,13 @@ async function main() {
     if (args.topic) {
       const format = args.format ?? "shorts";
       console.log(`  тема: «${args.topic}», формат: ${format}`);
-      const r = await generateScript({ topic: args.topic, format, language: "ru", notes: args.notes, targetSeconds: args.seconds });
+      let r: Awaited<ReturnType<typeof generateScript>>;
+      try {
+        r = await generateScript({ topic: args.topic, format, language: "ru", notes: args.notes, targetSeconds: args.seconds });
+      } catch (e) {
+        if (e instanceof ScriptGenerationError) reportFailedLlmUsage(e.usage, args.out);
+        throw e;
+      }
       usage.push(...r.usage);
       s = r.script;
       const cost = r.usage.reduce((a, u) => a + u.costUsd, 0);
@@ -227,9 +251,15 @@ async function main() {
   if (args.theme) script = { ...script, theme: args.theme };
   const format = script.format;
   const slug = slugify(script.title);
-  const runDir = path.join(args.out, slug);
+  const source = runSource(args, script);
+  const { runDir, busy } = chooseRunDir(args.out, slug, source);
+  if (busy) console.log(`  папка ${rel(path.join(args.out, slug))} занята другим сценарием (${busy}) — пишу в новую`);
   const publicDir = preparePublicDir(runDir);
+  writeJson(path.join(runDir, SOURCE_FILE), { source, title: script.title, updatedAt: new Date().toISOString() });
   writeJson(path.join(runDir, "script.json"), script);
+  // Сразу, а не в конце: если озвучка или рендер упадут, workflow всё равно
+  // сохранит сценарий (особенно ценен написанный LLM — квота/деньги потрачены).
+  ghOutput({ slug, run_dir: rel(runDir), title: script.title });
   console.log(`  «${script.title}» — ${script.scenes.length} сцен, ${format}, тема ${script.theme ?? "midnight"}`);
   console.log(`  папка ролика: ${rel(runDir)}`);
 
@@ -254,18 +284,39 @@ async function main() {
 
   // 3. Визуал
   const visuals: VisualResult[] = await steps.run("Визуал", async () => {
-    fs.rmSync(path.join(publicDir, "visuals"), { recursive: true, force: true });
-    const usedIds = new Set<string>();
+    // Визуал прошлого запуска этой папки берём повторно, если входы сцены не
+    // менялись (manifest.ts): квоты стоков и генерации не тратятся заново.
+    const prev = readVisualsManifest(publicDir);
+    const next: Record<string, ManifestEntry> = {};
+    const minDur = (i: number) => voices[i].durationMs / 1000 + 0.8;
+    const keys = script.scenes.map((scene) => visualKey(scene, format, process.env));
+    const reused = script.scenes.map((scene, i) => reusableEntry(prev[scene.id], keys[i], publicDir, minDur(i)));
+    // Клипы, которые остаются, — сразу в usedIds: заново подобранные сцены их не повторят.
+    const usedIds = new Set<string>(reused.flatMap((e) => (e?.candidateId ? [e.candidateId] : [])));
     const out: VisualResult[] = [];
     // По очереди, а не параллельно: у стоков лимиты запросов в час.
     for (const [i, scene] of script.scenes.entries()) {
-      const r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: voices[i].durationMs / 1000 + 0.8, usedIds });
+      const old = reused[i];
+      let r: VisualResult;
+      let candidateId: string | null = null;
+      if (old) {
+        r = old.result;
+        candidateId = old.candidateId;
+      } else {
+        const before = new Set(usedIds);
+        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds });
+        candidateId = [...usedIds].find((id) => !before.has(id)) ?? null;
+      }
+      next[scene.id] = { key: keys[i], result: r, candidateId, minDurationSec: minDur(i) };
       out.push(r);
       const v = r.visual;
-      if (v.type !== "none") console.log(`  ${scene.id}: ${v.type === "video" ? `видео ${v.durationSec.toFixed(1)} с` : "картинка"} — ${r.credit?.provider ?? "?"}${r.credit?.author ? `, ${r.credit.author}` : ""}`);
+      if (v.type !== "none") console.log(`  ${scene.id}: ${v.type === "video" ? `видео ${v.durationSec.toFixed(1)} с` : "картинка"} — ${r.credit?.provider ?? "?"}${r.credit?.author ? `, ${r.credit.author}` : ""}${old ? " (из прошлого запуска)" : ""}`);
     }
+    writeVisualsManifest(publicDir, next);
     const found = out.filter((r) => r.visual.type !== "none").length;
+    const again = reused.filter(Boolean).length;
     console.log(`  визуал найден для ${found} из ${out.length} сцен${found < out.length ? " (остальные — чистая моушен-графика)" : ""}`);
+    if (again) console.log(`  ${again} — из прошлого запуска; подобрать заново: удалите ${rel(path.join(publicDir, "visuals"))}`);
     return out;
   });
 
@@ -324,7 +375,7 @@ async function main() {
       youtube = await steps.run("Загрузка на YouTube", () =>
         uploadToYoutube({ videoFile: r.videoFile, thumbnailFile: r.thumbnailJpg ?? r.thumbnailFile, meta: files.meta, privacy: args.privacy }),
       );
-      writeJson(path.join(runDir, "youtube-result.json"), youtube);
+      writeYoutubeResult(runDir, youtube);
       if (args.privacy !== "private" && youtube.privacy === "private") {
         console.warn("  ⚠ YouTube оставил видео приватным: загрузки из непроверенных проектов Google Cloud всегда приватные — смените видимость в YouTube Studio.");
       }
@@ -372,6 +423,43 @@ async function main() {
     youtube_url: youtube?.url,
   });
   ghSummary(summaryMarkdown(result, render, script));
+}
+
+// ---- Папка ролика ----
+
+const SOURCE_FILE = "source.json";
+
+// Откуда сценарий: тот же источник → та же папка (повторная сборка
+// отредактированного сценария переиспользует голос и визуал). Для --topic
+// источник — сам текст: та же тема даёт у LLM каждый раз новый сценарий.
+function runSource(args: Args, script: VideoScript): string {
+  if (args.demo) return "demo";
+  if (args.script) return `script:${rel(resolveInputPath(args.script) ?? path.resolve(args.script))}`;
+  const hash = createHash("sha1").update(JSON.stringify(script.scenes.map((s) => s.narration))).digest("hex").slice(0, 12);
+  return `topic:${hash}`;
+}
+
+function readSource(dir: string): string | null {
+  try {
+    const v = (JSON.parse(fs.readFileSync(path.join(dir, SOURCE_FILE), "utf8")) as { source?: unknown }).source;
+    return typeof v === "string" ? v : null;
+  } catch {
+    return null; // папки нет или она из старой версии (без source.json) — считаем своей
+  }
+}
+
+// Папка по названию, но чужую не перезаписываем: два черновика с одинаковым
+// заголовком (scripts/x.json и x-2.json) или новая тема с тем же названием
+// получают out/<slug>-2, -3… — как uniquePath у черновиков. Иначе второй
+// ролик молча затёр бы видео, обложку и youtube-result.json первого.
+function chooseRunDir(outDir: string, slug: string, source: string): { runDir: string; busy: string | null } {
+  let busy: string | null = null;
+  for (let i = 1; ; i++) {
+    const dir = path.join(outDir, i === 1 ? slug : `${slug}-${i}`);
+    const prev = readSource(dir);
+    if (prev === null || prev === source) return { runDir: dir, busy };
+    busy ??= prev;
+  }
 }
 
 function buildCost(usage: LlmUsage[], voiceProvider: string, script: VideoScript, credits: (Credit | null)[]) {

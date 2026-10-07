@@ -98,7 +98,7 @@ function explainApiError(status: number, body: string): string {
   if (reason === "uploadLimitExceeded") return "достигнут лимит загрузок канала на сегодня.";
   if (reason === "youtubeSignupRequired") return "у аккаунта Google нет канала YouTube — создайте канал.";
   if (reason === "invalidTitle") return "YouTube отклонил заголовок (пустой, длиннее 100 символов или с «<», «>»).";
-  if (reason === "invalidDescription") return "YouTube отклонил описание (длиннее 5000 символов или с «<», «>»).";
+  if (reason === "invalidDescription") return "YouTube отклонил описание (больше 5000 байт — у кириллицы 2 байта на букву — или с «<», «>»).";
   if (reason === "invalidTags") return "YouTube отклонил теги (суммарно больше 500 символов).";
   if (status === 403 && /insufficient|scope/i.test(message)) return "у токена нет права youtube.upload — получите его заново: npm run youtube-auth.";
   return `HTTP ${status}${reason ? ` ${reason}` : ""}: ${message}`;
@@ -150,17 +150,33 @@ export async function uploadToYoutube(input: UploadInput): Promise<UploadResult>
   const params = new URLSearchParams({ uploadType: "resumable", part: "snippet,status", notifySubscribers: String(input.notifySubscribers ?? true) });
   let sessionUrl = "";
   for (let attempt = 1; ; attempt++) {
-    const res = await fetchImpl(`${UPLOAD_URL}?${params}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${await accessToken(auth)}`,
-        "Content-Type": "application/json; charset=UTF-8",
-        "X-Upload-Content-Length": String(size),
-        "X-Upload-Content-Type": "video/mp4",
-      },
-      body: JSON.stringify(resource),
-      signal: AbortSignal.timeout(60_000),
-    });
+    let res: Response;
+    try {
+      res = await fetchImpl(`${UPLOAD_URL}?${params}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${await accessToken(auth)}`,
+          "Content-Type": "application/json; charset=UTF-8",
+          "X-Upload-Content-Length": String(size),
+          "X-Upload-Content-Type": "video/mp4",
+        },
+        body: JSON.stringify(resource),
+        signal: AbortSignal.timeout(60_000),
+      });
+    } catch (e) {
+      // Сбой сети/DNS/таймаут (в т.ч. при обновлении токена) — повторяем, как
+      // 5xx: иначе в CI ради одного запроса пришлось бы заново рендерить ролик.
+      // Неверный токен или клиент повтором не лечатся.
+      const code = (e as { cause?: { code?: string } })?.cause?.code;
+      const msg = `${e instanceof Error ? e.message : String(e)}${code ? `: ${code}` : ""}`;
+      if (/недействителен|неверные YT_CLIENT/.test(msg)) throw e;
+      if (attempt >= 4) {
+        throw new Error(`YouTube: нет связи с сервером загрузки (${msg}). Видео собрано — повторите загрузку позже: npm run upload -- <папка ролика>.`, { cause: e });
+      }
+      log(`[youtube] нет связи (${msg}) — повтор через ${attempt * 5} с…`);
+      await sleep(attempt * 5000);
+      continue;
+    }
     if (res.ok) {
       sessionUrl = res.headers.get("location") ?? "";
       if (!sessionUrl) throw new Error("YouTube: сервер не вернул адрес сессии загрузки.");

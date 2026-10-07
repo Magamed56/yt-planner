@@ -260,6 +260,11 @@ export async function renderVideo(opts: RenderOptions): Promise<RenderResult> {
 
     let thumbnailJpg: string | null = null;
     if (thumbnailFile) {
+      // Обложки прошлого запуска в той же папке удаляем заранее: иначе при сбое
+      // renderStill (или когда JPEG в этот раз не нужен) старый файл со
+      // старым текстом ушёл бы на YouTube как свежий.
+      fs.rmSync(thumbnailFile, { force: true });
+      fs.rmSync(thumbnailFile.replace(/\.png$/i, "") + ".jpg", { force: true });
       try {
         const thumb = await selectComposition({ serveUrl, id: "Thumbnail", inputProps, ...browser, logLevel: "warn" });
         await renderStill({ serveUrl, composition: thumb, inputProps, output: thumbnailFile, frame: 0, imageFormat: "png", overwrite: true, ...browser, logLevel: "warn" });
@@ -292,7 +297,14 @@ export async function renderVideo(opts: RenderOptions): Promise<RenderResult> {
     throw e;
   } finally {
     process.removeListener("SIGINT", onSigint);
-    fs.rmSync(outDir, { recursive: true, force: true });
+    // Уборка не должна превращать готовый рендер в ошибку: на Windows
+    // антивирус/индексатор держит свежие файлы (EBUSY/EPERM) — повторяем и
+    // в крайнем случае просто сообщаем (как deleteDirectory у самого Remotion).
+    try {
+      fs.rmSync(outDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    } catch (e) {
+      log(`[рендер] не удалось удалить временную папку ${outDir} (${e instanceof Error ? e.message : String(e)}) — удалите её вручную`);
+    }
   }
 }
 

@@ -6,7 +6,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import type { YoutubeMeta } from "../pipeline/meta";
 import { PRIVACY_VALUES, uploadToYoutube, type Privacy } from "../pipeline/youtube";
-import { UserError, argsError, fail, ghOutput, ghSummary, loadEnv, rel, resolveInputPath, writeJson } from "./common";
+import { UserError, argsError, fail, ghOutput, ghSummary, loadEnv, rel, resolveInputPath, writeYoutubeResult } from "./common";
 
 const HELP = `Загрузка готового ролика на YouTube.
 
@@ -52,11 +52,15 @@ async function main() {
   if (!fs.existsSync(video)) throw new UserError(`В ${rel(runDir)} нет video.mp4 — сначала соберите ролик: npm run make -- …`);
   if (!fs.existsSync(metaFile)) throw new UserError(`В ${rel(runDir)} нет youtube.json — пересоберите ролик свежей версией npm run make.`);
   const meta = JSON.parse(fs.readFileSync(metaFile, "utf8")) as YoutubeMeta;
-  const thumb = ["thumbnail.jpg", "thumbnail.png"].map((f) => path.join(runDir, f)).find((f) => fs.existsSync(f)) ?? null;
+  // JPEG — только если он не старше PNG (иначе это остаток прошлого рендера).
+  const png = path.join(runDir, "thumbnail.png");
+  const jpg = path.join(runDir, "thumbnail.jpg");
+  const mtime = (f: string) => (fs.existsSync(f) ? fs.statSync(f).mtimeMs : -1);
+  const thumb = mtime(jpg) >= 0 && mtime(jpg) >= mtime(png) ? jpg : mtime(png) >= 0 ? png : null;
 
   console.log(`video-studio · загрузка на YouTube\n  «${meta.title}» (${privacy}${publishAt ? `, публикация ${publishAt}` : ""})`);
   const r = await uploadToYoutube({ videoFile: video, thumbnailFile: thumb, meta, privacy, publishAt });
-  writeJson(path.join(runDir, "youtube-result.json"), r);
+  writeYoutubeResult(runDir, r);
   console.log(`\n✔ ${r.url} (${r.privacy})\n  редактировать: ${r.studioUrl}`);
   if (privacy !== "private" && r.privacy === "private") {
     console.log(

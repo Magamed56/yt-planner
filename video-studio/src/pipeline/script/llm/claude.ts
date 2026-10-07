@@ -29,7 +29,7 @@ export interface AnthropicLike {
       stream(
         body: BetaMessageStreamParams,
         options?: { signal?: AbortSignal; timeout?: number },
-      ): { finalMessage(): Promise<BetaMessage> };
+      ): { finalMessage(): Promise<BetaMessage>; readonly currentMessage?: BetaMessage | undefined };
     };
   };
 }
@@ -198,10 +198,20 @@ export function claudeTarget(cfg: ClaudeConfig): LlmTarget {
 
       const { signal, cleanup, timedOut } = linkedAbort(cfg.timeoutMs, req.signal);
       let msg: BetaMessage;
+      let stream: ReturnType<AnthropicLike["beta"]["messages"]["stream"]> | null = null;
       try {
-        msg = await c.beta.messages.stream(params, { signal, timeout: cfg.timeoutMs }).finalMessage();
+        stream = c.beta.messages.stream(params, { signal, timeout: cfg.timeoutMs });
+        msg = await stream.finalMessage();
       } catch (e) {
-        throw classify(label, e, timedOut(), !!req.signal?.aborted);
+        const err = classify(label, e, timedOut(), !!req.signal?.aborted);
+        // Стрим оборвался (таймаут, сеть) — уже принятые токены оплачены:
+        // берём учёт из снимка сообщения (вход точный, выход — не меньше).
+        const snap = stream?.currentMessage;
+        if (snap?.usage) {
+          const u = usageOf(snap, cfg.model);
+          err.spent = { inputTokens: u.input, outputTokens: u.output, costUsd: u.cost };
+        }
+        throw err;
       } finally {
         cleanup();
       }

@@ -58,6 +58,12 @@ export interface StructuredRequest<T> {
 
 const MAX_LENGTH_RETRIES = 2;
 
+// Платные вызовы — в лог сразу: если генерация потом упадёт, человек всё
+// равно видит, сколько уже ушло (бесплатные не шумят).
+function logPaid(r: StructuredRequest<unknown>, target: LlmTarget, s: Spent): void {
+  if (s.costUsd > 0) r.log.info(`[сценарий] ${target.label}: ${s.inputTokens} вх. + ${s.outputTokens} вых. токенов ≈ $${s.costUsd.toFixed(4)}`);
+}
+
 export async function generateStructured<T>(r: StructuredRequest<T>): Promise<{ value: T; target: LlmTarget }> {
   if (r.chain.length === 0) throw new Error("Цепочка LLM пуста — не задан ни один провайдер.");
   const failures: string[] = [];
@@ -87,9 +93,11 @@ export async function generateStructured<T>(r: StructuredRequest<T>): Promise<{ 
           signal: r.signal,
         });
         r.usage.add(target, { inputTokens: res.inputTokens, outputTokens: res.outputTokens, costUsd: res.costUsd });
+        logPaid(r, target, res);
       } catch (e) {
         const err = e instanceof LlmError ? e : new LlmError(`${target.label}: ${(e as Error)?.message ?? String(e)}`, "unavailable", null, e);
         r.usage.add(target, err.spent ?? null);
+        if (err.spent) logPaid(r, target, err.spent);
         if (err.kind === "aborted") throw new Error(`Генерация (${r.what}) отменена.`, { cause: err });
         if (err.kind === "bad_request" && compat < target.maxCompat) {
           compat += 1;

@@ -258,6 +258,10 @@ export function lintScript(script: VideoScript, opts: Partial<LintOptions> = {})
   const out = lintScenes(script.scenes, { format: opts.format ?? script.format, targetSeconds: opts.targetSeconds });
   if (script.title.length > 70) out.push(`title длиннее 70 символов — в поиске YouTube обрежется`);
   if (!/#[\p{L}\p{N}_]+/u.test(script.description)) out.push("в description нет хэштегов");
+  // YouTube считает описание в байтах (≤ 5000), кириллица — 2 байта на букву;
+  // ещё нужно место под источники, музыку и голос (meta.ts их свернёт/обрежет).
+  const descBytes = Buffer.byteLength(script.description, "utf8");
+  if (descBytes > 3500) out.push(`description ${descBytes} байт — YouTube принимает до 5000 байт вместе с источниками; сократи до ~1500 символов`);
   if (script.tags.length < 5) out.push("мало тегов (нужно 8–15)");
   return out;
 }

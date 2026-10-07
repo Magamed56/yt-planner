@@ -163,6 +163,18 @@ const rotateTo = (chain: LlmTarget[], t: LlmTarget) => {
 
 // ---- Точка входа ----
 
+// Неудача генерации вместе с уже потраченным: платный Claude мог ответить
+// дважды (запрос + ремонт) до того, как всё упало, — CLI печатает расход и
+// при ошибке, а не только при успехе.
+export class ScriptGenerationError extends Error {
+  readonly usage: LlmUsage[];
+  constructor(message: string, usage: LlmUsage[], cause?: unknown) {
+    super(message, cause !== undefined ? { cause } : undefined);
+    this.name = "ScriptGenerationError";
+    this.usage = usage;
+  }
+}
+
 export async function generateScript(req: ScriptRequest, deps: ScriptDeps = {}): Promise<{ script: VideoScript; usage: LlmUsage[] }> {
   if (!req.topic?.trim()) throw new Error("Не задана тема ролика (topic).");
   const env = deps.env ?? process.env;
@@ -176,8 +188,17 @@ export async function generateScript(req: ScriptRequest, deps: ScriptDeps = {}):
     );
   }
   const usage = new UsageBook();
+  try {
+    return await generateWith(req, chain, usage, log, deps.signal);
+  } catch (e) {
+    if (e instanceof ScriptGenerationError) throw e;
+    throw new ScriptGenerationError(e instanceof Error ? e.message : String(e), usage.list(), e);
+  }
+}
+
+async function generateWith(req: ScriptRequest, chain: LlmTarget[], usage: UsageBook, log: Logger, signal?: AbortSignal): Promise<{ script: VideoScript; usage: LlmUsage[] }> {
   const system = buildSystemPrompt();
-  const base = { system, usage, log, signal: deps.signal };
+  const base = { system, usage, log, signal };
 
   let script: VideoScript;
   if (req.format === "shorts") {
