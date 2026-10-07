@@ -104,6 +104,7 @@ export interface VideoProps {
   showCaptions: boolean;
   showProgressBar: boolean;
   channelName: string | null; // для финальной сцены cta
+  ctaComment?: string | null; // подпись к «облачку» комментария в финальной сцене; null — не показывать
 }
 
 export const DEFAULT_TRANSITION_FRAMES = 12; // 0.4 c при 30 fps

@@ -42,7 +42,7 @@ const FALLBACK_EXAMPLE = JSON.stringify({
   scenes: [
     { id: "s1", kind: "hook", narration: "Через сутки ты забудешь почти всё, что выучил сегодня.", onScreen: "Через 24 часа ты *забудешь* почти всё", icon: "brain", visualQuery: "tired student night desk", imagePrompt: "cinematic close-up of a glowing human brain fading into darkness" },
     { id: "s2", kind: "stat", narration: "Это доказал Герман Эббингауз ещё в тысяча восемьсот восемьдесят пятом году.", onScreen: "Кривая забывания, 1885", stat: { value: 66, suffix: "%", label: "нового забывается за сутки" }, icon: "trending-down", visualQuery: "old library books", imagePrompt: "vintage scientist notebook with a declining curve, candle light" },
-    { id: "s3", kind: "cta", narration: "Подпишись, чтобы не забыть следующий лайфхак для мозга.", onScreen: "*Подпишись*, чтобы не забыть", icon: "bell-ring" },
+    { id: "s3", kind: "cta", narration: "А ты что забываешь чаще всего? Напиши в комментариях и подпишись, чтобы не забыть следующий лайфхак.", onScreen: "Что забываешь *ты*?", icon: "message-circle" },
   ],
 });
 
@@ -67,7 +67,7 @@ export function buildSystemPrompt(): string {
 - Pattern interrupt: регулярно меняй ритм — новый тип сцены, неожиданный вопрос зрителю, контраст «думали так — а на деле так».
 - Чередуй kind: не ставь подряд больше двух "statement"; используй "stat", "list", "quote", "media" там, где они действительно к месту.
 - Открытая петля: в начале намекни, что самое ценное будет в конце, — и обязательно это раскрой. Самая сильная мысль — ближе к концу, а не в первой сцене.
-- Последняя сцена (kind "cta") — короткий призыв, связанный с темой ролика (не просто «подпишись»), до 15 слов.
+- Последняя сцена (kind "cta") — до 18 слов: сначала короткий вопрос зрителю по теме ролика, на который хочется ответить в комментариях («А ты замечал такое? Напиши в комментариях»), затем призыв подписаться. Комментарии продвигают ролик сильнее лайков.
 
 ## Темп
 - Shorts: сцена звучит 3–5 секунд (8–14 слов); на 45 секунд — 6–9 сцен.

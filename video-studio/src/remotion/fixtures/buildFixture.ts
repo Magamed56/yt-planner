@@ -70,6 +70,7 @@ export function buildFixtureProps(script: VideoScript, opts: FixtureOptions = {}
     sfxVolume: 0.5,
     showCaptions: opts.showCaptions ?? true,
     showProgressBar: true,
-    channelName: opts.channelName === undefined ? "Мозг на максимум" : opts.channelName,
+    channelName: opts.channelName === undefined ? "Суть за минуту" : opts.channelName,
+    ctaComment: "Что думаешь? Пиши в комментариях",
   };
 }

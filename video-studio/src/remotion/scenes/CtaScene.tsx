@@ -1,8 +1,8 @@
 import React from "react";
 import { interpolate, interpolateColors, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import { BellRing, Check, MousePointer2 } from "lucide-react";
+import { ArrowDown, BellRing, Check, MessageCircle, MousePointer2 } from "lucide-react";
 import { KineticText } from "../components/KineticText";
-import { FONT_DISPLAY } from "../fonts";
+import { FONT_BODY, FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
 import { withAlpha } from "../theme";
 import { ContentBox, SceneFrame, clamp, useVoice, type SceneProps } from "./common";
@@ -10,6 +10,8 @@ import { ContentBox, SceneFrame, clamp, useVoice, type SceneProps } from "./comm
 // Призыв подписаться: курсор подлетает к кнопке, «нажимает» её (кнопка
 // проседает, расходится волна, текст меняется на «Вы подписаны»), затем
 // качается колокольчик. Имя канала — если задано в props.channelName.
+// Следом всплывает «облачко» комментария (props.ctaComment): сначала
+// «печатает…», потом текст и стрелка вниз — к полю комментариев.
 export const CtaScene: React.FC<SceneProps> = (p) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -45,13 +47,20 @@ export const CtaScene: React.FC<SceneProps> = (p) => {
   const avatar = Math.round((shorts ? 120 : 100) * unit);
   const rowS = spring({ frame: frame - rowIn, fps, config: { damping: 15, stiffness: 140 } });
 
+  const comment = p.video.ctaComment?.trim();
+  const bubbleAt = Math.min(pressAt + 12, dur - 40);
+  const bubbleS = spring({ frame: frame - bubbleAt, fps, config: { damping: 13, stiffness: 150, mass: 0.8 } });
+  const typingUntil = bubbleAt + 12;
+  const bubbleFont = Math.round((shorts ? 46 : 40) * unit);
+  const arrowBob = Math.sin(Math.max(0, frame - typingUntil) * 0.28) * 12 * unit;
+
   return (
     <SceneFrame p={p} push={0.04}>
       <ContentBox gap={Math.round(64 * unit)}>
         <KineticText
           text={p.scene.onScreen}
           theme={p.theme}
-          box={{ w: content.w, h: content.h * 0.42 }}
+          box={{ w: content.w, h: content.h * (comment ? 0.34 : 0.42) }}
           font={{ fontFamily: FONT_DISPLAY, fontWeight: 900, lineHeight: 1.05, letterSpacingEm: -0.02 }}
           maxFontSize={Math.round((shorts ? 132 : 132) * unit)}
           maxLines={5}
@@ -161,6 +170,68 @@ export const CtaScene: React.FC<SceneProps> = (p) => {
             <MousePointer2 size={86 * unit} color="#111" fill="#ffffff" strokeWidth={1.6} />
           </div>
         </div>
+        {comment ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 22 * unit,
+              maxWidth: content.w,
+              opacity: interpolate(frame, [bubbleAt, bubbleAt + 5], [0, 1], clamp),
+              transform: `translateY(${interpolate(bubbleS, [0, 1], [40 * unit, 0])}px) scale(${interpolate(bubbleS, [0, 1], [0.85, 1])})`,
+              transformOrigin: "left center",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 18 * unit,
+                padding: `${22 * unit}px ${34 * unit}px`,
+                // Острый нижний левый угол — «хвостик» облачка сообщения.
+                borderRadius: `${44 * unit}px ${44 * unit}px ${44 * unit}px ${10 * unit}px`,
+                background: withAlpha(p.theme.text, 0.12),
+                border: `${2 * unit}px solid ${withAlpha(p.theme.text, 0.26)}`,
+                boxShadow: `0 ${12 * unit}px ${36 * unit}px rgba(0,0,0,0.35)`,
+                fontFamily: FONT_BODY,
+                fontWeight: 800,
+                fontSize: bubbleFont,
+                lineHeight: 1.15,
+                color: p.theme.text,
+                minHeight: bubbleFont * 1.6,
+              }}
+            >
+              <MessageCircle size={bubbleFont * 1.25} color={p.theme.accent} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+              {frame < typingUntil ? (
+                <span style={{ display: "flex", gap: 10 * unit, padding: `0 ${8 * unit}px` }}>
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      style={{
+                        width: 14 * unit,
+                        height: 14 * unit,
+                        borderRadius: 7 * unit,
+                        background: p.theme.text,
+                        opacity: 0.35 + 0.65 * Math.max(0, Math.sin((frame - bubbleAt) * 0.6 - i * 0.9)),
+                      }}
+                    />
+                  ))}
+                </span>
+              ) : (
+                // Вопрос и призыв — разными строками: переносы посреди фразы на
+                // узком экране Shorts читаются хуже («Пиши в / комментариях»).
+                <span style={{ display: "flex", flexDirection: "column" }}>
+                  {comment.split(/(?<=[?!])\s+/u).map((line, i) => (
+                    <span key={i} style={{ whiteSpace: "nowrap", opacity: i === 0 ? 1 : 0.82 }}>
+                      {line}
+                    </span>
+                  ))}
+                </span>
+              )}
+            </div>
+            <ArrowDown size={bubbleFont * 1.4} color={p.theme.accent} strokeWidth={3} style={{ flexShrink: 0, transform: `translateY(${arrowBob}px)`, opacity: frame < typingUntil ? 0 : 1 }} />
+          </div>
+        ) : null}
       </ContentBox>
     </SceneFrame>
   );

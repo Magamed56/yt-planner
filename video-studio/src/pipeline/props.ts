@@ -135,7 +135,16 @@ export function buildVideoProps(input: BuildPropsInput): VideoProps {
     showCaptions: input.showCaptions ?? true,
     showProgressBar: input.showProgressBar ?? true,
     channelName: input.channelName === undefined ? channelEnv : input.channelName,
+    // Призыв к комментарию в финале: комментарии продвигают ролик сильнее лайков.
+    // CTA_COMMENT=off — убрать «облачко».
+    ctaComment: ctaCommentFromEnv(),
   };
 }
 
 export const propsDurationSec = (p: Pick<VideoProps, "durationInFrames">): number => p.durationInFrames / FPS;
+
+function ctaCommentFromEnv(): string | null {
+  const v = process.env.CTA_COMMENT?.trim();
+  if (v && /^(off|none|0)$/i.test(v)) return null;
+  return v || "Что думаешь? Пиши в комментариях";
+}
