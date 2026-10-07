@@ -123,14 +123,51 @@ const expectedPause = (s: number) => EXPECTED_PAUSE[s] ?? 0;
 const pauseConfidence = (durMs: number) => Math.min(1, Math.max(0, (durMs - 75) / 125));
 
 // «Вес» буквы ≈ её длительность: гласная — слог, согласная — около половины,
-// ь/ъ не звучат, цифры (если остались) читаются длинно.
+// ь/ъ не звучат.
 const VOWEL = /[аеёиоуыэюяaeiouy]/;
-const letterWeight = (ch: string) => (VOWEL.test(ch) ? 1 : /[ьъ]/.test(ch) ? 0 : /\p{N}/u.test(ch) ? 2.5 : 0.55);
-const tokenWeight = (t: Token) => {
-  let w = 0;
-  for (const ch of t.norm) w += letterWeight(ch);
-  return Math.max(0.3, w);
+const DIGIT = /\p{N}/u;
+const letterWeight = (ch: string) => (VOWEL.test(ch) ? 1 : /[ьъ]/.test(ch) ? 0 : 0.55);
+// Цифры (если остались в тексте) диктор читает словами: «1885» — «тысяча
+// восемьсот восемьдесят пятом» (12 слогов), «66» — «шестьдесят шесть» (4),
+// «1400» — «тысяча четыреста» (нули не звучат). Без этого вес числа был
+// втрое меньше, слогов у него не было вовсе, и подсветка слов после числа
+// убегала вперёд на 0,4–0,7 с (сверка Piper с распознаванием речи).
+const SYLLABLE_WEIGHT = 2; // слог числительного: гласная + 1–2 согласных
+const numberSyllables = (digits: string) => {
+  const spoken = [...digits].filter((d) => d !== "0").length;
+  return digits.length === 1 ? 1.5 : Math.max(2, 2.6 * spoken);
 };
+// Знаки, которые читаются словом (normWord их выбрасывает): «%» — «процентов».
+const SYMBOL_SYLLABLES: Record<string, number> = { "%": 3, "№": 2, $: 3, "€": 2, "₽": 2 };
+
+// Вес слова и центры его слогов (в единицах веса от начала слова).
+function tokenProfile(t: Token): { weight: number; nuclei: number[] } {
+  let w = 0;
+  const nuclei: number[] = [];
+  const spoken = (syl: number) => {
+    const n = Math.max(1, Math.round(syl));
+    const span = syl * SYLLABLE_WEIGHT;
+    for (let k = 0; k < n; k++) nuclei.push(w + ((k + 0.5) * span) / n);
+    w += span;
+  };
+  const norm = t.norm;
+  for (let i = 0; i < norm.length; ) {
+    if (DIGIT.test(norm[i]!)) {
+      let j = i;
+      while (j < norm.length && DIGIT.test(norm[j]!)) j++;
+      spoken(numberSyllables(norm.slice(i, j)));
+      i = j;
+      continue;
+    }
+    const lw = letterWeight(norm[i]!);
+    if (VOWEL.test(norm[i]!)) nuclei.push(w + lw / 2);
+    w += lw;
+    i++;
+  }
+  for (const ch of t.text) if (SYMBOL_SYLLABLES[ch]) spoken(SYMBOL_SYLLABLES[ch]!);
+  return { weight: w, nuclei };
+}
+const tokenWeight = (t: Token) => Math.max(0.3, tokenProfile(t).weight);
 
 export interface EstimateOptions {
   align?: boolean; // сопоставлять знаки препинания с паузами (по умолчанию да)
@@ -355,11 +392,9 @@ function letterScale(tokens: Token[]): { wordStart: number[]; wordEnd: number[];
   let acc = 0;
   for (const t of tokens) {
     wordStart.push(acc);
-    for (const ch of t.norm) {
-      const w = letterWeight(ch);
-      if (VOWEL.test(ch)) nuclei.push(acc + w / 2);
-      acc += w;
-    }
+    const p = tokenProfile(t);
+    for (const v of p.nuclei) nuclei.push(acc + v);
+    acc += p.weight;
     if (acc === wordStart.at(-1)) acc += 0.3; // слово без «звучащих» букв — минимальная длина
     wordEnd.push(acc);
   }
