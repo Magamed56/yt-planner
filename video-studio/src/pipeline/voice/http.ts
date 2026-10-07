@@ -5,11 +5,21 @@
 export class TtsError extends Error {
   readonly retryable: boolean;
   readonly status: number | null;
-  constructor(message: string, opts: { retryable?: boolean; status?: number | null; cause?: unknown } = {}) {
+  // Для 429: через сколько можно повторить (RetryInfo Google / Retry-After) и
+  // какая квота кончилась (…PerMinute… или …PerDay…) — чтобы отличать
+  // «подождать минуту» от «на сегодня всё».
+  readonly retryAfterMs?: number;
+  readonly quotaId?: string;
+  constructor(
+    message: string,
+    opts: { retryable?: boolean; status?: number | null; cause?: unknown; retryAfterMs?: number; quotaId?: string } = {},
+  ) {
     super(message, opts.cause !== undefined ? { cause: opts.cause } : undefined);
     this.name = "TtsError";
     this.retryable = opts.retryable ?? false;
     this.status = opts.status ?? null;
+    if (opts.retryAfterMs !== undefined) this.retryAfterMs = opts.retryAfterMs;
+    if (opts.quotaId !== undefined) this.quotaId = opts.quotaId;
   }
 }
 
@@ -80,12 +90,36 @@ function hostOf(url: string): string {
   }
 }
 
+interface GoogleErrorDetail {
+  "@type"?: string;
+  retryDelay?: unknown;
+  violations?: { quotaId?: unknown }[];
+}
+
 export function httpError(what: string, status: number, body: Buffer, headers?: Headers): TtsError {
   let detail = body.toString("utf8").slice(0, 400).replace(/\s+/g, " ").trim();
+  let retryAfterMs: number | undefined;
+  let quotaId: string | undefined;
   try {
-    const j = JSON.parse(body.toString("utf8")) as { error?: { message?: string } | string; detail?: unknown; message?: string };
+    const j = JSON.parse(body.toString("utf8")) as {
+      error?: { message?: string; details?: GoogleErrorDetail[] } | string;
+      detail?: unknown;
+      message?: string;
+    };
     const m = typeof j.error === "string" ? j.error : j.error?.message ?? j.message ?? (typeof j.detail === "string" ? j.detail : null);
     if (m) detail = m.slice(0, 400);
+    // Google (Gemini) кладёт срок повтора и id квоты в error.details.
+    const details = typeof j.error === "object" && Array.isArray(j.error?.details) ? j.error.details : [];
+    for (const d of details) {
+      if (/RetryInfo$/.test(String(d?.["@type"])) && typeof d.retryDelay === "string") {
+        const sec = Number.parseFloat(d.retryDelay);
+        if (Number.isFinite(sec) && sec >= 0) retryAfterMs = Math.round(sec * 1000);
+      }
+      if (/QuotaFailure$/.test(String(d?.["@type"])) && Array.isArray(d.violations)) {
+        const ids = d.violations.map((v) => (typeof v?.quotaId === "string" ? v.quotaId : "")).filter(Boolean);
+        if (ids.length) quotaId = ids.join(",");
+      }
+    }
   } catch {
     // тело не JSON — показываем как есть
   }
@@ -100,10 +134,13 @@ export function httpError(what: string, status: number, body: Buffer, headers?: 
             ? " — ошибка на стороне сервиса."
             : "";
   const retryAfter = headers?.get("retry-after");
+  if (retryAfterMs === undefined && retryAfter && /^\d+(\.\d+)?$/.test(retryAfter.trim())) retryAfterMs = Math.round(Number(retryAfter) * 1000);
   if (detail && !/[.!?…]$/.test(detail)) detail += ".";
   return new TtsError(`${what}: HTTP ${status}${hint}${detail ? ` Ответ: ${detail}` : ""}${retryAfter ? ` (Retry-After: ${retryAfter} с)` : ""}`, {
     status,
     retryable: status === 408 || status === 429 || status >= 500,
+    retryAfterMs,
+    quotaId,
   });
 }
 

@@ -3,10 +3,14 @@
 // /v1beta/interactions (стиль — в speech_metadata.style, ответ — готовый WAV);
 // старые (*-preview-tts) — через generateContent и отдают сырой PCM 24 кГц.
 // Квоты у моделей раздельные, поэтому при 429/404 пробуем следующую по цепочке.
+// Но 429 «в минуту» (RetryInfo «retry in 37s») — повод подождать и повторить
+// ту же модель, а не менять голос посреди ролика; на следующую модель идём
+// только при суточной квоте, 404/400 или повторном 5xx, и дальше весь ролик
+// озвучивает уже она (один голос, а не три).
 // Таймингов слов нет — их оценивает общая обвязка по звуку.
 
 import { decodePcm16, decodeWav, isWav } from "../../audio/wav";
-import { envInt, httpRequest, TtsError } from "../http";
+import { envInt, httpRequest, sleep, TtsError } from "../http";
 import type { RawAudio, RawProvider } from "../provider";
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
@@ -58,10 +62,40 @@ export function geminiProvider(): RawProvider {
     configKey: () => `gemini:${model}:${style}`,
     async synthesizeRaw(text, ctx) {
       if (!key) throw new TtsError("Gemini TTS: не задан GEMINI_API_KEY (ключ бесплатно: https://aistudio.google.com/apikey).");
-      const headers = { "x-goog-api-key": key, "Content-Type": "application/json" };
       let lastErr: TtsError | null = null;
-      for (const m of geminiModelChain(model)) {
-        try {
+      for (let idx = start; idx < chain.length; idx++) {
+        const m = chain[idx]!;
+        for (let attempt = 1; ; attempt++) {
+          try {
+            const audio = await callModel(m, text, ctx);
+            start = idx; // «липкий» запасной вариант: остальные сцены — той же моделью
+            return idx > 0 ? { ...audio, fallback: m } : audio;
+          } catch (e) {
+            if (!(e instanceof TtsError)) throw new TtsError(`Gemini TTS (${m}): ${(e as Error).message}`, { retryable: true, cause: e });
+            // Ключ неверный — другие модели не помогут.
+            if (e.status === 401 || e.status === 403) throw e;
+            const wait = sameModelWait(e, attempt);
+            if (wait !== null && !ctx.signal?.aborted) {
+              console.warn(`[озвучка] Gemini TTS (${m}): ${e.status === 429 ? "лимит запросов в минуту" : `сбой сервиса (HTTP ${e.status})`} — жду ${Math.ceil(wait / 1000)} с и повторяю…`);
+              await sleep(wait, ctx.signal);
+              continue;
+            }
+            const fallThrough = e.status === 429 || e.status === 404 || e.status === 400 || (e.status ?? 0) >= 500;
+            if (!fallThrough) throw e;
+            lastErr = e;
+            if (idx + 1 < chain.length) console.warn(`[озвучка] ${e.message} Пробую следующую модель (${chain[idx + 1]}) — ею будет озвучен и остаток ролика…`);
+            break;
+          }
+        }
+      }
+      throw lastErr ?? new TtsError("Gemini TTS: ни одна модель не ответила.", { retryable: true });
+    },
+  };
+
+  async function callModel(m: string, text: string, ctx: RawContext): Promise<RawAudio> {
+    const headers = { "x-goog-api-key": key, "Content-Type": "application/json" };
+    {
+      {
           if (!isLegacy(m)) {
             const r = await httpRequest(`Gemini TTS (${m})`, `${BASE}/interactions`, {
               method: "POST",
@@ -96,17 +130,23 @@ export function geminiProvider(): RawProvider {
           const part = j.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData;
           if (!part?.data) throw new TtsError(`Gemini TTS (${m}): в ответе нет аудио.`, { retryable: true });
           return geminiAudioToPcm(part.data, part.mimeType ?? "audio/L16;codec=pcm;rate=24000");
-        } catch (e) {
-          if (!(e instanceof TtsError)) throw new TtsError(`Gemini TTS (${m}): ${(e as Error).message}`, { retryable: true, cause: e });
-          // Ключ неверный — другие модели не помогут.
-          if (e.status === 401 || e.status === 403) throw e;
-          const fallThrough = e.status === 429 || e.status === 404 || e.status === 400 || (e.status ?? 0) >= 500;
-          if (!fallThrough) throw e;
-          lastErr = e;
-          console.warn(`[озвучка] ${e.message} Пробую следующую модель…`);
-        }
       }
-      throw lastErr ?? new TtsError("Gemini TTS: ни одна модель не ответила.", { retryable: true });
-    },
-  };
+    }
+  }
+}
+
+// Когда повторить ту же модель вместо перехода на следующую: 429 с квотой «в
+// минуту» (или с RetryInfo без id квоты) — ждём сколько сказано (до ~1 мин),
+// не больше двух раз; 5xx — один повтор через 3 с. Суточная квота, 404, 400
+// и 429 без подробностей — сразу дальше по цепочке.
+function sameModelWait(e: TtsError, attempt: number): number | null {
+  if (e.status === 429) {
+    const perDay = /PerDay/i.test(e.quotaId ?? "");
+    const perMinute = /PerMinute/i.test(e.quotaId ?? "") || (!e.quotaId && e.retryAfterMs !== undefined);
+    if (perDay || !perMinute || attempt > 2) return null;
+    const ms = (e.retryAfterMs ?? 20_000) + 1000;
+    return ms <= 66_000 ? ms : null;
+  }
+  if ((e.status ?? 0) >= 500 && attempt === 1) return 3000;
+  return null;
 }

@@ -16,9 +16,12 @@ import { TtsError, sleep } from "./http";
 import { normalizeText, rateMultiplier } from "./text";
 import { alignToTokens, analyzeSpeech, estimateWordTimings, estimateWordsUniform, finalize } from "./timing";
 
+// fallback — звук дала запасная модель (у Gemini — после 429/404 основной):
+// такой результат в кэше не переиспользуем, чтобы при следующей сборке сцены
+// переозвучились основной моделью и в ролике остался один голос.
 export type RawAudio =
-  | { kind: "pcm"; audio: PcmAudio; words?: WordTiming[] | null }
-  | { kind: "mp3"; bytes: Uint8Array; words?: WordTiming[] | null };
+  | { kind: "pcm"; audio: PcmAudio; words?: WordTiming[] | null; fallback?: string }
+  | { kind: "mp3"; bytes: Uint8Array; words?: WordTiming[] | null; fallback?: string };
 
 export interface RawContext {
   voice: string;
@@ -48,6 +51,7 @@ interface CacheEntry {
   durationMs: number;
   words: WordTiming[];
   wordsSource: "provider" | "estimated";
+  fallback?: string; // см. RawAudio.fallback
 }
 
 export function wrapProvider(raw: RawProvider): VoiceProvider {
@@ -107,7 +111,7 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       }
       durationMs = Math.round(Math.max(durationMs, words.at(-1)?.endMs ?? 0));
       const out: VoiceResult = { file, durationMs, words, wordsSource };
-      await writeCache(outFileBase, key, out);
+      await writeCache(outFileBase, key, out, result.fallback);
       return out;
     },
   };
@@ -171,14 +175,14 @@ async function readCache(outFileBase: string, key: string): Promise<VoiceResult 
   try {
     const c = JSON.parse(await readFile(p, "utf8")) as CacheEntry;
     const file = path.join(path.dirname(outFileBase), c.file);
-    if (c.key !== cacheKey(key) || !existsSync(file)) return null;
+    if (c.key !== cacheKey(key) || !existsSync(file) || c.fallback) return null;
     return { file, durationMs: c.durationMs, words: c.words, wordsSource: c.wordsSource };
   } catch {
     return null;
   }
 }
 
-async function writeCache(outFileBase: string, key: string, r: VoiceResult): Promise<void> {
+async function writeCache(outFileBase: string, key: string, r: VoiceResult, fallback?: string): Promise<void> {
   if (process.env.TTS_CACHE === "0") return;
   const entry: CacheEntry = {
     key: cacheKey(key),
@@ -186,6 +190,7 @@ async function writeCache(outFileBase: string, key: string, r: VoiceResult): Pro
     durationMs: r.durationMs,
     words: r.words,
     wordsSource: r.wordsSource,
+    ...(fallback ? { fallback } : {}),
   };
   await writeFile(cachePath(outFileBase), JSON.stringify(entry, null, 1));
 }
