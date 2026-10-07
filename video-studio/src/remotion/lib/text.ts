@@ -84,7 +84,7 @@ export interface FittedText {
   lineWidths: number[];
 }
 
-function wrap(widths: number[], space: number, maxWidth: number): number[][] {
+function wrap(widths: number[], space: number, maxWidth: number, breaks?: Set<number>): number[][] {
   const lines: number[][] = [];
   let cur: number[] = [];
   let w = 0;
@@ -98,62 +98,85 @@ function wrap(widths: number[], space: number, maxWidth: number): number[][] {
       cur.push(i);
       w = add;
     }
+    if (breaks?.has(i) && i < widths.length - 1) {
+      lines.push(cur);
+      cur = [];
+      w = 0;
+    }
   });
   if (cur.length) lines.push(cur);
   return lines;
 }
 
+// Индексы слов, после которых заканчивается предложение («День. Три дня.»):
+// по возможности начинаем новое предложение с новой строки.
+function sentenceBreaks(tokens: { text: string }[]): Set<number> {
+  const out = new Set<number>();
+  tokens.forEach((t, i) => {
+    if (i < tokens.length - 1 && /[.!?…]["»”)]?$/.test(t.text)) out.add(i);
+  });
+  return out;
+}
+
+interface FitOptions {
+  maxFontSize: number;
+  minFontSize?: number;
+  maxLines?: number;
+  balance?: boolean;
+  sentenceBreaks?: boolean;
+  extraEm?: number; // добавка к ширине каждого слова (поля, «поп»-масштаб)
+}
+
 // Подбирает максимальный кегль, при котором текст влезает в коробку, и
 // «балансирует» строки (как text-wrap: balance), чтобы не было сироты
 // из одного короткого слова на последней строке.
-export function fitTokens(
-  tokens: { text: string }[],
-  font: FontSpec,
-  box: { w: number; h: number },
-  opts: { maxFontSize: number; minFontSize?: number; maxLines?: number; balance?: boolean },
-): FittedText {
-  const minFont = opts.minFontSize ?? Math.min(28, opts.maxFontSize);
-  const maxLines = opts.maxLines ?? 6;
-  const refWidths = tokens.map((t) => measureAtRef(t.text, font));
+export function fitTokens(tokens: { text: string }[], font: FontSpec, box: { w: number; h: number }, opts: FitOptions): FittedText {
+  if (tokens.length === 0) return { fontSize: opts.maxFontSize, lines: [], lineWidths: [] };
+  const refWidths = tokens.map((t) => measureAtRef(t.text, font) + (opts.extraEm ?? 0) * REF);
   // Пробел меряем как разницу — measureText обрезает одиночный пробел.
   const space = Math.max(1, measureAtRef("a a", font) - measureAtRef("aa", font));
+  const plain = fitWith(refWidths, space, font, box, opts, undefined);
+  if (opts.sentenceBreaks === false) return plain;
+  const br = sentenceBreaks(tokens);
+  if (br.size === 0) return plain;
+  const broken = fitWith(refWidths, space, font, box, opts, br);
+  // Разбивка по предложениям красивее, но не ценой заметно меньшего кегля.
+  return broken.fontSize >= plain.fontSize * 0.86 ? broken : plain;
+}
 
-  const tryFit = (size: number): number[][] | null => {
+function fitWith(refWidths: number[], space: number, font: FontSpec, box: { w: number; h: number }, opts: FitOptions, breaks: Set<number> | undefined): FittedText {
+  const minFont = opts.minFontSize ?? Math.min(28, opts.maxFontSize);
+  const maxLines = opts.maxLines ?? 6;
+
+  const tryFit = (size: number): boolean => {
     const k = size / REF;
     const widths = refWidths.map((w) => w * k);
-    if (widths.some((w) => w > box.w)) return null;
-    const lines = wrap(widths, space * k, box.w);
-    if (lines.length > maxLines) return null;
-    if (lines.length * size * font.lineHeight > box.h) return null;
-    return lines;
+    if (widths.some((w) => w > box.w)) return false;
+    const lines = wrap(widths, space * k, box.w, breaks);
+    if (lines.length > maxLines) return false;
+    return lines.length * size * font.lineHeight <= box.h;
   };
 
-  let lo = minFont;
-  let hi = opts.maxFontSize;
-  let best: number[][] | null = tryFit(hi);
-  let bestSize = hi;
-  if (!best) {
-    best = null;
+  let bestSize = opts.maxFontSize;
+  if (!tryFit(bestSize)) {
+    let lo = minFont;
+    let hi = opts.maxFontSize;
+    let found = false;
     for (let i = 0; i < 18; i++) {
       const mid = (lo + hi) / 2;
-      const r = tryFit(mid);
-      if (r) {
-        best = r;
+      if (tryFit(mid)) {
+        found = true;
         bestSize = mid;
         lo = mid;
       } else hi = mid;
     }
-    if (!best) {
-      // Даже минимальный кегль не влез (аномально длинный текст) — режем по ширине как есть.
-      bestSize = minFont;
-      const k = minFont / REF;
-      best = wrap(refWidths.map((w) => w * k), space * k, box.w);
-    }
+    // Даже минимальный кегль не влез (аномально длинный текст) — берём минимум.
+    if (!found) bestSize = minFont;
   }
   const fontSize = Math.floor(bestSize);
   const k = fontSize / REF;
   const widths = refWidths.map((w) => w * k);
-  let lines = wrap(widths, space * k, box.w);
+  let lines = wrap(widths, space * k, box.w, breaks);
 
   if (opts.balance !== false && lines.length > 1) {
     // Минимальная ширина, при которой число строк не растёт.
@@ -162,10 +185,10 @@ export function fitTokens(
     let b = box.w;
     for (let i = 0; i < 14; i++) {
       const mid = (a + b) / 2;
-      if (wrap(widths, space * k, mid).length <= n) b = mid;
+      if (wrap(widths, space * k, mid, breaks).length <= n) b = mid;
       else a = mid;
     }
-    lines = wrap(widths, space * k, b + 0.5);
+    lines = wrap(widths, space * k, b + 0.5, breaks);
   }
   const lineWidths = lines.map((ln) => ln.reduce((s, i, j) => s + widths[i] + (j > 0 ? space * k : 0), 0));
   return { fontSize, lines, lineWidths };

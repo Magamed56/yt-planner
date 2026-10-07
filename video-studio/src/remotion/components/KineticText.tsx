@@ -48,7 +48,11 @@ export function useFittedTokens(text: string, font: FontSpec, box: { w: number; 
 export const KineticText: React.FC<KineticTextProps> = (p) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const { tokens, fit } = useFittedTokens(p.text, p.font, p.box, p.maxFontSize, p.minFontSize, p.maxLines);
+  // Маркер выступает за слово на ~0.12em с каждой стороны — резервируем место,
+  // чтобы он не залезал в правую зону интерфейса Shorts.
+  const reserve = (p.highlight ?? "underline") === "marker" && /\*/.test(p.text) ? p.maxFontSize * 0.26 : 0;
+  const box = useMemo(() => ({ w: Math.max(50, p.box.w - reserve), h: p.box.h }), [p.box.w, p.box.h, reserve]);
+  const { tokens, fit } = useFittedTokens(p.text, p.font, box, p.maxFontSize, p.minFontSize, p.maxLines);
   const start = p.start ?? 4;
   const step = p.step ?? 3;
   const appear = useMemo(() => {
@@ -130,11 +134,11 @@ const Word: React.FC<{
   let opacity = 1;
   let filter: string | undefined;
   if (entrance === "pop") {
-    const s = spring({ frame: local, fps, config: { damping: 12, stiffness: 220, mass: 0.6 } });
+    const s = spring({ frame: local, fps, config: { damping: 13, stiffness: 260, mass: 0.55 } });
     opacity = interpolate(local, [0, 3], [0, 1], clamp);
-    transform = `scale(${interpolate(s, [0, 1], [1.9, 1])}) translateY(${interpolate(s, [0, 1], [-0.12, 0])}em)`;
+    transform = `scale(${interpolate(s, [0, 1], [1.45, 1])}) translateY(${interpolate(s, [0, 1], [-0.1, 0])}em)`;
     // Размытие только первые кадры и только на одном слове — дёшево.
-    const blur = interpolate(local, [0, 7], [10, 0], clamp);
+    const blur = interpolate(local, [0, 6], [8, 0], clamp);
     filter = blur > 0.3 ? `blur(${blur}px)` : undefined;
   } else if (entrance === "fade") {
     const s = spring({ frame: local, fps, config: { damping: 200 }, durationInFrames: 16 });

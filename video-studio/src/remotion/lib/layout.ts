@@ -31,8 +31,8 @@ export function computeLayout(format: Format, width: number, height: number, sho
     const bottomUi = Math.round(height * 0.18);
     const safe: Box = { x: left, y: top, w: width - left - right, h: height - top - bottomUi };
     // Субтитры — полоса над нижним интерфейсом; контент заканчивается выше неё.
-    const captionsCenterY = Math.round(height * 0.715);
-    const contentBottom = showCaptions ? Math.round(height * 0.635) : height - bottomUi - Math.round(40 * unit);
+    const captionsCenterY = Math.round(height * 0.728);
+    const contentBottom = showCaptions ? Math.round(height * 0.652) : height - bottomUi - Math.round(40 * unit);
     return {
       format,
       width,

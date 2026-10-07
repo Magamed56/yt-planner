@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { AbsoluteFill, Sequence, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { createTikTokStyleCaptions, type Caption, type TikTokPage } from "@remotion/captions";
+import { measureText } from "@remotion/layout-utils";
 import type { TimelineCaption } from "../../types";
 import { FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
@@ -13,6 +14,8 @@ import { type Theme } from "../theme";
 
 const COMBINE_MS = 1000;
 const HOLD_AFTER_MS = 450; // страница висит чуть после последнего слова, но не через всю паузу
+const BREAK_ON_SILENCE_MS = 300; // пауза между предложениями — новая страница
+const WORD_PAD_EM = 0.09; // поля слова: «поп»-масштаб активного слова не наезжает на соседей
 
 const CAPTION_FONT: FontSpec = { fontFamily: FONT_DISPLAY, fontWeight: 800, lineHeight: 1.18, letterSpacingEm: -0.01 };
 
@@ -38,7 +41,7 @@ export const Captions: React.FC<{ captions: TimelineCaption[]; theme: Theme }> =
       ...c,
       text: i === 0 ? c.text.trimStart() : c.text.startsWith(" ") ? c.text : ` ${c.text}`,
     }));
-    return createTikTokStyleCaptions({ captions: prepared, combineTokensWithinMilliseconds: COMBINE_MS }).pages;
+    return createTikTokStyleCaptions({ captions: prepared, combineTokensWithinMilliseconds: COMBINE_MS, breakOnSilenceAfterMilliseconds: BREAK_ON_SILENCE_MS }).pages;
   }, [captions]);
 
   return (
@@ -68,10 +71,18 @@ const CaptionPage: React.FC<{ page: TikTokPage; theme: Theme; durationInFrames: 
 
   const tokens = useMemo(() => page.tokens.map((t) => ({ ...t, text: t.text.trim() })), [page]);
   const fit = useMemo(
-    () => fitTokens(tokens, CAPTION_FONT, { w: c.maxWidth, h: c.fontSize * CAPTION_FONT.lineHeight * c.maxLines }, { maxFontSize: c.fontSize, minFontSize: c.fontSize * 0.6, maxLines: c.maxLines }),
+    () => fitTokens(tokens, CAPTION_FONT, { w: c.maxWidth, h: c.fontSize * CAPTION_FONT.lineHeight * c.maxLines }, { maxFontSize: c.fontSize, minFontSize: c.fontSize * 0.6, maxLines: c.maxLines, extraEm: WORD_PAD_EM * 2, sentenceBreaks: false }),
     [tokens, c.maxWidth, c.fontSize, c.maxLines],
   );
   const fs = fit.fontSize;
+  // Амплитуда «попа» ограничена шириной промежутка: длинное слово растёт
+  // меньше, чтобы не наехать на соседей.
+  const amps = useMemo(() => {
+    const m = (text: string) =>
+      measureText({ text, fontFamily: CAPTION_FONT.fontFamily, fontSize: fs, fontWeight: CAPTION_FONT.fontWeight, letterSpacing: `${(CAPTION_FONT.letterSpacingEm ?? 0) * fs}px` }).width;
+    const gap = Math.max(1, m("a a") - m("aa")) + 2 * WORD_PAD_EM * fs;
+    return tokens.map((t) => Math.min(0.1, (0.9 * gap) / Math.max(1, m(t.text))));
+  }, [tokens, fs]);
   const enter = spring({ frame, fps, config: { damping: 16, stiffness: 260, mass: 0.5 } });
   const exit = interpolate(frame, [durationInFrames - 3, durationInFrames], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const ol = outline(Math.max(3, fs * 0.065), "rgba(0,0,0,0.92)");
@@ -101,7 +112,9 @@ const CaptionPage: React.FC<{ page: TikTokPage; theme: Theme; durationInFrames: 
               const t = tokens[ti];
               const active = nowMs >= t.fromMs && nowMs < t.toMs;
               const since = ((nowMs - t.fromMs) / 1000) * fps;
-              const pop = active ? spring({ frame: since, fps, config: { damping: 10, stiffness: 320, mass: 0.45 } }) : 0;
+              // «Поп» без перелёта: быстро до пика за 3 кадра и чуть назад —
+              // масштаб никогда не превышает рассчитанную амплитуду.
+              const pop = active ? interpolate(since, [0, 3, 8], [0, 1, 0.7], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 0;
               const spoken = nowMs >= t.toMs;
               return (
                 <React.Fragment key={ti}>
@@ -109,7 +122,8 @@ const CaptionPage: React.FC<{ page: TikTokPage; theme: Theme; durationInFrames: 
                   <span
                     style={{
                       display: "inline-block",
-                      transform: `scale(${1 + 0.12 * pop})`,
+                      margin: `0 ${WORD_PAD_EM}em`,
+                      transform: `scale(${1 + amps[ti] * pop})`,
                       transformOrigin: "50% 60%",
                       color: active ? theme.accent : theme.text,
                       opacity: active || spoken ? 1 : 0.88,

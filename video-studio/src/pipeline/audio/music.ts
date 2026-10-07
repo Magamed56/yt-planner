@@ -361,9 +361,10 @@ function addBassNote(
     let env = padEnv(t, lenSec, attack, release);
     if (pulseBeat > 0) {
       // Мягкий саб-пульс на каждую долю: атака 15 мс, спад ~0.3 с, без щелчков.
-      const bt = (t % pulseBeat) / pulseBeat;
-      const sec = bt * pulseBeat;
-      const pulse = sec < 0.015 ? smoothstep(sec / 0.015) : Math.exp(-(sec - 0.015) / 0.28);
+      const sec = t % pulseBeat;
+      // Атака стартует с того уровня, где закончился хвост прошлой доли, — огибающая непрерывна.
+      const tail = Math.exp(-(pulseBeat - 0.015) / 0.28);
+      const pulse = sec < 0.015 ? tail + (1 - tail) * smoothstep(sec / 0.015) : Math.exp(-(sec - 0.015) / 0.28);
       env *= 0.35 + 0.65 * pulse;
     }
     ph += inc;

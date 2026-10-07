@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { AbsoluteFill, random, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Easing, random, useCurrentFrame, useVideoConfig } from "remotion";
 import { noise2D } from "@remotion/noise";
 import { withAlpha, type Theme } from "../theme";
 
@@ -50,14 +50,29 @@ interface Props {
   frameOverride?: number;
   grain?: boolean;
   particles?: boolean;
+  // Кадры склеек: на каждой «камера» плавно смещается по фону — пятна и
+  // сетка переезжают, и каждая сцена получает свою композицию фона.
+  cuts?: number[];
+  cutFrames?: number;
 }
 
-export const Background: React.FC<Props> = ({ theme, seed = "bg", frameOverride, grain = true, particles = true }) => {
+const panEase = Easing.inOut(Easing.cubic);
+export function panAt(frame: number, cuts: number[], dur: number): number {
+  let p = 0;
+  for (const c of cuts) {
+    if (frame >= c + dur) p += 1;
+    else if (frame > c) p += panEase((frame - c) / dur);
+  }
+  return p;
+}
+
+export const Background: React.FC<Props> = ({ theme, seed = "bg", frameOverride, grain = true, particles = true, cuts, cutFrames = 20 }) => {
   const realFrame = useCurrentFrame();
   const frame = frameOverride ?? realFrame;
   const { width, height, fps } = useVideoConfig();
   const t = frame / fps;
   const big = Math.max(width, height);
+  const pan = cuts && cuts.length ? panAt(frame, cuts, cutFrames) : 0;
 
   const blobs = useMemo(
     () => [
@@ -92,8 +107,8 @@ export const Background: React.FC<Props> = ({ theme, seed = "bg", frameOverride,
         const s = big * b.size;
         const nx = noise2D(`${seed}-bx-${i}`, t * 0.07, i * 10);
         const ny = noise2D(`${seed}-by-${i}`, i * 10, t * 0.07);
-        const cx = width * (b.ax + nx * 0.28);
-        const cy = height * (b.ay + ny * 0.22);
+        const cx = width * (b.ax + nx * 0.28 + 0.2 * Math.sin(pan * 2.1 + i * 1.7));
+        const cy = height * (b.ay + ny * 0.22 + 0.14 * Math.cos(pan * 1.6 + i * 2.3));
         const breathe = 1 + 0.08 * noise2D(`${seed}-bs-${i}`, t * 0.12, 3);
         return (
           <div
@@ -115,13 +130,13 @@ export const Background: React.FC<Props> = ({ theme, seed = "bg", frameOverride,
         style={{
           backgroundImage: `radial-gradient(${withAlpha(theme.text, 0.5)} 1.4px, transparent 2.2px)`,
           backgroundSize: "54px 54px",
-          backgroundPosition: `${Math.round(t * 3)}px ${Math.round(-t * 6)}px`,
+          backgroundPosition: `${Math.round(t * 3 + pan * 70)}px ${Math.round(-t * 6 - pan * 150)}px`,
           opacity: 0.075,
         }}
       />
       {particles
         ? dots.map((d, i) => {
-            const y = (((d.y * height - t * d.speed) % height) + height) % height;
+            const y = (((d.y * height - t * d.speed - pan * 260 * (0.6 + d.r / 12)) % height) + height) % height;
             const x = d.x * width + noise2D(`${seed}-pw-${i}`, t * 0.2, 0) * 40;
             const tw = 0.35 + 0.65 * Math.max(0, noise2D(`${seed}-pt-${i}`, t * 0.5, 1));
             const color = d.tint ? theme.accent : theme.text;
