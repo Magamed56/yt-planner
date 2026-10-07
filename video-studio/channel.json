@@ -1,0 +1,41 @@
+{
+  "name": "Нейрофакт",
+  "handle": "neurofakt",
+  "handleFallbacks": ["neurofakt.ru", "neuro_fakt", "neurofakt.media"],
+  "tagline": "Как работает твой мозг — за минуту",
+  "niche": "Научпоп о мозге и мышлении: память, сон, фокус, привычки, эмоции, мифы о мозге. Только проверяемые факты из исследований — без эзотерики и кликбейтной лжи.",
+  "audience": "Русскоязычные 16–35 лет: студенты и молодые специалисты, которые хотят учиться быстрее, лучше спать, меньше прокрастинировать и понимать себя.",
+  "language": "ru",
+  "theme": "midnight",
+  "voice": { "provider": "gemini", "name": "Charon", "style": "Спокойно и уверенно, как умный друг-учёный: тёплый тембр, чёткая дикция, живые интонации, без пафоса." },
+  "pillars": [
+    { "id": "memory", "title": "Память и учёба", "icon": "brain" },
+    { "id": "sleep", "title": "Сон и энергия", "icon": "moon" },
+    { "id": "focus", "title": "Фокус и продуктивность", "icon": "target" },
+    { "id": "habits", "title": "Привычки и дофамин", "icon": "repeat" },
+    { "id": "emotions", "title": "Эмоции и стресс", "icon": "heart" },
+    { "id": "myths", "title": "Мифы о мозге", "icon": "circle-x" },
+    { "id": "perception", "title": "Странности восприятия", "icon": "eye" }
+  ],
+  "schedule": {
+    "perDay": 1,
+    "publishTimeLocal": "19:00",
+    "timezone": "Europe/Moscow",
+    "note": "1 Shorts/Reels в день: укладывается в бесплатные лимиты (Gemini TTS ≈ 10 запросов/сутки, GitHub Actions 2000 мин/мес)."
+  },
+  "hashtags": {
+    "brand": ["#нейрофакт"],
+    "core": ["#мозг", "#психология", "#наука", "#саморазвитие"],
+    "youtubeShorts": ["#shorts"],
+    "instagram": ["#reels", "#научпоп", "#фактыомозге"]
+  },
+  "cta": {
+    "subscribe": "Подпишись — каждый день один факт о твоём мозге",
+    "comment": "Напиши в комментариях, что проверишь на себе"
+  },
+  "links": {
+    "youtube": "https://youtube.com/@neurofakt",
+    "instagram": "https://instagram.com/neurofakt"
+  },
+  "disclaimer": "Ролики — научно-популярные и не заменяют консультацию врача."
+}
