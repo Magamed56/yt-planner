@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.131.0",
     "@remotion/bundler": "4.0.534",
     "@remotion/captions": "4.0.534",
     "@remotion/cli": "4.0.534",
@@ -26,6 +27,7 @@
     "@remotion/transitions": "4.0.534",
     "dotenv": "18.0.6",
     "edge-tts-universal": "1.4.0",
+    "googleapis": "183.0.0",
     "lucide-react": "1.52.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
