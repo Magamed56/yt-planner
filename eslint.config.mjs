@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Отдельный проект со своими зависимостями и конфигом.
+    "video-studio/**",
   ]),
 ]);
 

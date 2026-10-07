@@ -1,0 +1,43 @@
+{
+  "name": "video-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Автономный конвейер: тема → сценарий → озвучка → визуал → моушен-монтаж (Remotion) → MP4. Только бесплатные инструменты.",
+  "scripts": {
+    "make": "tsx src/cli/make.ts",
+    "studio": "remotion studio src/remotion/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.534",
+    "@remotion/captions": "4.0.534",
+    "@remotion/cli": "4.0.534",
+    "@remotion/google-fonts": "4.0.534",
+    "@remotion/layout-utils": "4.0.534",
+    "@remotion/media": "4.0.534",
+    "@remotion/media-parser": "4.0.534",
+    "@remotion/media-utils": "4.0.534",
+    "@remotion/motion-blur": "4.0.534",
+    "@remotion/noise": "4.0.534",
+    "@remotion/paths": "4.0.534",
+    "@remotion/renderer": "4.0.534",
+    "@remotion/shapes": "4.0.534",
+    "@remotion/transitions": "4.0.534",
+    "dotenv": "18.0.6",
+    "edge-tts-universal": "1.4.0",
+    "lucide-react": "1.52.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.534",
+    "sherpa-onnx-node": "1.13.8",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}
