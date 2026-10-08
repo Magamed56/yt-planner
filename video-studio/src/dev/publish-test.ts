@@ -422,6 +422,8 @@ const vid = (over: Partial<ChannelVideo> & { videoId: string }): ChannelVideo =>
   embeddable: null,
   license: null,
   publicStatsViewable: null,
+  tags: [],
+  categoryId: null,
   ...over,
 });
 
@@ -465,6 +467,13 @@ await test("youtube-fill: находим по имени файла, по заг
   // Две одинаково подходящие длительности (56,94 и 57,41 с) — не гадаем.
   const amb = matchVideos(week1, [vid({ videoId: "X", durationSec: 57 })]);
   assert.equal(matchVideos(week1, [vid({ videoId: "Y" })]).matches.length, 0); // 30 с — нет такого ролика
+  // По длительности — только нетронутый черновик: видео с описанием, временем выхода или кодом другой недели не берём.
+  const d49 = Math.round(week1.find((v) => v.id === "05b")!.durationSec);
+  for (const other of [
+    vid({ videoId: "W1", title: "Мой влог", description: "текст", durationSec: d49 }),
+    vid({ videoId: "W2", title: "clip", fileName: "clip.mp4", publishAt: "2026-11-01T09:00:00Z", durationSec: d49 }),
+    vid({ videoId: "W3", title: "08a-drugoy", fileName: "08a-drugoy.mp4", durationSec: d49 }),
+  ]) assert.equal(matchVideos(week1, [other]).matches.length, 0, other.videoId);
   assert.equal(amb.matches.length, 0);
 });
 
@@ -475,12 +484,18 @@ await test("youtube-fill: расписание — 2 в день по слота
     vid({ videoId: "A", fileName: `${items[0]!.file}.mp4` }),
     vid({ videoId: "B", fileName: `${items[1]!.file}.mp4`, publishAt: "2026-10-09T09:00:00Z" }), // уже стоит на 12:00 завтра
     vid({ videoId: "C", fileName: `${items[2]!.file}.mp4` }),
-    vid({ videoId: "D", fileName: `${items[3]!.file}.mp4`, privacyStatus: "public", title: items[3]!.title, description: items[3]!.description }),
+    vid({ videoId: "D", fileName: `${items[3]!.file}.mp4`, privacyStatus: "public", title: items[3]!.title, description: items[3]!.description, tags: items[3]!.tags, categoryId: "27" }),
     vid({ videoId: "E", fileName: `${items[4]!.file}.mp4`, embeddable: false, license: "creativeCommon", publicStatsViewable: false }),
   ];
   const plan = planUpdates(matchVideos(items, videos), { schedule: channel.schedule, mode: "slots", now });
   const at = Object.fromEntries(plan.map((p) => [p.match.video.videoId, p.publishAt]));
   assert.deepEqual(at, { A: "2026-10-08T16:00:00Z", B: "2026-10-09T09:00:00Z", C: "2026-10-09T16:00:00Z", D: null, E: "2026-10-10T09:00:00Z" });
+  // Слот, занятый другим роликом канала (не из списка), пропускается.
+  const busy = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: channel.schedule, mode: "slots", now, taken: ["2026-10-08T16:00:00Z"] });
+  assert.equal(busy[0]!.publishAt, "2026-10-09T09:00:00Z");
+  // Unlisted — только тексты: publishAt YouTube у него не примет.
+  const unl = planUpdates(matchVideos(items.slice(0, 1), [vid({ videoId: "U", fileName: `${items[0]!.file}.mp4`, privacyStatus: "unlisted" })]), { schedule: channel.schedule, mode: "slots", now });
+  assert.deepEqual([unl[0]!.privacyStatus, unl[0]!.publishAt], ["unlisted", null]);
   assert.equal(plan.find((p) => p.match.video.videoId === "B")!.keptPublishAt, true);
   assert.equal(plan.find((p) => p.match.video.videoId === "D")!.skip, true); // опубликован и тексты уже наши
   const body = updateBody(plan.find((p) => p.match.video.videoId === "E")!) as { id: string; snippet: Record<string, unknown>; status: Record<string, unknown> };
@@ -520,7 +535,7 @@ await test("youtube-fill: Data API — канал → «Загрузки» + п�
     if (u.includes("/playlistItems?")) return json({ items: [{ contentDetails: { videoId: "v2" } }] });
     if (u.includes("/search?")) return json({ items: [{ id: { videoId: "v3" } }, { id: { videoId: "v1" } }] });
     if (u.includes("/videos?part=snippet%2Cstatus%2CcontentDetails%2CfileDetails")) {
-      assert.match(u, /id=v1%2Cv2%2Cv3/);
+      assert.match(u, /id=v3%2Cv1%2Cv2/); // найденные поиском (свежие) — первыми
       return json({
         items: [
           { id: "v1", snippet: { title: item.file }, status: { uploadStatus: "processed", privacyStatus: "private" }, contentDetails: { duration: "PT54S" }, fileDetails: { fileName: `${item.file}.mp4` } },

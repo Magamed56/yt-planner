@@ -37,6 +37,10 @@ function readItems(file: string): FillItem[] {
     if (typeof v.description !== "string" || Buffer.byteLength(v.description) > 5000) throw new UserError(`${where}: описание больше 5000 байт.`);
     if (!Array.isArray(v.tags)) throw new UserError(`${where}: tags должен быть списком.`);
     if (!Number.isFinite(v.durationSec)) throw new UserError(`${where}: нет durationSec.`);
+    if (!/^\d+$/.test(String(v.categoryId ?? ""))) throw new UserError(`${where}: categoryId — номер категории YouTube, например "27" (Образование).`);
+    if (!v.defaultLanguage?.trim()) throw new UserError(`${where}: нет defaultLanguage (например "ru").`);
+    if (typeof v.containsSyntheticMedia !== "boolean") throw new UserError(`${where}: containsSyntheticMedia должен быть true или false.`);
+    if (/[<>]/.test(v.title + v.description)) throw new UserError(`${where}: YouTube не принимает «<» и «>» в названии и описании.`);
   }
   return list;
 }
@@ -69,13 +73,14 @@ async function main() {
   if (mode !== "slots" && mode !== "none") throw new UserError(`--schedule: «${values.schedule}» — бывает slots или none.`);
   const itemsFile = resolveInputPath(String(values.items));
   if (!itemsFile) throw new UserError(`Не найден файл со списком роликов: ${values.items}`);
-  let items = readItems(itemsFile);
+  const items = readItems(itemsFile);
+  let only: Set<string> | null = null;
   if (typeof values.only === "string" && values.only.trim()) {
-    const only = new Set(values.only.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
+    only = new Set(values.only.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
     const unknown = [...only].filter((c) => !items.some((i) => i.id.toLowerCase() === c));
     if (unknown.length) throw new UserError(`--only: нет таких роликов в ${rel(itemsFile)}: ${unknown.join(", ")}`);
-    items = items.filter((i) => only.has(i.id.toLowerCase()));
   }
+  const wanted = (id: string) => !only || only.has(id.toLowerCase());
   const missingEnv = missingYoutubeEnv();
   if (missingEnv.length) throw new UserError(`Не заданы ${missingEnv.join(", ")}.\n${youtubeEnvHelp()}`);
 
@@ -85,15 +90,28 @@ async function main() {
   const dry = values["dry-run"] === true;
   const deps = { auth: youtubeAuth(), log: (m: string) => console.log(`  ${m}`) };
 
-  console.log(`video-studio · тексты и расписание для ${items.length} роликов из ${rel(itemsFile)}${dry ? " (пробный запуск, без изменений)" : ""}`);
+  const count = items.filter((i) => wanted(i.id)).length;
+  console.log(`video-studio · тексты и расписание для ${count} роликов из ${rel(itemsFile)}${dry ? " (пробный запуск, без изменений)" : ""}`);
   const videos = await listChannelVideos(deps);
   console.log(`  на канале видео: ${videos.length}`);
-  const report = matchVideos(items, videos);
-  const plan = planUpdates(report, { schedule: channel.schedule, mode, start });
+  // Сопоставляем со всем списком, а --only применяем к итогу.
+  const full = matchVideos(items, videos);
+  const report = {
+    matches: full.matches.filter((m) => wanted(m.item.id)),
+    missing: full.missing.filter((i) => wanted(i.id)),
+    duplicates: full.duplicates.filter((d) => wanted(d.item.id)),
+    broken: full.broken.filter((b) => wanted(b.item.id)),
+    pending: full.pending.filter((x) => wanted(x.item.id)),
+  };
+  // Занятые слоты — все запланированные ролики канала, не только из этого списка.
+  const now = Date.now();
+  const taken = videos.filter((v) => v.privacyStatus === "private" && v.publishAt && Date.parse(v.publishAt) > now).map((v) => v.publishAt!);
+  const plan = planUpdates(report, { schedule: channel.schedule, mode, start, taken });
 
   const rows: string[] = [];
   const warnings: string[] = [];
   let changed = 0;
+  let failed = 0;
   for (const p of plan) {
     const { item, video, by } = p.match;
     const when = p.publishAt ? formatLocal(new Date(p.publishAt), tz) : p.privacyStatus === "public" ? "уже опубликован" : "время не задано";
@@ -101,10 +119,22 @@ async function main() {
     if (p.skip) result = "уже заполнено";
     else if (dry) result = "будет заполнено";
     else {
-      const r = await applyUpdate(deps, p);
-      changed++;
-      if (r.warning) warnings.push(`${item.id}: ${r.warning}`);
-      result = r.warning ? "тексты ✔, время ✖" : "✔";
+      try {
+        const r = await applyUpdate(deps, p);
+        changed++;
+        if (r.warning) warnings.push(`${item.id}: ${r.warning}`);
+        result = r.warning ? "тексты ✔, время ✖" : "✔";
+      } catch (e) {
+        failed++;
+        const msg = e instanceof Error ? e.message : String(e);
+        warnings.push(`${item.id}: ${msg}`);
+        result = "ошибка";
+        // Без прав или ключа остальные ролики тоже не пройдут — не тратим квоту.
+        if (/не хватает прав|недействителен|неверные YT_CLIENT|квота/.test(msg)) {
+          console.log(`  ${item.id}  ✖ ${msg}`);
+          throw new UserError(msg);
+        }
+      }
     }
     const kept = p.keptPublishAt ? " (было)" : "";
     console.log(`  ${item.id}  ${result.padEnd(15)} ${when}${kept}  ← нашли по ${by}: ${video.fileName ?? video.title} → ${studio(video.videoId)}`);
@@ -145,10 +175,11 @@ async function main() {
 
   const found = report.matches.length;
   console.log(
-    `\n${found ? "✔" : "✖"} Найдено ${found} из ${items.length}` +
-      (dry ? "; это пробный запуск — ничего не меняли." : `; обновлено ${changed}, уже было в порядке ${plan.filter((p) => p.skip).length}.`),
+    `\n${found && !failed ? "✔" : "✖"} Найдено ${found} из ${count}` +
+      (dry ? "; это пробный запуск — ничего не меняли." : `; обновлено ${changed}, уже было в порядке ${plan.filter((p) => p.skip).length}${failed ? `, с ошибкой ${failed}` : ""}.`),
   );
   if (!found) throw new UserError(`Ни одного ролика из списка на канале не нашли.\n${hints[0] ?? ""}`);
+  if (failed) throw new UserError(`${failed} ролик(ов) не обновились — причины выше. Запустите ещё раз: готовые пропустятся.`);
 }
 
 process.on("unhandledRejection", (e) => fail(e));

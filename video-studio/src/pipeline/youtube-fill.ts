@@ -36,6 +36,8 @@ export interface ChannelVideo {
   embeddable: boolean | null;
   license: string | null;
   publicStatsViewable: boolean | null;
+  tags: string[];
+  categoryId: string | null;
 }
 
 export type MatchedBy = "файл" | "название" | "длительность";
@@ -90,6 +92,7 @@ function identify(video: ChannelVideo, items: FillItem[], codes: Set<string>): {
 }
 
 const DURATION_TOLERANCE_SEC = 1.5;
+const CODE_LIKE = /(?:^|[^0-9a-zа-яё])\d{2}[a-z](?=$|[^0-9a-zа-яё])/i;
 
 export function matchVideos(items: FillItem[], videos: ChannelVideo[]): MatchReport {
   const codes = new Set(items.map((i) => i.id.toLowerCase()));
@@ -105,12 +108,18 @@ export function matchVideos(items: FillItem[], videos: ChannelVideo[]): MatchRep
     list.push({ video: v, by: hit.by });
     found.set(hit.item.id, list);
   }
-  // Последний шанс — длительность, но только однозначная: один ролик ↔ одно видео.
+  // Последний шанс — длительность, но только однозначная (один ролик ↔ одно видео) и только у
+  // нетронутого черновика Studio: приватный, без времени выхода, название = имя файла, без
+  // описания и без кода вида «08a» (это ролик другой недели). Иначе можно переписать чужое видео.
   const unmatchedItems = items.filter((i) => !found.has(i.id));
+  const untouchedDraft = (v: ChannelVideo) =>
+    v.privacyStatus === "private" &&
+    !v.publishAt &&
+    !v.description.trim() &&
+    !CODE_LIKE.test(`${v.fileName ?? ""} ${v.title}`) &&
+    (!v.fileName || norm(v.title) === norm(v.fileName.replace(/\.[^.]+$/, "")));
   const candidates = (v: ChannelVideo) =>
-    v.durationSec === null || v.privacyStatus === "public"
-      ? []
-      : unmatchedItems.filter((i) => Math.abs(i.durationSec - v.durationSec!) <= DURATION_TOLERANCE_SEC);
+    v.durationSec === null || !untouchedDraft(v) ? [] : unmatchedItems.filter((i) => Math.abs(i.durationSec - v.durationSec!) <= DURATION_TOLERANCE_SEC);
   for (const v of unknown) {
     const c = candidates(v);
     if (c.length !== 1) continue;
@@ -145,29 +154,34 @@ export interface PlannedUpdate {
   skip: boolean; // всё уже как надо — запрос не нужен
 }
 
-const textsMatch = (v: ChannelVideo, i: FillItem) => v.title.trim() === i.title.trim() && v.description.trim() === i.description.trim();
+const textsMatch = (v: ChannelVideo, i: FillItem) =>
+  v.title.trim() === i.title.trim() &&
+  v.description.trim() === i.description.trim() &&
+  v.categoryId === i.categoryId &&
+  v.tags.join("\n") === i.tags.join("\n");
 
 // Кому какой слот: по порядку списка, следующие свободные слоты после «сейчас»
 // (или после start), уже назначенные времена не сдвигаем и не занимаем.
 export function planUpdates(
   report: MatchReport,
-  opts: { schedule: ChannelSchedule; mode: ScheduleMode; start?: Date | null; now?: Date },
+  opts: { schedule: ChannelSchedule; mode: ScheduleMode; start?: Date | null; now?: Date; taken?: Iterable<string> },
 ): PlannedUpdate[] {
   const now = opts.now ?? new Date();
   const future = (iso: string | null) => (iso ? Date.parse(iso) > now.getTime() : false);
-  const kept = report.matches.filter((m) => m.video.privacyStatus !== "public" && future(m.video.publishAt));
-  const needSlot = report.matches.filter((m) => m.video.privacyStatus !== "public" && !future(m.video.publishAt));
+  const kept = report.matches.filter((m) => m.video.privacyStatus === "private" && future(m.video.publishAt));
+  // Время ставим только приватным: publishAt у unlisted и у уже выходивших YouTube отвергает.
+  const needSlot = report.matches.filter((m) => m.video.privacyStatus === "private" && !future(m.video.publishAt));
   const from = opts.start && opts.start.getTime() > now.getTime() ? opts.start : now;
   const slots =
     opts.mode === "slots"
-      ? upcomingSlots(opts.schedule, needSlot.length, { from, taken: kept.map((m) => m.video.publishAt!) })
+      ? upcomingSlots(opts.schedule, needSlot.length, { from, taken: [...kept.map((m) => m.video.publishAt!), ...(opts.taken ?? [])] })
       : [];
   let next = 0;
   return report.matches.map((match) => {
     const v = match.video;
     const textsChanged = !textsMatch(v, match.item);
-    if (v.privacyStatus === "public") {
-      return { match, privacyStatus: "public", publishAt: null, keptPublishAt: false, textsChanged, skip: !textsChanged };
+    if (v.privacyStatus !== "private") {
+      return { match, privacyStatus: v.privacyStatus, publishAt: null, keptPublishAt: false, textsChanged, skip: !textsChanged };
     }
     if (future(v.publishAt)) {
       return { match, privacyStatus: "private", publishAt: v.publishAt, keptPublishAt: true, textsChanged, skip: !textsChanged };
@@ -248,7 +262,7 @@ async function api<T>(deps: ApiDeps, method: "GET" | "PUT", path: string, body?:
 
 interface ApiVideo {
   id: string;
-  snippet?: { title?: string; description?: string };
+  snippet?: { title?: string; description?: string; tags?: string[]; categoryId?: string };
   status?: { uploadStatus?: string; privacyStatus?: string; publishAt?: string; embeddable?: boolean; license?: string; publicStatsViewable?: boolean };
   contentDetails?: { duration?: string };
   fileDetails?: { fileName?: string };
@@ -266,6 +280,8 @@ const toChannelVideo = (v: ApiVideo): ChannelVideo => ({
   embeddable: v.status?.embeddable ?? null,
   license: v.status?.license ?? null,
   publicStatsViewable: v.status?.publicStatsViewable ?? null,
+  tags: v.snippet?.tags ?? [],
+  categoryId: v.snippet?.categoryId ?? null,
 });
 
 // Последние загрузки канала (до maxVideos): плейлист «Загрузки» + поиск по своим
@@ -275,6 +291,7 @@ export async function listChannelVideos(deps: ApiDeps, maxVideos = 200): Promise
   const uploads = ch.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
   if (!uploads) throw new Error("YouTube: у этого аккаунта Google нет канала — войдите в аккаунт канала «Суть за минуту» при получении токена.");
   const ids: string[] = [];
+  const recent: string[] = [];
   let page = "";
   do {
     const q = new URLSearchParams({ part: "contentDetails", playlistId: uploads, maxResults: "50" });
@@ -285,14 +302,15 @@ export async function listChannelVideos(deps: ApiDeps, maxVideos = 200): Promise
   } while (page && ids.length < maxVideos);
   try {
     const s = await api<{ items?: { id?: { videoId?: string } }[] }>(deps, "GET", "search?part=id&forMine=true&type=video&order=date&maxResults=50");
-    for (const it of s.items ?? []) if (it.id?.videoId) ids.push(it.id.videoId);
+    for (const it of s.items ?? []) if (it.id?.videoId) recent.push(it.id.videoId);
   } catch (e) {
     deps.log?.(`поиск по своим роликам не сработал (${e instanceof Error ? e.message : e}) — беру только плейлист «Загрузки»`);
   }
-  const unique = [...new Set(ids)].slice(0, maxVideos);
+  // Найденные поиском — самые свежие загрузки: их первыми, чтобы лимит их не отрезал.
+  const unique = [...new Set([...recent, ...ids])].slice(0, maxVideos);
   const out: ChannelVideo[] = [];
   for (let i = 0; i < unique.length; i += 50) {
-    const q = new URLSearchParams({ part: "snippet,status,contentDetails,fileDetails", id: unique.slice(i, i + 50).join(","), maxResults: "50" });
+    const q = new URLSearchParams({ part: "snippet,status,contentDetails,fileDetails", id: unique.slice(i, i + 50).join(",") });
     const r = await api<{ items?: ApiVideo[] }>(deps, "GET", `videos?${q}`);
     out.push(...(r.items ?? []).map(toChannelVideo));
   }
