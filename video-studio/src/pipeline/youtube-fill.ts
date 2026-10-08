@@ -51,6 +51,7 @@ export interface MatchReport {
   missing: FillItem[]; // ролика нет на канале (ещё не загружен или YouTube его пока не показывает)
   duplicates: { item: FillItem; videos: ChannelVideo[] }[]; // загружен дважды — не трогаем, решает человек
   broken: { item: FillItem; video: ChannelVideo }[]; // загрузка не удалась (failed/rejected)
+  pending: { item: FillItem; video: ChannelVideo }[]; // файл ещё загружается: длительности нет (P0D), трогать рано
 }
 
 // «PT1M4S» → 64; «P0D» и мусор → null.
@@ -119,13 +120,15 @@ export function matchVideos(items: FillItem[], videos: ChannelVideo[]): MatchRep
     found.set(item.id, [{ video: v, by: "длительность" }]);
   }
 
-  const report: MatchReport = { matches: [], missing: [], duplicates: [], broken: [] };
+  const report: MatchReport = { matches: [], missing: [], duplicates: [], broken: [], pending: [] };
   for (const item of items) {
     const list = found.get(item.id) ?? [];
     const alive = list.filter((x) => !["failed", "rejected", "deleted"].includes(x.video.uploadStatus ?? ""));
     if (!list.length) report.missing.push(item);
     else if (!alive.length) report.broken.push({ item, video: list[0]!.video });
     else if (alive.length > 1) report.duplicates.push({ item, videos: alive.map((x) => x.video) });
+    // Как в bakery-escape (publish_plan.received): пока у видео нет длительности, YouTube не получил файл целиком.
+    else if (alive[0]!.video.durationSec === null) report.pending.push({ item, video: alive[0]!.video });
     else report.matches.push({ item, video: alive[0]!.video, by: alive[0]!.by });
   }
   return report;

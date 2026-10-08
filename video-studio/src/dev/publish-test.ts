@@ -415,7 +415,7 @@ const vid = (over: Partial<ChannelVideo> & { videoId: string }): ChannelVideo =>
   title: "",
   description: "",
   fileName: null,
-  durationSec: null,
+  durationSec: 30,
   uploadStatus: "processed",
   privacyStatus: "private",
   publishAt: null,
@@ -452,6 +452,7 @@ await test("youtube-fill: находим по имени файла, по заг
     vid({ videoId: "V6", fileName: `${d.file}.mp4`, uploadStatus: "failed" }),
     vid({ videoId: "V7", fileName: `${e.file}.mp4` }),
     vid({ videoId: "V8", fileName: `${e.file} (1).mp4` }), // загружен дважды
+    vid({ videoId: "V9", fileName: `${week1[6]!.file}.mp4`, durationSec: null }), // 04a ещё загружается
   ];
   const r = matchVideos(week1, videos);
   const by = Object.fromEntries(r.matches.map((m) => [m.item.id, `${m.video.videoId}/${m.by}`]));
@@ -459,9 +460,11 @@ await test("youtube-fill: находим по имени файла, по заг
   assert.deepEqual(r.broken.map((x) => x.item.id), ["02b"]);
   assert.deepEqual(r.duplicates.map((x) => [x.item.id, x.videos.map((v) => v.videoId)]), [["03a", ["V7", "V8"]]]);
   assert.ok(!r.matches.some((m) => m.video.videoId === "V5"));
-  assert.equal(r.missing.length, 14 - 4 - 1 - 1);
+  assert.deepEqual(r.pending.map((x) => x.item.id), ["04a"]);
+  assert.equal(r.missing.length, 14 - 4 - 1 - 1 - 1);
   // Две одинаково подходящие длительности (56,94 и 57,41 с) — не гадаем.
   const amb = matchVideos(week1, [vid({ videoId: "X", durationSec: 57 })]);
+  assert.equal(matchVideos(week1, [vid({ videoId: "Y" })]).matches.length, 0); // 30 с — нет такого ролика
   assert.equal(amb.matches.length, 0);
 });
 

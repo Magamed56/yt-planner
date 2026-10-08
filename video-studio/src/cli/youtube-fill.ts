@@ -123,6 +123,10 @@ async function main() {
     console.log(`  ${b.item.id}  загрузка не удалась (${b.video.uploadStatus}) — загрузите файл заново`);
     rows.push(`| ${b.item.id} | ${escapeMd(b.item.title)} | — | — | загрузка не удалась (${b.video.uploadStatus}) |`);
   }
+  for (const x of report.pending) {
+    console.log(`  ${x.item.id}  ещё загружается или обрабатывается — запустите снова через 5–10 минут: ${studio(x.video.videoId)}`);
+    rows.push(`| ${x.item.id} | [${escapeMd(x.item.title)}](${studio(x.video.videoId)}) | — | — | ещё загружается — запустите позже |`);
+  }
   for (const w of warnings) console.log(`  ⚠ ${w}`);
 
   const hints: string[] = [];
