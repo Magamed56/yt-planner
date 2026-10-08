@@ -154,11 +154,15 @@ export interface PlannedUpdate {
   skip: boolean; // всё уже как надо — запрос не нужен
 }
 
+// Теги YouTube отдаёт в своём порядке (по алфавиту) — сравниваем без учёта порядка,
+// иначе каждый запуск заново переписывает уже заполненные ролики.
+const sameTags = (a: string[], b: string[]) => [...a].sort().join("\n") === [...b].sort().join("\n");
+
 const textsMatch = (v: ChannelVideo, i: FillItem) =>
   v.title.trim() === i.title.trim() &&
   v.description.trim() === i.description.trim() &&
   v.categoryId === i.categoryId &&
-  v.tags.join("\n") === i.tags.join("\n");
+  sameTags(v.tags, i.tags);
 
 // Кому какой слот: по порядку списка, следующие свободные слоты после «сейчас»
 // (или после start), уже назначенные времена не сдвигаем и не занимаем.

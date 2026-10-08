@@ -492,7 +492,8 @@ await test("youtube-fill: расписание — 2 в день по слота
     vid({ videoId: "A", fileName: `${items[0]!.file}.mp4` }),
     vid({ videoId: "B", fileName: `${items[1]!.file}.mp4`, publishAt: "2026-10-09T09:00:00Z" }), // уже стоит на 12:00 завтра
     vid({ videoId: "C", fileName: `${items[2]!.file}.mp4` }),
-    vid({ videoId: "D", fileName: `${items[3]!.file}.mp4`, privacyStatus: "public", title: items[3]!.title, description: items[3]!.description, tags: items[3]!.tags, categoryId: "27" }),
+    // Теги YouTube возвращает в своём порядке — это не повод переписывать ролик.
+    vid({ videoId: "D", fileName: `${items[3]!.file}.mp4`, privacyStatus: "public", title: items[3]!.title, description: items[3]!.description, tags: [...items[3]!.tags].reverse(), categoryId: "27" }),
     vid({ videoId: "E", fileName: `${items[4]!.file}.mp4`, embeddable: false, license: "creativeCommon", publicStatsViewable: false }),
   ];
   const plan = planUpdates(matchVideos(items, videos), { schedule: channel.schedule, mode: "slots", now });
