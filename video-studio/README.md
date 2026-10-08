@@ -250,7 +250,10 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 4. На своём ПК выполните `npm run youtube-auth`. Откроется браузер; войдите в аккаунт с каналом.
    В терминале появится `YT_REFRESH_TOKEN=…`: добавьте его в `.env` (или запустите с `--save`)
    и в секреты GitHub.
+   Без компьютера ключ можно получить в браузере через OAuth Playground: [docs/youtube-setup.md](docs/youtube-setup.md), шаг 6.
 5. Загрузка: `npm run upload -- out/<имя> --privacy unlisted` или `npm run make -- … --upload youtube`.
+   Загрузили ролики в Studio руками — тексты и расписание поставит `npm run youtube-fill` (или
+   workflow «video-studio: YouTube — тексты и расписание»): см. docs/youtube-setup.md.
 6. По расписанию: `--schedule` (ближайший свободный слот из `channel.json`), `--schedule-slot N`,
    `--publish-at 2026-10-10T12:00:00+03:00`. Видео загружается приватным с `publishAt`, и YouTube
    сам публикует его в это время. Как это выглядит в Studio: [docs/youtube-setup.md](docs/youtube-setup.md).

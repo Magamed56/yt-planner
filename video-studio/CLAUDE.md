@@ -45,14 +45,17 @@
   относительно publicDir запуска (`out/<slug>/public`).
 - `src/cli/` — `make.ts` (всё одной командой), `script.ts` (черновик), `upload.ts` (`--to youtube,instagram`,
   `--schedule`), `publish-options.ts` (общие флаги `--upload`/`--schedule*`), `youtube-auth.ts`,
-  `instagram-token.ts` (проверка/продление токена, IG_USER_ID), `brand.ts`.
+  `instagram-token.ts` (проверка/продление токена, IG_USER_ID), `brand.ts`, `youtube-fill.ts` (ролики,
+  загруженные в Studio руками: найти по коду «01a» в имени файла и поставить тексты/publishAt через
+  videos.update; логика — `src/pipeline/youtube-fill.ts`, данные — `content/week1-videos.json`).
 - `src/dev/` — dev-скрипты: `stills.ts`, `preview.ts`, `voice-test.ts`, `script-test.ts`, `visuals-test.ts`,
   `publish-test.ts` (канал, слоты, описание, publishAt, Instagram на подменённом fetch).
 - `docs/` — инструкции для человека: `youtube-setup.md` (Studio, расписание), `instagram-setup.md`.
 - `.github/workflows/video-studio.yml` (в корне репозитория) — draft / render / batch в GitHub Actions
   (batch: ролик i → слот i через `--schedule-slot i --schedule-start <старт>`, релиз на ролик);
   `video-studio-instagram.yml` — публикует самый старый релиз с `instagram.json` без
-  `instagram-published.json` (расписание закомментировано).
+  `instagram-published.json` (расписание закомментировано); `video-studio-youtube-fill.yml` —
+  `youtube-fill` кнопкой из GitHub.
 - `.claude/skills/` — официальные скиллы Remotion (skills@1.7.1, версия 4.0.534, `skills-lock.json`).
   Обновить: `DISABLE_TELEMETRY=1 npx -y skills@1.7.1 update -p -y`.
 

@@ -13,7 +13,9 @@ import type { YoutubeMeta } from "./meta";
 export type Privacy = "private" | "unlisted" | "public";
 export const PRIVACY_VALUES: Privacy[] = ["private", "unlisted", "public"];
 
-export const YT_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
+// youtube.upload — загрузка; youtube — найти свои ролики и поправить им тексты и расписание
+// (npm run youtube-fill для роликов, загруженных в Studio руками).
+export const YT_SCOPES = ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube"];
 
 export interface UploadInput {
   videoFile: string;
@@ -52,6 +54,7 @@ export function youtubeEnvHelp(): string {
     "  2) OAuth consent screen: External, добавить себя в тестовые пользователи, затем «Publish app» (иначе токен живёт 7 дней).\n" +
     "  3) Credentials → OAuth client ID → тип «Desktop app» → скопировать Client ID и Client secret в .env.\n" +
     "  4) npm run youtube-auth — откроется браузер, после входа будет напечатан YT_REFRESH_TOKEN.\n" +
+    "  Без компьютера, только в браузере (OAuth Playground): docs/youtube-setup.md, шаг 6.\n" +
     "  Подробно: README.md, раздел «Загрузка на YouTube»."
   );
 }
@@ -64,9 +67,9 @@ export function youtubeAuth() {
   return auth;
 }
 
-type Auth = Pick<ReturnType<typeof youtubeAuth>, "getAccessToken">;
+export type Auth = Pick<ReturnType<typeof youtubeAuth>, "getAccessToken">;
 
-async function accessToken(auth: Auth): Promise<string> {
+export async function accessToken(auth: Auth): Promise<string> {
   try {
     const { token } = await auth.getAccessToken();
     if (!token) throw new Error("пустой access token");
@@ -87,7 +90,7 @@ async function accessToken(auth: Auth): Promise<string> {
 }
 
 // Понятные причины частых отказов API.
-function explainApiError(status: number, body: string): string {
+export function explainApiError(status: number, body: string): string {
   let reason = "";
   let message = body.slice(0, 300);
   try {
@@ -104,7 +107,9 @@ function explainApiError(status: number, body: string): string {
   if (reason === "invalidDescription") return "YouTube отклонил описание (больше 5000 байт — у кириллицы 2 байта на букву — или с «<», «>»).";
   if (reason === "invalidTags") return "YouTube отклонил теги (суммарно больше 500 символов).";
   if (reason === "invalidPublishAt") return "YouTube отклонил время публикации (оно в прошлом или в неверном формате) — выберите слот позже: --schedule или --publish-at <ISO-время>.";
-  if (status === 403 && /insufficient|scope/i.test(message)) return "у токена нет права youtube.upload — получите его заново: npm run youtube-auth.";
+  if (reason === "insufficientPermissions" || (status === 403 && /insufficient|scope/i.test(message)))
+    return "у токена не хватает прав (нужны youtube.upload и youtube) — получите YT_REFRESH_TOKEN заново: npm run youtube-auth или OAuth Playground (docs/youtube-setup.md).";
+  if (reason === "forbidden") return `YouTube запретил действие (видео с другого канала? токен выпущен для другого аккаунта?): ${message}`;
   return `HTTP ${status}${reason ? ` ${reason}` : ""}: ${message}`;
 }
 

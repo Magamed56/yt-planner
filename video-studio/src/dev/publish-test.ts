@@ -14,6 +14,7 @@ import { coverFrame } from "../pipeline/cover";
 import { buildInstagramCaption, instagramConfig, instagramHashtags, publishReel, publishRunDir, writeInstagramAssets, type InstagramConfig } from "../pipeline/instagram";
 import { DESCRIPTION_MAX_BYTES, buildYoutubeMeta } from "../pipeline/meta";
 import { uploadToYoutube } from "../pipeline/youtube";
+import { applyUpdate, listChannelVideos, matchVideos, parseIsoDuration, planUpdates, updateBody, type ChannelVideo, type FillItem } from "../pipeline/youtube-fill";
 import { parseUploadTargets, resolvePublishAt, scheduleArgsFrom, takenSlots } from "../cli/publish-options";
 import type { VideoScript } from "../types";
 
@@ -405,6 +406,144 @@ await test("Instagram: настройки — числовой IG_USER_ID, то�
   const c = instagramConfig({ IG_USER_ID: "1784", IG_ACCESS_TOKEN: "EAA1", IG_API_VERSION: "25.0" });
   assert.equal(c.version, "v25.0");
   assert.equal(c.host, "graph.facebook.com");
+});
+
+// ---- youtube-fill: ролики, загруженные в Studio руками ----
+
+const week1 = (JSON.parse(fs.readFileSync(path.join(root, "content", "week1-videos.json"), "utf8")) as { videos: FillItem[] }).videos;
+const vid = (over: Partial<ChannelVideo> & { videoId: string }): ChannelVideo => ({
+  title: "",
+  description: "",
+  fileName: null,
+  durationSec: null,
+  uploadStatus: "processed",
+  privacyStatus: "private",
+  publishAt: null,
+  embeddable: null,
+  license: null,
+  publicStatsViewable: null,
+  ...over,
+});
+
+await test("youtube-fill: список недели 1 — 14 роликов, коды по порядку, тексты в лимитах YouTube", () => {
+  assert.deepEqual(week1.map((v) => v.id), ["01a", "01b", "02a", "02b", "03a", "03b", "04a", "04b", "05a", "05b", "06a", "06b", "07a", "07b"]);
+  for (const v of week1) {
+    assert.ok(v.file.startsWith(`${v.id}-`), v.id);
+    assert.ok(v.title.length <= 100 && Buffer.byteLength(v.description) <= 5000, v.id);
+    assert.ok(v.tags.reduce((n, t) => n + t.length + (t.includes(" ") ? 2 : 0), 0) + v.tags.length - 1 <= 500, `${v.id}: теги`);
+    assert.equal(v.categoryId, "27");
+    assert.equal(v.containsSyntheticMedia, true);
+    assert.doesNotMatch(v.description, /12:00|19:00|МСК|по Москве/, `${v.id}: время выхода в описании`);
+  }
+  assert.equal(parseIsoDuration("PT1M4S"), 64);
+  assert.equal(parseIsoDuration("PT54S"), 54);
+  assert.equal(parseIsoDuration("P0D"), null);
+  assert.equal(parseIsoDuration(undefined), null);
+});
+
+await test("youtube-fill: находим по имени файла, по заголовку-черновику, по уже проставленному названию и по однозначной длительности", () => {
+  const [a, b, c, d, e] = week1 as [FillItem, FillItem, FillItem, FillItem, FillItem];
+  const videos = [
+    vid({ videoId: "V1", fileName: `${a.file}.mp4`, title: a.file }),
+    vid({ videoId: "V2", fileName: "IMG_2041.MOV", title: `${b.id} ${b.title}` }), // код в названии
+    vid({ videoId: "V3", fileName: "4b41f984.mp4", title: c.title }), // повторный запуск: название уже наше
+    vid({ videoId: "V4", fileName: "video (3).mp4", title: "video (3)", durationSec: Math.round(week1.find((v) => v.id === "05b")!.durationSec) }), // 49 с — одна такая
+    vid({ videoId: "V5", fileName: "random.mp4", title: "Мой влог", durationSec: 600 }), // чужое видео — не трогаем
+    vid({ videoId: "V6", fileName: `${d.file}.mp4`, uploadStatus: "failed" }),
+    vid({ videoId: "V7", fileName: `${e.file}.mp4` }),
+    vid({ videoId: "V8", fileName: `${e.file} (1).mp4` }), // загружен дважды
+  ];
+  const r = matchVideos(week1, videos);
+  const by = Object.fromEntries(r.matches.map((m) => [m.item.id, `${m.video.videoId}/${m.by}`]));
+  assert.deepEqual(by, { "01a": "V1/файл", "01b": "V2/название", "02a": "V3/название", "05b": "V4/длительность" });
+  assert.deepEqual(r.broken.map((x) => x.item.id), ["02b"]);
+  assert.deepEqual(r.duplicates.map((x) => [x.item.id, x.videos.map((v) => v.videoId)]), [["03a", ["V7", "V8"]]]);
+  assert.ok(!r.matches.some((m) => m.video.videoId === "V5"));
+  assert.equal(r.missing.length, 14 - 4 - 1 - 1);
+  // Две одинаково подходящие длительности (56,94 и 57,41 с) — не гадаем.
+  const amb = matchVideos(week1, [vid({ videoId: "X", durationSec: 57 })]);
+  assert.equal(amb.matches.length, 0);
+});
+
+await test("youtube-fill: расписание — 2 в день по слотам, прежнее время не сдвигаем, опубликованные не трогаем", () => {
+  const now = new Date("2026-10-08T15:00:00Z"); // 18:00 МСК — ближайший слот 19:00
+  const items = week1.slice(0, 5);
+  const videos = [
+    vid({ videoId: "A", fileName: `${items[0]!.file}.mp4` }),
+    vid({ videoId: "B", fileName: `${items[1]!.file}.mp4`, publishAt: "2026-10-09T09:00:00Z" }), // уже стоит на 12:00 завтра
+    vid({ videoId: "C", fileName: `${items[2]!.file}.mp4` }),
+    vid({ videoId: "D", fileName: `${items[3]!.file}.mp4`, privacyStatus: "public", title: items[3]!.title, description: items[3]!.description }),
+    vid({ videoId: "E", fileName: `${items[4]!.file}.mp4`, embeddable: false, license: "creativeCommon", publicStatsViewable: false }),
+  ];
+  const plan = planUpdates(matchVideos(items, videos), { schedule: channel.schedule, mode: "slots", now });
+  const at = Object.fromEntries(plan.map((p) => [p.match.video.videoId, p.publishAt]));
+  assert.deepEqual(at, { A: "2026-10-08T16:00:00Z", B: "2026-10-09T09:00:00Z", C: "2026-10-09T16:00:00Z", D: null, E: "2026-10-10T09:00:00Z" });
+  assert.equal(plan.find((p) => p.match.video.videoId === "B")!.keptPublishAt, true);
+  assert.equal(plan.find((p) => p.match.video.videoId === "D")!.skip, true); // опубликован и тексты уже наши
+  const body = updateBody(plan.find((p) => p.match.video.videoId === "E")!) as { id: string; snippet: Record<string, unknown>; status: Record<string, unknown> };
+  assert.equal(body.id, "E");
+  assert.equal(body.snippet.title, items[4]!.title);
+  assert.equal(body.snippet.categoryId, "27");
+  assert.equal(body.snippet.defaultAudioLanguage, "ru");
+  assert.deepEqual(body.status, {
+    privacyStatus: "private",
+    selfDeclaredMadeForKids: false,
+    containsSyntheticMedia: true,
+    embeddable: false,
+    license: "creativeCommon",
+    publicStatsViewable: false,
+    publishAt: "2026-10-10T09:00:00Z",
+  });
+  // С даты старта и без расписания.
+  const fromStart = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: channel.schedule, mode: "slots", now, start: parseScheduleStart("2026-10-12", "Europe/Moscow") });
+  assert.equal(fromStart[0]!.publishAt, "2026-10-12T09:00:00Z");
+  const none = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: channel.schedule, mode: "none", now });
+  assert.equal(none[0]!.publishAt, null);
+  assert.equal(none[0]!.privacyStatus, "private");
+  assert.equal(none[0]!.skip, false); // тексты ещё не наши
+});
+
+await test("youtube-fill: Data API — канал → «Загрузки» + поиск → videos.list → videos.update; время не принято — предупреждение", async () => {
+  const auth = { getAccessToken: async () => ({ token: "tok" }) };
+  const calls: { method: string; url: string; body?: string }[] = [];
+  const item = week1[0]!;
+  const f = (async (url: string | URL, init?: RequestInit) => {
+    const u = String(url);
+    calls.push({ method: init?.method ?? "GET", url: u, body: init?.body as string | undefined });
+    assert.equal((init?.headers as Record<string, string>).Authorization, "Bearer tok");
+    const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status });
+    if (u.includes("/channels?")) return json({ items: [{ contentDetails: { relatedPlaylists: { uploads: "UUx" } } }] });
+    if (u.includes("/playlistItems?") && !u.includes("pageToken")) return json({ items: [{ contentDetails: { videoId: "v1" } }], nextPageToken: "p2" });
+    if (u.includes("/playlistItems?")) return json({ items: [{ contentDetails: { videoId: "v2" } }] });
+    if (u.includes("/search?")) return json({ items: [{ id: { videoId: "v3" } }, { id: { videoId: "v1" } }] });
+    if (u.includes("/videos?part=snippet%2Cstatus%2CcontentDetails%2CfileDetails")) {
+      assert.match(u, /id=v1%2Cv2%2Cv3/);
+      return json({
+        items: [
+          { id: "v1", snippet: { title: item.file }, status: { uploadStatus: "processed", privacyStatus: "private" }, contentDetails: { duration: "PT54S" }, fileDetails: { fileName: `${item.file}.mp4` } },
+          { id: "v2", snippet: { title: "Чужое" }, status: { privacyStatus: "public" }, contentDetails: { duration: "PT10M" } },
+          { id: "v3", snippet: { title: "Ещё" }, status: { privacyStatus: "private" }, contentDetails: { duration: "PT3S" } },
+        ],
+      });
+    }
+    if (init?.method === "PUT") return json({ id: "v1", status: { privacyStatus: "private" } }); // publishAt не вернулся
+    throw new Error(`неожиданный запрос ${u}`);
+  }) as typeof fetch;
+  const videos = await listChannelVideos({ auth, fetch: f, log: () => {} });
+  assert.deepEqual(videos.map((v) => [v.videoId, v.durationSec]), [["v1", 54], ["v2", 600], ["v3", 3]]);
+  const plan = planUpdates(matchVideos([item], videos), { schedule: channel.schedule, mode: "slots", now: new Date("2026-10-08T15:00:00Z") });
+  const r = await applyUpdate({ auth, fetch: f }, plan[0]!);
+  const put = calls.find((c) => c.method === "PUT")!;
+  assert.equal(put.url, "https://www.googleapis.com/youtube/v3/videos?part=snippet,status");
+  const sent = JSON.parse(put.body!) as { id: string; snippet: { title: string; tags: string[] }; status: { publishAt: string } };
+  assert.equal(sent.id, "v1");
+  assert.equal(sent.snippet.title, item.title);
+  assert.deepEqual(sent.snippet.tags, item.tags);
+  assert.equal(sent.status.publishAt, "2026-10-08T16:00:00Z");
+  assert.match(r.warning ?? "", /не принял время выхода.*Запланировать/);
+  // 403 без нужного права — понятная подсказка.
+  const denied = (async () => new Response(JSON.stringify({ error: { message: "Request had insufficient authentication scopes.", errors: [{ reason: "insufficientPermissions" }] } }), { status: 403 })) as typeof fetch;
+  await assert.rejects(listChannelVideos({ auth, fetch: denied }), /не хватает прав.*youtube-auth/s);
 });
 
 console.log(`\nВсе проверки публикации пройдены: ${passed}.`);

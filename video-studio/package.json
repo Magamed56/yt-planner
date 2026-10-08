@@ -9,6 +9,7 @@
     "script": "tsx src/cli/script.ts",
     "upload": "tsx src/cli/upload.ts",
     "youtube-auth": "tsx src/cli/youtube-auth.ts",
+    "youtube-fill": "tsx src/cli/youtube-fill.ts",
     "instagram-token": "tsx src/cli/instagram-token.ts",
     "brand": "tsx src/cli/brand.ts",
     "studio": "remotion studio src/remotion/index.ts",
