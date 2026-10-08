@@ -473,8 +473,20 @@ async function finish(ctx: Ctx, containerId: string, mediaId: string | null, quo
 const stripMarks = (s: string) => s.replace(/\*/g, "").replace(/\s+/g, " ").trim();
 const stripLinks = (s: string) => s.replace(/\bhttps?:\/\/\S+/gi, "").replace(/\bwww\.\S+/gi, "").replace(/\s{2,}/g, " ").trim();
 
+// Конец предложения — знак, за которым идёт заглавная буква, цифра или конец текста.
+// Точка после одной буквы («до н. э.», «т. е.», «А. С. Пушкин») — сокращение, а не конец.
 function sentences(text: string): string[] {
-  return (text.match(/[^.!?…]+[.!?…]+["»”)]*|[^.!?…]+$/g) ?? []).map((s) => s.trim()).filter(Boolean);
+  const out: string[] = [];
+  let start = 0;
+  for (const m of text.matchAll(/[.!?…]+["»”)]*(?=\s+["«“(]?[\p{Lu}\d]|\s*$)/gu)) {
+    const before = text.slice(start, m.index);
+    if (m[0] === "." && /(?:^|[\s(«"])\p{L}$/u.test(before)) continue;
+    const end = m.index + m[0].length;
+    out.push(text.slice(start, end).trim());
+    start = end;
+  }
+  out.push(text.slice(start).trim());
+  return out.filter(Boolean);
 }
 
 // Хэштеги Reels: бренд, 2 по теме, затем вперемешку общие и «инстаграмные» —

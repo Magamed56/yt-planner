@@ -409,6 +409,12 @@ await test("Instagram: настройки — числовой IG_USER_ID, то�
   assert.equal(c.host, "graph.facebook.com");
 });
 
+await test("подпись Reels: «до н. э.», «т. е.» и инициалы не рвут предложение", () => {
+  const script = { ...demo, description: "Пирамиду построили около 2560 года до н. э., Клеопатра умерла в 30 году до н. э., а Луна — в 1969-м. Это т. е. урок от А. С. Пушкина. Третье." };
+  const cap = buildInstagramCaption(script, channel);
+  assert.match(cap, /до н\. э\., Клеопатра умерла в 30 году до н\. э\., а Луна — в 1969-м\.\nЭто т\. е\. урок от А\. С\. Пушкина\./);
+});
+
 // ---- youtube-fill: ролики, загруженные в Studio руками ----
 
 const week1 = (JSON.parse(fs.readFileSync(path.join(root, "content", "week1-videos.json"), "utf8")) as { videos: FillItem[] }).videos;
