@@ -160,15 +160,14 @@ function channelHashtags(ch: ChannelConfig, tags: string[], format: Format, body
   return uniqueHashtags([...head.slice(0, Math.max(0, 8 - tail.length)), ...tail]).join(" ");
 }
 
-// Подвал описания канала: призыв к комментарию, подписка, ссылки, дисклеймер.
+// Подвал описания канала: призыв к комментарию, подписка, Instagram, дисклеймер.
+// Без ссылок: в описании Shorts они не кликаются, а у нового канала ссылки в описании
+// считаются признаком спама. Ссылки канала — в поле «Ссылки» профиля (channel.json → links).
 function channelFooter(ch: ChannelConfig): string[] {
   const lines: string[] = [];
   if (ch.cta.comment) lines.push(`💬 ${ch.cta.comment.replace(/[.!]+$/, "")} 👇`);
-  if (ch.cta.subscribe) {
-    const yt = ch.links.youtube ? `${ch.links.youtube.replace(/\/+$/, "")}?sub_confirmation=1` : null;
-    lines.push(`🔔 ${ch.cta.subscribe}${yt ? `: ${yt}` : ""}`);
-  }
-  if (ch.links.instagram) lines.push(`📱 Instagram: ${ch.links.instagram}`);
+  if (ch.cta.subscribe) lines.push(`🔔 ${ch.cta.subscribe}`);
+  if (ch.links.instagram && ch.name) lines.push(`📱 Мы есть и в Instagram — ищи «${ch.name}»`);
   return lines;
 }
 

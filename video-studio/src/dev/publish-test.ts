@@ -126,8 +126,9 @@ await test("описание YouTube с каналом: призыв, подпи
   const d = m.description;
   assert.ok(d.startsWith(demo.description));
   assert.match(d, /💬 Напиши в комментариях, что думаешь 👇/);
-  assert.match(d, /🔔 Подпишись — каждый день новая суть за минуту: https:\/\/youtube\.com\/@sutzaminutu\?sub_confirmation=1/);
-  assert.match(d, /📱 Instagram: https:\/\/instagram\.com\/sutzaminutu/);
+  assert.match(d, /🔔 Подпишись — каждый день новая суть за минуту\n/);
+  assert.match(d, /📱 Мы есть и в Instagram — ищи «Суть за минуту»/);
+  assert.doesNotMatch(d, /https?:\/\/|www\./, "в описании нет ссылок");
   const tagLine = d.split("\n").find((l) => l.startsWith("#"))!;
   const tags = tagLine.split(" ");
   assert.equal(tags[0], "#сутьзаминуту");
@@ -139,7 +140,7 @@ await test("описание YouTube с каналом: призыв, подпи
   // Длинное описание урезается, а подвал канала остаётся.
   const long = buildYoutubeMeta({ script: { ...demo, description: "Очень длинный текст. ".repeat(400) }, format: "shorts", visualCredits: [], musicCredit: null, voiceProvider: "edge", channel });
   assert.ok(Buffer.byteLength(long.description) <= DESCRIPTION_MAX_BYTES);
-  assert.ok(long.description.includes("sub_confirmation") && long.description.trimEnd().endsWith(channel.disclaimer!));
+  assert.ok(long.description.includes("🔔 Подпишись") && long.description.trimEnd().endsWith(channel.disclaimer!));
   // Без канала — описание как раньше.
   assert.doesNotMatch(buildYoutubeMeta({ script: demo, format: "shorts", visualCredits: [], musicCredit: null, voiceProvider: "edge" }).description, /sutzaminutu/);
 });
@@ -436,6 +437,7 @@ await test("youtube-fill: список недели 1 — 14 роликов, к�
     assert.equal(v.categoryId, "27");
     assert.equal(v.containsSyntheticMedia, true);
     assert.doesNotMatch(v.description, /12:00|19:00|МСК|по Москве/, `${v.id}: время выхода в описании`);
+    assert.doesNotMatch(v.description, /https?:\/\/|www\./, `${v.id}: ссылка в описании`);
   }
   assert.equal(parseIsoDuration("PT1M4S"), 64);
   assert.equal(parseIsoDuration("PT54S"), 54);
