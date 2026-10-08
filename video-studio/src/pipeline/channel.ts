@@ -3,11 +3,10 @@
 // необязателен: без него всё работает как раньше. Переменные окружения
 // (CHANNEL_NAME, GEMINI_TTS_VOICE, PUBLISH_TIMES…) всегда сильнее файла —
 // так секреты и переменные GitHub Actions перебивают репозиторий.
+// Здесь — разбор и слоты без файловой системы (их берёт и веб-панель); чтение
+// channel.json с диска — loadChannel в channel-file.ts.
 
-import fs from "node:fs";
-import path from "node:path";
 import { THEME_NAMES, type ThemeName } from "../types";
-import { projectRoot } from "./audio/paths";
 
 export interface ChannelSchedule {
   perDay: number;
@@ -69,28 +68,10 @@ export function isValidTimeZone(tz: string): boolean {
   }
 }
 
-export function channelFile(env: NodeJS.ProcessEnv = process.env): string | null {
-  const own = env.CHANNEL_FILE?.trim();
-  if (own && /^(none|off|0)$/i.test(own)) return null;
-  if (own) return path.isAbsolute(own) ? own : path.resolve(projectRoot(), own);
-  return path.join(projectRoot(), "channel.json");
-}
-
-// Чтение и проверка channel.json. Битый файл — понятная ошибка (это правка
-// человека, молча игнорировать её нельзя); отсутствующий — пустые умолчания.
-export function loadChannel(opts: { file?: string | null; env?: NodeJS.ProcessEnv } = {}): ChannelConfig {
-  const env = opts.env ?? process.env;
-  const file = opts.file === undefined ? channelFile(env) : opts.file;
-  let raw: Record<string, unknown> = {};
-  let used: string | null = null;
-  if (file && fs.existsSync(file)) {
-    try {
-      raw = obj(JSON.parse(fs.readFileSync(file, "utf8").replace(/^﻿/, "")));
-      used = file;
-    } catch (e) {
-      throw new Error(`${path.basename(file)}: битый JSON (${e instanceof Error ? e.message : String(e)}). Проверьте запятые и кавычки или удалите файл.`);
-    }
-  }
+// Разбор уже прочитанного channel.json (loadChannel читает его с диска, веб-панель — из GitHub).
+export function channelFromJson(json: unknown, env: Readonly<Record<string, string | undefined>> = {}, file: string | null = null): ChannelConfig {
+  const raw = obj(json);
+  const used = file;
   const voice = obj(raw.voice);
   const schedule = obj(raw.schedule);
   const hashtags = obj(raw.hashtags);

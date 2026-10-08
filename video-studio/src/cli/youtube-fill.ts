@@ -1,10 +1,12 @@
 // Ролики загрузили в YouTube Studio руками — эта команда ставит им тексты и расписание.
-//   npm run youtube-fill [-- --items content/week1-videos.json] [--schedule slots|none] [--schedule-start 2026-10-09] [--only 01a,01b] [--dry-run]
+//   npm run youtube-fill [-- --items content/week1-videos.json,content/videos.json] [--schedule slots|none] [--schedule-start 2026-10-09] [--only 01a,01b] [--dry-run]
 // Ролик узнаём по коду «01a» в имени файла (Studio кладёт имя файла и в заголовок-черновик),
 // иначе — по однозначной длительности. Подробно: docs/youtube-setup.md, «Загрузили руками».
 import fs from "node:fs";
+import path from "node:path";
 import { parseArgs } from "node:util";
-import { formatLocal, loadChannel, parseScheduleStart } from "../pipeline/channel";
+import { formatLocal, parseScheduleStart } from "../pipeline/channel";
+import { loadChannel } from "../pipeline/channel-file";
 import { applyUpdate, listChannelVideos, matchVideos, planUpdates, type FillItem, type ScheduleMode } from "../pipeline/youtube-fill";
 import { missingYoutubeEnv, youtubeAuth, youtubeEnvHelp } from "../pipeline/youtube";
 import { UserError, argsError, escapeMd, fail, ghSummary, loadEnv, rel, resolveInputPath } from "./common";
@@ -13,7 +15,8 @@ const HELP = `Тексты и расписание для роликов, заг
 
   npm run youtube-fill [-- параметры]
 
-  --items <файл>              список роликов (по умолчанию content/week1-videos.json)
+  --items <файлы>             списки роликов через запятую (по умолчанию content/week1-videos.json
+                              и content/videos.json — его пополняет workflow после рендера)
   --schedule slots|none       slots — время выхода по слотам channel.json, 2 в день (по умолчанию);
                               none — только тексты, видимость не трогать
   --schedule-start <дата>     считать слоты с этой даты: 2026-10-09 (по умолчанию — с ближайшего)
@@ -47,6 +50,28 @@ function readItems(file: string): FillItem[] {
 
 const studio = (id: string) => `https://studio.youtube.com/video/${id}/edit`;
 
+const DEFAULT_ITEMS = "content/week1-videos.json,content/videos.json";
+
+// Несколько списков через запятую. content/videos.json появляется только после первого
+// рендера в релиз — пока его нет, это не ошибка; любой другой ненайденный файл — ошибка.
+function readItemLists(arg: string): { items: FillItem[]; label: string } {
+  const files: string[] = [];
+  for (const f of arg.split(",").map((s) => s.trim()).filter(Boolean)) {
+    const found = resolveInputPath(f);
+    if (found) files.push(found);
+    else if (path.basename(f) !== "videos.json") throw new UserError(`Не найден файл со списком роликов: ${f}`);
+  }
+  if (!files.length) throw new UserError(`Не найден ни один список роликов: ${arg}`);
+  const items: FillItem[] = [];
+  for (const file of files) {
+    for (const it of readItems(file)) {
+      if (items.some((i) => i.id.toLowerCase() === it.id.toLowerCase())) throw new UserError(`${rel(file)}: ролик «${it.id}» уже есть в другом списке — оставьте его в одном.`);
+      items.push(it);
+    }
+  }
+  return { items, label: files.map(rel).join(" + ") };
+}
+
 async function main() {
   loadEnv();
   let values: Record<string, string | boolean | undefined>;
@@ -54,7 +79,7 @@ async function main() {
     ({ values } = parseArgs({
       args: process.argv.slice(2),
       options: {
-        items: { type: "string", default: "content/week1-videos.json" },
+        items: { type: "string", default: DEFAULT_ITEMS },
         schedule: { type: "string", default: "slots" },
         "schedule-start": { type: "string" },
         only: { type: "string" },
@@ -71,14 +96,12 @@ async function main() {
   }
   const mode = String(values.schedule) as ScheduleMode;
   if (mode !== "slots" && mode !== "none") throw new UserError(`--schedule: «${values.schedule}» — бывает slots или none.`);
-  const itemsFile = resolveInputPath(String(values.items));
-  if (!itemsFile) throw new UserError(`Не найден файл со списком роликов: ${values.items}`);
-  const items = readItems(itemsFile);
+  const { items, label: itemsLabel } = readItemLists(String(values.items));
   let only: Set<string> | null = null;
   if (typeof values.only === "string" && values.only.trim()) {
     only = new Set(values.only.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
     const unknown = [...only].filter((c) => !items.some((i) => i.id.toLowerCase() === c));
-    if (unknown.length) throw new UserError(`--only: нет таких роликов в ${rel(itemsFile)}: ${unknown.join(", ")}`);
+    if (unknown.length) throw new UserError(`--only: нет таких роликов в ${itemsLabel}: ${unknown.join(", ")}`);
   }
   const wanted = (id: string) => !only || only.has(id.toLowerCase());
   const missingEnv = missingYoutubeEnv();
@@ -91,7 +114,7 @@ async function main() {
   const deps = { auth: youtubeAuth(), log: (m: string) => console.log(`  ${m}`) };
 
   const count = items.filter((i) => wanted(i.id)).length;
-  console.log(`video-studio · тексты и расписание для ${count} роликов из ${rel(itemsFile)}${dry ? " (пробный запуск, без изменений)" : ""}`);
+  console.log(`video-studio · тексты и расписание для ${count} роликов из ${itemsLabel}${dry ? " (пробный запуск, без изменений)" : ""}`);
   const videos = await listChannelVideos(deps);
   console.log(`  на канале видео: ${videos.length}`);
   // Сопоставляем со всем списком, а --only применяем к итогу.

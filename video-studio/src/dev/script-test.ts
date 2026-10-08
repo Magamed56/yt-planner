@@ -11,6 +11,7 @@ import type { BetaMessage, BetaMessageStreamParams } from "@anthropic-ai/sdk/res
 import { extractJson, generateScript, lintScript, ScriptValidationError, validateScript } from "../pipeline/script/index";
 import type { AnthropicLike } from "../pipeline/script/llm/claude";
 import { claudeCostUsd } from "../pipeline/script/pricing";
+import { parsePlan, planNotes, scriptCode } from "../pipeline/plan";
 import type { VideoScript } from "../types";
 
 // Пауза перед повтором при 503 — в тестах без ожидания.
@@ -486,6 +487,21 @@ await test("Landscape: часть с лишним hook уходит в ремо�
   assert.equal(calls.length, 4);
   assert.ok(msgs(calls[3])[3].content.includes('kind "hook" допустим только'));
   assert.equal(script.scenes.length, 18);
+});
+
+await test("План: 60 тем с кодами, код из имени сценария, пожелания — хук, угол и факты с источниками", () => {
+  const plan = parsePlan(JSON.parse(readFileSync(path.join(root, "content", "plan.json"), "utf8")));
+  assert.equal(plan.items.length, 60);
+  assert.equal(scriptCode("scripts/sut-08a-pochemu-tak.json"), "08a");
+  assert.equal(scriptCode("C:\\x\\scripts\\sut-12B-abc.json"), "12b");
+  assert.equal(scriptCode("scripts/kleopatra.json"), null);
+  const item = plan.items.find((i) => i.id === "08a")!;
+  const notes = planNotes(item);
+  assert.ok(notes.includes(item.hook.trim()));
+  assert.ok(notes.includes(item.angle.trim()));
+  for (const f of item.keyFacts) assert.ok(notes.includes(f.source.trim()), `нет источника: ${f.source}`);
+  assert.match(notes, /других фактов и цифр не добавляй/);
+  assert.throws(() => parsePlan({ items: [{ id: "8a", title: "x", keyFacts: [] }] }), /вида «08a»/);
 });
 
 console.log(`\nВсе проверки пройдены: ${passed}.`);

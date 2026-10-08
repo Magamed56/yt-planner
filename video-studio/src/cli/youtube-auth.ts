@@ -12,7 +12,7 @@ import http from "node:http";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { google } from "googleapis";
-import { loadChannel } from "../pipeline/channel";
+import { loadChannel } from "../pipeline/channel-file";
 import { YT_SCOPES } from "../pipeline/youtube";
 import { ROOT, UserError, fail, loadEnv } from "./common";
 

@@ -5,7 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { loadChannel } from "../pipeline/channel";
+import { loadChannel } from "../pipeline/channel-file";
 import { instagramEnvHelp, missingInstagramEnv, publishRunDir } from "../pipeline/instagram";
 import type { YoutubeMeta } from "../pipeline/meta";
 import { PRIVACY_VALUES, missingYoutubeEnv, uploadToYoutube, youtubeEnvHelp, type Privacy } from "../pipeline/youtube";

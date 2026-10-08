@@ -6,7 +6,7 @@
 // videos.update. Ролики, у которых уже есть время выхода, не сдвигаем.
 
 import { isoNoMs, upcomingSlots, type ChannelSchedule } from "./channel";
-import { accessToken, explainApiError, type Auth } from "./youtube";
+import { accessToken, explainApiError, type Auth } from "./google-api";
 
 const API = "https://www.googleapis.com/youtube/v3";
 
@@ -21,6 +21,19 @@ export interface FillItem {
   categoryId: string;
   defaultLanguage: string;
   containsSyntheticMedia: boolean;
+}
+
+// Список роликов: { "about": "…", "videos": [ … ] } (как content/week1-videos.json) или массив.
+export function fillItemsOf(raw: unknown): FillItem[] {
+  const list = Array.isArray(raw) ? raw : (raw as { videos?: unknown } | null)?.videos;
+  return Array.isArray(list) ? (list as FillItem[]) : [];
+}
+
+// Пересобранный ролик заменяет свою запись, новый добавляется. Порядок — по коду, как в
+// плане (01a, 01b, 02a…): это и порядок слотов публикации.
+export function upsertFillItem(list: FillItem[], item: FillItem): FillItem[] {
+  const rest = list.filter((i) => i.id.toLowerCase() !== item.id.toLowerCase());
+  return [...rest, item].sort((a, b) => a.id.localeCompare(b.id));
 }
 
 // Видео канала — то, что вернул videos.list.
@@ -38,6 +51,7 @@ export interface ChannelVideo {
   publicStatsViewable: boolean | null;
   tags: string[];
   categoryId: string | null;
+  publishedAt?: string | null; // snippet.publishedAt: у вышедшего — время выхода, у приватного — загрузки
 }
 
 export type MatchedBy = "файл" | "название" | "длительность";
@@ -266,7 +280,7 @@ async function api<T>(deps: ApiDeps, method: "GET" | "PUT", path: string, body?:
 
 interface ApiVideo {
   id: string;
-  snippet?: { title?: string; description?: string; tags?: string[]; categoryId?: string };
+  snippet?: { title?: string; description?: string; tags?: string[]; categoryId?: string; publishedAt?: string };
   status?: { uploadStatus?: string; privacyStatus?: string; publishAt?: string; embeddable?: boolean; license?: string; publicStatsViewable?: boolean };
   contentDetails?: { duration?: string };
   fileDetails?: { fileName?: string };
@@ -286,11 +300,14 @@ const toChannelVideo = (v: ApiVideo): ChannelVideo => ({
   publicStatsViewable: v.status?.publicStatsViewable ?? null,
   tags: v.snippet?.tags ?? [],
   categoryId: v.snippet?.categoryId ?? null,
+  publishedAt: v.snippet?.publishedAt ?? null,
 });
 
 // Последние загрузки канала (до maxVideos): плейлист «Загрузки» + поиск по своим
 // роликам — только что загруженное видео появляется в плейлисте с задержкой.
-export async function listChannelVideos(deps: ApiDeps, maxVideos = 200): Promise<ChannelVideo[]> {
+// Поиск стоит 100 единиц квоты из 10 000 в сутки (остальное — по 1), поэтому панель,
+// которая обновляет список часто, вызывает с search: false.
+export async function listChannelVideos(deps: ApiDeps, maxVideos = 200, opts: { search?: boolean } = {}): Promise<ChannelVideo[]> {
   const ch = await api<{ items?: { contentDetails?: { relatedPlaylists?: { uploads?: string } } }[] }>(deps, "GET", "channels?part=contentDetails&mine=true");
   const uploads = ch.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
   if (!uploads) throw new Error("YouTube: у этого аккаунта Google нет канала — войдите в аккаунт канала «Суть за минуту» при получении токена.");
@@ -304,11 +321,13 @@ export async function listChannelVideos(deps: ApiDeps, maxVideos = 200): Promise
     for (const it of r.items ?? []) if (it.contentDetails?.videoId) ids.push(it.contentDetails.videoId);
     page = r.nextPageToken ?? "";
   } while (page && ids.length < maxVideos);
-  try {
-    const s = await api<{ items?: { id?: { videoId?: string } }[] }>(deps, "GET", "search?part=id&forMine=true&type=video&order=date&maxResults=50");
-    for (const it of s.items ?? []) if (it.id?.videoId) recent.push(it.id.videoId);
-  } catch (e) {
-    deps.log?.(`поиск по своим роликам не сработал (${e instanceof Error ? e.message : e}) — беру только плейлист «Загрузки»`);
+  if (opts.search !== false) {
+    try {
+      const s = await api<{ items?: { id?: { videoId?: string } }[] }>(deps, "GET", "search?part=id&forMine=true&type=video&order=date&maxResults=50");
+      for (const it of s.items ?? []) if (it.id?.videoId) recent.push(it.id.videoId);
+    } catch (e) {
+      deps.log?.(`поиск по своим роликам не сработал (${e instanceof Error ? e.message : e}) — беру только плейлист «Загрузки»`);
+    }
   }
   // Найденные поиском — самые свежие загрузки: их первыми, чтобы лимит их не отрезал.
   const unique = [...new Set([...recent, ...ids])].slice(0, maxVideos);
