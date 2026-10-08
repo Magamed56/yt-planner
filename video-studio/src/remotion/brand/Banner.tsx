@@ -115,7 +115,7 @@ export const Banner: React.FC<{ guides?: boolean }> = ({ guides = false }) => {
             <div style={{ fontFamily: FONT_BODY, fontWeight: 700, fontSize: 52 * u, lineHeight: 1.15, color: t.text, opacity: 0.94, whiteSpace: "nowrap", marginTop: 6 * u }}>
               {BRAND.tagline}
             </div>
-            <Pill fontSize={36 * u} filled icon={<Icon name="clock" size={40 * u} color={t.accentInk} strokeWidth={2.6} />} style={{ marginTop: 8 * u }}>
+            <Pill fontSize={36 * u} filled icon={<Icon name="calendar-days" size={40 * u} color={t.accentInk} strokeWidth={2.6} />} style={{ marginTop: 8 * u }}>
               {BRAND.schedule}
             </Pill>
           </div>

@@ -57,8 +57,6 @@ export const IntroPost: React.FC = () => {
   const pad = 80 * u;
   const chipH = 80 * u;
   const chipGap = 14 * u;
-  const perDay = BRAND.times.length;
-  const perDayText = perDay === 1 ? "1 ролик" : perDay < 5 ? `${perDay} ролика` : `${perDay} роликов`;
 
   return (
     <AbsoluteFill style={{ backgroundColor: t.bgFrom }}>
@@ -109,10 +107,10 @@ export const IntroPost: React.FC = () => {
           </div>
 
           <div style={{ flex: 1 }} />
-          {/* Подвал: когда выходят ролики и где искать */}
+          {/* Подвал: как часто выходят ролики и где искать */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 * u }}>
-            <Pill fontSize={29 * u} filled icon={<Icon name="clock" size={34 * u} color={t.accentInk} strokeWidth={2.6} />}>
-              {perDayText} в день · {BRAND.timesText}
+            <Pill fontSize={29 * u} filled icon={<Icon name="calendar-days" size={34 * u} color={t.accentInk} strokeWidth={2.6} />}>
+              {BRAND.perDayText}
             </Pill>
             <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 30 * u, color: t.text }}>{BRAND.handle}</div>
           </div>

@@ -38,28 +38,21 @@ const raw = channel as unknown as {
   links: { youtube: string; instagram: string };
 };
 
-// «Europe/Moscow» → «МСК»; для других поясов — как есть, без догадок.
-const tzLabel = (tz: string): string => (tz === "Europe/Moscow" ? "МСК" : tz);
-
-// ["12:00", "19:00"] → «12:00 и 19:00»; три и больше — через запятую.
-function joinTimes(times: string[]): string {
-  if (times.length <= 1) return times[0] ?? "";
-  return `${times.slice(0, -1).join(", ")} и ${times[times.length - 1]}`;
-}
-
+// Время выхода и часовой пояс на картинки не пишем: зрители живут в разных поясах,
+// а расписание может меняться. Из расписания берём только число роликов в день.
 const times = (raw.schedule.publishTimesLocal?.length ? raw.schedule.publishTimesLocal : [raw.schedule.publishTimeLocal ?? ""]).filter(Boolean);
-const tz = tzLabel(raw.schedule.timezone);
-const timesText = `${joinTimes(times)} ${tz}`.trim();
+const perDay = Math.max(1, raw.schedule.perDay ?? times.length);
+const rolik = perDay < 5 ? "ролика" : "роликов";
+const perDayText = perDay === 1 ? "1 ролик" : `${perDay} ${rolik}`;
 
 export const BRAND = {
   name: raw.name,
   handle: `@${raw.handle}`,
   tagline: raw.tagline,
-  times, // ["12:00", "19:00"]
-  tz, // «МСК»
-  timesText, // «12:00 и 19:00 МСК»
-  // Одна строка про расписание — для баннера и поста.
-  schedule: times.length > 1 ? `Новые ролики каждый день в ${timesText}` : `Новый ролик каждый день в ${timesText}`,
+  perDay,
+  perDayText: `${perDayText} в день`, // «2 ролика в день» — для поста
+  // Плашка баннера; «каждый день» уже есть в слогане рядом, поэтому — число в день.
+  schedule: perDay > 1 ? `${perDay} новых ${rolik} в день` : "Новый ролик каждый день",
   cta: raw.cta.subscribe,
   pillars: raw.pillars.map((p): Pillar => ({ ...p, short: SHORT[p.id] ?? p.title.split(/\s+/)[0] ?? p.title })),
   theme: THEMES.midnight,
