@@ -9,7 +9,6 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { channelFromJson } from "../../src/pipeline/channel";
 import { buildYoutubeMeta, descriptionTxt, voiceCreditLine } from "../../src/pipeline/meta";
 import type { Credit } from "../../src/pipeline/contracts";
-import { DEFAULT_REAL_PILLARS } from "../../src/pipeline/visuals/index";
 import type { VideoScript } from "../../src/types";
 import {
   expectedVoice,
@@ -27,6 +26,9 @@ import {
 } from "../lib/checks";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+// Рубрики «настоящих фото» конвейера — из исходника текстом: модуль визуала тянет SDK Claude, а у
+// панели (её типы и сборка проверяют и эти тесты) этой зависимости нет — как на Vercel.
+const DEFAULT_REAL_PILLARS = /export const DEFAULT_REAL_PILLARS = "([^"]+)"/.exec(fs.readFileSync(path.join(studio, "src/pipeline/visuals/index.ts"), "utf8"))?.[1] ?? "";
 const channel = channelFromJson(JSON.parse(fs.readFileSync(path.join(studio, "channel.json"), "utf8")));
 const demo = JSON.parse(fs.readFileSync(path.join(studio, "examples", "demo-ru.json"), "utf8")) as VideoScript;
 // qc.ts тянет @remotion/renderer (он есть только в node_modules video-studio): путь — строкой,
