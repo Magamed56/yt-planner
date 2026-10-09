@@ -171,6 +171,7 @@ export interface VideoProps {
   showProgressBar: boolean;
   channelName: string | null; // для финальной сцены cta
   ctaComment?: string | null; // подпись к «облачку» комментария в финальной сцене; null — не показывать
+  language?: string; // язык ролика (из сценария): подписи композиции и запись чисел; нет — русский
 }
 
 export const DEFAULT_TRANSITION_FRAMES = 12; // 0.4 c при 30 fps

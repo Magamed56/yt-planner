@@ -2,8 +2,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { plural } from "@/lib/stages";
+import type { StatsExtras } from "@/app/stats/load";
 import type { Goal, StatsData, VideoStat } from "@/lib/stats";
 import AppShell from "./AppShell";
+import { PlaylistsCard, TimingCard, WeakStartCard } from "./StatsTools";
 import Thumb from "./Thumb";
 import ViewsChart, { type ChartBar } from "./ViewsChart";
 
@@ -50,9 +52,12 @@ function Meter({ label, value, of, percent, tone = "normal" }: { label: string; 
 const SECTIONS = [
   { id: "overview", label: "Обзор" },
   { id: "videos", label: "Ролики" },
+  { id: "weak", label: "Слабый старт" },
   { id: "money", label: "Монетизация" },
   { id: "pillars", label: "Рубрики" },
   { id: "tags", label: "Хэштеги" },
+  { id: "timing", label: "Время выхода" },
+  { id: "playlists", label: "Плейлисты" },
   { id: "costs", label: "Расходы" },
 ];
 
@@ -84,7 +89,7 @@ function Kpi({ label, value, hint }: { label: string; value: string; hint?: stri
 const goalMeter = (g: Goal) => <Meter key={g.label} label={g.label} value={g.haveLabel} of={g.needLabel} percent={g.percent} tone={g.done ? "done" : "normal"} />;
 const usageTone = (percent: number) => (percent >= 100 ? "over" : percent >= 80 ? "warn" : "normal");
 
-export default function StatsView({ stats, shell }: { stats: StatsData; shell: Shell }) {
+export default function StatsView({ stats, shell, extras }: { stats: StatsData; shell: Shell; extras: StatsExtras }) {
   const [sort, setSort] = useState<SortKey>("views");
   const [showAll, setShowAll] = useState(false);
   const sorted = [...stats.videos].sort((a, b) => sortValue(b, sort) - sortValue(a, sort) || b.views - a.views);
@@ -196,6 +201,8 @@ export default function StatsView({ stats, shell }: { stats: StatsData; shell: S
             )}
           </section>
 
+          <WeakStartCard extras={extras} />
+
           <section className="card" id="money">
             <h2>Монетизация</h2>
             {money.tiers.map((t) => (
@@ -270,6 +277,9 @@ export default function StatsView({ stats, shell }: { stats: StatsData; shell: S
             )}
             {tags.everywhere.length > 0 && <p className="muted small">Во всех роликах, не сравниваем: {tags.everywhere.join(" ")}.</p>}
           </section>
+          <TimingCard extras={extras} />
+          <PlaylistsCard extras={extras} />
+
           <section className="card" id="costs">
             <h2>Расходы</h2>
             <div className="cost">

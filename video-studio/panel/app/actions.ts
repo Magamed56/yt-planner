@@ -11,6 +11,7 @@ import { runAutopilot } from "@/lib/autopilot";
 import { assetText, dispatchWorkflow, getVariable, GithubError, readFileWithSha, readJson, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { lockedCodes, movableIds, reorderPlan } from "@/lib/plan-order";
+import { autoAddToPlaylists } from "@/lib/playlist-sync";
 import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
 import { SESSION_COOKIE } from "@/lib/session";
@@ -217,11 +218,13 @@ async function applyFill(codes: string[], onlyNew: boolean): Promise<ActionResul
   const todo = updates.filter((p) => want.has(p.match.item.id) && !p.skip && (!onlyNew || isNewUpload(p)));
   if (!todo.length) return fail("Заполнять нечего: ролики уже заполнены или YouTube их пока не показывает — обновите страницу.");
   const done: string[] = [];
+  const filled: { code: string; videoId: string }[] = [];
   const problems: string[] = [];
   for (const p of todo) {
     try {
       const r = await applyUpdate({ auth: youtubeAuth }, p);
       done.push(r.publishAt ? `${p.match.item.id} → ${slotLabel(r.publishAt, tz)}` : p.match.item.id);
+      filled.push({ code: p.match.item.id, videoId: p.match.video.videoId });
       if (r.warning) problems.push(`${p.match.item.id}: ${r.warning}`);
     } catch (e) {
       problems.push(`${p.match.item.id}: ${errorText(e)}`);
@@ -229,7 +232,9 @@ async function applyFill(codes: string[], onlyNew: boolean): Promise<ActionResul
       if (/не хватает прав|недействителен|неверные YT_CLIENT|квота/.test(errorText(e))) break;
     }
   }
-  const message = [done.length ? `Готово: ${done.join(", ")}.` : "", problems.length ? `Не вышло — ${problems.join("; ")}` : ""].filter(Boolean).join(" ");
+  // Свежие загрузки — в плейлисты рубрик, если это включено на «Статистике» (ошибки — только текстом).
+  const playlists = onlyNew ? await autoAddToPlaylists(filled) : null;
+  const message = [done.length ? `Готово: ${done.join(", ")}.` : "", playlists ?? "", problems.length ? `Не вышло — ${problems.join("; ")}` : ""].filter(Boolean).join(" ");
   return { ok: done.length > 0, message };
 }
 

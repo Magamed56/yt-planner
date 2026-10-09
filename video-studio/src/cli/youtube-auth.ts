@@ -166,6 +166,13 @@ async function main() {
       "Google не выдал refresh token. Отзовите доступ приложения на https://myaccount.google.com/permissions и запустите npm run youtube-auth ещё раз.",
     );
   }
+  // Google даёт снять галочки отдельных прав: без force-ssl не загрузятся субтитры (captions-translate).
+  const granted = (tokens.scope ?? "").split(/\s+/).filter(Boolean);
+  const missing = granted.length ? YT_SCOPES.filter((s) => !granted.includes(s)) : [];
+  if (missing.length) {
+    console.log(`\n⚠ Выданы не все права: нет ${missing.map((s) => s.replace("https://www.googleapis.com/auth/", "")).join(", ")}.`);
+    console.log("  Запустите npm run youtube-auth ещё раз и оставьте отмеченными все галочки доступа.");
+  }
   const title = tokens.access_token ? await channelTitle(tokens.access_token) : null;
   if (title) console.log(`\nКанал: «${title}»`);
   const expected = loadChannel().name;
@@ -182,6 +189,8 @@ async function main() {
     if (fromFile) console.log(`YT_CLIENT_ID=${clientId}\nYT_CLIENT_SECRET=${clientSecret}`);
     console.log(`YT_REFRESH_TOKEN=${tokens.refresh_token}\n`);
   }
+  // Ключ меняется везде, где он есть: иначе панель и второй ПК останутся со старыми правами.
+  console.log("Новый YT_REFRESH_TOKEN замените и в Vercel (панель: Settings → Environment Variables, затем Redeploy), и в video-studio/.env на втором компьютере.");
   console.log("Важно: в OAuth consent screen переведите приложение в «In production» — в режиме «Testing» токен перестаёт работать через 7 дней.");
 }
 

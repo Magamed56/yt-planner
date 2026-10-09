@@ -2,12 +2,27 @@
 // темами плана) + цифры канала из того же прохода по YouTube + запуски Actions с начала месяца
 // + content/usage.jsonl. Считает всё lib/stats.ts; здесь — только запросы.
 import { parsePlan } from "../../../src/pipeline/plan";
+import { parseTitleIdeas, TITLE_IDEAS_FILE } from "../../../src/pipeline/title-ideas";
 import type { ChannelListing } from "../../../src/pipeline/youtube-fill";
-import { GithubError, readFile, readJson, repoName } from "@/lib/github";
+import { getVariable, GithubError, readFile, readJson, repoName } from "@/lib/github";
+import { releaseTiming, weakStarts, type ReleaseTiming, type WeakStartReport } from "@/lib/insights";
 import { loadState, STUDIO_DIR } from "@/lib/load";
+import { PLAYLISTS_VAR, parsePlaylistsSetting } from "@/lib/playlists";
 import type { PanelState } from "@/lib/state";
 import { buildStats, type RunTiming, type StatsData } from "@/lib/stats";
+import { titleIdeaViews, type TitleIdeaView } from "@/lib/titles";
 import { channelOverview } from "@/lib/youtube";
+
+// Подсказки: слабый старт и новые названия, лучшее время выхода, плейлисты рубрик.
+export interface StatsExtras {
+  weak: WeakStartReport;
+  ideas: TitleIdeaView[];
+  ideasError: string | null;
+  titlesRunning: string[]; // коды, для которых сейчас идёт подбор названий
+  timing: ReleaseTiming;
+  slotTimes: string[];
+  playlists: { auto: boolean; count: number; error: string | null; channelName: string };
+}
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).replace(/^YouTube:\s*/, "");
 
@@ -52,14 +67,14 @@ async function monthRuns(now: Date): Promise<RunTiming[]> {
     .map((r) => ({ id: r.id, status: r.status, createdAt: r.created_at, startedAt: r.run_started_at ?? null, updatedAt: r.updated_at }));
 }
 
-export async function loadStats(now = new Date()): Promise<{ state: PanelState; stats: StatsData }> {
+export async function loadStats(now = new Date()): Promise<{ state: PanelState; stats: StatsData; extras: StatsExtras }> {
   // Один проход по каналу (≈ 3–5 единиц квоты, без поиска): ролики уходят и в очередь.
   const overview = channelOverview();
   const youtube = overview.then(
     (o): ChannelListing & { error: string | null } => ({ ...o, error: null }),
     (e: unknown) => ({ videos: [], channel: null, error: errorText(e) }),
   );
-  const [state, planJson, runs, usage, yt] = await Promise.all([
+  const [state, planJson, runs, usage, yt, ideasRaw, playlistsRaw] = await Promise.all([
     loadState(now, overview.then((o) => o.videos)),
     readJson(`${STUDIO_DIR}/content/plan.json`),
     monthRuns(now).then(
@@ -71,6 +86,14 @@ export async function loadStats(now = new Date()): Promise<{ state: PanelState; 
       (e: unknown) => ({ text: null, error: errorText(e) }),
     ),
     youtube,
+    readJson(`${STUDIO_DIR}/${TITLE_IDEAS_FILE}`).then(
+      (json) => ({ json, error: null as string | null }),
+      (e: unknown) => ({ json: null, error: errorText(e) }),
+    ),
+    getVariable(PLAYLISTS_VAR).then(
+      (raw) => ({ raw, error: null as string | null }),
+      (e: unknown) => ({ raw: null, error: errorText(e) }),
+    ),
   ]);
   const plan = parsePlan(planJson);
   const pillarOf = new Map(plan.items.map((it) => [it.id, it.pillar]));
@@ -89,5 +112,15 @@ export async function loadStats(now = new Date()): Promise<{ state: PanelState; 
     usageText: usage.text,
     usageError: usage.error,
   });
-  return { state, stats };
+  const setting = parsePlaylistsSetting(playlistsRaw.raw);
+  const extras: StatsExtras = {
+    weak: weakStarts(stats.videos, now),
+    ideas: titleIdeaViews(parseTitleIdeas(ideasRaw.json), stats.videos, now, state.timezone),
+    ideasError: ideasRaw.error,
+    titlesRunning: [...new Set(state.runs.filter((r) => r.active && /^titles\b/.test(r.title)).flatMap((r) => r.codes))],
+    timing: releaseTiming(stats.videos, state.slotTimes, state.timezone, now),
+    slotTimes: state.slotTimes,
+    playlists: { auto: setting.auto, count: Object.keys(setting.byPillar).length, error: playlistsRaw.error, channelName: state.channelName },
+  };
+  return { state, stats, extras };
 }

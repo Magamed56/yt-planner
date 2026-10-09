@@ -4,6 +4,7 @@ import { ArrowDown, BellRing, Check, MessageCircle, MousePointer2 } from "lucide
 import { KineticText } from "../components/KineticText";
 import { FONT_BODY, FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
+import { uiText } from "../lib/ui-text";
 import { withAlpha } from "../theme";
 import { ContentBox, SceneFrame, clamp, useVoice, type SceneProps } from "./common";
 
@@ -138,7 +139,7 @@ export const CtaScene: React.FC<SceneProps> = (p) => {
               }}
             >
               {done ? <Check size={pillFont * 1.1} strokeWidth={3} color={pillInk} style={{ transform: `scale(${doneP})` }} /> : null}
-              {done ? "Вы подписаны" : "Подписаться"}
+              {done ? uiText(p.video.language).subscribed : uiText(p.video.language).subscribe}
             </div>
           </div>
           <div

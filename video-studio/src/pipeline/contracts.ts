@@ -7,6 +7,7 @@
 //   TTS_PROVIDER      auto | gemini | edge | piper | elevenlabs | openai | fish   (auto: gemini при ключе, иначе edge)
 //   TTS_VOICE         голос провайдера (edge: ru-RU-DmitryNeural, piper: ru_RU-dmitri-medium, …)
 //   TTS_RATE          темп для edge, например "+5%"
+//   TTS_LANGUAGE      язык озвучки (en, kk, uz…; ставит make по сценарию): голос по умолчанию, язык Gemini TTS
 //   GEMINI_API_KEY    общий ключ AI Studio — и для сценариев, и для Gemini TTS
 //   GEMINI_TTS_MODEL, GEMINI_TTS_VOICE, GEMINI_TTS_STYLE
 //   ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL

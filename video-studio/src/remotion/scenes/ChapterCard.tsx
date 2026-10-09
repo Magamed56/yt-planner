@@ -4,6 +4,7 @@ import { chapterCardFrames, type RenderScene } from "../../types";
 import { KineticText } from "../components/KineticText";
 import { FONT_BODY, FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
+import { uiText } from "../lib/ui-text";
 import { withAlpha, type Theme } from "../theme";
 import { clamp, type SceneProps } from "./common";
 
@@ -25,13 +26,13 @@ export const ChapterWrap: React.FC<SceneProps & { Comp: React.FC<SceneProps> }> 
         <Comp {...p} scene={inner} />
       </Sequence>
       <Sequence durationInFrames={card + FADE_FRAMES} name="Карточка главы">
-        <ChapterCard title={p.scene.chapter} number={number} total={chapters.length} theme={p.theme} frames={card} />
+        <ChapterCard title={p.scene.chapter} number={number} total={chapters.length} theme={p.theme} frames={card} lang={p.video.language} />
       </Sequence>
     </AbsoluteFill>
   );
 };
 
-const ChapterCard: React.FC<{ title: string; number: number; total: number; theme: Theme; frames: number }> = ({ title, number, total, theme, frames }) => {
+const ChapterCard: React.FC<{ title: string; number: number; total: number; theme: Theme; frames: number; lang?: string }> = ({ title, number, total, theme, frames, lang }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const layout = useLayout();
@@ -74,7 +75,7 @@ const ChapterCard: React.FC<{ title: string; number: number; total: number; them
             whiteSpace: "nowrap",
           }}
         >
-          ГЛАВА {number}
+          {uiText(lang).chapter(number)}
           {total > 1 ? <span style={{ color: theme.textDim }}> / {total}</span> : null}
         </div>
         <KineticText

@@ -12,11 +12,14 @@
 #      пишет по ним сценарии scripts/sut-08a-….json; mode = batch пишет недостающие и собирает все
 #      (upload = release: в релизе файл 08a-….mp4 — его грузят в Studio руками, тексты для
 #      youtube-fill попадают в content/videos.json). Так запускает и веб-панель (video-studio/panel).
+#   5. lang = en (kk, uz) — тот же ролик на другом языке: draft переводит сценарий темы в
+#      scripts/<язык>/, render/batch собирают его с каналом channels/<язык>.json (файл в релизе —
+#      en-08a-….mp4). Загрузка в YouTube/Instagram для других языков выключена (свой канал — свой ключ).
 # Кнопка «Run workflow» появляется, только когда этот файл лежит в ветке по умолчанию.
 
 name: "video-studio: ролик"
 # Коды роликов в названии запуска — по ним веб-панель видит, что сейчас пишется или собирается.
-run-name: "${{ github.event_name == 'schedule' && 'draft: по расписанию' || format('{0}: {1}', inputs.mode || 'draft', inputs.plan || inputs.topic || inputs.script || 'демо') }}"
+run-name: "${{ github.event_name == 'schedule' && 'draft: по расписанию' || format('{0}: {1}{2}', inputs.mode || 'draft', inputs.plan || inputs.topic || inputs.script || 'демо', inputs.lang && inputs.lang != 'ru' && format(' [{0}]', inputs.lang) || '') }}"
 
 on:
   workflow_dispatch:
@@ -81,6 +84,11 @@ on:
         description: "Необязательно: считать слоты от даты, например 2026-10-14 (иначе — от момента запуска)"
         type: string
         required: false
+      lang:
+        description: "Язык ролика: ru — «Суть за минуту»; en/kk/uz — перевод (scripts/<язык>/, channels/<язык>.json), только upload = none или release"
+        type: choice
+        options: [ru, en, kk, uz]
+        default: ru
   # Запуск по расписанию (раскомментируйте): черновик на тему из переменной
   # репозитория SCHEDULED_TOPIC, например по понедельникам и четвергам в 05:17 UTC.
   # schedule:
@@ -123,6 +131,7 @@ jobs:
       PRIVACY: ${{ inputs.privacy || 'private' }}
       SCHEDULE: ${{ inputs.schedule || 'none' }}
       SCHEDULE_START: ${{ inputs.schedule_start }}
+      VIDEO_LANG: ${{ inputs.lang || 'ru' }}
       # Несекретные настройки — Settings → Secrets and variables → Actions → Variables.
       TTS_PROVIDER: ${{ inputs.voice || vars.TTS_PROVIDER || 'auto' }}
       TTS_VOICE: ${{ inputs.voice_name || vars.TTS_VOICE }}
@@ -167,6 +176,13 @@ jobs:
           # Токен с правом записи не оставляем в .git/config: его увидел бы любой
           # код зависимостей npm. Пушу черновика токен дают явно (см. ниже).
           persist-credentials: false
+
+      # Ключи YouTube и Instagram здесь — от русского канала: ролик на другом языке туда не грузим.
+      - name: Язык ролика
+        if: env.VIDEO_LANG != 'ru' && (contains(env.UPLOAD, 'youtube') || contains(env.UPLOAD, 'instagram'))
+        run: |
+          echo "::error::Ролик на «$VIDEO_LANG» нельзя загрузить в YouTube/Instagram отсюда: ключи — от русского канала. Выберите upload = release или none и загрузите файл в Studio своего канала руками (video-studio/README.md, «Ролики на других языках»)."
+          exit 1
 
       - name: Node.js 22
         uses: actions/setup-node@v7
@@ -223,12 +239,15 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
+          lang=()
+          if [ "$VIDEO_LANG" != "ru" ]; then lang=(--lang "$VIDEO_LANG"); fi
           if [ -n "$PLAN" ]; then
             # Темы плана: сценарии scripts/sut-<код>-….json, отметка в plan.json; готовые пропускаются.
-            npm run script -- --plan "$PLAN"
+            # Другой язык — перевод русского сценария темы в scripts/<язык>/ (план не меняется).
+            npm run script -- --plan "$PLAN" "${lang[@]}"
           elif [ -n "$TOPIC" ]; then
             fmt="$FORMAT"; [ "$fmt" = "auto" ] && fmt=shorts
-            npm run script -- --topic "$TOPIC" --format "$fmt"
+            npm run script -- --topic "$TOPIC" --format "$fmt" "${lang[@]}"
           else
             echo "::error::Для mode=draft нужна тема (поле topic) или коды тем из плана (поле plan, например 08a,08b)."
             exit 1
@@ -241,6 +260,7 @@ jobs:
           name: script-${{ github.run_number }}-${{ github.run_attempt }}
           path: |
             video-studio/${{ steps.draft.outputs.script_path || 'scripts/sut-*.json' }}
+            video-studio/scripts/*/sut-*.json
             video-studio/content/plan.json
           retention-days: 7
 
@@ -270,6 +290,7 @@ jobs:
           fi
           [ "$FORMAT" != "auto" ] && args+=(--format "$FORMAT")
           [ "$THEME" != "auto" ] && args+=(--theme "$THEME")
+          [ "$VIDEO_LANG" != "ru" ] && args+=(--lang "$VIDEO_LANG")
           npm run make -- "${args[@]}"
 
       # continue-on-error: когда квота хранилища артефактов исчерпана, загрузка падает —
@@ -325,10 +346,13 @@ jobs:
           # грузят в Studio руками, по коду его находит youtube-fill (тексты — content/videos.json).
           code=""
           if [[ "$(basename "$SCRIPT_PATH")" =~ ^sut-([0-9]{2}[a-z])- ]]; then code="${BASH_REMATCH[1]}"; fi
+          # Другой язык — «en-08a-….mp4»: «08a-….mp4» панель и youtube-fill считают роликом русского канала.
+          lp=""
+          if [ "$VIDEO_LANG" != "ru" ]; then lp="$VIDEO_LANG-"; fi
           mp4="$RUN_DIR/video.mp4"
-          if [ -n "$code" ]; then mp4="$RUN_DIR/$code-${SLUG:0:60}.mp4"; cp "$RUN_DIR/video.mp4" "$mp4"; fi
+          if [ -n "$code" ]; then mp4="$RUN_DIR/$lp$code-${SLUG:0:60}.mp4"; cp "$RUN_DIR/video.mp4" "$mp4"; fi
           # run_attempt: при «Re-run» номер запуска тот же, и тег уже занят.
-          tag="video-${code:+$code-}${SLUG:0:60}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          tag="video-$lp${code:+$code-}${SLUG:0:60}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
           files=("$mp4" "$RUN_DIR/captions.srt" "$RUN_DIR/description.txt")
           # instagram.txt и cover.jpg — для ручной публикации Reels с телефона.
           for f in thumbnail.png cover.jpg instagram.txt qc.json; do
@@ -338,7 +362,8 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           url=$(gh release view "$tag" --json url -q .url)
           echo "🏷️ **Релиз:** [$tag]($url) — файлы хранятся, пока вы не удалите релиз." >> "$GITHUB_STEP_SUMMARY"
-          if [ -n "$code" ] && [ -n "$DURATION" ]; then
+          # Тексты для youtube-fill — только у роликов русского канала.
+          if [ -n "$code" ] && [ -n "$DURATION" ] && [ "$VIDEO_LANG" = "ru" ]; then
             env -u GH_TOKEN npx tsx src/cli/videos-list.ts "$RUN_DIR" --code "$code" --file "$(basename "$mp4" .mp4)" --duration "$DURATION"
           fi
 
@@ -445,10 +470,12 @@ jobs:
           missing=()
           if [ -n "$PLAN" ] && [ -z "$SCRIPT_PATH" ]; then
             IFS=', ' read -r -a codes <<< "$PLAN"
+            sdir="scripts"
+            if [ "$VIDEO_LANG" != "ru" ]; then sdir="scripts/$VIDEO_LANG"; fi
             for c in "${codes[@]}"; do
               c="${c,,}"
               [ -z "$c" ] && continue
-              f=$(compgen -G "scripts/sut-$c-*.json" | LC_ALL=C sort | head -n 1 || true)
+              f=$(compgen -G "$sdir/sut-$c-*.json" | LC_ALL=C sort | head -n 1 || true)
               if [ -n "$f" ]; then
                 files+=("$f")
               else
@@ -501,6 +528,7 @@ jobs:
             args=(--script "$f")
             [ "$FORMAT" != "auto" ] && args+=(--format "$FORMAT")
             [ "$THEME" != "auto" ] && args+=(--theme "$THEME")
+            [ "$VIDEO_LANG" != "ru" ] && args+=(--lang "$VIDEO_LANG")
             if [[ "$UPLOAD" == *youtube* ]]; then
               args+=(--upload youtube --privacy "$PRIVACY")
               [ "$SCHEDULE" = "slots" ] && args+=(--schedule-slot "$slot" --schedule-start "$start")
@@ -528,9 +556,11 @@ jobs:
             if [ -n "$release" ] && [ -n "$run_dir" ] && [ -f "$run_dir/video.mp4" ]; then
               # Файл с кодом (08a-….mp4): под этим именем ролик грузят в Studio руками,
               # по коду его находит youtube-fill.
+              lp=""
+              if [ "$VIDEO_LANG" != "ru" ]; then lp="$VIDEO_LANG-"; fi
               mp4="$run_dir/video.mp4"
-              if [ -n "$code" ]; then mp4="$run_dir/$code-${slug:0:60}.mp4"; cp "$run_dir/video.mp4" "$mp4"; fi
-              tag="video-${code:+$code-}${slug:0:50}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}-${slot}"
+              if [ -n "$code" ]; then mp4="$run_dir/$lp$code-${slug:0:60}.mp4"; cp "$run_dir/video.mp4" "$mp4"; fi
+              tag="video-$lp${code:+$code-}${slug:0:50}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}-${slot}"
               rfiles=("$mp4" "$run_dir/captions.srt" "$run_dir/description.txt")
               for x in thumbnail.png cover.jpg instagram.txt youtube-result.json qc.json; do
                 [ -f "$run_dir/$x" ] && rfiles+=("$run_dir/$x")
@@ -540,7 +570,7 @@ jobs:
               if gh release create "$tag" "${rfiles[@]}" --prerelease --target "$GITHUB_SHA" --title "${title:-$slug}" --notes-file "$run_dir/description.txt"; then
                 note="$note, релиз \`$tag\`"
                 # Тексты для youtube-fill — в content/videos.json (его коммитит шаг ниже).
-                if [ -n "$code" ] && [ -n "$dur" ] && [ "$status" = "✅" ]; then
+                if [ -n "$code" ] && [ -n "$dur" ] && [ "$status" = "✅" ] && [ "$VIDEO_LANG" = "ru" ]; then
                   env -u GH_TOKEN npx tsx src/cli/videos-list.ts "$run_dir" --code "$code" --file "$(basename "$mp4" .mp4)" --duration "$dur" || failed+=("$f (тексты для YouTube)")
                 fi
               else
