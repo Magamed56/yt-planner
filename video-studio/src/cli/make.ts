@@ -358,7 +358,7 @@ async function main() {
           const chars = fresh.reduce((a, { i }) => a + script.scenes[i]!.narration.length, 0);
           const calls = run.posts > 0 ? run.posts : fresh.length;
           if (calls > 0) ttsUsage.push(ttsUsageRecord({ provider: voice.name, model: ttsModel(voice.name), calls, chars, costUsd: voice.name === "elevenlabs" ? null : 0 }, usageCode));
-          const fromCache = run.value.length - fresh.length;
+          const fromCache = run.value.filter((v) => v.cached).length; // пустые реплики (тишина) — не кэш
           if (fromCache && fresh.length === 0) console.log("  вся озвучка — из кэша: запросов к сервису не было");
           else if (fromCache) console.log(`  из кэша — ${fromCache} сцен, озвучено заново — ${fresh.length}`);
           return run.value;
