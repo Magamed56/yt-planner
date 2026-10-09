@@ -22,6 +22,7 @@ import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import { frameOf } from "./CoverMedia";
 import Dots from "./Dots";
 import FilesSaver from "./FilesSaver";
+import RunProgressBar from "./RunProgressBar";
 import Thumb from "./Thumb";
 
 type Undo = { videoId: string; publishAt: string }[];
@@ -127,6 +128,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   const [scriptSaved, setScriptSaved] = useState(false);
   const [rebuild, setRebuild] = useState<RebuildOptions>(DEFAULT_REBUILD);
   const locked = busy || Boolean(row.running);
+  const runOf = row.running ? (state.runs.find((r) => r.active && r.codes.includes(row.code)) ?? null) : null;
   // Править сценарий и пересобирать — только пока ролик не загружен в YouTube.
   const lock = editLock(row, state.youtubeError);
 
@@ -254,7 +256,12 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           ✕
         </button>
       </div>
-      {row.running && <p>⚙ {row.running}…</p>}
+      {row.running && (
+        <div className="sheet-running">
+          <p>⚙ {row.running}…</p>
+          {runOf?.progress && <RunProgressBar progress={runOf.progress} />}
+        </div>
+      )}
       {row.flags.map((f) => (
         <p key={f} className="flag">
           ⚠ {f}

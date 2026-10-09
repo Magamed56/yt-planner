@@ -2107,3 +2107,79 @@ video.frame {
 .badge.accent {
   background: var(--accent);
 }
+
+/* Полоска идущего запуска: этап, доля, «осталось ≈ N мин», этапы по порядку */
+.run-progress {
+  display: grid;
+  gap: 6px;
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+.run-progress-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 10px;
+}
+.run-progress-track {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 16%, var(--card-2));
+}
+.run-progress-track > span {
+  display: block;
+  height: 100%;
+  min-width: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.8s linear;
+}
+.run-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sheet .run-stages {
+  padding: 0;
+}
+.run-stages li {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--dim);
+}
+.run-stages li.done {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--ok) 18%, transparent);
+  color: var(--ok);
+}
+.run-stages li.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.run-stages li.failed {
+  border-color: var(--error);
+  color: var(--error);
+}
+.run-progress.compact {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.run-progress.compact .run-progress-track {
+  height: 5px;
+}
+.sheet-running p {
+  margin: 0 0 6px;
+}
+.save-progress {
+  display: grid;
+  gap: 4px;
+}

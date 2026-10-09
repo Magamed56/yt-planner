@@ -16,7 +16,16 @@ import { applyScriptEdit, checkScriptEdit, countWords, parseTags, SCRIPT_LIMITS,
 import { buildState, DEFAULT_AUTOPILOT, parseAutopilot, type Row, type RunInfo } from "../lib/state";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const json = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
+// План «как на 08b»: автопилот каждый день дописывает сценарии в plan.json, а проверки порядка тем
+// ждут, что дальние темы ещё без сценария.
+const FROZEN_AT = "08b";
+const read = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
+const json = (p: string): unknown => {
+  const data = read(p);
+  if (p !== "content/plan.json") return data;
+  const plan = data as { items: { id: string }[] };
+  return { ...plan, items: plan.items.map((it) => (it.id > FROZEN_AT ? { ...it, status: "planned", script: undefined } : it)) };
+};
 // validate.ts и schema.ts тянут zod (он есть только в node_modules video-studio): путь — строкой,
 // чтобы проверка типов панели (next build) их не разбирала.
 const pipeline = (rel: string) => import(pathToFileURL(path.join(studio, "src", "pipeline", "script", rel)).href) as Promise<Record<string, unknown>>;
@@ -227,11 +236,11 @@ async function main() {
 
   await test("порядок тем: позиции (id, day, slot) на месте, содержимое переезжает; двигать можно только planned без сценария", () => {
     const plan = parsePlan(json("content/plan.json"));
-    const locked = new Set(["11a"]); // например, у 11a уже идёт запуск
+    const locked = new Set(["10a"]); // например, у 10a уже идёт запуск
     const movable = movableIds(plan, locked);
-    assert.ok(!movable.includes("01a") && !movable.includes("10a"), "темы со сценарием не двигаются");
-    assert.ok(!movable.includes("11a"));
-    assert.ok(movable.includes("11b") && movable.includes("12a"));
+    assert.ok(!movable.includes("01a") && !movable.includes("08a"), "темы со сценарием не двигаются");
+    assert.ok(!movable.includes("10a"));
+    assert.ok(movable.includes("09a") && movable.includes("10b"));
     // Последнюю подвижную тему — на первое место.
     const order = moveItem(movable, movable.length - 1, 0);
     const next = reorderPlan(plan, movable, order);
@@ -245,7 +254,7 @@ async function main() {
     assert.equal(at(next, movable[1]!).title, at(plan, first).title);
     // Неподвижные — те же объекты, порядок позиций и ключей прежний, план читается.
     assert.equal(at(next, "01a"), at(plan, "01a"));
-    assert.equal(at(next, "11a"), at(plan, "11a"));
+    assert.equal(at(next, "10a"), at(plan, "10a"));
     assert.deepEqual(
       next.items.map((x) => x.id),
       plan.items.map((x) => x.id),
