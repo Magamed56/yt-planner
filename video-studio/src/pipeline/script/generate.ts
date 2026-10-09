@@ -9,7 +9,7 @@
 import type { LlmUsage } from "../contracts";
 import type { ScriptScene, VideoScript } from "../../types";
 import { assignChapters, countChapters } from "./chapters";
-import { indexCovered, RepeatGuard } from "./covered";
+import { ctaRepeat, indexCovered, recentCtas, RepeatGuard, type RecentCta } from "./covered";
 import { resolveChain, type Env } from "./llm/chain";
 import type { AnthropicLike } from "./llm/claude";
 import { generateStructured, UsageBook, type Verdict } from "./llm/runner";
@@ -24,6 +24,7 @@ import {
   LONG_SCENES,
   QUIZ_ROUNDS_PLANNED,
   QUIZ_SILENCE_SEC,
+  SHORTS_DEFAULT_SECONDS,
   shortsTargets,
   type ChunkSpec,
   type ScriptGenRequest,
@@ -36,10 +37,13 @@ import {
   coerceScene,
   coerceScriptCandidate,
   countWords,
+  ctaProblems,
   formatZodIssues,
   lintScenes,
   lintScript,
   ScriptValidationError,
+  SHORTS_RULES,
+  trimCta,
   unwrap,
   validateScenes,
   validateScript,
@@ -79,14 +83,55 @@ function dropChapters(cand: unknown): unknown {
 
 const quizCount = (scenes: unknown[]) => scenes.filter((s) => isObj(s) && s.kind === "quiz").length;
 
+// Строгие правила (объём ±15 %, финал) — только к ПЕРВОМУ ответу: он уходит в
+// ремонт. Дальше небольшой промах — замечание или автоправка: иначе ответ
+// бросали бы и шли к следующей (более слабой) модели, а то и падали совсем.
+function firstPass(): () => boolean {
+  let armed = true;
+  return () => {
+    const first = armed;
+    armed = false;
+    return first;
+  };
+}
+
+// Финал: строго — в ремонт; после ремонта убираем «подпишись» и лишние фразы
+// сами (сцена в кандидате правится на месте, до проверки схемой).
+function checkCta(scenes: unknown[], strict: boolean): { problems: string[]; notes: string[] } {
+  const problems = ctaProblems(scenes);
+  const last = scenes[scenes.length - 1];
+  if (!problems.length || strict || !isObj(last)) return { problems, notes: [] };
+  const before = typeof last.narration === "string" ? last.narration : "";
+  const fixed = trimCta(before);
+  if (!fixed) return { problems, notes: [] };
+  last.narration = fixed;
+  return { problems: [], notes: [`финал сокращён автоматически: «${before}» → «${fixed}» — проверь, что это вопрос по теме ролика`] };
+}
+
+// Финал повторяет прошлые ролики — замечание человеку (и подсказка в ремонт).
+function ctaRepeatWarnings(scenes: unknown[], recent: RecentCta[]): string[] {
+  const last = scenes[scenes.length - 1];
+  if (!recent.length || !isObj(last) || last.kind !== "cta" || typeof last.narration !== "string") return [];
+  const hit = ctaRepeat(last.narration, recent);
+  const where = hit ? (hit.code ? `ролика ${hit.code}` : `ролика «${hit.title}»`) : "";
+  return hit ? [`финал «${last.narration}» почти повторяет финал ${where} («${hit.cta}») — придумай свой вопрос по теме, иначе концовки на канале звучат одинаково`] : [];
+}
+
+// Замечания отклонённого ответа — в ремонтный запрос, без дублей с проблемами.
+const softOnly = (warnings: string[], problems: string[]) => [...new Set(warnings)].filter((w) => !problems.includes(w));
+
 // ---- Shorts ----
 
-function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGuard): (raw: unknown) => Verdict<VideoScript> {
+function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGuard, recent: RecentCta[], accepted: string[]): (raw: unknown) => Verdict<VideoScript> {
+  const isFirst = firstPass();
   return (raw) => {
+    const strict = isFirst();
     const cand = dropChapters(coerceScriptCandidate(raw, req));
     const scenes = isObj(cand) && Array.isArray(cand.scenes) ? cand.scenes : [];
     const problems: string[] = [];
     const warnings: string[] = [];
+    const cta = checkCta(scenes, strict);
+    problems.push(...cta.problems);
     let script: VideoScript | null = null;
     try {
       script = validateScript(cand);
@@ -100,10 +145,13 @@ function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGu
     // Правила конкретного запроса: объём и число сцен под длительность.
     const words = narrationWords(scenes);
     const target = voiceSeconds * WORDS_PER_SECOND;
-    // Нижняя граница 0.75: короче — ролик выходит заметно короче заказанного
+    const ratio = words / target;
+    const { lengthTolerance: tol, lengthHard: hard } = SHORTS_RULES;
+    // Нижняя граница 0.75 — всегда: короче — ролик выходит заметно короче заказанного
     // (запасная Flash-Lite любит сжимать), один ремонтный ход это исправляет.
-    if (scenes.length && (words < target * 0.75 || words > target * 1.6)) {
-      problems.push(`общий объём narration ${words} слов — для ~${Math.round(voiceSeconds)} с голоса нужно ${t.wordsMin}–${t.wordsMax} слов`);
+    const offTarget = Math.abs(ratio - 1) > tol;
+    if (scenes.length && (ratio < hard.min || ratio > hard.max || (strict && offTarget))) {
+      problems.push(`общий объём narration ${words} слов — для ~${Math.round(voiceSeconds)} с нужно ${t.wordsMin}–${t.wordsMax} слов`);
     }
     if (scenes.length && (scenes.length < 4 || scenes.length > t.scenesMax + 5)) {
       problems.push(`сцен ${scenes.length} — нужно ${t.scenesMin}–${t.scenesMax}`);
@@ -115,9 +163,16 @@ function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGu
     const rep = guard.check(looseScenes(scenes));
     problems.push(...rep.problems);
     warnings.push(...rep.warnings);
-    if (problems.length || !script) return { ok: false, problems, warnings: [...warnings, ...lintScenes(scenes, { format: "shorts", targetSeconds: voiceSeconds })] };
+    if (problems.length || !script) {
+      const soft = [...warnings, ...lintScenes(scenes, { format: "shorts", targetSeconds: voiceSeconds }), ...ctaRepeatWarnings(scenes, recent)];
+      return { ok: false, problems, warnings: softOnly(soft, problems) };
+    }
     guard.accept(rep.warnings);
-    return { ok: true, value: script, warnings: [...warnings, ...lintScript(script, { targetSeconds: voiceSeconds })] };
+    // Принят с промахом по объёму (уже после ремонта) — человеку стоит знать.
+    const notes = [...cta.notes];
+    if (offTarget) notes.push(`объём narration ${words} слов вместо ~${Math.round(target)} — ролик выйдет на ${Math.round(Math.abs(ratio - 1) * 100)} % ${ratio > 1 ? "длиннее" : "короче"} цели (~${Math.round(seconds)} с)`);
+    accepted.push(...notes);
+    return { ok: true, value: script, warnings: [...warnings, ...notes, ...lintScript(script)] };
   };
 }
 
@@ -150,17 +205,21 @@ function outlineValidator(seconds: number): (raw: unknown) => Verdict<Outline> {
   };
 }
 
-function chunkValidator(spec: ChunkSpec, guard: RepeatGuard): (raw: unknown) => Verdict<ScriptScene[]> {
+function chunkValidator(spec: ChunkSpec, guard: RepeatGuard, accepted: string[]): (raw: unknown) => Verdict<ScriptScene[]> {
   const first = spec.index === 0;
   const last = spec.index === spec.count - 1;
   const what = `Часть ${spec.index + 1}`;
+  const isFirst = firstPass();
   return (raw) => {
+    const strict = isFirst();
     const top = Array.isArray(raw) ? { scenes: raw } : unwrap(raw, "scenes");
     let list = isObj(top) && Array.isArray(top.scenes) ? top.scenes.map((s, i) => coerceScene(s, i)) : null;
     if (!list) return { ok: false, problems: ['ожидался JSON-объект { "scenes": [...] }'], warnings: [] };
     if (!spec.chapters) list = (dropChapters({ scenes: list }) as { scenes: unknown[] }).scenes;
-    const warnings = lintScenes(list, { format: "landscape" });
-    const problems: string[] = [];
+    // Финал — только в последней части (в остальных cta и так запрещён).
+    const cta = last ? checkCta(list, strict) : { problems: [], notes: [] };
+    const warnings = [...cta.notes, ...lintScenes(list, { format: "landscape" })];
+    const problems: string[] = [...cta.problems];
     let scenes: ScriptScene[] = [];
     try {
       scenes = validateScenes(list, { hookFirst: first, ctaLast: last, allowHook: first, allowCta: last, checkIds: false }, what);
@@ -182,8 +241,9 @@ function chunkValidator(spec: ChunkSpec, guard: RepeatGuard): (raw: unknown) => 
     const rep = guard.check(looseScenes(list));
     problems.push(...rep.problems);
     warnings.push(...rep.warnings);
-    if (problems.length) return { ok: false, problems, warnings };
+    if (problems.length) return { ok: false, problems, warnings: softOnly(warnings, problems) };
     guard.accept(rep.warnings);
+    accepted.push(...cta.notes);
     // Главы: первая сцена каждого раздела; модель сбилась — по доле слов.
     return { ok: true, value: spec.chapters ? assignChapters(scenes, spec.sections) : scenes, warnings };
   };
@@ -289,10 +349,13 @@ async function generateWith(
     return g;
   };
   const extraWarnings: string[] = [];
+  // Автоправки и промахи, принятые после ремонта: в лог их уже вывел runner, здесь — в итог.
+  const accepted: string[] = [];
+  const recent = recentCtas(req.covered ?? []);
 
   let script: VideoScript;
   if (req.format === "shorts") {
-    const seconds = req.targetSeconds ?? 45;
+    const seconds = req.targetSeconds ?? SHORTS_DEFAULT_SECONDS;
     // Для викторины цели по словам — без тишины раундов (её добавит ролик).
     const voiceSeconds = req.quiz ? Math.max(15, seconds - QUIZ_ROUNDS_PLANNED * QUIZ_SILENCE_SEC) : seconds;
     const { value } = await generateStructured({
@@ -302,7 +365,7 @@ async function generateWith(
       schemaName: "video_script",
       zodSchema: VideoScriptSchema,
       jsonSchema: toCompatJsonSchema(VideoScriptSchema),
-      validate: shortsValidator(req, seconds, newGuard()),
+      validate: shortsValidator(req, seconds, newGuard(), recent, accepted),
       what: req.quiz ? "сценарий викторины" : "сценарий Shorts",
     });
     script = value;
@@ -351,7 +414,7 @@ async function generateWith(
         schemaName: "video_scenes",
         zodSchema: SceneChunkSchema,
         jsonSchema: toCompatJsonSchema(SceneChunkSchema),
-        validate: chunkValidator(spec, newGuard()),
+        validate: chunkValidator(spec, newGuard(), accepted),
         what: `часть ${k + 1} из ${groups.length}`,
       });
       current = rotateTo(current, res.target);
@@ -380,14 +443,18 @@ async function generateWith(
     }
   }
 
+  extraWarnings.push(...ctaRepeatWarnings(script.scenes, recent));
+
   const list = usage.list();
   const cost = list.reduce((a, u) => a + u.costUsd, 0);
   const words = narrationWords(script.scenes);
+  // Длительность ролика: голос с паузами между сцен + тишина раундов викторины.
+  const estSeconds = words / WORDS_PER_SECOND + quizCount(script.scenes) * QUIZ_SILENCE_SEC;
   log.info(
-    `[сценарий] Готово: «${script.title}», ${script.scenes.length} сцен, ${words} слов (~${Math.round(words / WORDS_PER_SECOND)} с)` +
+    `[сценарий] Готово: «${script.title}», ${script.scenes.length} сцен, ${words} слов (~${Math.round(estSeconds)} с)` +
       (cost > 0 ? `, стоимость ≈ $${cost.toFixed(4)}` : ", бесплатно"),
   );
-  const warnings = [...new Set([...guards.flatMap((g) => g.warnings), ...extraWarnings])];
+  const warnings = [...new Set([...guards.flatMap((g) => g.warnings), ...accepted, ...extraWarnings])];
   for (const w of extraWarnings) log.info(`[сценарий] замечание: ${w}`);
   return { script, usage: list, warnings };
 }

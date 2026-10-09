@@ -8,9 +8,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Format, ScriptRequest } from "../contracts";
 import { FPS, QUIZ_PAUSE_SEC, QUIZ_REVEAL_FRAMES } from "../../types";
-import { coveredPromptBlock, type CoveredEntry } from "./covered";
+import { coveredPromptBlock, recentCtas, type CoveredEntry } from "./covered";
 import type { Outline } from "./schema";
-import { WORDS_PER_SECOND } from "./validate";
+import { SHORTS_RULES, WORDS_PER_SECOND } from "./validate";
 
 // Дополнительные параметры генерации — аддитивно к контракту ScriptRequest.
 export interface ScriptExtras {
@@ -22,6 +22,9 @@ export interface ScriptExtras {
 }
 export type ScriptGenRequest = ScriptRequest & ScriptExtras;
 
+// Shorts по умолчанию: готовые ролики выходили по 49–68 с (медиана 57), досматривают
+// короткие лучше — цель 40–45 с, середина.
+export const SHORTS_DEFAULT_SECONDS = 42;
 // Тишина одного раунда викторины: отсчёт + вердикт (голоса нет).
 export const QUIZ_SILENCE_SEC = QUIZ_PAUSE_SEC.default + QUIZ_REVEAL_FRAMES / FPS;
 export const QUIZ_ROUNDS_PLANNED = 2;
@@ -61,7 +64,7 @@ const FALLBACK_EXAMPLE = JSON.stringify({
   scenes: [
     { id: "s1", kind: "hook", narration: "Через сутки ты забудешь почти всё, что выучил сегодня.", onScreen: "Через 24 часа ты *забудешь* почти всё", icon: "brain", visualQuery: "tired student night desk", imagePrompt: "cinematic close-up of a glowing human brain fading into darkness" },
     { id: "s2", kind: "stat", narration: "Это доказал Герман Эббингауз ещё в тысяча восемьсот восемьдесят пятом году.", onScreen: "Кривая забывания, 1885", stat: { value: 66, suffix: "%", label: "нового забывается за сутки" }, icon: "trending-down", visualQuery: "old library books", imagePrompt: "vintage scientist notebook with a declining curve, candle light" },
-    { id: "s3", kind: "cta", narration: "А ты что забываешь чаще всего? Напиши в комментариях и подпишись, чтобы не забыть следующий лайфхак.", onScreen: "Что забываешь *ты*?", icon: "message-circle" },
+    { id: "s3", kind: "cta", narration: "А что из вчерашнего ты помнишь сегодня?", onScreen: "Что помнишь *ты*?", icon: "message-circle" },
   ],
 });
 
@@ -85,11 +88,12 @@ export function buildSystemPrompt(): string {
 - Одна сцена — одна мысль. Каждая сцена приносит что-то новое: факт, поворот, вопрос, пример. Не пересказывай уже сказанное.
 - Pattern interrupt: регулярно меняй ритм — новый тип сцены, неожиданный вопрос зрителю, контраст «думали так — а на деле так».
 - Чередуй kind: не ставь подряд больше двух "statement"; используй "stat", "list", "quote", "media" там, где они действительно к месту.
+- В Shorts — ${SHORTS_RULES.media.min}–${SHORTS_RULES.media.max} сцены "media": полноэкранное живое видео по visualQuery. Ставь их туда, где есть что показать камерой (действие, место, животное, процесс), и не подряд.
 - Открытая петля: в начале намекни, что самое ценное будет в конце, — и обязательно это раскрой. Самая сильная мысль — ближе к концу, а не в первой сцене.
-- Последняя сцена (kind "cta") — до 18 слов: сначала короткий вопрос зрителю по теме ролика, на который хочется ответить в комментариях («А ты замечал такое? Напиши в комментариях»), затем призыв подписаться. Комментарии продвигают ролик сильнее лайков.
+- Последняя сцена (kind "cta") — один короткий вопрос зрителю по теме ролика, до ${SHORTS_RULES.ctaWordsMax} слов, который возвращает к хуку: на него хочется ответить в комментариях и пересмотреть начало (хук «Через сутки ты забудешь почти всё» → финал «А что из вчерашнего ты помнишь сегодня?»). Только вопрос: без «подпишись» и «напиши в комментариях» — кнопку подписки и облачко комментария ролик показывает на экране сам. Не повторяй финалы прошлых роликов.
 
 ## Темп
-- Shorts: сцена звучит 3–5 секунд (8–14 слов); на 45 секунд — 6–9 сцен.
+- Shorts: сцена звучит 3–5 секунд (8–12 слов); точную длительность и число сцен даёт запрос (обычно 40–45 секунд и 6–8 сцен).
 - Длинный ролик (landscape): сцена 8–14 секунд (20–35 слов), но внутри — короткие предложения; каждые 60–90 секунд — мини-развязка и новый крючок на следующий раздел.
 
 ## Текст диктора (narration)
@@ -115,7 +119,7 @@ export function buildSystemPrompt(): string {
 - compare — НЕОБЯЗАТЕЛЬНО, для сцены "statement" или "stat", где сравниваются 2–4 реальные величины одного типа: {"items": [{"label": "Пирамида", "value": 4500}, {"label": "Клеопатра", "value": 2050}], "suffix": " лет"} — на экране будут столбики. Только проверяемые числа.
 
 ## Метаданные для YouTube
-- title — до 70 символов, по-русски, с главным поисковым запросом темы; интрига без обмана, без КАПСА и эмодзи; можно цифру.
+- title — по-русски, с главным поисковым запросом темы; у Shorts до ${SHORTS_RULES.titleChars} символов (в ленте видно только начало), у длинного ролика до 70. Заголовок дополняет хук, а не пересказывает его: хук — неожиданный факт, заголовок — тема и обещание ответа. Интрига без обмана, без КАПСА и эмодзи; можно цифру.
 - description — по-русски: 2–3 предложения о том, что зритель узнает и чем это полезно (с ключевыми словами), затем с новой строки 3–5 хэштегов (для Shorts обязательно #shorts).
 - tags — 8–15 тегов по-русски (можно 2–3 английских), строчными буквами, без «#».
 - theme — "midnight" (тёмная: наука, технологии, космос), "sunset" (тёплая: эмоции, история, отношения), "emerald" (природа, здоровье, деньги), "mono" (строгая: бизнес, факты).
@@ -166,10 +170,16 @@ function channelContext(req: ScriptGenRequest): string {
   if (req.suggestions?.length) {
     parts.push(
       `Так эту тему ищут на YouTube (подсказки поиска): ${req.suggestions.map((s) => `«${s}»`).join("; ")}.\n` +
-        "Если какая-то формулировка точно подходит ролику — возьми её в основу title (до 70 символов, без обмана и кликбейта) и добавь 2–4 подходящие подсказки в tags.",
+        `Если какая-то формулировка точно подходит ролику — возьми её в основу title (до ${req.format === "shorts" ? SHORTS_RULES.titleChars : 70} символов, без обмана и кликбейта) и добавь 2–4 подходящие подсказки в tags.`,
     );
   }
   return parts.length ? `\n\n${parts.join("\n\n")}` : "";
+}
+
+// Финалы последних роликов — чтобы концовки не звучали одинаково (проверка — generate.ts).
+function recentCtaBlock(req: ScriptGenRequest): string {
+  const list = recentCtas(req.covered ?? [], 5);
+  return list.length ? `\nФиналы последних роликов — не повторяй ни вопрос, ни формулировку: ${list.map((c) => `«${c.cta}»`).join("; ")}.` : "";
 }
 
 const formatLine = (f: Format) =>
@@ -177,11 +187,12 @@ const formatLine = (f: Format) =>
 
 export function buildShortsPrompt(req: ScriptGenRequest, t: ShortsTargets): string {
   if (req.quiz) return buildQuizPrompt(req, t);
+  const { media, ctaWordsMax, titleChars } = SHORTS_RULES;
   return `${header(req)}
 ${formatLine("shorts")}
-Длительность: около ${t.seconds} секунд — это ${t.wordsMin}–${t.wordsMax} слов narration суммарно, ${t.scenesMin}–${t.scenesMax} сцен.${channelContext(req)}
+Длительность: около ${t.seconds} секунд — это ${t.wordsMin}–${t.wordsMax} слов narration суммарно, ${t.scenesMin}–${t.scenesMax} сцен, из них ${media.min}–${media.max} — kind "media".${channelContext(req)}
 
-Сначала про себя найди самый неожиданный и полезный факт по теме и развязку ролика, подбери 4–7 конкретных фактов, которые к ней ведут. Затем напиши сценарий целиком: первая сцена — "hook", последняя — "cta".
+Сначала про себя найди самый неожиданный и полезный факт по теме и развязку ролика, подбери 4–6 конкретных фактов, которые к ней ведут. Затем напиши сценарий целиком: первая сцена — "hook", последняя — "cta": один вопрос зрителю до ${ctaWordsMax} слов, который возвращает к хуку, без «подпишись». title — до ${titleChars} символов и не повторяет хук.${recentCtaBlock(req)}
 Ответ — JSON-объект с полями title, description, tags, language, format, theme, scenes.`;
 }
 
@@ -198,7 +209,8 @@ ${formatLine("shorts")}
   1) kind "quiz": narration — одно утверждение по теме и в конце вопрос «Правда или миф?» (до 16 слов); onScreen — само утверждение коротко (до 7 слов, без вопроса); поле quiz: {"answer": "truth" (правда) или "myth" (миф), "explanation": пояснение ответа для экрана — до 12 слов, "question": короткий вопрос зрителю для комментариев — необязательно}. После этой сцены ролик сам делает паузу с отсчётом 3…2…1 и показывает вердикт — в narration этого не пиши.
   2) следующая сцена (statement, stat или list) начинается со слов «Правда!» или «Миф!» и объясняет почему — конкретным фактом.
 - Утверждения-«правда» — только проверяемые факты темы; «миф» — распространённое заблуждение, которое факты темы опровергают. Нужна хотя бы одна правда и один миф, порядок — непредсказуемый.
-- cta: «Сколько угадал? Пиши в комментариях» и призыв подписаться.
+- cta: один короткий вопрос, до ${SHORTS_RULES.ctaWordsMax} слов («Сколько угадал? Пиши в комментариях»), без «подпишись» — кнопку подписки ролик показывает сам.
+- title — до ${SHORTS_RULES.titleChars} символов.${recentCtaBlock(req)}
 Ответ — JSON-объект с полями title, description, tags, language, format, theme, scenes.`;
 }
 
@@ -267,7 +279,7 @@ export function buildChunkPrompt(req: ScriptGenRequest, outline: Outline, spec: 
     ? 'Это начало ролика: первая сцена — kind "hook" (narration до 12 слов), затем коротко — что зритель получит к концу.'
     : `Не начинай с приветствия или хука — продолжи с того места, где остановилась предыдущая часть:\n${spec.previousTail.map((t) => `«${t}»`).join("\n")}`;
   const end = last
-    ? 'Это конец ролика: подведи итог одной сильной фразой и закончи сценой kind "cta".'
+    ? `Это конец ролика: подведи итог одной сильной фразой и закончи сценой kind "cta" — один короткий вопрос зрителю по теме (до ${SHORTS_RULES.ctaWordsMax} слов), без «подпишись».`
     : 'Не используй kind "hook" и "cta", не подводи итог всего ролика и не прощайся — ролик продолжится.';
   const chapters = spec.chapters
     ? `\nГлавы: у ПЕРВОЙ сцены каждого раздела этой части поле chapter — название раздела дословно (${spec.sections.map((s) => `«${s.heading}»`).join(", ")}); у остальных сцен chapter не указывай.`

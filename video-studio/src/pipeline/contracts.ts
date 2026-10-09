@@ -81,7 +81,7 @@ export interface ScriptRequest {
   topic: string;
   format: Format;
   language?: string; // "ru"
-  targetSeconds?: number; // по умолчанию 45 для shorts, 480 для landscape
+  targetSeconds?: number; // по умолчанию 42 для shorts (SHORTS_DEFAULT_SECONDS), 480 для landscape
   notes?: string; // пожелания автора: стиль, аудитория, факты
 }
 
