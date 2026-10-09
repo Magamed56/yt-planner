@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { Check } from "lucide-react";
-import { KineticText, useFittedTokens } from "../components/KineticText";
+import { KineticText, numberRender, useFittedTokens } from "../components/KineticText";
 import { FONT_BODY, FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
 import { listRevealFrames } from "../lib/cues";
@@ -201,16 +201,20 @@ export const ListScene: React.FC<SceneProps> = (p) => {
               >
                 {fit.lines.map((ln, li) => (
                   <div key={li} style={{ whiteSpace: "nowrap" }}>
-                    {ln.map((ti, j) => (
-                      <React.Fragment key={ti}>
-                        {j > 0 ? " " : null}
-                        {tokens[ti].runs.map((r, ri) => (
-                          <span key={ri} style={r.accent ? { color: p.theme.accent } : undefined}>
-                            {r.text}
-                          </span>
-                        ))}
-                      </React.Fragment>
-                    ))}
+                    {ln.map((ti, j) => {
+                      // Число в пункте («≈30 трлн») докручивается, пока карточка въезжает.
+                      const nr = numberRender(tokens[ti], { frame, appearAt: reveal[i] + 3, counting: true, theme: p.theme, fontSize: fs });
+                      return (
+                        <React.Fragment key={ti}>
+                          {j > 0 ? " " : null}
+                          {tokens[ti].runs.map((r, ri) => (
+                            <span key={ri} style={r.accent ? { color: p.theme.accent } : undefined}>
+                              {nr ? nr.render(r) : r.text}
+                            </span>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })}
                   </div>
                 ))}
               </div>

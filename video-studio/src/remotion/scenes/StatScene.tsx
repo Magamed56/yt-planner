@@ -151,6 +151,7 @@ export const StatScene: React.FC<SceneProps> = (p) => {
       step={3}
       entrance="fade"
       highlight="color"
+      numbers={false}
     />
   );
   const label = (align: "left" | "center", w: number) => (
@@ -168,6 +169,7 @@ export const StatScene: React.FC<SceneProps> = (p) => {
       entrance="fade"
       highlight="color"
       shadow={false}
+      numbers={false}
     />
   );
   const figure = (
