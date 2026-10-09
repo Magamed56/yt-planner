@@ -7,8 +7,27 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Format, ScriptRequest } from "../contracts";
+import { FPS, QUIZ_PAUSE_SEC, QUIZ_REVEAL_FRAMES } from "../../types";
+import { coveredPromptBlock, type CoveredEntry } from "./covered";
 import type { Outline } from "./schema";
 import { WORDS_PER_SECOND } from "./validate";
+
+// Дополнительные параметры генерации — аддитивно к контракту ScriptRequest.
+export interface ScriptExtras {
+  long?: boolean; // «Разбор»: landscape 5–8 мин, разделы = главы
+  quiz?: boolean; // Shorts-викторина «Правда или миф?»
+  covered?: CoveredEntry[]; // что канал уже рассказал (не повторять)
+  searchPhrases?: string[]; // ключевые фразы → подсказки поиска YouTube
+  suggestions?: string[]; // готовые подсказки (иначе их получит generateScript)
+}
+export type ScriptGenRequest = ScriptRequest & ScriptExtras;
+
+// Тишина одного раунда викторины: отсчёт + вердикт (голоса нет).
+export const QUIZ_SILENCE_SEC = QUIZ_PAUSE_SEC.default + QUIZ_REVEAL_FRAMES / FPS;
+export const QUIZ_ROUNDS_PLANNED = 2;
+// «Разбор»: 5–8 минут, 25–45 сцен.
+export const LONG_DEFAULT_SECONDS = 420;
+export const LONG_SCENES = { min: 25, max: 45 } as const;
 
 // Пример стиля — examples/demo-ru.json (ищем вверх от этого файла, чтобы не
 // зависеть от текущей папки; на Windows CLI часто запускают «не оттуда»).
@@ -137,15 +156,47 @@ function header(req: ScriptRequest): string {
   return `Тема: ${req.topic.trim()}${lang}${notes}`;
 }
 
+// «Уже было на канале» и подсказки поиска — только туда, где выбираются факты и
+// заголовок (Shorts и план длинного ролика), а не в каждую часть.
+function channelContext(req: ScriptGenRequest): string {
+  const parts: string[] = [];
+  if (req.covered?.length) parts.push(coveredPromptBlock(req.covered, `${req.topic} ${req.notes ?? ""}`));
+  if (req.suggestions?.length) {
+    parts.push(
+      `Так эту тему ищут на YouTube (подсказки поиска): ${req.suggestions.map((s) => `«${s}»`).join("; ")}.\n` +
+        "Если какая-то формулировка точно подходит ролику — возьми её в основу title (до 70 символов, без обмана и кликбейта) и добавь 2–4 подходящие подсказки в tags.",
+    );
+  }
+  return parts.length ? `\n\n${parts.join("\n\n")}` : "";
+}
+
 const formatLine = (f: Format) =>
   f === "shorts" ? 'Формат: YouTube Shorts, вертикальное видео 9:16 (поле format: "shorts").' : 'Формат: длинное горизонтальное видео 16:9 (поле format: "landscape").';
 
-export function buildShortsPrompt(req: ScriptRequest, t: ShortsTargets): string {
+export function buildShortsPrompt(req: ScriptGenRequest, t: ShortsTargets): string {
+  if (req.quiz) return buildQuizPrompt(req, t);
   return `${header(req)}
 ${formatLine("shorts")}
-Длительность: около ${t.seconds} секунд — это ${t.wordsMin}–${t.wordsMax} слов narration суммарно, ${t.scenesMin}–${t.scenesMax} сцен.
+Длительность: около ${t.seconds} секунд — это ${t.wordsMin}–${t.wordsMax} слов narration суммарно, ${t.scenesMin}–${t.scenesMax} сцен.${channelContext(req)}
 
 Сначала про себя найди самый неожиданный и полезный факт по теме и развязку ролика, подбери 4–7 конкретных фактов, которые к ней ведут. Затем напиши сценарий целиком: первая сцена — "hook", последняя — "cta".
+Ответ — JSON-объект с полями title, description, tags, language, format, theme, scenes.`;
+}
+
+// Викторина: t — цели по словам уже без тишины раундов (её добавит ролик).
+function buildQuizPrompt(req: ScriptGenRequest, t: ShortsTargets): string {
+  const total = Math.round(t.seconds + QUIZ_ROUNDS_PLANNED * QUIZ_SILENCE_SEC);
+  return `${header(req)}
+${formatLine("shorts")}
+Формат ролика — викторина «Правда или миф?». Длительность: около ${total} секунд, из них голос — ${t.wordsMin}–${t.wordsMax} слов narration суммарно (остальное — паузы викторины), ${t.scenesMin}–${t.scenesMax} сцен.${channelContext(req)}
+
+Структура: hook → 2–3 раунда → cta.
+- hook: вызов зрителю и тема, до 12 слов («Проверь себя: правда или миф? Три факта о сне»).
+- Раунд — две сцены подряд:
+  1) kind "quiz": narration — одно утверждение по теме и в конце вопрос «Правда или миф?» (до 16 слов); onScreen — само утверждение коротко (до 7 слов, без вопроса); поле quiz: {"answer": "truth" (правда) или "myth" (миф), "explanation": пояснение ответа для экрана — до 12 слов, "question": короткий вопрос зрителю для комментариев — необязательно}. После этой сцены ролик сам делает паузу с отсчётом 3…2…1 и показывает вердикт — в narration этого не пиши.
+  2) следующая сцена (statement, stat или list) начинается со слов «Правда!» или «Миф!» и объясняет почему — конкретным фактом.
+- Утверждения-«правда» — только проверяемые факты темы; «миф» — распространённое заблуждение, которое факты темы опровергают. Нужна хотя бы одна правда и один миф, порядок — непредсказуемый.
+- cta: «Сколько угадал? Пиши в комментариях» и призыв подписаться.
 Ответ — JSON-объект с полями title, description, tags, language, format, theme, scenes.`;
 }
 
@@ -166,14 +217,17 @@ export function landscapePlan(seconds: number): LandscapePlan {
   return { seconds, sections: Math.min(10, Math.max(3, Math.round(seconds / 80))) };
 }
 
-export function buildOutlinePrompt(req: ScriptRequest, plan: LandscapePlan): string {
+export function buildOutlinePrompt(req: ScriptGenRequest, plan: LandscapePlan): string {
   const minutes = Math.round((plan.seconds / 60) * 10) / 10;
+  const chapters = req.long
+    ? "\nЭто «Разбор» — подробный ролик, разделы станут главами YouTube: heading — короткое название главы (2–5 слов, до 40 символов), без нумерации и кавычек; главы не повторяют друг друга."
+    : "";
   return `${header(req)}
 ${formatLine("landscape")}
-Длительность: около ${plan.seconds} секунд (${minutes} мин).
+Длительность: около ${plan.seconds} секунд (${minutes} мин).${channelContext(req)}
 
 Сейчас нужен только ПЛАН ролика — сцены напишем потом по частям.
-Раздели ролик на ${plan.sections} ${ruPlural(plan.sections, "раздел", "раздела", "разделов")}. Первый раздел открывается хуком и обещанием ценности, последний — главной развязкой и призывом. Каждый раздел — отдельная мысль с мини-развязкой и крючком на следующий.
+Раздели ролик на ${plan.sections} ${ruPlural(plan.sections, "раздел", "раздела", "разделов")}. Первый раздел открывается хуком и обещанием ценности, последний — главной развязкой и призывом. Каждый раздел — отдельная мысль с мини-развязкой и крючком на следующий.${chapters}
 Для каждого раздела: heading — заголовок, goal — что зритель поймёт, points — 2–6 конкретных фактов, примеров или шагов (реальных, проверяемых), seconds — длительность; сумма seconds ≈ ${plan.seconds}.
 Также дай title, description (для длинного ролика — 2–3 предложения и 3–5 хэштегов, без #shorts), tags и theme для всего ролика.
 Ответ — JSON-объект с полями title, description, tags, theme, sections.`;
@@ -187,9 +241,10 @@ export interface ChunkSpec {
   seconds: number;
   previousTail: string[]; // последние narration предыдущей части
   scenesBudget?: number; // доля общего лимита сцен ролика (LIMITS.scenesMax) на эту часть
+  chapters?: boolean; // «Разбор»: первая сцена раздела несёт chapter
 }
 
-export function buildChunkPrompt(req: ScriptRequest, outline: Outline, spec: ChunkSpec): string {
+export function buildChunkPrompt(req: ScriptGenRequest, outline: Outline, spec: ChunkSpec): string {
   const first = spec.index === 0;
   const last = spec.index === spec.count - 1;
   const words = spec.seconds * WORDS_PER_SECOND;
@@ -212,6 +267,9 @@ export function buildChunkPrompt(req: ScriptRequest, outline: Outline, spec: Chu
   const end = last
     ? 'Это конец ролика: подведи итог одной сильной фразой и закончи сценой kind "cta".'
     : 'Не используй kind "hook" и "cta", не подводи итог всего ролика и не прощайся — ролик продолжится.';
+  const chapters = spec.chapters
+    ? `\nГлавы: у ПЕРВОЙ сцены каждого раздела этой части поле chapter — название раздела дословно (${spec.sections.map((s) => `«${s.heading}»`).join(", ")}); у остальных сцен chapter не указывай.`
+    : "";
   return `${header(req)}
 ${formatLine("landscape")}
 Название ролика: ${outline.title}
@@ -224,7 +282,7 @@ ${detail}
 
 Длительность части: около ${Math.round(spec.seconds)} с — это ${Math.round(words * 0.9)}–${Math.round(words * 1.1)} слов narration, ${scenesMin}–${scenesMax} сцен.
 ${start}
-${end}
+${end}${chapters}
 Ответ — JSON-объект { "scenes": [ … ] }; поля сцен — как в инструкции; id внутри части: "s1", "s2", … (при склейке перенумеруем).`;
 }
 

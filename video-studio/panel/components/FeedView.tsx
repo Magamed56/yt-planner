@@ -13,12 +13,14 @@ function chipText(r: Row): string {
 
 function Cover({ row }: { row: Row }) {
   const [broken, setBroken] = useState(false);
+  const views = row.stage === "published" && row.stats ? <span className="views-badge" title="просмотры">👁 {row.stats.viewsLabel}</span> : null;
   if (!row.cover || broken) {
     return (
       <span className="cover empty">
         {row.code}
         <small>{row.localVideo ? "файл на компьютере" : STAGE_LABEL[row.stage]}</small>
         <span className="time">{row.timeLabel}</span>
+        {views}
       </span>
     );
   }
@@ -26,6 +28,7 @@ function Cover({ row }: { row: Row }) {
     <span className="cover">
       <img src={row.cover} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setBroken(true)} />
       <span className="time">{row.timeLabel}</span>
+      {views}
       <span className="chip-stage">{chipText(row)}</span>
     </span>
   );

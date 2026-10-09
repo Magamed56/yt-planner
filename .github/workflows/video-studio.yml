@@ -57,6 +57,11 @@ on:
         type: choice
         options: [auto, midnight, sunset, emerald, mono]
         default: auto
+      music:
+        description: "Музыка: auto — как обычно (переменная MUSIC, иначе трек из music/ или эмбиент); none — без музыки"
+        type: choice
+        options: [auto, none]
+        default: auto
       upload:
         description: "Куда отдать результат. instagram: render — публикует сразу, batch — ставит в очередь (релиз)"
         type: choice
@@ -125,7 +130,8 @@ jobs:
       LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
       LLM_MODEL: ${{ vars.LLM_MODEL }}
       VISUALS: ${{ vars.VISUALS }}
-      MUSIC: ${{ vars.MUSIC }}
+      # Кнопка «Пересобрать» в панели может выключить музыку (music = none) для одного запуска.
+      MUSIC: ${{ inputs.music == 'none' && 'none' || vars.MUSIC }}
       CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
       # Остальные несекретные настройки из .env.example; пустое значение = умолчание.
       TTS_FALLBACK: ${{ vars.TTS_FALLBACK }}
@@ -563,7 +569,8 @@ jobs:
           DRAFT_FORMAT: ${{ steps.draft.outputs.format }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          for p in scripts content/plan.json content/videos.json; do
+          # content/usage.jsonl — журнал расхода LLM и TTS (дописывают script и make).
+          for p in scripts content/plan.json content/videos.json content/usage.jsonl; do
             if [ -e "$p" ]; then git add -A -- "$p"; fi
           done
           if git diff --cached --quiet; then
@@ -576,6 +583,7 @@ jobs:
             what=()
             git diff --cached --quiet -- scripts || what+=("сценарии")
             git diff --cached --quiet -- content/videos.json || what+=("тексты для YouTube")
+            git diff --cached --quiet -- content/usage.jsonl || what+=("расход")
             msg="video-studio: ${what[0]:-план}${what[1]:+ и ${what[1]}}${PLAN:+ ($PLAN)}"
           fi
           git config user.name "github-actions[bot]"
@@ -615,6 +623,24 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "Следующий шаг: mode = **batch**, plan = \`$PLAN\`, upload = **release** — или кнопка «Собрать видео» в панели." >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      # Уведомление на телефон через панель: «видео готово — загрузите в Studio». Нужны секреты
+      # PANEL_URL (адрес панели) и PANEL_NOTIFY_SECRET (тот же, что в Vercel); без них шаг молчит.
+      - name: Уведомить телефон
+        if: success() && (env.MODE == 'batch' || env.MODE == 'render') && contains(env.UPLOAD, 'release')
+        continue-on-error: true
+        env:
+          PANEL_URL: ${{ secrets.PANEL_URL }}
+          PANEL_NOTIFY_SECRET: ${{ secrets.PANEL_NOTIFY_SECRET }}
+        run: |
+          if [ -z "$PANEL_URL" ] || [ -z "$PANEL_NOTIFY_SECRET" ]; then
+            echo "Уведомления не настроены (секреты PANEL_URL и PANEL_NOTIFY_SECRET) — пропускаю."
+            exit 0
+          fi
+          body=$(jq -n --arg b "${PLAN:-новый ролик} — загрузите в Studio" '{title: "Видео готово", body: $b, url: "/"}')
+          curl -fsS --max-time 30 -X POST "${PANEL_URL%/}/api/notify" \
+            -H "Authorization: Bearer $PANEL_NOTIFY_SECRET" -H "Content-Type: application/json" -d "$body" > /dev/null
+          echo "Уведомление отправлено."
 
       # Без релиза пакет живёт только в артефакте — на 3 дня (квота хранилища артефактов мала).
       - name: Артефакт пакета

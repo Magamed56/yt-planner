@@ -53,6 +53,22 @@ export interface ChannelVideo {
   categoryId: string | null;
   publishedAt?: string | null; // snippet.publishedAt: у вышедшего — время выхода, у приватного — загрузки
   thumbnailUrl?: string | null; // обложка (snippet.thumbnails) — для панели
+  // statistics — в том же videos.list (квота считается за вызов, а не за part). Нет поля — null.
+  viewCount?: number | null;
+  likeCount?: number | null;
+  commentCount?: number | null;
+}
+
+// Цифры канала — channels.list part=statistics в том же вызове, что ищет плейлист «Загрузки».
+export interface ChannelStats {
+  subscriberCount: number | null; // YouTube округляет вниз до 3 значащих цифр; скрыты — null
+  viewCount: number | null;
+  videoCount: number | null;
+}
+
+export interface ChannelListing {
+  videos: ChannelVideo[];
+  channel: ChannelStats | null;
 }
 
 export type MatchedBy = "файл" | "название" | "длительность";
@@ -299,7 +315,14 @@ interface ApiVideo {
   status?: { uploadStatus?: string; privacyStatus?: string; publishAt?: string; embeddable?: boolean; license?: string; publicStatsViewable?: boolean };
   contentDetails?: { duration?: string };
   fileDetails?: { fileName?: string };
+  statistics?: { viewCount?: string; likeCount?: string; commentCount?: string };
 }
+
+// Счётчики API приходят строками («1234»); нет поля (лайки скрыты, комментарии выключены) — null.
+const count = (s: string | undefined): number | null => {
+  const n = s === undefined || s === "" ? Number.NaN : Number(s);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+};
 
 const toChannelVideo = (v: ApiVideo): ChannelVideo => ({
   videoId: v.id,
@@ -317,6 +340,9 @@ const toChannelVideo = (v: ApiVideo): ChannelVideo => ({
   categoryId: v.snippet?.categoryId ?? null,
   publishedAt: v.snippet?.publishedAt ?? null,
   thumbnailUrl: v.snippet?.thumbnails?.medium?.url ?? v.snippet?.thumbnails?.high?.url ?? v.snippet?.thumbnails?.default?.url ?? null,
+  viewCount: count(v.statistics?.viewCount),
+  likeCount: count(v.statistics?.likeCount),
+  commentCount: count(v.statistics?.commentCount),
 });
 
 // Последние загрузки канала (до maxVideos): плейлист «Загрузки» + поиск по своим
@@ -324,7 +350,20 @@ const toChannelVideo = (v: ApiVideo): ChannelVideo => ({
 // Поиск стоит 100 единиц квоты из 10 000 в сутки (остальное — по 1), поэтому панель,
 // которая обновляет список часто, вызывает с search: false.
 export async function listChannelVideos(deps: ApiDeps, maxVideos = 200, opts: { search?: boolean } = {}): Promise<ChannelVideo[]> {
-  const ch = await api<{ items?: { contentDetails?: { relatedPlaylists?: { uploads?: string } } }[] }>(deps, "GET", "channels?part=contentDetails&mine=true");
+  return (await listChannel(deps, maxVideos, opts)).videos;
+}
+
+// То же плюс цифры канала (подписчики, просмотры) — для экрана «Статистика» панели.
+export async function listChannel(deps: ApiDeps, maxVideos = 200, opts: { search?: boolean } = {}): Promise<ChannelListing> {
+  type ApiChannel = {
+    contentDetails?: { relatedPlaylists?: { uploads?: string } };
+    statistics?: { viewCount?: string; subscriberCount?: string; hiddenSubscriberCount?: boolean; videoCount?: string };
+  };
+  const ch = await api<{ items?: ApiChannel[] }>(deps, "GET", "channels?part=contentDetails,statistics&mine=true");
+  const st = ch.items?.[0]?.statistics;
+  const channel: ChannelStats | null = st
+    ? { subscriberCount: st.hiddenSubscriberCount ? null : count(st.subscriberCount), viewCount: count(st.viewCount), videoCount: count(st.videoCount) }
+    : null;
   const uploads = ch.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
   if (!uploads) throw new Error("YouTube: у этого аккаунта Google нет канала — войдите в аккаунт канала «Суть за минуту» при получении токена.");
   const ids: string[] = [];
@@ -349,11 +388,11 @@ export async function listChannelVideos(deps: ApiDeps, maxVideos = 200, opts: { 
   const unique = [...new Set([...recent, ...ids])].slice(0, maxVideos);
   const out: ChannelVideo[] = [];
   for (let i = 0; i < unique.length; i += 50) {
-    const q = new URLSearchParams({ part: "snippet,status,contentDetails,fileDetails", id: unique.slice(i, i + 50).join(",") });
+    const q = new URLSearchParams({ part: "snippet,status,contentDetails,fileDetails,statistics", id: unique.slice(i, i + 50).join(",") });
     const r = await api<{ items?: ApiVideo[] }>(deps, "GET", `videos?${q}`);
     out.push(...(r.items ?? []).map(toChannelVideo));
   }
-  return out;
+  return { videos: out, channel };
 }
 
 export interface AppliedUpdate {

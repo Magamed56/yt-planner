@@ -5,7 +5,9 @@ import { channelFromJson, isoNoMs, localDate, upcomingSlots } from "../../src/pi
 import { parsePlan, scriptCode } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
 import type { GhRelease, GhRun } from "./github";
+import { releaseVideosOf, type ReleaseVideo } from "./ops";
 import { STAGES, codesLabel, plural, shiftDateKey, type Stage } from "./stages";
+import { rowStats, type RowStats } from "./stats";
 
 export { STAGES, STAGE_LABEL, codesLabel, plural, type Stage } from "./stages";
 
@@ -55,6 +57,7 @@ export interface Row {
   timeLabel: string;
   flags: string[];
   running: string | null; // что сейчас делает Actions с этим роликом
+  stats?: RowStats | null; // просмотры, лайки, комментарии с YouTube (statistics того же videos.list)
 }
 
 export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "other";
@@ -71,6 +74,7 @@ export interface RunInfo {
   createdAt: string;
   createdLabel: string;
   url: string;
+  attempt: number; // номер попытки (после «Re-run» — 2 и дальше)
 }
 
 export interface Reminder {
@@ -91,6 +95,10 @@ export interface SlotCell {
 export interface AutopilotSettings {
   enabled: boolean;
   days: number; // ролики должны быть готовы за столько дней до выхода
+  // Дальше — поля, добавленные позже: в старом JSON их нет, parseAutopilot ставит умолчания.
+  retryFailed: boolean; // упавший за сутки запуск перезапустить один раз
+  keepReleaseDays: number; // видео в релизах — столько дней после выхода; 0 — не удалять
+  scriptReserve: number; // у ближайших N тем без видео сценарий пишется заранее (0–10)
 }
 
 export interface AutopilotLast {
@@ -103,13 +111,26 @@ export interface AutopilotLast {
 
 export const AUTOPILOT_VAR = "PANEL_AUTOPILOT";
 export const AUTOPILOT_LAST_VAR = "PANEL_AUTOPILOT_LAST";
-export const DEFAULT_AUTOPILOT: AutopilotSettings = { enabled: false, days: 3 };
+export const DEFAULT_AUTOPILOT: AutopilotSettings = { enabled: false, days: 3, retryFailed: true, keepReleaseDays: 0, scriptReserve: 0 };
+export const KEEP_RELEASE_MAX = 365;
+export const SCRIPT_RESERVE_MAX = 10;
+
+const intIn = (v: unknown, min: number, max: number, fallback: number) => {
+  const n = Number(v);
+  return v !== null && v !== "" && Number.isInteger(n) && n >= min && n <= max ? n : fallback;
+};
 
 export function parseAutopilot(raw: string | null): AutopilotSettings {
   try {
     const j = JSON.parse(raw ?? "") as Partial<AutopilotSettings>;
-    const days = Number(j.days);
-    return { enabled: j.enabled === true, days: Number.isInteger(days) && days >= 1 && days <= 14 ? days : DEFAULT_AUTOPILOT.days };
+    const d = DEFAULT_AUTOPILOT;
+    return {
+      enabled: j.enabled === true,
+      days: intIn(j.days, 1, 14, d.days),
+      retryFailed: typeof j.retryFailed === "boolean" ? j.retryFailed : d.retryFailed,
+      keepReleaseDays: intIn(j.keepReleaseDays, 0, KEEP_RELEASE_MAX, d.keepReleaseDays),
+      scriptReserve: intIn(j.scriptReserve, 0, SCRIPT_RESERVE_MAX, d.scriptReserve),
+    };
   } catch {
     return { ...DEFAULT_AUTOPILOT };
   }
@@ -146,6 +167,7 @@ export interface PanelState {
   autopilotLast: AutopilotLast | null;
   repo: string;
   branch: string;
+  releaseVideos: ReleaseVideo[]; // mp4 в релизах у уже вышедших роликов — для уборки релизов
 }
 
 export interface StateInput {
@@ -217,6 +239,7 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
     createdAt: r.created_at,
     createdLabel: `${f.day(t)} ${f.time(t)}`,
     url: r.html_url,
+    attempt: r.run_attempt ?? 1,
   };
 }
 
@@ -351,6 +374,7 @@ export function buildState(input: StateInput): PanelState {
       timeLabel: "",
       flags,
       running: running.get(it.id) ?? null,
+      stats: v ? rowStats(v) : null,
     };
   });
 
@@ -469,5 +493,6 @@ export function buildState(input: StateInput): PanelState {
     autopilotLast: input.autopilotLast ? { ...input.autopilotLast, atLabel: Number.isFinite(ms(input.autopilotLast.at)) ? labelOf(input.autopilotLast.at) : "" } : null,
     repo: input.repo,
     branch: input.branch,
+    releaseVideos: releaseVideosOf(input.releases, new Map(rows.filter((r) => r.stage === "published" && r.when).map((r) => [r.code, r.when!]))),
   };
 }

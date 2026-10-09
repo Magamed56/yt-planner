@@ -6,6 +6,9 @@ import { logoutAction } from "@/app/actions";
 import { plural } from "@/lib/stages";
 
 export type Section = "feed" | "calendar" | "runs";
+// Пункты меню: лента и календарь на главной переключаются без перезагрузки, остальные — ссылки.
+type NavItem = Section | "plan" | "stats";
+const NAV: NavItem[] = ["feed", "calendar", "plan", "runs", "stats"];
 
 // Кольцо-секундомер из знака канала: заполнено на столько дней расписания из недели.
 export function RunwayRing({ days, size = 52 }: { days: number | null; size?: number }) {
@@ -36,7 +39,7 @@ export function RunwayRing({ days, size = 52 }: { days: number | null; size?: nu
   );
 }
 
-const ICONS: Record<Section, React.ReactNode> = {
+const ICONS: Record<NavItem, React.ReactNode> = {
   feed: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
   calendar: (
     <>
@@ -44,12 +47,14 @@ const ICONS: Record<Section, React.ReactNode> = {
       <path d="M16 2v4M8 2v4M3 10h18" />
     </>
   ),
+  plan: <path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />,
   runs: <path d="m6 4 14 8-14 8z" />,
+  stats: <path d="M3 21h18M7 17v-5M12 17V5M17 17V9" />,
 };
-const LABEL: Record<Section, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски" };
-const HREF: Record<Section, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs" };
+const LABEL: Record<NavItem, string> = { feed: "Лента", calendar: "Календарь", plan: "План", runs: "Запуски", stats: "Статистика" };
+const HREF: Record<NavItem, string> = { feed: "/", calendar: "/?view=calendar", plan: "/plan", runs: "/runs", stats: "/stats" };
 
-function Icon({ section }: { section: Section }) {
+function Icon({ section }: { section: NavItem }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {ICONS[section]}
@@ -66,7 +71,7 @@ export default function AppShell({
   runwayLabel,
   children,
 }: {
-  active: Section;
+  active: NavItem;
   onSection?: (s: Section) => void; // на главной лента и календарь переключаются без перезагрузки
   updated: string;
   activeRuns: number;
@@ -88,13 +93,13 @@ export default function AppShell({
     return () => clearInterval(timer);
   }, [activeRuns, router]);
 
-  const link = (s: Section, className?: string, withIcon = true) => (
+  const link = (s: NavItem, className?: string, withIcon = true) => (
     <Link
       key={s}
       href={HREF[s]}
       className={`${className ?? ""}${active === s ? " active" : ""}`}
       onClick={(e) => {
-        if (onSection && s !== "runs") {
+        if (onSection && (s === "feed" || s === "calendar")) {
           e.preventDefault();
           onSection(s);
         }
@@ -111,6 +116,13 @@ export default function AppShell({
     </svg>
   );
 
+  const bellIcon = (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+  );
+
   return (
     <div className="app">
       <aside className="sidebar">
@@ -118,7 +130,7 @@ export default function AppShell({
           <span className="tag">СУТЬ</span>ЗА МИНУТУ
         </Link>
         <nav className="side-nav" aria-label="Разделы">
-          {(["feed", "calendar", "runs"] as Section[]).map((s) => link(s))}
+          {NAV.map((s) => link(s))}
         </nav>
         <div className="side-foot">
           <div className="runway-card">
@@ -136,6 +148,9 @@ export default function AppShell({
             <button className="btn small" onClick={refresh} disabled={pending}>
               {refreshIcon} {pending ? "Обновляю…" : "Обновить"}
             </button>
+            <Link href="/settings" className="btn small ghost" aria-label="Уведомления на телефон">
+              {bellIcon}
+            </Link>
             <form action={logoutAction}>
               <button className="btn small ghost" type="submit">
                 Выйти
@@ -150,6 +165,10 @@ export default function AppShell({
           <span className="tag">СУТЬ</span>ЗА МИНУТУ
         </Link>
         <div className="actions">
+          {/* У панели со значка на iPhone нет адресной строки — настройки уведомлений только по ссылке. */}
+          <Link href="/settings" className="btn icon" aria-label="Уведомления" title="Уведомления на телефон">
+            {bellIcon}
+          </Link>
           <button className="btn icon" onClick={refresh} disabled={pending} aria-label="Обновить" title={`обновлено ${updated}`}>
             {pending ? "…" : refreshIcon}
           </button>
@@ -159,7 +178,7 @@ export default function AppShell({
       <div className="content">{children}</div>
 
       <nav className="tabbar" aria-label="Разделы">
-        {(["feed", "calendar", "runs"] as Section[]).map((s) => link(s))}
+        {NAV.map((s) => link(s))}
       </nav>
     </div>
   );

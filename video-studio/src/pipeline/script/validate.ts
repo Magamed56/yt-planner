@@ -5,7 +5,7 @@
 
 import type { z } from "zod";
 import type { Format, ScriptRequest } from "../contracts";
-import { SCENE_KINDS, THEME_NAMES, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
+import { QUIZ_PAUSE_SEC, SCENE_KINDS, THEME_NAMES, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
 import { LIMITS, ScriptSceneSchema, VideoScriptSchema } from "./schema";
 
 export class ScriptValidationError extends Error {
@@ -142,6 +142,16 @@ export function checkSceneRules(scenes: unknown[], opts: SceneRuleOptions): stri
     if (kind === "media" && !str(raw.visualQuery).trim() && !str(raw.imagePrompt).trim()) {
       out.push(`${label}: для kind "media" нужен visualQuery или imagePrompt`);
     }
+    if (kind === "quiz") {
+      const q = raw.quiz;
+      if (!isObj(q)) out.push(`${label}: для kind "quiz" обязательно поле quiz {answer: "truth" | "myth", explanation}`);
+      else {
+        if (q.answer !== "truth" && q.answer !== "myth") out.push(`${label}: quiz.answer — "truth" (правда) или "myth" (миф)`);
+        const expl = str(q.explanation).trim();
+        if (!expl) out.push(`${label}: quiz.explanation — короткое пояснение ответа на экране (до 12 слов)`);
+        else if (countWords(expl) > 16) out.push(`${label}: quiz.explanation слишком длинное (${countWords(expl)} слов) — нужно до 12 слов`);
+      }
+    }
 
     const narration = str(raw.narration);
     if (kind === "hook" && countWords(narration) > LIMITS.hookWordsHard) {
@@ -255,6 +265,14 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
     const prev = i > 0 && isObj(scenes[i - 1]) ? str((scenes[i - 1] as Loose).kind) : "";
     sameKindRun = kind === prev ? sameKindRun + 1 : 1;
     if (sameKindRun === 3) out.push(`${label}: третья подряд сцена kind "${kind}" — чередуй типы сцен`);
+    if (kind === "quiz") {
+      // Утверждение звучит до паузы — без вопроса зритель не поймёт, что надо угадывать.
+      if (narration && !/\?\s*$/.test(narration)) out.push(`${label}: закончи утверждение викторины вопросом «Правда или миф?»`);
+      const next = isObj(scenes[i + 1]) ? (scenes[i + 1] as Loose) : null;
+      if (!next || str(next.kind) === "cta") out.push(`${label}: после quiz нужна сцена с ответом («Правда!» или «Миф!» и почему)`);
+      const expl = isObj(raw.quiz) ? str(raw.quiz.explanation) : "";
+      if (countWords(expl) > 12) out.push(`${label}: пояснение вердикта длиннее 12 слов — на экране не успеют прочитать`);
+    }
   });
 
   const words = scenes.reduce<number>((sum, s) => sum + (isObj(s) ? countWords(str(s.narration)) : 0), 0);
@@ -334,7 +352,64 @@ const KIND_ALIASES: Record<string, SceneKind> = {
   call_to_action: "cta",
   "call-to-action": "cta",
   subscribe: "cta",
+  trivia: "quiz",
+  truth_or_myth: "quiz",
+  myth_or_truth: "quiz",
+  fact_or_myth: "quiz",
+  myth_or_fact: "quiz",
+  true_or_false: "quiz",
+  quiz_question: "quiz",
 };
+
+// Вердикт викторины: модели пишут его по-разному — приводим к truth/myth.
+const QUIZ_ANSWERS: Record<string, "truth" | "myth"> = {
+  truth: "truth",
+  true: "truth",
+  fact: "truth",
+  правда: "truth",
+  верно: "truth",
+  да: "truth",
+  myth: "myth",
+  false: "myth",
+  fake: "myth",
+  миф: "myth",
+  неправда: "myth",
+  ложь: "myth",
+  нет: "myth",
+};
+
+function coerceQuiz(v: unknown): unknown {
+  if (!isObj(v)) return v;
+  const q = dropNulls(v);
+  const rawAnswer = q.answer ?? q.verdict ?? q.isTrue;
+  const key = typeof rawAnswer === "boolean" ? String(rawAnswer) : str(rawAnswer).trim().toLowerCase().replace(/[!.«»"]/g, "");
+  if (QUIZ_ANSWERS[key]) q.answer = QUIZ_ANSWERS[key];
+  delete q.verdict;
+  delete q.isTrue;
+  for (const f of ["explanation", "question"]) {
+    if (typeof q[f] === "string") {
+      q[f] = (q[f] as string).replace(/\*+/g, "").replace(/\s+/g, " ").trim();
+      if (!q[f]) delete q[f];
+    }
+  }
+  const p = typeof q.pauseSec === "string" ? Number.parseFloat(q.pauseSec) : q.pauseSec;
+  if (typeof p === "number" && Number.isFinite(p)) q.pauseSec = Math.min(QUIZ_PAUSE_SEC.max, Math.max(QUIZ_PAUSE_SEC.min, Math.round(p)));
+  else delete q.pauseSec;
+  return q;
+}
+
+// Название главы: без кавычек, звёздочек и «Глава 2:» (номер рисует композиция).
+export function cleanChapter(t: string): string {
+  const s = t
+    .replace(/[*«»"“”]/g, "")
+    .replace(/^\s*(глава|часть|раздел)\s*\d+\s*[.:—-]\s*/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (s.length <= LIMITS.chapter) return s;
+  const cut = s.slice(0, LIMITS.chapter);
+  const sp = cut.lastIndexOf(" ");
+  return (sp > 20 ? cut.slice(0, sp) : cut).replace(/[\s,.;:—-]+$/, "");
+}
 
 const WRAPPER_KEYS = ["script", "video", "videoScript", "video_script", "data", "result", "output"];
 
@@ -418,7 +493,13 @@ export function coerceScene(raw: unknown, index: number): unknown {
   if ((SCENE_KINDS as string[]).includes(String(s.kind))) {
     if (s.kind !== "list") delete s.items;
     if (s.kind !== "stat") delete s.stat;
+    if (s.kind !== "quiz") delete s.quiz;
   }
+  if (s.kind === "quiz" && s.quiz !== undefined) s.quiz = coerceQuiz(s.quiz);
+  if (typeof s.chapter === "string") {
+    s.chapter = cleanChapter(s.chapter);
+    if (!s.chapter) delete s.chapter;
+  } else delete s.chapter;
   if (Array.isArray(s.items)) {
     s.items = s.items
       .map((it) => (typeof it === "string" ? it.replace(/^\s*(\d+[.)]|[-–—•])\s*/, "").trim() : it))

@@ -1,0 +1,19 @@
+/* Страница настроек — без бокового меню: узкая колонка, удобная с телефона. */
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 16px;
+}
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.top h1 {
+  margin: 0;
+  font: 800 22px var(--display);
+}

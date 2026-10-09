@@ -113,7 +113,8 @@ test("этапы: вышел, запланирован, видео (неделя
     assert.equal(row(c).localVideo, true, c);
   }
   assert.equal(row("08a").stage, "script");
-  assert.equal(row("08a").scriptPath, "scripts/sut-08a-test.json");
+  // С 08a,08b в scripts/ лежит настоящий сценарий — имя файла не фиксируем.
+  assert.match(row("08a").scriptPath ?? "", /^scripts\/sut-08a-.+\.json$/);
   assert.equal(row("08b").stage, "video");
   assert.equal(row("08b").release?.mp4.id, 11);
   assert.equal(row("08b").release?.caption?.id, 13);
@@ -179,7 +180,7 @@ test("автопилот: на 3 дня всё готово; на 8 — нуже
   assert.deepEqual(decideAutopilot(withKey, { enabled: true, days: 8 }, now), { codes: ["08a"], skip: null });
   assert.equal(withKey.missingSecrets?.length, 0);
   assert.match(decideAutopilot({ ...withKey, youtubeError: "квота" }, { enabled: true, days: 8 }, now).skip ?? "", /YouTube недоступен/);
-  assert.deepEqual(parseAutopilot('{"enabled":true,"days":40}'), { enabled: true, days: 3 });
+  assert.deepEqual(parseAutopilot('{"enabled":true,"days":40}'), { ...parseAutopilot(null), enabled: true, days: 3 });
 });
 
 console.log(`\nВсе проверки панели пройдены: ${passed}.`);
