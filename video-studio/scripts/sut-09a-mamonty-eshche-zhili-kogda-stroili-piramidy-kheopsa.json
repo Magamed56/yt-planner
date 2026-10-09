@@ -1,0 +1,119 @@
+{
+  "title": "Мамонты ещё жили, когда строили пирамиды Хеопса",
+  "description": "Пирамиду Хеопса построили около 2560 года до нашей эры, а последние шерстистые мамонты на острове Врангеля дожили примерно до 4000 лет назад. Разбираем даты, исследования и главный вывод о том, как на самом деле шла древняя история.\n#shorts #мамонты #пирамиды #история #наука",
+  "tags": [
+    "мамонты",
+    "пирамиды",
+    "пирамида хеопса",
+    "остров врангеля",
+    "шерстистый мамонт",
+    "древний египет",
+    "история",
+    "палеонтология",
+    "факты",
+    "вымирание",
+    "mammoth",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Когда строили пирамиды, на Земле ещё жили мамонты.",
+      "onScreen": "Пирамиды и *мамонты* — одновременно",
+      "icon": "triangle-alert",
+      "visualQuery": "egypt pyramids desert sunset",
+      "imagePrompt": "cinematic wide shot of the Great Pyramid of Giza at golden hour, a faint ghostly silhouette of a woolly mammoth in the warm haze, warm amber and dusty orange palette, epic atmosphere"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Звучит как ошибка. Мамонтов мы ставим в каменный век, а пирамиды — в цивилизацию.",
+      "onScreen": "Каменный век vs *цивилизация*",
+      "icon": "circle-x",
+      "visualQuery": "cave painting rock wall",
+      "imagePrompt": "cinematic close-up of ancient ochre cave paintings on a rough rock wall, flickering torch light, warm amber shadows, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Пирамиду Хеопса построили около двух тысяч пятьсот шестидесятого года до нашей эры.",
+      "onScreen": "Пирамида Хеопса: *2560* до н. э.",
+      "stat": {
+        "value": 2560,
+        "prefix": "≈",
+        "suffix": " до н. э.",
+        "label": "постройка пирамиды Хеопса"
+      },
+      "icon": "calendar-check",
+      "visualQuery": "great pyramid giza stones",
+      "imagePrompt": "low angle cinematic shot of massive limestone blocks of the Great Pyramid, harsh desert sun, warm golden palette, dust particles in the air"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "А на острове Врангеля, в Сибирской Арктике, жили последние шерстистые мамонты.",
+      "onScreen": "Остров Врангеля: *последние* мамонты",
+      "icon": "compass",
+      "visualQuery": "arctic tundra island coast",
+      "imagePrompt": "cinematic wide shot of a small herd of woolly mammoths walking across an arctic tundra island coast, low warm polar sun, long shadows, amber and cold blue contrast"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Они дожили примерно до четырёх тысяч лет назад. Это показали Вартанян, Гарутт и Шер в тысяча девятьсот девяносто третьем году.",
+      "onScreen": "Исследование 1993 года, *Nature*",
+      "stat": {
+        "value": 4000,
+        "prefix": "≈",
+        "suffix": " лет назад",
+        "label": "последние мамонты острова Врангеля"
+      },
+      "icon": "microscope",
+      "visualQuery": "mammoth tusk bones",
+      "imagePrompt": "cinematic close-up of a weathered mammoth tusk lying on frozen tundra moss, soft warm low sunlight, shallow depth of field, melancholic mood"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "А в две тысячи двадцать четвёртом генетики проследили геномы этих мамонтов вплоть до вымирания.",
+      "onScreen": "2024: геномы до *вымирания*",
+      "icon": "dna",
+      "visualQuery": "laboratory dna samples",
+      "imagePrompt": "cinematic macro shot of a glowing DNA double helix made of warm amber light over an ancient bone fragment, dark background, soft rim light"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "Сложи даты. Пирамида — четыре с половиной тысячи лет. Мамонты — четыре тысячи. Разница около пятисот лет.",
+      "onScreen": "Около *500 лет* вместе",
+      "items": [
+        "Пирамида: ≈4500 лет назад",
+        "Мамонты: ≈4000 лет назад",
+        "Разница: ≈500 лет"
+      ],
+      "icon": "hourglass",
+      "visualQuery": "hourglass sand desk",
+      "imagePrompt": "cinematic close-up of an antique hourglass with golden sand, pyramid silhouette reflected in the glass, warm sunset light, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Вывод простой. Эпохи из разных глав учебника на деле шли одновременно. Помни это, когда читаешь про древний мир.",
+      "onScreen": "Эпохи шли *одновременно*",
+      "icon": "lightbulb",
+      "visualQuery": "old history book pages",
+      "imagePrompt": "cinematic top-down shot of an open old history book, pages blending into a desert pyramid on one side and snowy tundra with mammoths on the other, warm amber light"
+    },
+    {
+      "id": "s9",
+      "kind": "cta",
+      "narration": "Какой факт из истории ломал тебе картину мира? Пиши в комментариях и подписывайся.",
+      "onScreen": "Твой факт — в *комментарии*",
+      "icon": "bell-ring"
+    }
+  ]
+}

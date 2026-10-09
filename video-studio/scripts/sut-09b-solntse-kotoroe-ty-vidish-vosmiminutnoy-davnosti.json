@@ -1,0 +1,111 @@
+{
+  "title": "Солнце, которое ты видишь, — восьмиминутной давности",
+  "description": "Почему ты всегда видишь Солнце в прошлом и как посчитать задержку света самому. Разбираем путь солнечного света до Земли и свет Проксимы Центавра, ближайшей к Солнцу звезды.\n#shorts #космос #солнце #астрономия #скоростьсвета",
+  "tags": [
+    "солнце",
+    "скорость света",
+    "космос",
+    "астрономия",
+    "проксима центавра",
+    "астрономическая единица",
+    "звёзды",
+    "наука",
+    "факты о космосе",
+    "свет",
+    "shorts",
+    "space"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Ты никогда не видел Солнце таким, какое оно сейчас.",
+      "onScreen": "Это Солнце — *не сейчас*",
+      "icon": "sun",
+      "visualQuery": "sun sky sunset horizon",
+      "imagePrompt": "cinematic view of a blazing sun low over a dark horizon, deep blue night tones with golden glow, wide angle, awe-inspiring mood"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Даже свету нужно время, чтобы долететь до твоих глаз. А в конце покажу свет постарше.",
+      "onScreen": "Свету тоже нужно *время*",
+      "icon": "eye",
+      "visualQuery": "human eye close up",
+      "imagePrompt": "extreme close-up of a human eye reflecting a bright star, dark blue background, soft rim light, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "От Солнца до Земли почти сто пятьдесят миллионов километров. А свет проходит почти триста тысяч километров за секунду.",
+      "onScreen": "Путь длиной в *150 млн км*",
+      "stat": {
+        "value": 149.6,
+        "prefix": "≈",
+        "suffix": " млн км",
+        "label": "от Солнца до Земли"
+      },
+      "icon": "globe",
+      "visualQuery": "earth from space",
+      "imagePrompt": "cinematic shot of planet Earth in deep space with a distant glowing sun, thin beam of light between them, dark blue palette"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "Делим одно на другое и получаем около четырёхсот девяноста девяти секунд. Это восемь минут девятнадцать секунд.",
+      "onScreen": "8 минут *19 секунд*",
+      "stat": {
+        "value": 499,
+        "prefix": "≈",
+        "suffix": " с",
+        "label": "летит свет от Солнца"
+      },
+      "icon": "timer",
+      "visualQuery": "stopwatch hand closeup",
+      "imagePrompt": "glowing stopwatch floating in dark space with sunlight streaming through it, cinematic blue and gold lighting"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Значит, Солнце в небе — снимок восьмиминутной давности. Погасни оно вдруг, ты бы ещё восемь минут видел его свет.",
+      "onScreen": "Ты видишь *снимок* из прошлого",
+      "icon": "camera",
+      "visualQuery": "sunlight through clouds",
+      "imagePrompt": "sun rays breaking through dark clouds over a quiet landscape, frozen moment, cinematic blue and gold palette"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "А теперь ближайшая к Солнцу звезда, Проксима Центавра. До неё около четырёх и двух десятых светового года.",
+      "onScreen": "Проксима Центавра: *4,2* световых года",
+      "stat": {
+        "value": 4.2,
+        "prefix": "≈",
+        "suffix": " св. года",
+        "label": "до ближайшей к Солнцу звезды"
+      },
+      "icon": "star",
+      "visualQuery": "starry night sky",
+      "imagePrompt": "faint red star glowing in a dense starfield, deep space, cinematic dark blue palette with subtle gold highlights"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Её свет ты видишь таким, каким он был больше четырёх лет назад. Смотреть в ночное небо — значит смотреть в прошлое.",
+      "onScreen": "Небо — это *прошлое*",
+      "icon": "hourglass",
+      "visualQuery": "person looking night sky",
+      "imagePrompt": "silhouette of a person standing on a hill gazing at a vast starry sky, milky glow, cinematic wide shot, blue and gold tones"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Какую звезду ты хотел бы увидеть такой, какая она сейчас? Пиши в комментариях и подписывайся.",
+      "onScreen": "Какую звезду *ты* бы выбрал?",
+      "icon": "bell-ring"
+    }
+  ]
+}

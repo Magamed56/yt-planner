@@ -457,7 +457,8 @@
           "source": "Encyclopaedia Britannica, «Pyramids of Giza»"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-09a-mamonty-eshche-zhili-kogda-stroili-piramidy-kheopsa.json"
     },
     {
       "id": "09b",
@@ -477,7 +478,8 @@
           "source": "NASA Science, «Proxima Centauri b» / ESO"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-09b-solntse-kotoroe-ty-vidish-vosmiminutnoy-davnosti.json"
     },
     {
       "id": "10a",
