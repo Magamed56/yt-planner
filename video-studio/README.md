@@ -277,6 +277,49 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 
 ---
 
+## Субтитры на других языках
+
+`npm run captions-translate -- 08a,08b --langs en,kk,uz [--dry-run]` (или workflow «video-studio:
+субтитры на других языках»): русский `captions.srt` ролика (из `out/<ролик>/` или из его релиза) →
+перевод LLM с теми же репликами и таймингами → `captions.en.srt`… → дорожки «English (AI)»,
+«Қазақша (AI)»… у ролика на YouTube (ролик ищется по коду, как в youtube-fill). Повторный запуск
+безопасен: готовые переводы и загруженные дорожки пропускаются. Квота: ~400 единиц за дорожку
+(≈ 20 дорожек в сутки). `--no-upload` — только файлы.
+
+Нужно право **youtube.force-ssl**. Ключи, выпущенные раньше, его не имеют — один раз:
+
+1. На ПК: `npm run youtube-auth -- --save` и в окне Google оставьте отмеченными все галочки.
+2. Новый `YT_REFRESH_TOKEN` из `.env` — в секреты GitHub (Settings → Secrets and variables →
+   Actions), в Vercel (проект панели → Settings → Environment Variables → `YT_REFRESH_TOKEN`, затем
+   Redeploy) и в `video-studio/.env` на втором компьютере.
+
+## Ролики на других языках
+
+Основа для каналов на английском, казахском, узбекском (и uk, es, de, fr, pt, tr):
+
+- `npm run script -- --plan 08a --lang en` — русский сценарий темы переводится (те же сцены, факты и
+  числа; хук и призыв — как у носителя языка), а если его нет — пишется сразу на этом языке по
+  плану. Файл — `scripts/en/sut-08a-<имя>.json` (план и русские сценарии не меняются).
+- `npm run make -- --script scripts/en/sut-08a-<имя>.json` — язык берётся из сценария: канал
+  `channels/en.json` (та же схема, что `channel.json`: имя, хэштеги, призывы, подвал, дисклеймер),
+  голос языка (Gemini — тот же Charon; для kk и uz Gemini TTS нет — Edge `kk-KZ-DauletNeural`,
+  `uz-UZ-SardorNeural`), подписи в кадре («Subscribe», «FACT OR MYTH?»). Свой файл канала —
+  `CHANNEL_FILE`.
+- В GitHub Actions: workflow «video-studio: ролик», поле **lang** (draft / render / batch). В релизе
+  файл называется `en-08a-<имя>.mp4` — панель и youtube-fill его не трогают (их ролики — `08a-….mp4`).
+
+Загрузки в эти каналы нет: у каждого канала свой ключ YouTube, а `--upload` и upload = youtube /
+instagram для других языков выключены. Что сделать владельцу:
+
+1. Создать канал (лучше — отдельный бренд-аккаунт), заполнить `channels/<язык>.json`: `name`,
+   `handle`, `links`, проверить тексты (kk, uz — носителю языка), удалить `_todo` и `placeholder`.
+2. Пока — собирать с upload = release и загружать `en-08a-….mp4` в Studio нового канала руками,
+   тексты — из `description.txt` релиза.
+3. Позже, для автозагрузки, — отдельный ключ: `npm run youtube-auth` с входом в новый канал и свои
+   секреты (например, `YT_REFRESH_TOKEN_EN`); подключение к workflow — отдельная задача.
+
+---
+
 ## Instagram Reels
 
 Официальный API Meta, вариант **«Instagram API with Facebook Login for Business»**

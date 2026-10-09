@@ -44,7 +44,7 @@ export const Thumbnail: React.FC<VideoProps & Record<string, unknown>> = (props)
   // Хук короткий и с *акцентом* — берём его; иначе заголовок ролика.
   const statScene = props.scenes.find((s) => s.kind === "stat" && s.stat);
   const stat = statScene?.stat;
-  const statText = stat ? `${stat.prefix ?? ""}${formatNumber(stat.value, Number.isInteger(stat.value) ? 0 : 1)}${stat.suffix ?? ""}` : null;
+  const statText = stat ? `${stat.prefix ?? ""}${formatNumber(stat.value, Number.isInteger(stat.value) ? 0 : 1, props.language)}${stat.suffix ?? ""}` : null;
   const text = autoAccent(hookText && stripMarkup(hookText).length <= 48 ? hookText : props.title, stat ? String(stat.value) : null);
   // Плашка с цифрой не шире ~1.3 иконки — иначе длинное «≈1 250 000 млн» наедет на заголовок.
   const badgeFit = useMemo(

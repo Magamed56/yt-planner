@@ -1,0 +1,53 @@
+{
+  "_todo": "ЗАГОТОВКА — заменить после создания канала: name, handle, links; тексты (хэштеги, призывы, дисклеймер) — проверить носителю казахского. Пока \"placeholder\": true, make предупреждает при каждой сборке; после замены удалите эту строку и placeholder.",
+  "placeholder": true,
+  "name": "Мәні бір минутта",
+  "handle": null,
+  "tagline": "Күрделіні — қарапайым. Күн сайын",
+  "niche": "Бәрі туралы танымдық арна: ғылым, ғарыш, дене, психология, тарих, технология, ақша және күнделікті «неге?». Бір ролик — бір минуттағы бір түсінікті мән, тек тексерілетін фактілер.",
+  "audience": "Қазақ тілінде жаңа нәрсе білгенді ұнататын 14–45 жастағы көрермендер.",
+  "language": "kk",
+  "theme": "midnight",
+  "voice": {
+    "provider": "edge",
+    "name": "kk-KZ-DauletNeural",
+    "style": null
+  },
+  "voiceByPillar": {
+    "note": "Как в channel.json. У Gemini TTS нет казахского — голос Edge (kk-KZ-DauletNeural или женский kk-KZ-AigulNeural), запасной офлайн — Piper kk_KZ-issai-high."
+  },
+  "brandIntro": true,
+  "pillars": [
+    { "id": "mind", "title": "Ми және психология", "icon": "brain" },
+    { "id": "body", "title": "Дене және денсаулық", "icon": "heart-pulse" },
+    { "id": "space", "title": "Ғарыш", "icon": "rocket" },
+    { "id": "nature", "title": "Табиғат және жануарлар", "icon": "leaf" },
+    { "id": "history", "title": "Тарих", "icon": "landmark" },
+    { "id": "tech", "title": "Технология және ЖИ", "icon": "cpu" },
+    { "id": "money", "title": "Ақша және экономика", "icon": "coins" },
+    { "id": "why", "title": "Неге олай?", "icon": "lightbulb" }
+  ],
+  "schedule": {
+    "perDay": 2,
+    "publishTimesLocal": ["12:00", "19:00"],
+    "timezone": "Asia/Almaty",
+    "note": "Заготовка. Загрузка в этот канал — отдельным ключом (см. README, «Ролики на других языках»)."
+  },
+  "hashtags": {
+    "brand": ["#мәнібірминутта"],
+    "core": ["#фактілер", "#ғылым", "#қызықты", "#танымдық"],
+    "youtubeShorts": ["#shorts"],
+    "instagram": ["#reels", "#ғылымипоп", "#білесіңбе"]
+  },
+  "cta": {
+    "subscribe": "Жазыл — күн сайын бір минутта жаңа мән",
+    "comment": "Пікіріңді комментарийге жаз",
+    "onScreenComment": "Қалай ойлайсың? Комментарийге жаз",
+    "rule": "Соңында: көрерменге сұрақ (жауабы — комментарийде), содан кейін «жазыл»."
+  },
+  "links": {
+    "youtube": null,
+    "instagram": null
+  },
+  "disclaimer": "Роликтер ғылыми-танымдық сипатта және маманның (дәрігердің, заңгердің, қаржыгердің) кеңесін алмастырмайды."
+}

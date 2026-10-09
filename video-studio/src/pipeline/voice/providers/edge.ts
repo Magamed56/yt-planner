@@ -6,10 +6,16 @@
 
 import { Communicate } from "edge-tts-universal";
 import type { WordTiming } from "../../../types";
+import { LANGS } from "../../lang";
 import { envInt, TtsError, warnOnce } from "../http";
 import type { RawProvider } from "../provider";
 
 export const EDGE_DEFAULT_VOICE = "ru-RU-DmitryNeural";
+
+// Голос по умолчанию под язык ролика (TTS_LANGUAGE): у английского ролика — английский диктор.
+export function edgeDefaultVoice(lang: string | undefined = process.env.TTS_LANGUAGE): string {
+  return LANGS[(lang ?? "").trim().toLowerCase()]?.edgeVoice ?? EDGE_DEFAULT_VOICE;
+}
 
 export interface EdgeChunk {
   type: string;
@@ -121,11 +127,12 @@ export function edgeProvider(factory: CommunicateFactory = defaultFactory): RawP
     output: "mp3",
     resolveVoice(voice) {
       const v = voice?.trim();
-      if (!v) return EDGE_DEFAULT_VOICE;
+      const fallback = edgeDefaultVoice();
+      if (!v) return fallback;
       // Общий TTS_VOICE мог остаться от другого провайдера (например, Piper).
       if (!/^[a-z]{2,3}-[A-Z]{2,}-/i.test(v) && !v.startsWith("Microsoft Server Speech")) {
-        warnOnce(`edge-voice-${v}`, `[озвучка] Голос "${v}" не похож на голос Edge — использую ${EDGE_DEFAULT_VOICE}. Русские голоса Edge: ru-RU-DmitryNeural, ru-RU-SvetlanaNeural.`);
-        return EDGE_DEFAULT_VOICE;
+        warnOnce(`edge-voice-${v}`, `[озвучка] Голос "${v}" не похож на голос Edge — использую ${fallback}. Русские голоса Edge: ru-RU-DmitryNeural, ru-RU-SvetlanaNeural.`);
+        return fallback;
       }
       return v;
     },

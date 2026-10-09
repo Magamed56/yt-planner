@@ -114,3 +114,63 @@ export function captionsToSrt(captions: TimelineCaption[], opts: SrtOptions = {}
       .join("\n\n") + "\n"
   );
 }
+
+// ---- Готовый .srt: разбор и запись (перевод субтитров, npm run captions-translate) ----
+
+export interface SrtCue {
+  index: number; // номер реплики, как в файле
+  timing: string; // «00:00:01,000 --> 00:00:02,500» — переносится в перевод байт в байт
+  startMs: number;
+  endMs: number;
+  text: string; // строки реплики через \n
+}
+
+const TIMING_LINE = /^(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})\s*-->\s*(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})(?:\s.*)?$/;
+
+const toMs = (h: string, m: string, s: string, ms: string) => ((Number(h) * 60 + Number(m)) * 60 + Number(s)) * 1000 + Number(ms.padEnd(3, "0"));
+
+// Разбор с понятной ошибкой: битый файл молча «переводить» нельзя — тайминги разъедутся.
+export function parseSrt(text: string, name = "captions.srt"): SrtCue[] {
+  const blocks = text.replace(/^﻿/, "").replace(/\r\n?/g, "\n").split(/\n[ \t]*\n+/);
+  const cues: SrtCue[] = [];
+  for (const block of blocks) {
+    const lines = block.split("\n").map((l) => l.trimEnd());
+    while (lines.length && !lines[0]!.trim()) lines.shift();
+    if (!lines.length) continue;
+    const n = cues.length + 1;
+    let index = n;
+    if (/^\d+$/.test(lines[0]!.trim())) index = Number(lines.shift()!.trim());
+    const timing = (lines.shift() ?? "").trim();
+    const m = TIMING_LINE.exec(timing);
+    if (!m) throw new Error(`${name}: реплика ${n} — нет строки времени вида «00:00:01,000 --> 00:00:02,500» (вместо неё «${timing.slice(0, 60)}»).`);
+    const startMs = toMs(m[1]!, m[2]!, m[3]!, m[4]!);
+    const endMs = toMs(m[5]!, m[6]!, m[7]!, m[8]!);
+    const body = lines.join("\n").trim();
+    if (!body) throw new Error(`${name}: реплика ${n} (${timing}) без текста.`);
+    cues.push({ index, timing, startMs, endMs, text: body });
+  }
+  if (!cues.length) throw new Error(`${name}: пустой файл — нет ни одной реплики.`);
+  return cues;
+}
+
+export function serializeSrt(cues: Pick<SrtCue, "index" | "timing" | "text">[]): string {
+  return cues.map((c) => `${c.index}\n${c.timing}\n${c.text.trim()}`).join("\n\n") + "\n";
+}
+
+// Перевод совпадает с оригиналом по числу реплик, номерам и строкам времени.
+export function sameTimings(a: Pick<SrtCue, "index" | "timing">[], b: Pick<SrtCue, "index" | "timing">[]): boolean {
+  return a.length === b.length && a.every((c, i) => c.index === b[i]!.index && c.timing === b[i]!.timing);
+}
+
+// Ширина строки субтитров как в оригинале: у Shorts 32 символа (с «хвостом» фразы строка
+// доходит до ~39), у длинного ролика 42.
+export function srtLineWidth(cues: Pick<SrtCue, "text">[]): number {
+  const widest = Math.max(0, ...cues.flatMap((c) => c.text.split("\n").map((l) => l.length)));
+  return widest > 40 ? 42 : 32;
+}
+
+// Новые тексты в те же реплики: время и номера — из оригинала, строки — заново по ширине.
+export function withCueTexts(cues: SrtCue[], texts: string[], maxLineChars = srtLineWidth(cues)): SrtCue[] {
+  if (texts.length !== cues.length) throw new Error(`Перевод: ${texts.length} реплик вместо ${cues.length}.`);
+  return cues.map((c, i) => ({ ...c, text: wrap(texts[i]!.replace(/\s+/g, " ").trim(), maxLineChars) }));
+}

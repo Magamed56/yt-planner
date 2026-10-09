@@ -563,7 +563,9 @@ export function coerceScriptCandidate(raw: unknown, req: Pick<ScriptRequest, "fo
   const top = unwrap(raw, "scenes");
   if (!isObj(top)) return top;
   const out = coerceMeta(top);
-  out.language = typeof out.language === "string" && out.language.trim() ? out.language.trim() : req.language ?? "ru";
+  // Язык, как и формат, задаёт запрос: в системном промпте пример с "ru", и модель
+  // переписывает его даже в английском сценарии (npm run script -- --lang en).
+  out.language = req.language?.trim() || (typeof out.language === "string" && out.language.trim() ? out.language.trim() : "ru");
   out.format = req.format; // формат задаёт запрос, а не модель
   if (Array.isArray(out.scenes)) out.scenes = out.scenes.map((s, i) => coerceScene(s, i));
   return out;

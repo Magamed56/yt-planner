@@ -12,6 +12,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { envPath } from "../../audio/paths";
+import { LANGS } from "../../lang";
 import { TtsError, linkedAbort, warnOnce } from "../http";
 import type { RawProvider } from "../provider";
 
@@ -34,9 +35,14 @@ interface SherpaModule {
 
 export function resolvePiperVoice(requested: string | undefined): string {
   const v = requested?.trim().replace(/^vits-piper-/, "");
-  if (!v) return PIPER_DEFAULT_VOICE;
+  // Ролик не на русском (TTS_LANGUAGE): голос Piper того же языка, если он есть.
+  const langVoice = LANGS[(process.env.TTS_LANGUAGE ?? "").trim().toLowerCase()]?.piperVoice ?? null;
+  if (!v) return langVoice ?? PIPER_DEFAULT_VOICE;
   if (PIPER_RU_VOICES.includes(v.toLowerCase())) return `ru_RU-${v.toLowerCase()}-medium`;
   if (/^[a-z]{2,3}_[A-Z]{2}-[A-Za-z0-9_]+-(x_low|low|medium|high)$/.test(v)) return v;
+  // Голос Edge другого языка (en-US-…Neural при автозамене Edge → Piper) — Piper того же языка.
+  const edgeLang = /^([a-z]{2})-[A-Z]{2}-\w+Neural$/.exec(v)?.[1];
+  if (edgeLang && edgeLang !== "ru" && LANGS[edgeLang]?.piperVoice) return LANGS[edgeLang]!.piperVoice!;
   // Голос Edge (чаще всего — при автозамене Edge → Piper): сохраняем хотя бы
   // пол диктора, иначе женский голос канала молча стал бы мужским.
   if (/^[a-z]{2}-[A-Z]{2}-\w+Neural$/.test(v)) {

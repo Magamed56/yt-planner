@@ -1,0 +1,53 @@
+{
+  "_todo": "ЗАГОТОВКА — заменить после создания канала: name, handle, links (и проверить тексты). Пока \"placeholder\": true, make предупреждает при каждой сборке; после замены удалите эту строку и placeholder.",
+  "placeholder": true,
+  "name": "Gist in a Minute",
+  "handle": null,
+  "tagline": "Complex made simple. Every day",
+  "niche": "Educational channel about everything: science, space, the human body, psychology, history, tech, money and everyday “why” questions. One video — one clear gist in a minute, only verifiable facts.",
+  "audience": "English-speaking viewers 14–45 who love learning something new from Shorts and Reels.",
+  "language": "en",
+  "theme": "midnight",
+  "voice": {
+    "provider": "gemini",
+    "name": "Charon",
+    "style": "Lively and confident, like an enthusiastic storyteller: warm tone, clear diction, a hint of intrigue, no pathos."
+  },
+  "voiceByPillar": {
+    "note": "Как в channel.json: голос и темп по рубрике. Пусто — голос канала (Gemini Charon, запасной — Edge en-US-ChristopherNeural)."
+  },
+  "brandIntro": true,
+  "pillars": [
+    { "id": "mind", "title": "Mind & psychology", "icon": "brain" },
+    { "id": "body", "title": "Body & health", "icon": "heart-pulse" },
+    { "id": "space", "title": "Space", "icon": "rocket" },
+    { "id": "nature", "title": "Nature & animals", "icon": "leaf" },
+    { "id": "history", "title": "History", "icon": "landmark" },
+    { "id": "tech", "title": "Tech & AI", "icon": "cpu" },
+    { "id": "money", "title": "Money & economics", "icon": "coins" },
+    { "id": "why", "title": "Why is that?", "icon": "lightbulb" }
+  ],
+  "schedule": {
+    "perDay": 2,
+    "publishTimesLocal": ["12:00", "19:00"],
+    "timezone": "America/New_York",
+    "note": "Заготовка: время под аудиторию США. Загрузка в этот канал — отдельным ключом (см. README, «Ролики на других языках»)."
+  },
+  "hashtags": {
+    "brand": ["#gistinaminute"],
+    "core": ["#facts", "#science", "#didyouknow", "#learnsomethingnew"],
+    "youtubeShorts": ["#shorts"],
+    "instagram": ["#reels", "#sciencefacts", "#todayilearned"]
+  },
+  "cta": {
+    "subscribe": "Subscribe for a new gist every day",
+    "comment": "Tell me what you think in the comments",
+    "onScreenComment": "What do you think? Comment below",
+    "rule": "At the end: a question for the viewer (answer in the comments), then “subscribe”."
+  },
+  "links": {
+    "youtube": null,
+    "instagram": null
+  },
+  "disclaimer": "Videos are for general education and are not a substitute for professional advice (medical, legal or financial)."
+}

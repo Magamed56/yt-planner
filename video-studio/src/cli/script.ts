@@ -6,6 +6,7 @@
 //   npm run script -- --plan 08a,08b   — темы из content/plan.json: хук, угол и факты с источниками
 //   npm run script -- --plan 08a --quiz   — Shorts-викторина «Правда или миф?»
 //   npm run script -- --plan 08a --long   — «Разбор» 5–8 мин, 16:9, с главами
+//   npm run script -- --plan 08a --lang en — тот же ролик на другом языке (scripts/en/…)
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -15,6 +16,9 @@ import { generateScript, lintScript, loadCovered, LONG_DEFAULT_SECONDS, ScriptGe
 import { collectLlmUsage } from "../pipeline/script/usage-log";
 import { slugify } from "../pipeline/slug";
 import { ROOT, UserError, argsError, escapeMd, fail, fmtDuration, ghOutput, ghSummary, loadEnv, rel, reportFailedLlmUsage, writeJson } from "./common";
+import { langScriptDir } from "../pipeline/lang";
+import { parseLangArg } from "./lang-run";
+import { draftPlanInLanguage } from "./script-lang";
 
 const HELP = `Черновик сценария для проверки перед рендером.
 
@@ -22,6 +26,7 @@ const HELP = `Черновик сценария для проверки пере
   npm run script -- --plan 08a,08b [--seconds 45]
   npm run script -- --plan 08a --quiz     викторина «Правда или миф?» (Shorts)
   npm run script -- --plan 08a --long     «Разбор» 5–8 минут, 16:9, с главами (и с --topic)
+  npm run script -- --plan 08a --lang en  ролик на другом языке (en, kk, uz…) → scripts/en/
 
 Файл появится в scripts/<имя>.json. Проверьте факты и текст, затем:
   npm run make -- --script scripts/<имя>.json
@@ -38,6 +43,10 @@ const HELP = `Черновик сценария для проверки пере
   Gemini переходит на запасную модель, а если и её нет — весь ролик переозвучит Edge
   (затем Piper, офлайн): голос будет другим. Надёжнее собирать «Разбор» с --voice edge,
   если в этот день уже делали несколько роликов.
+
+--lang — язык ролика: с --plan русский сценарий темы переводится (те же сцены, факты и числа;
+  хук и призыв — как у носителя), а если его нет — пишется сразу на этом языке по плану;
+  с --topic — сразу на этом языке. Файлы — scripts/<язык>/, канал — channels/<язык>.json.
 
 Сценарист видит, что уже было на канале (сценарии scripts/ и факты готовых тем плана), и не
 повторяет это; почти дословный повтор он один раз переписывает, иначе — замечание.
@@ -186,6 +195,7 @@ async function main() {
         out: { type: "string" },
         long: { type: "boolean", default: false },
         quiz: { type: "boolean", default: false },
+        lang: { type: "string" },
         help: { type: "boolean", short: "h", default: false },
       },
       strict: true,
@@ -202,19 +212,21 @@ async function main() {
   const seconds = values.seconds ? Number(values.seconds) : undefined;
   if (seconds !== undefined && !(seconds > 0)) throw new UserError("--seconds: нужно положительное число.");
   const mode: Mode = { long: Boolean(values.long), quiz: Boolean(values.quiz) };
+  const lang = parseLangArg(typeof values.lang === "string" ? values.lang : undefined) ?? "ru";
   if (mode.long && mode.quiz) throw new UserError("--long и --quiz вместе нельзя: викторина — это Shorts, «Разбор» — длинный ролик.");
   const formatArg = typeof values.format === "string" ? values.format : undefined;
   if (mode.long && formatArg && formatArg !== "landscape") throw new UserError("--long — горизонтальный ролик: уберите --format или укажите --format landscape.");
   if (mode.quiz && formatArg && formatArg !== "shorts") throw new UserError("--quiz — только Shorts: уберите --format или укажите --format shorts.");
   if (planCodes) {
     if (topic || values.notes || values.out || formatArg) throw new UserError("--plan берёт тему, пожелания, формат и папку из плана — без --topic, --notes, --format и --out.");
-    await draftFromPlan(planCodes, seconds, mode);
+    if (lang !== "ru") await draftPlanInLanguage(planCodes, lang, seconds, mode, PLAN_FILE);
+    else await draftFromPlan(planCodes, seconds, mode);
     return;
   }
   if (!topic) throw new UserError(`Не задана тема: --topic "…" (или --plan 08a для темы из плана)\n\n${HELP}`);
   const format = (mode.long ? "landscape" : (formatArg ?? "shorts")) as Format;
   if (format !== "shorts" && format !== "landscape") throw new UserError(`--format: shorts или landscape, а не «${format}».`);
-  const outDir = path.resolve(typeof values.out === "string" ? values.out : path.join(ROOT, "scripts"));
+  const outDir = path.resolve(typeof values.out === "string" ? values.out : path.join(ROOT, langScriptDir(lang)));
 
   console.log(`video-studio · черновик сценария\n  тема: «${topic}», формат: ${format}${mode.long ? " («Разбор» с главами)" : mode.quiz ? " (викторина)" : ""}`);
   let generated: Awaited<ReturnType<typeof generateScript>>;
@@ -230,13 +242,14 @@ async function main() {
       {
         topic,
         format,
-        language: "ru",
+        language: lang,
         notes: typeof values.notes === "string" ? values.notes : undefined,
         targetSeconds: seconds,
         long: mode.long,
         quiz: mode.quiz,
         covered: loadCovered(ROOT, { plan }),
-        searchPhrases: searchPhrases(topic),
+        // Подсказки поиска — по русской теме; для другого языка они не к месту.
+        searchPhrases: lang === "ru" ? searchPhrases(topic) : undefined,
       },
       { onLlmCall: usage.onLlmCall },
     );
