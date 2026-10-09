@@ -110,6 +110,7 @@ export interface RetentionResult {
 }
 
 // Короче, чем у Data API: страница «Статистики» ждёт этот ответ, а без удержания она всё равно полезна.
+// Срок общий на запрос и повтор без engagedViews — иначе худший случай вдвое дольше.
 const ANALYTICS_TIMEOUT_MS = 10_000;
 // Отчёт не принял engagedViews — в этом экземпляре функции больше не спрашиваем (один запрос на страницу).
 let engagedOk = true;
@@ -117,6 +118,8 @@ let engagedOk = true;
 // Средний % и длительность просмотра по роликам канала. Никогда не бросает: отказ — в problem.
 export async function channelRetention(range: AnalyticsRange): Promise<RetentionResult> {
   const fail = (text: string): RetentionResult => ({ rows: new Map(), problem: { kind: "error", text, activationUrl: null } });
+  const slow = `YouTube Analytics не ответил за ${ANALYTICS_TIMEOUT_MS / 1000} с`;
+  const deadline = Date.now() + ANALYTICS_TIMEOUT_MS;
   let token: string;
   try {
     token = await accessToken(youtubeAuth);
@@ -124,30 +127,32 @@ export async function channelRetention(range: AnalyticsRange): Promise<Retention
     return fail(e instanceof Error ? e.message : String(e));
   }
   for (let engaged = engagedOk; ; engaged = false) {
+    const left = deadline - Date.now();
+    if (left <= 0) return fail(slow);
     let status: number;
     let text: string;
     try {
       const res = await fetch(`${ANALYTICS_REPORTS}?${retentionQuery(range, engaged)}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
-        signal: AbortSignal.timeout(ANALYTICS_TIMEOUT_MS),
+        signal: AbortSignal.timeout(left),
       });
       status = res.status;
       text = await res.text();
     } catch (e) {
-      return fail(`YouTube Analytics не ответил за ${ANALYTICS_TIMEOUT_MS / 1000} с (${e instanceof Error ? e.message : String(e)}) — обновите страницу позже`);
+      const timeout = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
+      return fail(timeout ? slow : `нет связи с YouTube Analytics (${e instanceof Error ? e.message : String(e)})`);
     }
     if (status >= 200 && status < 300) {
+      // Без engagedViews прошло, а с ней отчёт отказал — дальше в этом экземпляре сразу без неё.
+      if (!engaged && engagedOk) engagedOk = false;
       try {
         return { rows: parseRetention(JSON.parse(text)), problem: null };
       } catch {
-        return fail("YouTube Analytics вернул не JSON — обновите страницу позже");
+        return fail("YouTube Analytics вернул не JSON");
       }
     }
-    if (engaged && engagedRejected(status, text)) {
-      engagedOk = false;
-      continue;
-    }
+    if (engaged && engagedRejected(status, text)) continue;
     return { rows: new Map(), problem: analyticsProblem(status, text) };
   }
 }

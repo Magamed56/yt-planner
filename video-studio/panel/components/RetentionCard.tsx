@@ -6,7 +6,12 @@ const CLOUD_LIBRARY = "https://console.cloud.google.com/apis/library/youtubeanal
 
 export default function RetentionCard({ problem }: { problem: AnalyticsProblem }) {
   if (problem.kind === "error") {
-    return <p className="notice info wide">Удержание (% досмотра) сейчас недоступно: {problem.text}. Остальные цифры — как обычно.</p>;
+    // Точку в конце текста отказа (сообщения Google её ставят) не удваиваем.
+    return (
+      <p className="notice info wide">
+        Удержание (% досмотра) сейчас недоступно: {problem.text.replace(/[.\s]+$/, "")}. Остальные цифры — как обычно; обновите страницу позже.
+      </p>
+    );
   }
   return (
     <section className={`card wide ${r.card}`} id="retention">

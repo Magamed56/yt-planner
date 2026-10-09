@@ -35,10 +35,20 @@ function cut(s: string, max: number): string {
   return `${s.slice(0, space > max / 2 ? space : max - 1).trimEnd()}…`;
 }
 
-// Не источник для зрителя: ссылка назад («… (см. выше)», «Pörschmann 2000», «Coe & Coe 1996» — только
-// фамилии и год, без названия работы), продолжение предыдущей записи («In: …») и расчёт («Арифметика»).
+// Не источник для зрителя: ссылка назад («… (см. выше)», «Pörschmann 2000», «Coe & Coe 1996», «Nielsen
+// et al. 2016 (…)» — только фамилии и год, без названия работы), продолжение предыдущей записи («In: …»)
+// и расчёт («Арифметика», «Математика сложных процентов», «любой учебник …»).
 const notASource = (s: string) =>
-  s.length < 4 || /см\.?\s*выше|see above/i.test(s) || /^[\p{L}'’&\s-]{2,30}\s\d{4}$/u.test(s) || /^(in|в):\s/i.test(s) || /^(арифметика|расч[её]т|оценка)(?!\p{L})/iu.test(s);
+  s.length < 4 ||
+  /см\.?\s*выше|see above/i.test(s) ||
+  /^[\p{L}'’&.\s-]{2,30}\s\d{4}[a-z]?(\s*\([^)]*\))?$/u.test(s) ||
+  /^(in|в):\s/i.test(s) ||
+  /^(арифметика|математика|расч[её]т|оценка|любой учебник)(?!\p{L})/iu.test(s);
+
+// Один источник в двух записях: «NASA NSSDC, Venus Fact Sheet (nssdc…)» и «NASA NSSDC, Venus Fact
+// Sheet» — сравниваем без регистра и хвоста в скобках, короткую запись — с началом длинной.
+const sourceKey = (s: string) => s.toLowerCase().replace(/\s*\([^()]*\)$/, "").replace(/[\s.,;:]+$/, "");
+const sameSource = (a: string, b: string) => a.startsWith(b) || b.startsWith(a);
 
 // Источники фактов по одному на строку (в плане в одном поле их бывает несколько через «;»).
 // Сначала первый источник каждого факта, потом остальные: так разнообразнее.
@@ -50,12 +60,14 @@ export function commentSources(facts: { source?: string }[], max = 2): string[] 
       .filter((s) => !notASource(s)),
   );
   const out: string[] = [];
-  const seen = new Set<string>();
+  const seen: string[] = [];
   for (let round = 0; out.length < max && groups.some((g) => g.length > round); round++) {
     for (const g of groups) {
       const s = g[round];
-      if (!s || out.length >= max || seen.has(s.toLowerCase())) continue;
-      seen.add(s.toLowerCase());
+      if (!s || out.length >= max) continue;
+      const key = sourceKey(s);
+      if (seen.some((k) => sameSource(k, key))) continue;
+      seen.push(key);
       out.push(cut(s, SOURCE_MAX));
     }
   }

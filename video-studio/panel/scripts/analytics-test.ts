@@ -252,6 +252,22 @@ test("источники: по одному на факт, без ссылок �
   ]);
   // Один и тот же источник в двух фактах — один раз; не хватило первых — берём вторые из записи.
   assert.deepEqual(commentSources([{ source: "NASA, «ISS Facts»; ESA, «Sleeping in space»" }, { source: "NASA, «ISS Facts»" }]), ["NASA, «ISS Facts»", "ESA, «Sleeping in space»"]);
+  // Тот же источник без адреса в скобках или короче — тоже повтор (02a, 18a, 25b плана).
+  assert.deepEqual(
+    commentSources([{ source: "NASA NSSDC, Venus Fact Sheet (nssdc.gsfc.nasa.gov)" }, { source: "NASA NSSDC, Venus Fact Sheet; NASA Science, «Venus: Facts»" }]),
+    ["NASA NSSDC, Venus Fact Sheet (nssdc.gsfc.nasa.gov)", "NASA Science, «Venus: Facts»"],
+  );
+  assert.deepEqual(commentSources([{ source: "Smithsonian Ocean, «Octopuses»" }, { source: "Smithsonian Ocean" }]), ["Smithsonian Ocean, «Octopuses»"]);
+  // Ссылка назад с «et al.» и пояснением в скобках, «математика»/«любой учебник» — не источники (06b, 22b).
+  assert.deepEqual(
+    commentSources([{ source: "Nielsen et al. 2016 (со ссылкой на мечение: Hansen P. M. 1963)" }, { source: "Математика сложных процентов; любой учебник финансовой математики" }]),
+    [],
+  );
+  // На всём плане два источника черновика — всегда разные.
+  for (const it of plan.items) {
+    const [x, y] = commentSources(it.keyFacts);
+    if (x && y) assert.ok(!x.toLowerCase().startsWith(y.toLowerCase().replace(/\s*\([^()]*\)$/, "")), it.id);
+  }
   const long = commentSources([{ source: `${"Очень длинное название работы ".repeat(10)}(2020)` }])[0]!;
   assert.ok(long.length <= 180 && long.endsWith("…") && !long.endsWith(" …"));
   assert.deepEqual(commentSources([]), []);
@@ -350,7 +366,42 @@ test("Analytics: один запрос с токеном; нет права и �
   };
   const offline = await channelRetention(range);
   assert.equal(offline.problem?.kind, "error");
-  assert.match(offline.problem!.text, /не ответил/);
+  assert.match(offline.problem!.text, /нет связи с YouTube Analytics/);
+
+  route = () => {
+    throw new DOMException("The operation was aborted due to timeout", "TimeoutError");
+  };
+  assert.match((await channelRetention(range)).problem!.text, /не ответил за 10 с/);
+});
+
+test("Analytics: срок 10 с общий на запрос и повтор; чужая ошибка 400 не отключает engagedViews навсегда", async () => {
+  stubNetwork();
+  // Первый ответ (отказ из-за engagedViews) пришёл через 11 с — повтор уже не шлём, страница не ждёт ещё 10 с.
+  const realNow = Date.now;
+  let shift = 0;
+  Date.now = () => realNow() + shift;
+  try {
+    calls.length = 0;
+    route = () => {
+      shift += 11_000;
+      return reply(400, engagedBody);
+    };
+    const late = await channelRetention(range);
+    assert.equal(calls.length, 1);
+    assert.match(late.problem!.text, /не ответил за 10 с/);
+  } finally {
+    Date.now = realNow;
+  }
+  // 400 не про метрику: повтор без неё тоже отказ — в следующий раз снова спрашиваем engagedViews.
+  calls.length = 0;
+  route = () => reply(400, JSON.stringify({ error: { code: 400, message: "The query is not supported.", errors: [{ reason: "badRequest" }] } }));
+  assert.equal((await channelRetention(range)).problem?.kind, "error");
+  assert.equal(calls.length, 2);
+  calls.length = 0;
+  route = () => reply(200, table);
+  await channelRetention(range);
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0]!.url.includes("engagedViews"));
 });
 
 test("Analytics: engagedViews не принят — повтор без неё, дальше сразу без неё (один запрос)", async () => {
