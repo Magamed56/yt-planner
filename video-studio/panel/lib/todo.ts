@@ -2,7 +2,8 @@
 // утреннего уведомления, чтобы все три говорили одно и то же. Чистая функция по уже собранному
 // состоянию панели, без сети; проверяет scripts/todo-test.ts.
 import { plural, type Stage } from "./stages";
-import { failedRun, type PanelState, type Row } from "./state";
+import { canRetry, failedRun } from "./ops";
+import type { PanelState, Row } from "./state";
 
 export type TodoLevel = "error" | "warn" | "info";
 
@@ -10,10 +11,12 @@ export type TodoAction =
   | { kind: "download"; label: string; codes: string[] } // видео и обложки — лист «Скачать»
   | { kind: "find"; label: string } // «Найти новые загрузки»
   | { kind: "open"; label: string; code: string } // карточка ролика
-  | { kind: "href"; label: string; href: string }; // страница панели
+  | { kind: "href"; label: string; href: string } // страница панели
+  | { kind: "retry"; label: string; runId: number } // повтор упавшего запуска (с подтверждением)
+  | { kind: "extend"; label: string; count: number }; // новые темы в план (с подтверждением)
 
 export interface Todo {
-  id: "youtube" | "run" | "problem" | "upload" | "fill" | "runway";
+  id: "youtube" | "run" | "problem" | "upload" | "fill" | "runway" | "topics";
   level: TodoLevel;
   title: string; // что сделать
   detail: string; // срок или подробность
@@ -36,6 +39,7 @@ const GAP_STAGE: Record<Stage, string> = {
   scheduled: "запланирован",
   published: "вышел",
 };
+const TOPICS_WARN_DAYS = 10;
 const LEVEL_RANK: Record<TodoLevel, number> = { error: 0, warn: 1, info: 2 };
 const HOUR_MS = 3_600_000;
 const SOON_MS = 48 * HOUR_MS; // загрузить нужно «срочно», если первый ролик выходит раньше
@@ -81,15 +85,16 @@ export function buildTodo(state: PanelState, now: Date): Todo[] {
 
   const run = failedRun(state.runs, nowMs);
   if (run) {
+    const where = run.failedStage ? ` на этапе «${run.failedStage}»` : "";
     todos.push({
       id: "run",
       level: "error",
-      title: `Не удался запуск «${run.title}»`,
-      detail: `${run.createdLabel} — причина в логе`,
-      push: `не удался запуск «${run.title}»`,
+      title: `Не удался запуск «${run.label}»${where}`,
+      detail: `${run.createdLabel}${run.attempt > 1 ? ` · попытка ${run.attempt}` : ""} — подробности в логе`,
+      push: `не удался запуск «${run.label}»${where}`,
       deadline: null,
       codes: [],
-      action: { kind: "href", label: "Запуски", href: "/runs" },
+      action: canRetry(run, state).ok ? { kind: "retry", label: "Повторить", runId: run.id } : { kind: "href", label: "Запуски", href: "/runs" },
       secondary: { label: "Лог ↗", href: run.url },
     });
   }
@@ -172,6 +177,20 @@ export function buildTodo(state: PanelState, now: Date): Todo[] {
         action: gapRow?.stage === "studio" ? { kind: "find", label: "Найти новые загрузки" } : gapRow?.stage === "video" && gapRow.release ? { kind: "download", label: "⬇ Скачать", codes: [gapRow.code] } : null,
       });
     }
+  }
+
+  // План кончается: меньше чем на 10 дней тем — пора добавить (workflow «план тем» ≈ 3–5 мин).
+  if (state.topicsDays !== null && state.topicsDays < TOPICS_WARN_DAYS) {
+    todos.push({
+      id: "topics",
+      level: "warn",
+      title: `Темы плана закончатся ≈ ${state.topicsUntilLabel ? (/\d{2}\.\d{2}/.exec(state.topicsUntilLabel)?.[0] ?? state.topicsUntilLabel) : "скоро"}`,
+      detail: `без сценария ${state.topicsLeft} ${plural(state.topicsLeft, "тема", "темы", "тем")} — плана хватит на ${state.topicsDays} ${plural(state.topicsDays, "день", "дня", "дней")}`,
+      push: `темы плана закончатся через ${state.topicsDays} ${plural(state.topicsDays, "день", "дня", "дней")}`,
+      deadline: state.topicsUntil,
+      codes: [],
+      action: { kind: "extend", label: "Добавить 10 тем", count: 10 },
+    });
   }
 
   return todos.sort(

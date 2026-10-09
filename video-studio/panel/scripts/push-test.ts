@@ -350,7 +350,7 @@ async function main() {
     assert.deepEqual(msg, {
       title: "Нужно внимание",
       // Порядок — как в карточке «Сейчас»: срочное, важное, остальное.
-      body: "Не удался запуск «youtube-fill: 01a (проверка)» · в Studio без времени выхода: 09a · загрузите в Studio: 08a, 08b · расписание до 14.10",
+      body: "Не удался запуск «Заполнение YouTube · 01a (проверка)» · в Studio без времени выхода: 09a · загрузите в Studio: 08a, 08b · расписание до 14.10",
       url: "/runs",
       tag: "daily",
       badge: 2,
@@ -389,6 +389,25 @@ async function main() {
     assert.match(dup?.body ?? "", /^Проблемы с загрузкой в Studio: 07a · /);
     const many = ["02a", "02b", "03a", "03b", "04a", "04b", "05a", "05b"].map((c, i) => release(10 + i, c));
     assert.match(summary({ releases: many })?.body ?? "", /^Загрузите в Studio: 02a, 02b, 03a, 03b, 04a, 04b и ещё 2 · расписание до 14\.10$/);
+  });
+
+  await test("сводка с цифрами: «вчера ≈ +1,9 тыс. (обычно 1,6 тыс.)»; без дел — только если заметно; ≤ 178 знаков", () => {
+    // Дневные строки истории: 7 обычных дней по +1 600, вчера +1 900, подписчики 488 → 500.
+    const days = Array.from({ length: 10 }, (_, i) => new Date(Date.UTC(2026, 8, 28 + i)).toISOString().slice(0, 10)); // 28.09–07.10
+    const ch = days.map((d, i) => [d, i === 9 ? 500 : 488 + i, 10_000 + i * 1600 + (i === 9 ? 300 : 0), 5] as [string, number, number, number]);
+    const history = { v: 1 as const, ch, t: [], vid: {} };
+    const withTodo = summary({ history });
+    assert.equal(withTodo?.body, "Загрузите в Studio: 08a, 08b · расписание до 14.10 · вчера ≈ +1,9 тыс. просмотров (обычно 1,6 тыс.) · +4 подписчика");
+    // Дел нет, но перейдён рубеж 500 — «Сводка канала» со ссылкой на «Статистику».
+    const quiet = summary({ releases: [], history });
+    assert.deepEqual(quiet, { title: "Сводка канала", body: "🎉 500 подписчиков · вчера ≈ +1,9 тыс. просмотров (обычно 1,6 тыс.) · +4 подписчика", url: "/stats", tag: "daily", badge: 0 });
+    // Обычный день без дел — тишина.
+    const calm = { ...history, ch: ch.map((r, i) => [r[0], 400 + i, 10_000 + i * 1600, 5] as [string, number, number, number]) };
+    assert.equal(summary({ releases: [], history: calm }), null);
+    // Длинный список дел — цифры отбрасываются, тело не длиннее 178 знаков.
+    const many = ["02a", "02b", "03a", "03b", "04a", "04b", "05a", "05b"].map((c, i) => release(10 + i, c));
+    const long = summary({ releases: many, videos: [...full, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })], runs: [failedRun], history })!;
+    assert.ok(long.body.length <= 178, `${long.body.length}`);
   });
 
   console.log(`\nВсе проверки уведомлений пройдены: ${passed}.`);

@@ -1,11 +1,15 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import type { LiveRuns } from "@/app/api/runs/route";
+import { clearPending, usePending } from "@/lib/pending";
+import type { RunProgress } from "@/lib/progress";
 import { logoutAction } from "@/app/actions";
 import { plural } from "@/lib/stages";
 import { useResumeRefresh } from "@/lib/use-resume-refresh";
 import Freshness from "./Freshness";
+import { LiveRunsContext } from "./LiveRuns";
 
 export type Section = "feed" | "calendar" | "runs";
 // Пункты меню: лента и календарь на главной переключаются без перезагрузки, остальные — ссылки.
@@ -70,6 +74,7 @@ export default function AppShell({
   updated,
   generatedAt = null,
   activeRuns,
+  activeIds,
   runwayDays,
   runwayLabel,
   loading = false,
@@ -80,6 +85,7 @@ export default function AppShell({
   updated: string; // «14:05» — время данных (сервер)
   generatedAt?: string | null; // то же в ISO: «обновлено 3 мин назад» и автообновление
   activeRuns: number;
+  activeIds?: number[]; // id идущих запусков на странице — с ними сравнивает опрос /api/runs
   runwayDays: number | null;
   runwayLabel: string | null;
   loading?: boolean; // экран ещё грузится (loading.tsx): без цифр, которых пока нет
@@ -91,15 +97,45 @@ export default function AppShell({
   // Вернулись в приложение, а данным больше 5 минут — обновляем сами.
   useResumeRefresh(loading ? null : generatedAt, refresh, pending);
 
-  // Пока в Actions что-то идёт — обновляемся сами раз в 90 с, только открытая вкладка
-  // (каждое обновление — запросы к GitHub и ~3 единицы квоты YouTube).
+  // Пока в Actions что-то идёт (или только что нажали «запустить») — раз в 20 с спрашиваем
+  // лёгкий /api/runs: этапы обновляются на месте, без квоты YouTube. Всю страницу обновляем,
+  // только когда запуск появился или закончился. Ошибка — тихо реже, раз в минуту.
+  const queued = usePending();
+  const [live, setLive] = useState<Map<number, RunProgress>>(() => new Map());
+  const baseSig = activeIds ? [...activeIds].sort((a, b) => a - b).join(",") : null;
+  const waiting = queued.size > 0;
   useEffect(() => {
-    if (!activeRuns) return;
-    const timer = setInterval(() => {
-      if (document.visibilityState === "visible") startTransition(() => router.refresh());
-    }, 90_000);
-    return () => clearInterval(timer);
-  }, [activeRuns, router]);
+    if (loading || (!activeRuns && !waiting)) return;
+    let seen = baseSig;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      let delay = 20_000;
+      if (document.visibilityState === "visible") {
+        try {
+          const res = await fetch("/api/runs", { cache: "no-store" });
+          if (!res.ok) throw new Error(String(res.status));
+          const j = (await res.json()) as LiveRuns;
+          setLive(new Map(j.active.flatMap((r) => (r.progress ? [[r.id, r.progress] as const] : []))));
+          clearPending(j.active.flatMap((r) => r.codes));
+          if (seen === null) seen = j.signature;
+          else if (j.signature !== seen) {
+            seen = j.signature;
+            startTransition(() => router.refresh());
+          }
+        } catch {
+          delay = 60_000;
+        }
+      }
+      if (!stopped) timer = setTimeout(tick, delay);
+    };
+    // Только что нажали — первый вопрос раньше: GitHub показывает запуск через 5–20 с.
+    timer = setTimeout(tick, waiting ? 8_000 : 20_000);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [activeRuns, waiting, baseSig, loading, router]);
 
   const link = (s: NavItem, className?: string, withIcon = true) => (
     <Link
@@ -186,7 +222,9 @@ export default function AppShell({
         </div>
       </header>
 
-      <div className="content">{children}</div>
+      <div className="content">
+        <LiveRunsContext.Provider value={live}>{children}</LiveRunsContext.Provider>
+      </div>
 
       <nav className="tabbar" aria-label="Разделы">
         {NAV.map((s) => link(s))}

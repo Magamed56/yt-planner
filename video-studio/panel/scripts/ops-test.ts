@@ -7,8 +7,9 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import { ASSET_CHUNK, assetHeaders, assetType, contentDisposition, parseContentRange, planRange } from "../lib/asset-range";
-import type { GhRelease } from "../lib/github";
-import { decideReserve, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
+import { listReleases, nextPage, type GhRelease } from "../lib/github";
+import { addDispatch, dispatchConflict, parseDispatches, type RunLike } from "../lib/dispatch-guard";
+import { canRetry, DAY_MS, decideReserve, failedRun, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
 import { rebuildInputs, DEFAULT_REBUILD } from "../lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, countWords, parseTags, SCRIPT_LIMITS, scriptEditOf, scriptFileText, type ScriptEdit } from "../lib/script-edit";
 import { buildState, DEFAULT_AUTOPILOT, parseAutopilot, type Row, type RunInfo } from "../lib/state";
@@ -44,6 +45,7 @@ const now = Date.parse("2026-10-09T03:00:00Z");
 const run = (over: Partial<RunInfo>): RunInfo => ({
   id: 1,
   workflow: "video-studio: ролик",
+  file: "video-studio.yml",
   title: "",
   kind: "batch",
   codes: [],
@@ -55,6 +57,7 @@ const run = (over: Partial<RunInfo>): RunInfo => ({
   url: "",
   attempt: 1,
   ...over,
+  label: over.label ?? over.title ?? "",
 });
 const rowsOf = (list: [string, Row["stage"], string?][]) => list.map(([code, stage, running]) => ({ code, stage, running: running ?? null }) as Row);
 
@@ -341,6 +344,80 @@ async function main() {
     assert.equal(whole["Cache-Control"], "private, no-store");
     assert.equal(contentDisposition("ролик «1».mp4", true), `attachment; filename="_____ _1_.mp4"; filename*=UTF-8''%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%20%C2%AB1%C2%BB.mp4`);
     assert.equal(parseContentRange("bytes */20"), null);
+  });
+
+  await test("релизы: больше сотни — по ссылке Link на следующие страницы, не больше 5", async () => {
+    assert.equal(nextPage('<https://api.github.com/repositories/1/releases?per_page=100&page=2>; rel="next", <https://api.github.com/repositories/1/releases?per_page=100&page=3>; rel="last"'), "/repositories/1/releases?per_page=100&page=2");
+    assert.equal(nextPage(null), null);
+    assert.equal(nextPage('<https://evil.example/x>; rel="next"'), null, "только адрес API GitHub");
+    const realFetch = globalThis.fetch;
+    const token = process.env.GITHUB_TOKEN;
+    process.env.GITHUB_TOKEN = "t";
+    const seen: string[] = [];
+    globalThis.fetch = (async (url: string) => {
+      seen.push(url);
+      const page = Number(/[?&]page=(\d+)/.exec(url)?.[1] ?? 1);
+      const items = Array.from({ length: page < 7 ? 100 : 3 }, (_, i) => ({ id: page * 1000 + i }));
+      const link = page < 7 ? `<https://api.github.com/repositories/1/releases?per_page=100&page=${page + 1}>; rel="next"` : "";
+      return new Response(JSON.stringify(items), { status: 200, headers: link ? { link } : {} });
+    }) as typeof fetch;
+    try {
+      const all = await listReleases();
+      assert.equal(all.length, 500, "5 страниц по 100");
+      assert.equal(seen.length, 5);
+    } finally {
+      globalThis.fetch = realFetch;
+      process.env.GITHUB_TOKEN = token;
+    }
+  });
+
+  await test("«Повторить» руками: упавший, не отменённый, меньше 3 попыток, ролики ещё не готовы", () => {
+    const failed = run({ id: 7, title: "batch: 08a,08b", codes: ["08a", "08b"] });
+    const rows = rowsOf([
+      ["08a", "script"],
+      ["08b", "topic"],
+    ]);
+    assert.deepEqual(canRetry(failed, { runs: [failed], rows }), { ok: true, cost: 2 });
+    assert.deepEqual(canRetry(run({ kind: "draft", codes: ["08b"] }), { runs: [], rows }), { ok: true, cost: 0 }, "черновик голос не тратит");
+    const no = (r: RunInfo, rs = rows) => {
+      const c = canRetry(r, { runs: [r], rows: rs });
+      return c.ok ? "можно" : c.reason;
+    };
+    assert.match(no(run({ codes: ["08a"], conclusion: "cancelled" })), /отменён/);
+    assert.match(no(run({ codes: ["08a"], attempt: 3 })), /уже 3 попытки/);
+    assert.match(no(run({ codes: ["08a"], active: true, status: "in_progress", conclusion: null })), /ещё идёт/);
+    assert.match(no(run({ codes: ["08a"], kind: "fill" })), /только у сценариев и сборок/);
+    assert.equal(no(failed, rowsOf([["08a", "video"], ["08b", "studio"]])), "уже готово или запущено заново");
+    // Тот же ролик потом собрали удачно — повторять нечего.
+    const later = run({ id: 8, codes: ["08a", "08b"], conclusion: "success", createdAt: "2026-10-08T22:00:00Z" });
+    assert.equal(canRetry(failed, { runs: [later, failed], rows }).ok, false);
+    // Последний упавший за двое суток — для «Сейчас» и напоминания.
+    assert.equal(failedRun([later, failed], now), null, "последний закончился удачно");
+    assert.equal(failedRun([failed], now)?.id, 7);
+    assert.equal(failedRun([failed], now + 3 * DAY_MS), null, "старше двух суток — не напоминаем");
+  });
+
+  await test("повтор платного запуска: идёт или только что запускали — отказ; после сбоя и другой workflow — можно", () => {
+    const t = Date.parse("2026-10-09T11:00:00Z");
+    const iso = (min: number) => new Date(t - min * 60_000).toISOString();
+    const label = (x: string) => x.slice(11, 16);
+    const want = { file: "video-studio.yml", kind: "batch", codes: ["08a", "08b"] };
+    const r = (over: Partial<RunLike>): RunLike => ({ file: "video-studio.yml", kind: "batch", codes: ["08a"], active: false, conclusion: "success", createdAt: iso(30), ...over });
+    assert.equal(dispatchConflict(want, [], [], t, label), null);
+    assert.equal(dispatchConflict(want, [r({ active: true, conclusion: null, createdAt: iso(5), kind: "draft" })], [], t, label), "08a уже в работе (запуск 10:55) — второй раз не запускаю.");
+    assert.match(dispatchConflict(want, [r({ createdAt: iso(1) })], [], t, label)!, /^08a только что запускали \(10:59\)/);
+    assert.equal(dispatchConflict(want, [r({ createdAt: iso(1), conclusion: "failure" })], [], t, label), null, "после сбоя пересобрать сразу можно");
+    assert.equal(dispatchConflict(want, [r({ createdAt: iso(1), kind: "draft" })], [], t, label), null, "сценарий готов — собирать видео можно");
+    assert.equal(dispatchConflict(want, [r({ active: true, file: "video-studio-titles.yml" })], [], t, label), null, "другой workflow не мешает");
+    assert.equal(dispatchConflict(want, [r({ active: true, codes: ["09a"] })], [], t, label), null, "другие ролики не мешают");
+    // Нажали 10 с назад, GitHub ещё не показал запуск — второе нажатие (хоть с другого устройства) — отказ.
+    const pressed = addDispatch([], { ...want, at: iso(1 / 6) }, t);
+    assert.match(dispatchConflict({ ...want, codes: ["08b"] }, [], pressed, t, label)!, /^08b уже запущен \(10:59\), GitHub ещё ставит его в очередь/);
+    // Запуск появился и уже закончился удачно сценарием — запись о нажатии больше не держит.
+    assert.equal(dispatchConflict({ ...want, kind: "batch" }, [r({ kind: "draft", codes: ["08a", "08b"], createdAt: iso(0) })], [{ ...want, kind: "draft", at: iso(1 / 6) }], t, label), null);
+    // Записи старше 10 минут и мусор не читаются.
+    assert.deepEqual(parseDispatches(JSON.stringify([{ ...want, at: iso(11) }, { file: 1 }]), t), []);
+    assert.equal(parseDispatches("oops", t).length, 0);
   });
 
   console.log(`\nВсе проверки операций пройдены: ${passed}.`);

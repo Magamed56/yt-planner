@@ -2580,3 +2580,101 @@ a.btn[aria-disabled] {
 a.code-chip {
   text-decoration: none;
 }
+.run-failed {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  color: var(--error);
+}
+.plan-runway {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+.autopilot-next {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card-2);
+}
+
+/* ---- «Пульс»: что изменилось с прошлого визита, последние вышедшие ---- */
+.pulse {
+  margin-bottom: 12px;
+}
+.pulse-line {
+  min-height: 1.45em;
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+.pulse-line b {
+  color: var(--text);
+}
+.pulse-failed {
+  color: var(--error);
+}
+.pulse-party {
+  color: var(--accent);
+}
+.pulse-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+.pulse-strip::-webkit-scrollbar {
+  display: none;
+}
+.pulse-item {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 210px;
+  padding: 6px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pulse-item img,
+.pulse-item .ph {
+  flex: none;
+  width: 42px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--card-2);
+}
+.pulse-item .ph {
+  display: grid;
+  place-items: center;
+  font: 800 11px var(--display);
+  color: var(--dim);
+}
+.pulse-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.pulse-text b {
+  color: var(--text);
+}
+@media (min-width: 1000px) {
+  .pulse-strip {
+    margin: 0;
+    padding: 0;
+  }
+}

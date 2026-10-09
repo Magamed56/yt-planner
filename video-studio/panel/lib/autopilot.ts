@@ -6,24 +6,12 @@
 // своими настройками, поэтому работают и при выключенном автопилоте.
 import { deleteReleaseAsset, dispatchWorkflow, getVariable, rerunFailedJobs, setVariable } from "./github";
 import { loadState } from "./load";
+import { AUTOPILOT_MAX, decideAutopilot } from "./autopilot-rules";
 import { CLEANUP_MAX, decideReserve, pickCleanup, pickRetries } from "./ops";
 import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, codesLabel, parseAutopilot, type AutopilotLast, type AutopilotSettings, type PanelState } from "./state";
 
-// Бесплатный Gemini TTS — около 10 запросов в сутки: больше 6 роликов за запуск не просим
-// (сюда же входят повторы упавших сборок).
-export const AUTOPILOT_MAX = 6;
-
-export function decideAutopilot(state: PanelState, settings: Pick<AutopilotSettings, "enabled" | "days">, now: Date): { codes: string[]; skip: string | null } {
-  // Без YouTube не видно расписания: ориентиры дат съехали бы, и собралось бы лишнее.
-  if (state.youtubeError) return { codes: [], skip: `YouTube недоступен (${state.youtubeError}) — пропускаю, чтобы не собрать лишнего` };
-  const horizon = now.getTime() + settings.days * 86_400_000;
-  const need = state.rows.filter((r) => (r.stage === "topic" || r.stage === "script") && !r.running && r.when && Date.parse(r.when) <= horizon);
-  if (!need.length) return { codes: [], skip: `всё, что выходит в ближайшие ${settings.days} дн., уже готово или в работе` };
-  const missing = state.missingSecrets ?? [];
-  if (missing.includes("GEMINI_API_KEY")) return { codes: [], skip: "в секретах GitHub нет GEMINI_API_KEY — без него голос был бы не Charon" };
-  if (missing.includes("ANTHROPIC_API_KEY") && need.some((r) => r.stage === "topic")) return { codes: [], skip: "в секретах GitHub нет ANTHROPIC_API_KEY — сценарии писать нечем" };
-  return { codes: need.slice(0, AUTOPILOT_MAX).map((r) => r.code), skip: null };
-}
+// Что собрать — чистое правило в lib/autopilot-rules.ts: его же считает превью в «Запусках».
+export { AUTOPILOT_MAX, decideAutopilot } from "./autopilot-rules";
 
 export interface AutopilotRun {
   last: AutopilotLast;
@@ -89,9 +77,9 @@ export async function runAutopilot(source: "cron" | "manual", now = new Date()):
       if (Date.now() > deadline) break;
       try {
         await rerunFailedJobs(r.id);
-        retried.push(`«${r.title}» (${r.createdLabel})`);
+        retried.push(`«${r.label}» (${r.createdLabel})`);
       } catch (e) {
-        failed(`повтор «${r.title}» не удался`, e);
+        failed(`повтор «${r.label}» не удался`, e);
       }
     }
     if (retried.length) did.push(`повтор упавших: ${retried.join(", ")}`);

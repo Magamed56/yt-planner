@@ -5,10 +5,12 @@ import { channelFromJson, isoNoMs, localDate, upcomingSlots } from "../../src/pi
 import { parsePlan, scriptCode } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
 import type { GhRelease, GhRun, GhStep } from "./github";
-import { expectedMs, runProgress, type RunProgress } from "./progress";
-import { releaseVideosOf, type ReleaseVideo } from "./ops";
-import { STAGES, codesLabel, plural, shiftDateKey, type Stage } from "./stages";
+import { expectedMs, minutesLabel, runProgress, stageOf, type RunProgress } from "./progress";
+import { failedRun, releaseVideosOf, type ReleaseVideo } from "./ops";
+import { STAGES, codesLabel, plural, runLabel, shiftDateKey, type Stage } from "./stages";
+import type { StatsHistory } from "./history";
 import { typicalRatio } from "./insights";
+import { buildPulse, type Pulse } from "./pulse";
 import { isShorts, rowStats, viewsPerDay, type RowStats } from "./stats";
 
 export { STAGES, STAGE_LABEL, codesLabel, plural, type Stage } from "./stages";
@@ -62,12 +64,14 @@ export interface Row {
   stats?: RowStats | null; // просмотры, лайки, комментарии с YouTube (statistics того же videos.list)
 }
 
-export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "other";
+export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "plan" | "titles" | "captions" | "other";
 
 export interface RunInfo {
   id: number;
   workflow: string;
-  title: string;
+  file: string; // файл workflow: «video-studio.yml»
+  title: string; // заголовок GitHub: «batch: 08a,08b»
+  label: string; // по-русски: «Ролик · 08a, 08b»
   kind: RunKind;
   codes: string[];
   active: boolean;
@@ -78,6 +82,9 @@ export interface RunInfo {
   url: string;
   attempt: number; // номер попытки (после «Re-run» — 2 и дальше)
   progress?: RunProgress | null; // у идущего: этапы и ожидаемая длительность
+  failedStage?: string | null; // упавший: этап, на котором сломался («Озвучка и видео»)
+  failedStep?: string | null; // и сам шаг workflow
+  durationLabel?: string | null; // закончившийся: сколько шёл
 }
 
 export interface Reminder {
@@ -185,6 +192,11 @@ export interface PanelState {
   runwayLabel: string | null; // до какого слота расписание без пропусков
   firstGap: FirstGap | null; // null — пропусков нет на SLOT_GRID_DAYS дней (или YouTube недоступен)
   coverage: Coverage[]; // запланировано → видео → сценарии → темы; пусто без YouTube
+  topicsLeft: number; // тем плана без сценария
+  topicsUntil: string | null; // ISO: когда выйдет последний ролик плана (ориентир)
+  topicsUntilLabel: string | null;
+  topicsDays: number | null; // на сколько дней хватит плана
+  pulse: Pulse; // «Пульс»: ряд за неделю, события, последние вышедшие
   reminders: Reminder[];
   runs: RunInfo[];
   slotGrid: SlotCell[]; // слоты на SLOT_GRID_DAYS дней вперёд — перенос и «конвейер»
@@ -213,6 +225,7 @@ export interface StateInput {
   repo: string;
   branch: string;
   queueOrder?: string[]; // PANEL_QUEUE_ORDER
+  history?: StatsHistory | null; // PANEL_STATS_HISTORY — для «Пульса» (в состояние — только сжатое)
   runSteps?: Record<number, GhStep[]>; // шаги идущих запусков (по id)
 }
 
@@ -266,16 +279,10 @@ const RUNNING_LABEL: Partial<Record<RunKind, string>> = {
   batch: "сценарий и видео в работе",
   render: "собирается видео",
   fill: "заполняются тексты на YouTube",
+  titles: "подбираются названия",
+  captions: "переводятся субтитры",
 };
 const MP4_WITH_CODE = /^(\d{2}[a-z])-.+\.mp4$/i;
-const FAILED_RUN_FRESH_MS = 2 * 86_400_000;
-
-// Последний завершённый запуск конвейера, если он упал не больше двух суток назад: о нём
-// напоминают панель, карточка «Сейчас» и утреннее уведомление. Проверки и прочее — не в счёт.
-export function failedRun(runs: RunInfo[], nowMs: number): RunInfo | null {
-  const last = runs.find((r) => !r.active && r.kind !== "other" && r.kind !== "check");
-  return last?.conclusion === "failure" && nowMs - Date.parse(last.createdAt) < FAILED_RUN_FRESH_MS ? last : null;
-}
 const DAY_MS = 86_400_000;
 const ms = (t: string | number | Date) => (t instanceof Date ? t.getTime() : typeof t === "number" ? t : Date.parse(t));
 const minute = (t: string | number | Date) => Math.floor(ms(t) / 60_000);
@@ -305,13 +312,18 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
   if (r.path.endsWith("/video-studio-youtube-fill.yml")) kind = "fill";
   else if (r.path.endsWith("/video-studio-check.yml")) kind = "check";
   else if (r.path.endsWith("/video-studio-instagram.yml")) kind = "instagram";
+  else if (r.path.endsWith("/video-studio-plan.yml")) kind = "plan";
+  else if (r.path.endsWith("/video-studio-titles.yml")) kind = "titles";
+  else if (r.path.endsWith("/video-studio-captions.yml")) kind = "captions";
   else if (r.path.endsWith("/video-studio.yml")) kind = (/^(draft|render|batch)\b/.exec(r.display_title)?.[1] as RunKind | undefined) ?? "other";
   const codes = [...new Set([...r.display_title.matchAll(/(?:^|[^0-9a-z])(\d{2}[a-z])(?=$|[^0-9a-z])/gi)].map((m) => m[1]!.toLowerCase()))];
   const t = Date.parse(r.created_at);
   return {
     id: r.id,
     workflow: r.name,
+    file: r.path.split("/").pop() ?? r.path,
     title: r.display_title,
+    label: runLabel(kind, r.display_title, codes),
     kind,
     codes,
     active: ACTIVE_RUN.has(r.status),
@@ -322,6 +334,35 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
     url: r.html_url,
     attempt: r.run_attempt ?? 1,
   };
+}
+
+// Запуски — свежие первыми; у идущих — этапы и «осталось ≈ N мин» по тому, сколько обычно
+// идут удачные запуски того же вида. Нужен и очереди, и лёгкому /api/runs.
+export function runInfos(ghRuns: GhRun[], steps: Record<number, GhStep[]> | undefined, tz: string): RunInfo[] {
+  const f = formatters(tz);
+  const runs = ghRuns.map((r) => runInfo(r, f)).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+  const started = new Map(ghRuns.map((r) => [r.id, r.run_started_at ?? r.created_at]));
+  const history = ghRuns
+    .filter((r) => r.status === "completed" && r.conclusion === "success")
+    .map((r) => {
+      const info = runs.find((x) => x.id === r.id)!;
+      return { kind: info.kind, codes: info.codes.length, ms: ms(r.updated_at) - ms(started.get(r.id)!) };
+    });
+  const ended = new Map(ghRuns.map((r) => [r.id, r.updated_at]));
+  for (const r of runs) {
+    if (r.active) {
+      r.progress = runProgress(steps?.[r.id] ?? [], started.get(r.id)!, expectedMs(r.kind, r.codes.length, history));
+      continue;
+    }
+    const took = ms(ended.get(r.id)!) - ms(started.get(r.id)!);
+    r.durationLabel = Number.isFinite(took) && took > 0 ? minutesLabel(took) : null;
+    const broke = r.conclusion === "failure" || r.conclusion === "timed_out" ? steps?.[r.id]?.find((s) => s.conclusion === "failure" || s.conclusion === "timed_out") : undefined;
+    if (broke) {
+      r.failedStep = broke.name;
+      r.failedStage = stageOf(broke.name);
+    }
+  }
+  return runs;
 }
 
 // Самый свежий релиз с файлом «08a-….mp4» на каждый код.
@@ -401,20 +442,7 @@ export function buildState(input: StateInput): PanelState {
       .map((p) => p.match.item.id),
   );
 
-  const runs = input.runs.map((r) => runInfo(r, f)).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
-  // Сколько обычно идут удачные запуски того же вида — для «осталось ≈ N мин».
-  const started = new Map(input.runs.map((r) => [r.id, r.run_started_at ?? r.created_at]));
-  const history = input.runs
-    .filter((r) => r.status === "completed" && r.conclusion === "success")
-    .map((r) => {
-      const info = runs.find((x) => x.id === r.id)!;
-      return { kind: info.kind, codes: info.codes.length, ms: ms(r.updated_at) - ms(started.get(r.id)!) };
-    });
-  for (const r of runs) {
-    if (!r.active) continue;
-    const steps = input.runSteps?.[r.id];
-    r.progress = runProgress(steps ?? [], started.get(r.id)!, expectedMs(r.kind, r.codes.length, history));
-  }
+  const runs = runInfos(input.runs, input.runSteps, tz);
   const running = new Map<string, string>();
   for (const r of runs) if (r.active) for (const c of r.codes) if (!running.has(c)) running.set(c, RUNNING_LABEL[r.kind] ?? "идёт запуск");
 
@@ -533,6 +561,9 @@ export function buildState(input: StateInput): PanelState {
   const runwayDays = input.youtubeError ? null : gap ? Math.max(0, Math.floor((ms(gap.iso) - nowMs) / DAY_MS)) : SLOT_GRID_DAYS;
   const runwayLabel = pipeline.coverage.find((c) => c.level === "scheduled")?.untilLabel ?? null;
 
+  // Когда кончится план: время выхода последнего ролика плана (ориентир).
+  const planEnd = rows.reduce<string | null>((end, r) => (r.when && (!end || ms(r.when) > ms(end)) ? r.when : end), null);
+
   const reminders: Reminder[] = [];
   if (input.youtubeError) reminders.push({ kind: "youtube", level: "error", text: `YouTube недоступен: ${input.youtubeError}` });
   else if (!scheduleEnd) reminders.push({ kind: "runway", level: "warn", text: "В расписании YouTube пусто — ни один ролик не запланирован." });
@@ -580,7 +611,8 @@ export function buildState(input: StateInput): PanelState {
   }
   const lastDone = failedRun(runs, nowMs);
   if (lastDone) {
-    reminders.push({ kind: "run", level: "error", text: `Запуск «${lastDone.title}» (${lastDone.createdLabel}) не удался — откройте лог.`, href: lastDone.url });
+    const where = lastDone.failedStage ? ` на этапе «${lastDone.failedStage}»` : "";
+    reminders.push({ kind: "run", level: "error", text: `Запуск «${lastDone.label}» (${lastDone.createdLabel}) не удался${where} — откройте лог.`, href: lastDone.url });
   }
   if (missingSecrets?.length) {
     // Одной причиной — один раз: «YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN — заполнение YouTube из Actions».
@@ -612,6 +644,11 @@ export function buildState(input: StateInput): PanelState {
     runwayLabel,
     firstGap: gap,
     coverage: pipeline.coverage,
+    topicsLeft: counts.topic,
+    topicsUntil: planEnd,
+    topicsUntilLabel: planEnd ? labelOf(planEnd) : null,
+    topicsDays: planEnd ? Math.max(0, Math.floor((ms(planEnd) - nowMs) / DAY_MS)) : null,
+    pulse: buildPulse(input.history ?? null, rows, runs, now),
     reminders,
     runs,
     slotGrid,

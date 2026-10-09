@@ -1,11 +1,13 @@
 "use server";
 // Действия экрана «Статистика»: плейлисты рубрик, подбор новых названий (workflow) и смена
 // названия ролика. Каждое проверяет вход само (действие сервера — это POST), ключи остаются на сервере.
+import { channelFromJson } from "../../../src/pipeline/channel";
 import { parsePlan, PLAN_CODE } from "../../../src/pipeline/plan";
 import { parseTitleIdeas, TITLE_IDEAS_FILE } from "../../../src/pipeline/title-ideas";
 import type { ActionResult } from "@/app/actions";
 import { requireSession } from "@/lib/auth";
-import { dispatchWorkflow, GithubError, readJson, setVariable } from "@/lib/github";
+import { dispatchOnce } from "@/lib/dispatch";
+import { GithubError, readJson, setVariable } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { applyPlaylistSync, computePlaylistSync, readPlaylistsSetting } from "@/lib/playlist-sync";
 import { PLAYLIST_MAX_INSERTS, PLAYLISTS_VAR, playlistsSettingText, quotaLabel } from "@/lib/playlists";
@@ -99,8 +101,9 @@ export async function titleIdeasAction(codes: string[]): Promise<ActionResult> {
     const want = new Set((Array.isArray(codes) ? codes : []).map((c) => String(c).trim().toLowerCase()).filter((c) => PLAN_CODE.test(c)));
     const list = plan.items.map((i) => i.id).filter((id) => want.has(id)).slice(0, MAX_CODES);
     if (!list.length) return fail("Нет роликов из плана — обновите страницу.");
+    const channel = channelFromJson((await readJson(`${STUDIO_DIR}/channel.json`)) ?? {});
     try {
-      await dispatchWorkflow("video-studio-titles.yml", { codes: list.join(",") });
+      await dispatchOnce("video-studio-titles.yml", { codes: list.join(",") }, "other", list, channel.schedule.timezone);
     } catch (e) {
       if (e instanceof GithubError && e.status === 404) throw new Error("Workflow «video-studio: названия» ещё не в ветке — слейте PR с ним.");
       throw e;

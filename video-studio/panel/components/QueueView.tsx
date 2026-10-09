@@ -12,6 +12,8 @@ import DownloadSheet from "./DownloadSheet";
 import FeedView from "./FeedView";
 import NowCard from "./NowCard";
 import PipelineStrip from "./PipelineStrip";
+import PulseCard from "./PulseCard";
+import { usePlanExtend, useRetry } from "./RetryConfirm";
 import VideoSheet from "./VideoSheet";
 
 type Filter = "ahead" | "all" | Stage;
@@ -86,6 +88,12 @@ export default function QueueView({ state, initialMode, initialSelected = null }
   const [chosen, setChosen] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const done = (r: { ok: boolean; message: string }) => {
+    setToast({ text: r.message, ok: r.ok });
+    if (r.ok) router.refresh();
+  };
+  const retry = useRetry(done);
+  const extend = usePlanExtend(done);
   // Подсказку про перетаскивание можно убрать — запоминаем в браузере (может не быть доступа).
   const [hintHidden, setHintHidden] = useState(false);
   useEffect(() => {
@@ -323,6 +331,7 @@ export default function QueueView({ state, initialMode, initialSelected = null }
       onSection={(s) => (s === "runs" ? router.push("/runs") : switchMode(s))}
       updated={state.updatedLabel}
       generatedAt={state.generatedAt}
+      activeIds={state.runs.filter((r) => r.active).map((r) => r.id)}
       activeRuns={state.runs.filter((r) => r.active).length}
       runwayDays={state.runwayDays}
       runwayLabel={state.runwayLabel}
@@ -341,11 +350,14 @@ export default function QueueView({ state, initialMode, initialSelected = null }
           <NowCard
             todos={todos}
             doneUntil={state.runwayLabel}
-            disabled={busy || chosen !== null}
+            disabled={busy || retry.busy || extend.busy || chosen !== null}
             onDownload={saveWaiting}
             onFind={() => void findNew()}
             onOpen={openSheet}
+            onRetry={(id) => void retry.start(id)}
+            onExtend={(n) => void extend.start(n)}
           />
+          {mode === "feed" && <PulseCard pulse={state.pulse} timeZone={state.timezone} onOpen={openSheet} />}
 
           <div className="page-head">
             <h1>{mode === "calendar" ? "Календарь" : "Лента"}</h1>
@@ -491,7 +503,9 @@ export default function QueueView({ state, initialMode, initialSelected = null }
           </button>
         </div>
       )}
-      {toast && !pickedRow && !choosingBar && (
+      {retry.bar}
+      {extend.bar}
+      {toast && !pickedRow && !choosingBar && !retry.open && !extend.open && (
         <div className={`toast${toast.ok ? "" : " err"}`} role="status">
           <span>{toast.text}</span>
           {toast.undo && (
