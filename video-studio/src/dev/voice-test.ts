@@ -77,6 +77,7 @@ interface FakeOpts {
   batch?: number;
   fallback?: string;
   mp3?: boolean;
+  takes?: boolean; // каждый запрос — новый дубль (длиннее прежнего), как живой сервис
 }
 
 // «Сервис» без сети: считает запросы и отдаёт синтетический звук.
@@ -92,6 +93,7 @@ function fake(o: FakeOpts = {}) {
       calls.push(text);
       const fb = o.fallback ? { fallback: o.fallback } : {};
       if (o.mp3) return { kind: "mp3", bytes: fakeMp3(80), words: [{ text: text.split(" ")[0]!, startMs: 0, endMs: 300 }], ...fb };
+      if (o.takes) return { kind: "pcm", audio: speechLike([text + " а".repeat(calls.length * 5)]), ...fb };
       return { kind: "pcm", audio: speechLike(text.split("\n\n")), ...fb };
     },
   };
@@ -158,8 +160,29 @@ async function offline() {
     assert.equal(calls.length, 2, "пересборка переозвучивает основной моделью");
   });
 
-  await test("TTS_CACHE=0 и TTS_CACHE_DIR=none выключают общий кэш; путь по умолчанию — .cache/voice", async () => {
-    assert.equal(sharedCacheDir({ TTS_CACHE: "0" }), null);
+  await test("TTS_CACHE=0 — новый дубль: из кэша не берём, а запись общего кэша заменяется", async () => {
+    const { provider, calls } = fake({ takes: true });
+    const text = TEXT + " Дубль.";
+    const a = await provider.synthesize(text, path.join(freshDir(), "s1"));
+    setEnv({ TTS_CACHE: "0" });
+    let b: VoiceResult;
+    try {
+      b = await provider.synthesize(text, path.join(freshDir(), "s1"));
+    } finally {
+      setEnv({ TTS_CACHE: undefined });
+    }
+    assert.equal(calls.length, 2, "с TTS_CACHE=0 — запрос к сервису, а не кэш");
+    assert.ok(!b.cached);
+    assert.ok(b.durationMs > a.durationMs + 100, `новый дубль: ${a.durationMs} → ${b.durationMs} мс`);
+    // Следующая пересборка без флага — из кэша, и это новый дубль, а не прежний.
+    const c = await provider.synthesize(text, path.join(freshDir(), "s1"));
+    assert.equal(calls.length, 2);
+    assert.equal(c.cached, true);
+    assert.ok(Math.abs(c.durationMs - b.durationMs) < 5, `из кэша — новый дубль: ${c.durationMs} и ${b.durationMs} мс`);
+  });
+
+  await test("TTS_CACHE_DIR=none выключает общий кэш; путь по умолчанию — .cache/voice", async () => {
+    assert.equal(sharedCacheDir({ TTS_CACHE: "0" }), path.join(projectRoot(), ".cache", "voice"), "TTS_CACHE=0 запрещает только чтение");
     assert.equal(sharedCacheDir({ TTS_CACHE_DIR: "none" }), null);
     assert.equal(sharedCacheDir({}), path.join(projectRoot(), ".cache", "voice"));
     assert.equal(sharedCacheDir({ TTS_CACHE_DIR: "x/y" }), path.resolve("x/y"));

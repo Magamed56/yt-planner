@@ -152,6 +152,10 @@ jobs:
       TTS_FALLBACK: ${{ inputs.voice_fallback == 'none' && 'none' || vars.TTS_FALLBACK }}
       # Общий кэш озвучки: раннер чистый, кэш живёт между запусками через actions/cache (шаги ниже).
       TTS_CACHE_DIR: ${{ github.workspace }}/video-studio/.cache/voice
+      # Пересборка берёт тот же текст из кэша — тот же дубль. Нужен новый (оговорка, обрезанное
+      # слово): переменная TTS_CACHE = 0 на время пересборки или правка текста сцены.
+      TTS_CACHE: ${{ vars.TTS_CACHE }}
+      TTS_CACHE_DAYS: ${{ vars.TTS_CACHE_DAYS }}
       GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL }}
       GEMINI_TTS_VOICE: ${{ inputs.voice_name || vars.GEMINI_TTS_VOICE }}
       GEMINI_TTS_STYLE: ${{ vars.GEMINI_TTS_STYLE }}

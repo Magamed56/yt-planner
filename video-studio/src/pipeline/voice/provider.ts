@@ -83,7 +83,8 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
   async function fromCaches(clean: string, outFileBase: string, key: string, voice: string): Promise<VoiceResult | null> {
     const local = await readCache(outFileBase, key);
     if (local) return { ...local, voice, cached: true };
-    const dir = sharedCacheDir();
+    // TTS_CACHE=0 — нужен новый дубль: общий кэш не читаем (запишет его finish).
+    const dir = process.env.TTS_CACHE === "0" ? null : sharedCacheDir();
     if (!dir) return null;
     await pruneSharedOnce(dir);
     const hit = await readShared(dir, key);

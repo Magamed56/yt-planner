@@ -182,7 +182,7 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 3. **Variables** (вкладка рядом, необязательно): `CHANNEL_NAME` (имя канала в финальной сцене),
    `LLM_PROVIDER`, `LLM_MODEL`, `LLM_FALLBACKS`, `LLM_EFFORT`, `VISUALS`, `VISUALS_PREFER`,
    `TTS_PROVIDER` (только для расписания — при ручном запуске провайдер и голос выбираются кнопкой: поля «Озвучка» и «Голос»), `TTS_VOICE`,
-   `TTS_RATE`, `TTS_FALLBACK`, `GEMINI_TTS_MODEL`, `GEMINI_TTS_VOICE`, `GEMINI_TTS_STYLE`,
+   `TTS_RATE`, `TTS_FALLBACK`, `TTS_CACHE`, `TTS_CACHE_DAYS`, `GEMINI_TTS_MODEL`, `GEMINI_TTS_VOICE`, `GEMINI_TTS_STYLE`,
    `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL`, `MUSIC`, `MUSIC_MOOD`, `LOUDNESS_TARGET`,
    `RENDER_CONCURRENCY`, `YT_CATEGORY_ID`, `YT_SYNTHETIC_MEDIA`, `PUBLISH_TIMES`, `PUBLISH_TZ`,
    `IG_API_VERSION`, `IG_AI_GENERATED`, `SCHEDULED_TOPIC` (тема для запуска
@@ -222,7 +222,9 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    Автопилот панели запускает с **none**.
 
 Озвученные сцены кэшируются между запусками (`actions/cache`, папка `video-studio/.cache/voice`,
-14 дней): пересборка и повтор упавшего запуска того же текста квоту Gemini не тратят.
+14 дней): пересборка и повтор упавшего запуска того же текста квоту Gemini не тратят — но и дубль
+голоса берут тот же. Нужен новый (оговорка, обрезанное слово) — переменная репозитория
+`TTS_CACHE` = `0` на одну пересборку (потом удалите) или правка текста сцены.
 
 Без `script`, но с `topic` render делает всё сам; без обоих — демо-ролик. **format = auto** берёт формат
 из сценария (для темы без сценария — Shorts); горизонтальный ролик по теме — **format = landscape**.
@@ -416,6 +418,7 @@ out/                      результаты (в git не попадают)
 | `Нет ни одной доступной LLM` | Задайте `GEMINI_API_KEY` в `.env` (локально) или в секретах (GitHub) |
 | Gemini: 429 / квота | Бесплатная квота на сегодня кончилась — подождите, добавьте `GROQ_API_KEY`/`OPENROUTER_API_KEY` или используйте `--script` |
 | «квота Gemini закончилась — ролик соберётся при повторе» | Голос Gemini на сегодня кончился, а запасной выключен (`TTS_FALLBACK=none`, автопилот): панель перезапустит сборку, вручную — Re-run на следующий день. Озвученное раньше возьмётся из кэша |
+| Пересборка дала ту же оговорку в озвучке | Сцены взяты из кэша (в логе «из кэша»): тот же текст — тот же дубль. Новый: `TTS_CACHE=0 npm run make -- …`, в GitHub — переменная репозитория `TTS_CACHE` = `0` на одну пересборку (потом удалите) |
 | `Сценарий … не прошёл проверку` | В сообщении — список проблем с номерами сцен. Сверьтесь с `examples/demo-ru.json` |
 | Рендер очень медленный или ПК зависает | `RENDER_CONCURRENCY=1`, `VISUALS_PREFER=image`, закройте браузер; или рендерите в GitHub Actions |
 | В логе `Detected differing memory amounts` | Предупреждение Remotion в Docker и облачных контейнерах, на результат не влияет |

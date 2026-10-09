@@ -34,9 +34,10 @@ interface SharedEntry {
 
 export const sharedKey = (key: string) => createHash("sha256").update(key).digest("hex");
 
-// null — общий кэш выключен (TTS_CACHE=0 или TTS_CACHE_DIR=none).
+// null — общий кэш выключен (TTS_CACHE_DIR=none). TTS_CACHE=0 его не выключает, а
+// только запрещает чтение (provider.ts): новый дубль заменяет старую запись, иначе
+// следующая пересборка без флага вернула бы прежний — с той же оговоркой.
 export function sharedCacheDir(env: Record<string, string | undefined> = process.env): string | null {
-  if (env.TTS_CACHE === "0") return null;
   const v = env.TTS_CACHE_DIR?.trim();
   if (v && /^(none|off|0|false|no)$/i.test(v)) return null;
   return v ? path.resolve(v) : path.join(projectRoot(), ".cache", "voice");
