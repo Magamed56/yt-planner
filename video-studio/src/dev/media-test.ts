@@ -265,6 +265,17 @@ await test("Субтитры: страница не переходит чере�
   }
   assert.deepEqual(pages.map((p) => p.text.trim()), ["Мозг", "экономит.", "Это нормально."]);
   assert.equal(captionPages([], laid.scenes).length, 0);
+
+  // Тайминг провайдера «в минусе» (после обрезки тишины): слово не раньше своего
+  // файла голоса и не уезжает на страницу прошлой сцены.
+  const early = layoutScenes([
+    { audioDurationMs: 1300, words: [w("Мозг", 0, 300), w("экономит.", 700, 1180)] },
+    { audioDurationMs: 900, words: [w("Это", -90, 200), w("нормально.", 220, 800)] },
+  ]);
+  const earlyCaps = buildTimelineCaptions(early.scenes);
+  const voice2 = ((early.scenes[1]!.startFrame + early.scenes[1]!.audioStartFrame) / FPS) * 1000;
+  assert.equal(earlyCaps[2]!.startMs, Math.round(voice2), "слово сцены — не раньше её голоса");
+  assert.deepEqual(captionPages(earlyCaps, early.scenes).map((p) => p.text.trim()), ["Мозг", "экономит.", "Это нормально."]);
 });
 
 console.log(`\nВсе проверки пройдены: ${passed}.`);

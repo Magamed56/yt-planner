@@ -223,12 +223,17 @@ export function buildTimelineCaptions(
   for (const scene of scenes) {
     const offsetMs = ((scene.startFrame + scene.audioStartFrame) / FPS) * 1000;
     for (const w of scene.words) {
+      // Слово не начинается раньше своего файла голоса: тайминги провайдера
+      // после обрезки тишины бывают чуть «в минусе», а пауза на склейке всего
+      // ≈ 0,2 с — такое слово попало бы на страницу субтитров прошлой сцены.
+      const startMs = Math.max(0, w.startMs);
+      const endMs = Math.max(startMs, w.endMs);
       captions.push({
         // Ведущий пробел — так createTikTokStyleCaptions понимает границы слов.
         text: ` ${w.text}`,
-        startMs: Math.round(offsetMs + w.startMs),
-        endMs: Math.round(offsetMs + w.endMs),
-        timestampMs: Math.round(offsetMs + (w.startMs + w.endMs) / 2),
+        startMs: Math.round(offsetMs + startMs),
+        endMs: Math.round(offsetMs + endMs),
+        timestampMs: Math.round(offsetMs + (startMs + endMs) / 2),
         confidence: null,
       });
     }
