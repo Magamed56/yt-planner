@@ -1,0 +1,135 @@
+# video-studio: новые темы в content/plan.json (npm run plan-extend) и коммит плана в ветку.
+#
+# Actions → «video-studio: план тем» → Run workflow → count = сколько тем добавить.
+# Коды продолжают план по слотам канала (после 30b — 31a, 31b…), рубрики — самые редкие.
+# У каждого факта — ссылка на источник: с LLM_PROVIDER=claude (переменная репозитория) их ищет
+# веб-поиск Claude ($10 за 1000 поисков сверх токенов), с бесплатным Gemini ссылки проверяются
+# запросом по сети. Факт без ссылки или с битой ссылкой выбрасывается.
+# Нужен секрет GEMINI_API_KEY (бесплатно) или ANTHROPIC_API_KEY. Потом сценарии — workflow
+# «video-studio: ролик» с plan = <коды> (или кнопка в панели).
+
+name: "video-studio: план тем"
+run-name: "${{ format('plan: +{0} тем', inputs.count || '10') }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "Сколько новых тем добавить (1–30)"
+        type: string
+        default: "10"
+
+permissions:
+  contents: write # коммит content/plan.json
+
+# Та же очередь, что у «video-studio: ролик»: не делим квоты бесплатных API и не толкаемся
+# при пуше plan.json (черновики по плану тоже его меняют).
+concurrency:
+  group: video-studio
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  plan:
+    name: Новые темы плана
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: video-studio
+        shell: bash
+    env:
+      LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
+      LLM_MODEL: ${{ vars.LLM_MODEL }}
+      LLM_FALLBACKS: ${{ vars.LLM_FALLBACKS }}
+      LLM_EFFORT: ${{ vars.LLM_EFFORT }}
+      PLAN_WEB_SEARCH: ${{ vars.PLAN_WEB_SEARCH }}
+      PLAN_CHECK_URLS: ${{ vars.PLAN_CHECK_URLS }}
+      NO_COLOR: "1"
+    steps:
+      - name: Код репозитория
+        uses: actions/checkout@v7
+        with:
+          # Свежий конец ветки: запуск мог ждать в очереди, пока другой менял plan.json.
+          ref: ${{ github.ref_name }}
+          # Токен с правом записи не оставляем в .git/config — пушу его дают явно (см. ниже).
+          persist-credentials: false
+
+      - name: Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video-studio/package-lock.json
+
+      - name: Зависимости (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      - name: Новые темы
+        id: extend
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Ввод пользователя — только через env, не подставляем в текст команды.
+          COUNT: ${{ inputs.count || '10' }}
+        run: |
+          if ! [[ "$COUNT" =~ ^[0-9]+$ ]]; then
+            echo "::error::count — целое число от 1 до 30, а не «$COUNT»."
+            exit 1
+          fi
+          npm run plan-extend -- --count "$COUNT"
+
+      - name: Закоммитить план
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODES: ${{ steps.extend.outputs.codes }}
+        run: |
+          for p in content/plan.json content/usage.jsonl; do
+            if [ -e "$p" ]; then git add -A -- "$p"; fi
+          done
+          if git diff --cached --quiet; then
+            echo "Коммитить нечего."
+            exit 0
+          fi
+          msg="video-studio: новые темы плана${CODES:+ ($CODES)}"
+          git diff --cached --quiet -- content/plan.json && msg="video-studio: расход"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Токен — только в этом шаге (checkout его не сохраняет).
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          gitauth() { git -c "http.$GITHUB_SERVER_URL/.extraheader=$auth" "$@"; }
+          git commit -q -m "$msg"
+          pushed=""
+          for i in 1 2 3; do
+            if gitauth pull --rebase --quiet origin "$GITHUB_REF_NAME" && gitauth push --quiet origin "HEAD:$GITHUB_REF_NAME"; then
+              pushed=1
+              break
+            fi
+            # Конфликт оставляет rebase незавершённым — без abort следующие попытки падали бы сразу.
+            git rebase --abort 2>/dev/null || true
+            echo "Пуш не удался (попытка $i), повторяю…"
+            sleep $((i * 5))
+          done
+          if [ -z "$pushed" ]; then
+            echo "::error::Не удалось запушить в $GITHUB_REF_NAME (конфликт с изменениями в ветке или ветка защищена). План сохранён в артефакте запуска."
+            exit 1
+          fi
+          if [ -n "$CODES" ]; then
+            {
+              echo ""
+              echo "Следующий шаг: Actions → «video-studio: ролик» → mode = **draft**, plan = \`$CODES\` — или кнопка в панели."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: План в артефакте (пуш не прошёл)
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: plan-${{ github.run_number }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: video-studio/content/plan.json
