@@ -143,6 +143,8 @@ export function buildVideoProps(input: BuildPropsInput): VideoProps {
     // Призыв к комментарию в финале: комментарии продвигают ролик сильнее лайков.
     // CTA_COMMENT=off — убрать «облачко».
     ctaComment: ctaCommentFromEnv(),
+    // Язык — только у роликов не на русском: подписи композиции (lib/ui-text.ts) и запись чисел.
+    ...(script.language && script.language !== "ru" ? { language: script.language } : {}),
   };
 }
 

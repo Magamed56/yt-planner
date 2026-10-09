@@ -112,7 +112,8 @@ export function geminiProvider(): RawProvider {
           model: m,
           input: [{ type: "text", text, annotations: style ? [{ type: "speech_metadata", style }] : [] }],
           response_format: { type: "audio", mime_type: "audio/wav" },
-          generation_config: { speech_config: [{ voice: ctx.voice, language: "ru" }] },
+          // Язык ролика (TTS_LANGUAGE ставит make по сценарию); по умолчанию — русский канал.
+          generation_config: { speech_config: [{ voice: ctx.voice, language: process.env.TTS_LANGUAGE?.trim() || "ru" }] },
         }),
       }, { timeoutMs, signal: ctx.signal });
       const j = JSON.parse(r.body.toString("utf8")) as InteractionsResponse;

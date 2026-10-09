@@ -5,6 +5,7 @@ import { FONT_BODY, FONT_DISPLAY, FONT_NUMBER } from "../fonts";
 import { statCountWindow } from "../lib/cues";
 import { useLayout } from "../lib/layout";
 import { fitTokens, type FontSpec } from "../lib/text";
+import { uiText } from "../lib/ui-text";
 import { withAlpha } from "../theme";
 import { ContentBox, SceneFrame, clamp, type SceneProps } from "./common";
 
@@ -13,11 +14,13 @@ const LABEL_FONT: FontSpec = { fontFamily: FONT_BODY, fontWeight: 600, lineHeigh
 
 // Число с разделителем тысяч (узкий неразрывный пробел, как принято в русском)
 // и тем же количеством знаков после запятой, что и у целевого значения.
-export function formatNumber(v: number, decimals: number): string {
+// lang — язык ролика: у английского «1,250.5», у русского «1 250,5».
+export function formatNumber(v: number, decimals: number, lang?: string | null): string {
+  const t = uiText(lang);
   const fixed = Math.abs(v).toFixed(decimals);
   const [int, frac] = fixed.split(".");
-  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  return `${v < 0 ? "−" : ""}${grouped}${frac ? `,${frac}` : ""}`;
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, t.group);
+  return `${v < 0 ? "−" : ""}${grouped}${frac ? `${t.decimal}${frac}` : ""}`;
 }
 
 // Крупная цифра: счётчик докручивается с ease-out (пока цифры бегут — лёгкое
@@ -45,8 +48,8 @@ export const StatScene: React.FC<SceneProps> = (p) => {
   // Скорость счёта → вертикальное размытие: быстро бегущие цифры «смазаны».
   const blur = Math.min(7, (tAt(frame) - tAt(frame - 1)) * 110) * unit;
   const current = stat.value * t;
-  const finalText = `${stat.prefix ?? ""}${formatNumber(stat.value, decimals)}${stat.suffix ?? ""}`;
-  const shownText = `${stat.prefix ?? ""}${formatNumber(current, decimals)}${stat.suffix ?? ""}`;
+  const finalText = `${stat.prefix ?? ""}${formatNumber(stat.value, decimals, p.video.language)}${stat.suffix ?? ""}`;
+  const shownText = `${stat.prefix ?? ""}${formatNumber(current, decimals, p.video.language)}${stat.suffix ?? ""}`;
 
   const ring = Math.round(Math.min(content.w * (shorts ? 0.9 : 0.42), content.h * (shorts ? 0.6 : 0.96)));
   const numberBox = isPercent ? { w: ring * 0.74, h: ring * 0.46 } : { w: content.w * (shorts ? 0.9 : 0.46), h: content.h * (shorts ? 0.36 : 0.6) };

@@ -5,6 +5,7 @@ import { quizTiming, type SceneQuiz } from "../../types";
 import { KineticText } from "../components/KineticText";
 import { FONT_BODY, FONT_DISPLAY, FONT_NUMBER } from "../fonts";
 import { useLayout } from "../lib/layout";
+import { uiText } from "../lib/ui-text";
 import { withAlpha } from "../theme";
 import { ContentBox, SceneFrame, clamp, useVoice, type SceneProps } from "./common";
 import { StatementScene } from "./StatementScene";
@@ -15,12 +16,11 @@ import { StatementScene } from "./StatementScene";
 // types.ts, тот же, что у layoutScenes(): пауза уже заложена в длину сцены.
 
 // Цвета вердикта — смысловые, не из темы: зелёный/красный читаются одинаково на любой палитре.
+// Подписи — на языке ролика (lib/ui-text.ts).
 const VERDICT = {
-  truth: { label: "ПРАВДА", color: "#2bd67b", ink: "#04210f", Icon: Check },
-  myth: { label: "МИФ", color: "#ff4d5e", ink: "#ffffff", Icon: X },
+  truth: { color: "#2bd67b", ink: "#04210f", Icon: Check },
+  myth: { color: "#ff4d5e", ink: "#ffffff", Icon: X },
 } as const;
-
-const DEFAULT_QUESTION = "А ты угадал? Пиши в комментариях";
 
 export const QuizScene: React.FC<SceneProps> = (p) => (p.scene.quiz ? <QuizBody {...p} quiz={p.scene.quiz} /> : <StatementScene {...p} />);
 
@@ -33,6 +33,8 @@ const QuizBody: React.FC<SceneProps & { quiz: SceneQuiz }> = (p) => {
   const shorts = layout.format === "shorts";
   const t = quizTiming(p.scene);
   const verdict = VERDICT[p.quiz.answer] ?? VERDICT.myth;
+  const ui = uiText(p.video.language);
+  const verdictLabel = verdict === VERDICT.truth ? ui.truth : ui.myth;
 
   const counting = frame >= t.countdownStart && frame < t.revealAt;
   const revealed = frame >= t.revealAt;
@@ -87,7 +89,7 @@ const QuizBody: React.FC<SceneProps & { quiz: SceneQuiz }> = (p) => {
       }}
     >
       <CircleHelp size={pillH * 0.56} color={p.theme.accentInk} strokeWidth={2.4} />
-      ПРАВДА ИЛИ МИФ?
+      {ui.quizTitle}
     </div>
   );
 
@@ -214,7 +216,7 @@ const QuizBody: React.FC<SceneProps & { quiz: SceneQuiz }> = (p) => {
             }}
           >
             <VIcon size={stampFont * 0.9} color={verdict.ink} strokeWidth={3.2} />
-            {verdict.label}
+            {verdictLabel}
           </div>
           <KineticText
             text={p.quiz.explanation}
@@ -245,7 +247,7 @@ const QuizBody: React.FC<SceneProps & { quiz: SceneQuiz }> = (p) => {
             }}
           >
             <MessageCircle size={Math.round((shorts ? 40 : 34) * unit)} color={p.theme.accent} strokeWidth={2.2} style={{ flexShrink: 0 }} />
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.quiz.question?.trim() || DEFAULT_QUESTION}</span>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.quiz.question?.trim() || ui.quizQuestion}</span>
           </div>
         </div>
       ) : null}

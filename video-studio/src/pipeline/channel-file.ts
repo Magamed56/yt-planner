@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { projectRoot } from "./audio/paths";
 import { channelFromJson, type ChannelConfig } from "./channel";
+import { DEFAULT_LANG, channelFileForLang } from "./lang";
 
 export function channelFile(env: NodeJS.ProcessEnv = process.env): string | null {
   const own = env.CHANNEL_FILE?.trim();
@@ -29,4 +30,17 @@ export function loadChannel(opts: { file?: string | null; env?: NodeJS.ProcessEn
     }
   }
   return channelFromJson(raw, env, used);
+}
+
+// Канал языка ролика: channels/<язык>.json (та же схема, что channel.json) → CHANNEL_FILE, если
+// его не задали явно. Русский — channel.json, как раньше. Файла языка нет — ошибка: иначе
+// английский ролик ушёл бы с русскими хэштегами, призывами и подвалом описания.
+export function useLanguageChannel(lang: string, env: NodeJS.ProcessEnv = process.env): string | null {
+  if (lang === DEFAULT_LANG || env.CHANNEL_FILE?.trim()) return null;
+  const rel = channelFileForLang(lang);
+  if (!fs.existsSync(path.join(projectRoot(), rel))) {
+    throw new Error(`Для роликов на «${lang}» нужен файл канала ${rel} (та же схема, что channel.json): скопируйте channels/en.json и переведите тексты, или задайте CHANNEL_FILE.`);
+  }
+  env.CHANNEL_FILE = rel;
+  return rel;
 }

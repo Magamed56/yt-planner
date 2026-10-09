@@ -92,8 +92,9 @@ export function voiceLang(voice: string | null | undefined): string | null {
 // переменные GitHub Actions и channels/<язык>.json сильнее. Исключение — TTS_VOICE другого
 // языка (например, ru-RU-SvetlanaNeural из переменных репозитория): английский текст он
 // прочёл бы с русским акцентом, поэтому меняем его на голос языка ролика.
-// Для русского ничего не меняется.
-export function applyLanguageVoice(lang: string, env: Record<string, string | undefined> = process.env): string[] {
+// Для русского ничего не меняется. channelVoice — голос из channels/<язык>.json: он лучше
+// умолчания, если он того же языка.
+export function applyLanguageVoice(lang: string, env: Record<string, string | undefined> = process.env, channelVoice?: string | null): string[] {
   const applied: string[] = [];
   const empty = (k: string) => !env[k]?.trim();
   const set = (k: string, v: string) => {
@@ -104,7 +105,8 @@ export function applyLanguageVoice(lang: string, env: Record<string, string | un
   if (lang === DEFAULT_LANG) return applied;
   const info = langInfo(lang);
   const own = voiceLang(env.TTS_VOICE);
-  if (empty("TTS_VOICE") || (own && own !== info.code)) set("TTS_VOICE", info.edgeVoice);
+  const preferred = channelVoice && voiceLang(channelVoice) === info.code ? channelVoice.trim() : info.edgeVoice;
+  if (empty("TTS_VOICE") || (own && own !== info.code)) set("TTS_VOICE", preferred);
   const provider = env.TTS_PROVIDER?.trim().toLowerCase() ?? "";
   if (!info.geminiTts && (!provider || provider === "auto")) set("TTS_PROVIDER", "edge");
   // Без Piper этого языка запасной офлайн-голос заговорил бы по-русски — лучше честная ошибка.

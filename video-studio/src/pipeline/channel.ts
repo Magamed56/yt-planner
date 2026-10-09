@@ -31,6 +31,9 @@ export interface ChannelConfig {
   // Нет записи для рубрики — голос канала как раньше.
   voiceByPillar: Record<string, PillarVoice>;
   brandIntro: boolean; // бренд-заставка ≤ 0,5 с поверх начала хука (по умолчанию да)
+  // Заготовка канала другого языка (channels/en.json → "placeholder": true): имя и ссылки
+  // заменить после создания канала — make предупреждает при каждой сборке.
+  placeholder?: boolean;
 }
 
 export interface PillarVoice {
@@ -118,6 +121,7 @@ export function channelFromJson(json: unknown, env: Readonly<Record<string, stri
     disclaimer: str(raw.disclaimer),
     voiceByPillar: parseVoiceByPillar(raw.voiceByPillar),
     brandIntro: raw.brandIntro !== false,
+    ...(raw.placeholder === true ? { placeholder: true } : {}),
   };
 }
 
@@ -180,6 +184,9 @@ export function applyChannelDefaults(ch: ChannelConfig, env: NodeJS.ProcessEnv =
   if (!ch.voice.provider || ch.voice.provider === "gemini") {
     setDefault("GEMINI_TTS_VOICE", ch.voice.name);
     setDefault("GEMINI_TTS_STYLE", ch.voice.style);
+  } else if (ch.voice.provider === "edge" || ch.voice.provider === "piper") {
+    // Канал другого языка (channels/kk.json): голос Edge/Piper этого языка — в TTS_VOICE.
+    setDefault("TTS_VOICE", ch.voice.name);
   }
   setDefault("CTA_COMMENT", ch.cta.onScreenComment);
   return applied;

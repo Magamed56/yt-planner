@@ -34,7 +34,7 @@ export const CompareScene: React.FC<SceneProps> = (p) => {
   const barH = Math.round(rowH * 0.48);
   const labelSize = Math.round(Math.min(rowH * 0.3, (shorts ? 52 : 46) * unit));
   // Кегль чисел — один на все столбики, по самому длинному итоговому значению.
-  const valueTexts = items.map((it) => `${formatNumber(it.value, decimals(it.value))}${suffix}`);
+  const valueTexts = items.map((it) => `${formatNumber(it.value, decimals(it.value), p.video.language)}${suffix}`);
   const valueW = area.w * 0.3;
   const valueSize = useMemo(
     () => Math.min(...valueTexts.map((t) => fitTokens([{ text: t }], VALUE_FONT, { w: valueW, h: barH * 1.3 }, { maxFontSize: Math.round(barH * 0.95), maxLines: 1 }).fontSize)),
@@ -70,7 +70,7 @@ export const CompareScene: React.FC<SceneProps> = (p) => {
         const share = Math.max(0.03, Math.abs(it.value) / max);
         const isMax = Math.abs(it.value) === max;
         const k = interpolate(local, [0, 22], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) });
-        const shown = `${formatNumber(it.value * k, decimals(it.value))}${suffix}`;
+        const shown = `${formatNumber(it.value * k, decimals(it.value), p.video.language)}${suffix}`;
         const y = top + i * (rowH + rowGap);
         return (
           <div key={i} style={{ position: "absolute", left: area.x, top: y, width: area.w, height: rowH, opacity: interpolate(local, [0, 5], [0, 1], clamp) }}>

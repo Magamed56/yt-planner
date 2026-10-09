@@ -28,6 +28,7 @@ import { coveredCode, loadCovered } from "../pipeline/script/covered";
 import { searchPhrases } from "../pipeline/script/suggest";
 import { appendUsage, countPostRequests, llmUsageRecord, ttsUsageRecord, type LlmCallInfo, type UsageRecord } from "../pipeline/script/usage-log";
 import { GEMINI_DEFAULT_MODEL } from "../pipeline/voice/providers/gemini";
+import { applyLanguageVoice } from "../pipeline/lang";
 import { slugify } from "../pipeline/slug";
 import { captionsToSrt } from "../pipeline/srt";
 import { parsePlan, scriptCode } from "../pipeline/plan";
@@ -55,6 +56,7 @@ import {
 } from "./common";
 import { SCHEDULE_HELP, describePublishAt, parseUploadTargets, resolvePublishAt, scheduleArgsFrom, wantsSchedule, type ScheduleArgs, type UploadTarget } from "./publish-options";
 import { loadScriptFile } from "./scriptFile";
+import { parseLangArg, prepareLanguage, runLanguage } from "./lang-run";
 
 const HELP = `Сборка ролика одной командой.
 
@@ -66,6 +68,7 @@ const HELP = `Сборка ролика одной командой.
   --format shorts|landscape    формат (по умолчанию из сценария, для --topic — shorts)
   --theme  midnight|sunset|emerald|mono   палитра (по умолчанию из сценария)
   --voice  auto|gemini|edge|piper|elevenlabs|openai|fish   провайдер озвучки (иначе TTS_PROVIDER; auto — Gemini при ключе, иначе Edge)
+  --lang   en|kk|uz|…          язык ролика (иначе — из сценария): канал channels/<язык>.json, голос языка; без --upload
   --notes  "..."               пожелания к сценарию (только с --topic)
   --seconds N                  желаемая длительность (только с --topic)
   --mood   calm|inspiring|upbeat|tech|dark   настроение музыки (иначе MUSIC_MOOD)
@@ -91,6 +94,7 @@ interface Args {
   format?: Format;
   theme?: ThemeName;
   voice?: string;
+  lang?: string;
   notes?: string;
   seconds?: number;
   mood?: string;
@@ -114,6 +118,7 @@ function parse(): Args {
         format: { type: "string" },
         theme: { type: "string" },
         voice: { type: "string" },
+        lang: { type: "string" },
         notes: { type: "string" },
         seconds: { type: "string" },
         mood: { type: "string" },
@@ -169,6 +174,7 @@ function parse(): Args {
     format: format as Format | undefined,
     theme: theme && theme !== "auto" ? (theme as ThemeName) : undefined,
     voice: str("voice"),
+    lang: parseLangArg(str("lang")),
     notes: str("notes"),
     seconds: num("seconds"),
     mood: str("mood"),
@@ -254,6 +260,9 @@ async function main() {
   const envFile = loadEnv();
   const args = parse();
   if (args.voice) process.env.TTS_PROVIDER = args.voice;
+  // Язык ролика (--lang или из сценария scripts/en/…): не русский — свой канал, голос и подписи.
+  const lang = runLanguage(args);
+  const langChannel = prepareLanguage(lang, args.upload.size);
 
   console.log("video-studio · сборка ролика");
   if (envFile) console.log(`  настройки: ${rel(envFile)}`);
@@ -272,6 +281,9 @@ async function main() {
   // Голос Gemini, его манера и подпись «облачка» — из канала, если не заданы в окружении.
   const applied = applyChannelDefaults(channel);
   if (channel.file) console.log(`  канал: «${channel.name ?? "без названия"}» (${rel(channel.file)})${applied.length ? `, умолчания: ${applied.join(", ")}` : ""}`);
+  const langVoice = applyLanguageVoice(lang, process.env, channel.voice.name);
+  if (lang !== "ru") console.log(`  язык ролика: ${lang}${langChannel ? `, канал ${langChannel}` : ""}${langVoice.length ? `, голос: ${langVoice.join(", ")}` : ""}`);
+  if (channel.placeholder) console.warn(`  ⚠ ${channel.file ? rel(channel.file) : "канал"} — заготовка: имя и ссылки заменить после создания канала.`);
 
   // Проверки до долгих шагов: ключи и браузер.
   let voice = getVoiceProvider(args.voice);
@@ -298,7 +310,7 @@ async function main() {
       const llmCalls: LlmCallInfo[] = []; // → content/usage.jsonl
       try {
         r = await generateScript(
-          { topic: args.topic, format, language: "ru", notes: args.notes, targetSeconds: args.seconds, covered: loadCovered(ROOT), searchPhrases: searchPhrases(args.topic) },
+          { topic: args.topic, format, language: lang, notes: args.notes, targetSeconds: args.seconds, covered: loadCovered(ROOT), searchPhrases: searchPhrases(args.topic) },
           { onLlmCall: (c) => llmCalls.push(c) },
         );
       } catch (e) {
