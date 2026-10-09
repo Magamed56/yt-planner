@@ -1,7 +1,7 @@
 // Данные не загрузились — показываем причину и что проверить, а не пустую страницу.
 export default function ErrorScreen({ message }: { message: string }) {
   return (
-    <main className="page">
+    <main className="page solo">
       <div className="card">
         <h2>Не получилось загрузить очередь</h2>
         <p className="error-text">{message}</p>
