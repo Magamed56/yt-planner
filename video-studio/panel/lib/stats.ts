@@ -465,6 +465,19 @@ export function usageSummary(records: UsageRecord[], now: Date, tz: string, bad 
   };
 }
 
+// ---- вовлечённость ----
+
+function engagement(videos: VideoStat[]): Pick<ChannelSummary, "avgViewsLabel" | "engagementLabel" | "likesLabel"> {
+  const views = videos.reduce((s, v) => s + v.views, 0);
+  const likes = videos.reduce((s, v) => s + (v.likes ?? 0), 0);
+  const comments = videos.reduce((s, v) => s + (v.comments ?? 0), 0);
+  return {
+    avgViewsLabel: videos.length ? formatCount(Math.round(views / videos.length)) : "—",
+    engagementLabel: views > 0 ? percentLabel(((likes + comments) / views) * 100) : "—",
+    likesLabel: formatCount(likes),
+  };
+}
+
 // ---- всё вместе ----
 
 export interface ChannelSummary {
@@ -474,7 +487,13 @@ export interface ChannelSummary {
   viewsLabel: string;
   published: number; // вышедших роликов
   publishedLabel: string; // «12 роликов»
+  avgViewsLabel: string; // средние просмотры на вышедший ролик
+  engagementLabel: string; // (лайки + комментарии) / просмотры
+  likesLabel: string; // лайки всех вышедших роликов
 }
+
+// Доля в процентах по-русски: «4,1 %»; меньше 10 — с десятыми.
+const percentLabel = (p: number) => `${p < 10 ? tenths.format(p) : whole.format(p)} %`;
 
 export interface StatsInput {
   now: Date;
@@ -527,6 +546,7 @@ export function buildStats(input: StatsInput): StatsData {
             viewsLabel: views === null ? "—" : formatNumber(views),
             published: videos.length,
             publishedLabel: `${videos.length} ${plural(videos.length, "ролик", "ролика", "роликов")}`,
+            ...engagement(videos),
           }
         : null,
     youtubeError: input.youtubeError,

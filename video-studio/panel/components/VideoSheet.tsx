@@ -19,14 +19,13 @@ import { DEFAULT_REBUILD, editLock, rebuildLabel, THEME_LABEL, THEMES, VOICE_LAB
 import { checkScriptEdit, parseTags, SCRIPT_LIMITS, type SceneEdit, type ScriptEdit } from "@/lib/script-edit";
 import type { PanelState, Row, SlotCell } from "@/lib/state";
 import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
+import { frameOf } from "./CoverMedia";
 import Dots from "./Dots";
-import SaveToPhone from "./SaveToPhone";
+import FilesSaver from "./FilesSaver";
 import Thumb from "./Thumb";
 
 type Undo = { videoId: string; publishAt: string }[];
 type Editing = { sha: string; edit: ScriptEdit; tags: string; problems: string[] };
-
-const mb = (bytes: number) => `${(bytes / 1_048_576).toFixed(1)} МБ`;
 
 const KIND_LABEL: Record<string, string> = { hook: "хук", statement: "мысль", list: "список", stat: "цифра", quote: "цитата", media: "кадр", cta: "призыв" };
 
@@ -233,7 +232,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   return (
     <aside className={`sheet stage-${row.stage}`} aria-label={`Ролик ${row.code}`}>
       <div className="sheet-head">
-        <Thumb src={row.cover} code={row.code} className="big" />
+        <Thumb src={row.cover} video={frameOf(row)} code={row.code} className="big" />
         <div className="sheet-title">
           <span className="badge">
             {row.code} · {STAGE_LABEL[row.stage]}
@@ -300,19 +299,16 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           (row.release ? (
             <>
               <ol>
-                <li>Скачайте видео — имя файла уже с кодом: {row.release.mp4.name}.</li>
+                <li>Скачайте видео и обложки — в именах файлов уже есть код: {row.release.mp4.name}.</li>
                 <li>YouTube Studio → «Создать» → «Добавить видео» (в приложении YouTube — «+»). Ничего не заполняйте.</li>
                 <li>Через пару минут на главном экране — «Найти новые загрузки»: встанут название, описание, теги и время.</li>
               </ol>
+              <FilesSaver items={[{ code: row.code, release: row.release }]} />
               <div className="btn-row">
-                <a className="btn primary" href={`/api/asset/${row.release.mp4.id}`}>
-                  ⬇ Видео · {mb(row.release.mp4.size)}
-                </a>
                 <a className="btn" href="https://studio.youtube.com" target="_blank" rel="noreferrer">
                   YouTube Studio ↗
                 </a>
               </div>
-              <SaveToPhone id={row.release.mp4.id} name={row.release.mp4.name} size={row.release.mp4.size} what="видео" />
             </>
           ) : (
             <p>
@@ -389,7 +385,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       {row.release && (
         <section>
           <h4>Посмотреть</h4>
-          <Preview mp4Id={row.release.mp4.id} poster={cover ? `/api/asset/${cover.id}` : row.cover} />
+          <Preview mp4Id={row.release.mp4.id} poster={cover ? `/api/asset/${cover.id}/file` : row.cover} />
         </section>
       )}
 
@@ -443,21 +439,10 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       {row.release && (
         <section>
           <h4>Файлы ролика</h4>
-          <p className="muted small">Instagram ждёт токен EAA (проверка Meta) — пока Reels с телефона: видео, обложка и подпись.</p>
+          <p className="muted small">Instagram ждёт токен EAA (проверка Meta) — пока Reels с телефона: видео, обложка 9:16 и подпись.</p>
+          {/* На этапе «видео» те же файлы — выше, в «Что дальше». */}
+          {row.stage !== "video" && <FilesSaver items={[{ code: row.code, release: row.release }]} />}
           <div className="btn-row">
-            <a className="btn small" href={`/api/asset/${row.release.mp4.id}`}>
-              ⬇ Видео
-            </a>
-            {cover && (
-              <a className="btn small" href={`/api/asset/${cover.id}`}>
-                ⬇ Обложка Reels
-              </a>
-            )}
-            {row.release.thumb && (
-              <a className="btn small" href={`/api/asset/${row.release.thumb.id}`}>
-                ⬇ Обложка YouTube
-              </a>
-            )}
             {row.release.caption && (
               <button className="btn small" disabled={busy} onClick={copyCaption}>
                 📋 Подпись
@@ -467,10 +452,6 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
               Релиз ↗
             </a>
           </div>
-          {/* На телефоне — сразу в «Фото» (кнопки видны только там, где можно делиться файлами). */}
-          {row.stage !== "video" && <SaveToPhone id={row.release.mp4.id} name={row.release.mp4.name} size={row.release.mp4.size} what="видео" />}
-          {cover && <SaveToPhone id={cover.id} name={cover.name} size={cover.size} what="обложку Reels" />}
-          {row.release.thumb && <SaveToPhone id={row.release.thumb.id} name={row.release.thumb.name} size={row.release.thumb.size} what="обложку YouTube" />}
           {caption && <div className="caption">{caption}</div>}
         </section>
       )}
