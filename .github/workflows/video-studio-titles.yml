@@ -1,0 +1,132 @@
+# video-studio: новые названия для роликов со слабым стартом (npm run title-ideas) и коммит
+# content/title-ideas.json в ветку.
+#
+# Обычно запускает панель: «Статистика» → «Слабый старт» → «Придумать названия». Вручную:
+# Actions → «video-studio: названия» → Run workflow → codes = 08a,08b.
+# 3–5 вариантов на ролик от той же LLM, что пишет сценарии (LLM_PROVIDER), с подсказками поиска
+# YouTube. Само название на YouTube не меняется — его применяет панель после подтверждения.
+# Нужен секрет GEMINI_API_KEY (бесплатно) или ANTHROPIC_API_KEY. YT_* — необязательно: с ними
+# нынешнее название берётся с YouTube, без них — из content/videos.json.
+
+name: "video-studio: названия"
+# Коды в названии запуска — по ним панель видит, для каких роликов идёт подбор.
+run-name: "${{ format('titles: {0}', inputs.codes) }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      codes:
+        description: "Коды роликов через запятую (08a,08b), до 10"
+        type: string
+        required: true
+
+permissions:
+  contents: write # коммит content/title-ideas.json
+
+# Та же очередь, что у остальных workflow канала: не делим квоты бесплатных API и не толкаемся
+# при пуше (usage.jsonl пишут все).
+concurrency:
+  group: video-studio
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  titles:
+    name: Новые названия
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: video-studio
+        shell: bash
+    env:
+      LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
+      LLM_MODEL: ${{ vars.LLM_MODEL }}
+      LLM_FALLBACKS: ${{ vars.LLM_FALLBACKS }}
+      LLM_EFFORT: ${{ vars.LLM_EFFORT }}
+      NO_COLOR: "1"
+    steps:
+      - name: Код репозитория
+        uses: actions/checkout@v7
+        with:
+          # Свежий конец ветки: запуск мог ждать в очереди, пока другой менял файлы.
+          ref: ${{ github.ref_name }}
+          # Токен с правом записи не оставляем в .git/config — пушу его дают явно (см. ниже).
+          persist-credentials: false
+
+      - name: Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video-studio/package-lock.json
+
+      - name: Зависимости (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      - name: Новые названия
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          # Ввод пользователя — только через env, не подставляем в текст команды.
+          CODES: ${{ inputs.codes }}
+        run: |
+          codes="${CODES// /}"
+          codes="${codes,,}"
+          if ! [[ "$codes" =~ ^[0-9]{2}[a-z](,[0-9]{2}[a-z]){0,9}$ ]]; then
+            echo "::error::codes — коды плана через запятую (08a,08b), до 10, а не «$CODES»."
+            exit 1
+          fi
+          npm run title-ideas -- "$codes"
+
+      - name: Закоммитить идеи
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODES: ${{ inputs.codes }}
+        run: |
+          for p in content/title-ideas.json content/usage.jsonl; do
+            if [ -e "$p" ]; then git add -A -- "$p"; fi
+          done
+          if git diff --cached --quiet; then
+            echo "Коммитить нечего."
+            exit 0
+          fi
+          msg="video-studio: идеи названий (${CODES// /})"
+          git diff --cached --quiet -- content/title-ideas.json && msg="video-studio: расход"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Токен — только в этом шаге (checkout его не сохраняет).
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          gitauth() { git -c "http.$GITHUB_SERVER_URL/.extraheader=$auth" "$@"; }
+          git commit -q -m "$msg"
+          pushed=""
+          for i in 1 2 3; do
+            if gitauth pull --rebase --quiet origin "$GITHUB_REF_NAME" && gitauth push --quiet origin "HEAD:$GITHUB_REF_NAME"; then
+              pushed=1
+              break
+            fi
+            # Конфликт оставляет rebase незавершённым — без abort следующие попытки падали бы сразу.
+            git rebase --abort 2>/dev/null || true
+            echo "Пуш не удался (попытка $i), повторяю…"
+            sleep $((i * 5))
+          done
+          if [ -z "$pushed" ]; then
+            echo "::error::Не удалось запушить в $GITHUB_REF_NAME (конфликт с изменениями в ветке или ветка защищена). Идеи сохранены в артефакте запуска."
+            exit 1
+          fi
+
+      - name: Идеи в артефакте (пуш не прошёл)
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: title-ideas-${{ github.run_number }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: video-studio/content/title-ideas.json
