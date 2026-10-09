@@ -1,8 +1,11 @@
 // YouTube Data API для панели. Токен — обмен refresh token → access token через fetch (без
 // googleapis), список роликов — общий код youtube-fill, но без поиска (он стоит 100 единиц
 // квоты из 10 000 в сутки, а панель обновляют часто). Перенос — videos.update части status.
+// Удержание — YouTube Analytics API (своя квота), первый комментарий — commentThreads.
 import { accessToken, explainApiError, type Auth } from "../../src/pipeline/google-api";
 import { listChannel, listChannelVideos, type ChannelListing, type ChannelVideo } from "../../src/pipeline/youtube-fill";
+import { ANALYTICS_REPORTS, analyticsProblem, engagedRejected, parseRetention, retentionQuery, type AnalyticsProblem, type AnalyticsRange, type Retention } from "./analytics";
+import { commentThreadBody, ownTopLevelComment, type OwnComment, type VideoBrief } from "./first-comment";
 
 const API = "https://www.googleapis.com/youtube/v3";
 
@@ -97,4 +100,98 @@ export function rescheduleBody(videoId: string, s: VideoStatus, publishAt: strin
 export async function setPublishAt(videoId: string, s: VideoStatus, publishAt: string): Promise<string | null> {
   const r = await yt<{ status?: VideoStatus }>("videos?part=status", { method: "PUT", body: JSON.stringify(rescheduleBody(videoId, s, publishAt)) });
   return r.status?.publishAt ?? null;
+}
+
+// ---- удержание: YouTube Analytics API ----
+
+export interface RetentionResult {
+  rows: Map<string, Retention>; // по videoId
+  problem: AnalyticsProblem | null; // почему данных нет — карточка на «Статистике»
+}
+
+// Короче, чем у Data API: страница «Статистики» ждёт этот ответ, а без удержания она всё равно полезна.
+const ANALYTICS_TIMEOUT_MS = 10_000;
+// Отчёт не принял engagedViews — в этом экземпляре функции больше не спрашиваем (один запрос на страницу).
+let engagedOk = true;
+
+// Средний % и длительность просмотра по роликам канала. Никогда не бросает: отказ — в problem.
+export async function channelRetention(range: AnalyticsRange): Promise<RetentionResult> {
+  const fail = (text: string): RetentionResult => ({ rows: new Map(), problem: { kind: "error", text, activationUrl: null } });
+  let token: string;
+  try {
+    token = await accessToken(youtubeAuth);
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : String(e));
+  }
+  for (let engaged = engagedOk; ; engaged = false) {
+    let status: number;
+    let text: string;
+    try {
+      const res = await fetch(`${ANALYTICS_REPORTS}?${retentionQuery(range, engaged)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(ANALYTICS_TIMEOUT_MS),
+      });
+      status = res.status;
+      text = await res.text();
+    } catch (e) {
+      return fail(`YouTube Analytics не ответил за ${ANALYTICS_TIMEOUT_MS / 1000} с (${e instanceof Error ? e.message : String(e)}) — обновите страницу позже`);
+    }
+    if (status >= 200 && status < 300) {
+      try {
+        return { rows: parseRetention(JSON.parse(text)), problem: null };
+      } catch {
+        return fail("YouTube Analytics вернул не JSON — обновите страницу позже");
+      }
+    }
+    if (engaged && engagedRejected(status, text)) {
+      engagedOk = false;
+      continue;
+    }
+    return { rows: new Map(), problem: analyticsProblem(status, text) };
+  }
+}
+
+// ---- первый комментарий ----
+
+export interface CommentCheck {
+  channelId: string | null; // канал ключа
+  video: VideoBrief | null;
+  existing: OwnComment | null; // верхний комментарий канала под роликом
+}
+
+// Сколько страниц комментариев (по 100, 1 единица квоты каждая) просматривать в поиске своего.
+const COMMENT_PAGES = 3;
+
+// Наш ли ролик, вышел ли он и нет ли уже комментария канала: ≈ 3 единицы квоты из 10 000.
+export async function commentCheck(videoId: string): Promise<CommentCheck> {
+  type ApiVideo = { id?: string; snippet?: { channelId?: string }; status?: { privacyStatus?: string } };
+  const [mine, videos] = await Promise.all([
+    yt<{ items?: { id?: string }[] }>("channels?part=id&mine=true"),
+    yt<{ items?: ApiVideo[] }>(`videos?part=snippet,status&id=${encodeURIComponent(videoId)}`),
+  ]);
+  const channelId = mine.items?.[0]?.id ?? null;
+  const v = videos.items?.find((x) => x.id === videoId);
+  const video: VideoBrief | null = v ? { videoId, channelId: v.snippet?.channelId ?? "", privacyStatus: v.status?.privacyStatus ?? "private" } : null;
+  if (!channelId || !video || video.channelId !== channelId || video.privacyStatus !== "public") return { channelId, video, existing: null };
+  let page = "";
+  for (let i = 0; i < COMMENT_PAGES; i++) {
+    const q = new URLSearchParams({ part: "snippet", videoId, maxResults: "100", order: "time", textFormat: "plainText" });
+    if (page) q.set("pageToken", page);
+    const r = await yt<{ items?: unknown[]; nextPageToken?: string }>(`commentThreads?${q}`);
+    const existing = ownTopLevelComment(r, channelId, videoId);
+    if (existing) return { channelId, video, existing };
+    page = r.nextPageToken ?? "";
+    if (!page) break;
+  }
+  return { channelId, video, existing: null };
+}
+
+// commentThreads.insert — 50 единиц квоты; возвращает id нового комментария.
+export async function postComment(videoId: string, channelId: string, text: string): Promise<string | null> {
+  const r = await yt<{ id?: string; snippet?: { topLevelComment?: { id?: string } } }>("commentThreads?part=snippet", {
+    method: "POST",
+    body: JSON.stringify(commentThreadBody(videoId, channelId, text)),
+  });
+  return r.snippet?.topLevelComment?.id ?? r.id ?? null;
 }

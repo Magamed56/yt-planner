@@ -240,7 +240,7 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 ## Загрузка на YouTube
 
 1. [console.cloud.google.com](https://console.cloud.google.com) → создайте проект → **APIs & Services →
-   Library → YouTube Data API v3 → Enable**.
+   Library → YouTube Data API v3 → Enable** (и **YouTube Analytics API** — удержание в панели).
 2. **OAuth consent screen**: тип External, добавьте свой Gmail в Test users. Затем **Publish app**
    (статус «In production»): в режиме Testing токен перестаёт работать через 7 дней.
    Проверку Google для личного использования проходить не нужно, будет только предупреждение

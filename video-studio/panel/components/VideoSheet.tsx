@@ -5,7 +5,9 @@ import {
   captionAction,
   draftAction,
   fillNewUploadsAction,
+  firstCommentPreviewAction,
   moveVideoAction,
+  postFirstCommentAction,
   rebuildAction,
   saveScriptAction,
   scriptForEditAction,
@@ -15,6 +17,7 @@ import {
   type ActionResult,
   type ScriptText,
 } from "@/app/actions";
+import { COMMENT_MAX, type OwnComment } from "@/lib/first-comment";
 import { DEFAULT_REBUILD, editLock, rebuildLabel, THEME_LABEL, THEMES, VOICE_LABEL, VOICES, type RebuildOptions } from "@/lib/rebuild";
 import { checkScriptEdit, parseTags, SCRIPT_LIMITS, type SceneEdit, type ScriptEdit } from "@/lib/script-edit";
 import type { PanelState, Row, SlotCell } from "@/lib/state";
@@ -26,6 +29,7 @@ import RunProgressBar from "./RunProgressBar";
 import Thumb from "./Thumb";
 
 type Undo = { videoId: string; publishAt: string }[];
+type CommentDraft = { text: string; existing: OwnComment | null; posted: string | null };
 type Editing = { sha: string; edit: ScriptEdit; tags: string; problems: string[] };
 
 const KIND_LABEL: Record<string, string> = { hook: "хук", statement: "мысль", list: "список", stat: "цифра", quote: "цитата", media: "кадр", cta: "призыв" };
@@ -110,6 +114,86 @@ function ScriptForm({ value, busy, onChange, onSave, onCancel }: { value: Editin
           {busy ? "Сохраняю…" : "Сохранить"}
         </button>
         <button className="btn" disabled={busy} onClick={onCancel}>
+          Отмена
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Первый комментарий: черновик (вопрос из призыва + источники плана) → правка → отправка. Повторно
+// не отправит: сервер сначала ищет комментарий канала под роликом.
+function FirstComment({ row, busy, setBusy, onToast }: { row: Row; busy: boolean; setBusy: (b: boolean) => void; onToast: (text: string, ok: boolean) => void }) {
+  const [draft, setDraft] = useState<CommentDraft | null>(null);
+  const videoId = row.youtube!.videoId;
+
+  async function open() {
+    setBusy(true);
+    try {
+      const r = await firstCommentPreviewAction(row.code, videoId, row.scriptPath);
+      if ("text" in r) setDraft({ text: r.text, existing: r.existing, posted: null });
+      else onToast(r.message, false);
+    } catch (e) {
+      onToast(e instanceof Error ? e.message : String(e), false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function send() {
+    if (!draft || !window.confirm(`Опубликовать комментарий от имени канала под ${row.code}? Удалить его потом можно только в YouTube.`)) return;
+    setBusy(true);
+    try {
+      const r = await postFirstCommentAction(videoId, draft.text);
+      onToast(r.message, r.ok);
+      const url = "url" in r ? r.url : null;
+      if (r.ok) setDraft({ ...draft, posted: url ?? `https://youtube.com/shorts/${videoId}` });
+      else if (url) setDraft({ ...draft, existing: { id: "", text: "", url } });
+    } catch (e) {
+      onToast(e instanceof Error ? e.message : String(e), false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!draft) {
+    return (
+      <div className="btn-row">
+        <button className="btn" disabled={busy} onClick={open}>
+          💬 Первый комментарий
+        </button>
+      </div>
+    );
+  }
+  if (draft.posted || draft.existing) {
+    const url = draft.posted ?? draft.existing!.url;
+    return (
+      <>
+        <p className="small">
+          {draft.posted ? "✓ Комментарий опубликован — закрепите его в приложении YouTube (⋮ → «Закрепить»)." : "Комментарий канала под роликом уже есть — второй не нужен."}{" "}
+          <a href={url} target="_blank" rel="noreferrer">
+            Открыть ↗
+          </a>
+        </p>
+        {!draft.posted && draft.existing?.text && <div className="caption">{draft.existing.text}</div>}
+      </>
+    );
+  }
+  return (
+    <div className="script-form">
+      <label>
+        Первый комментарий{" "}
+        <span className="muted">
+          {draft.text.trim().length}/{COMMENT_MAX}
+        </span>
+        <textarea rows={6} value={draft.text} onChange={(e) => setDraft({ ...draft, text: e.target.value })} />
+      </label>
+      <p className="muted small">Вопрос — из призыва сценария, источники — из фактов плана. Можно поправить перед отправкой.</p>
+      <div className="btn-row">
+        <button className="btn primary" disabled={busy || !draft.text.trim()} onClick={send}>
+          {busy ? "Отправляю…" : "Опубликовать"}
+        </button>
+        <button className="btn" disabled={busy} onClick={() => setDraft(null)}>
           Отмена
         </button>
       </div>
@@ -374,11 +458,14 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           </>
         )}
         {row.stage === "published" && row.youtube && (
-          <div className="btn-row">
-            <a className="btn" href={`https://youtube.com/shorts/${row.youtube.videoId}`} target="_blank" rel="noreferrer">
-              Смотреть ↗
-            </a>
-          </div>
+          <>
+            <div className="btn-row">
+              <a className="btn" href={`https://youtube.com/shorts/${row.youtube.videoId}`} target="_blank" rel="noreferrer">
+                Смотреть ↗
+              </a>
+            </div>
+            <FirstComment key={row.code} row={row} busy={busy} setBusy={setBusy} onToast={(text, ok) => setToast({ text, ok })} />
+          </>
         )}
         {row.youtube && (
           <div className="btn-row">
