@@ -1,0 +1,89 @@
+# video-studio: ролики загрузили в YouTube Studio руками — тексты и расписание ставит этот workflow.
+#
+# 1. Загрузите файлы роликов в Studio («Создать» → «Добавить видео», можно все сразу) и ничего
+#    не заполняйте: имя файла начинается с кода ролика (01a, 01b…), по нему ролик и находится.
+# 2. Actions → «video-studio: YouTube — тексты и расписание» → Run workflow.
+# Ставит название, описание, теги, категорию «Образование», язык, «не для детей», отметку о
+# синтетическом контенте и время выхода по слотам channel.json. Повторный запуск безопасен:
+# заполненное пропускается, уже назначенное время не сдвигается.
+# Нужны секреты YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN (права youtube.upload и youtube),
+# как их получить — video-studio/docs/youtube-setup.md.
+
+name: "video-studio: YouTube — тексты и расписание"
+
+on:
+  workflow_dispatch:
+    inputs:
+      items:
+        description: "Список роликов (файл в репозитории)"
+        type: string
+        default: video-studio/content/week1-videos.json
+      schedule:
+        description: "Время выхода: slots — 2 ролика в день по слотам channel.json; none — только тексты"
+        type: choice
+        options: [slots, none]
+        default: slots
+      schedule_start:
+        description: "Необязательно: первый день выхода, например 2026-10-09 (пусто — ближайший слот)"
+        type: string
+        required: false
+      only:
+        description: "Необязательно: только эти ролики, через запятую (01a,01b)"
+        type: string
+        required: false
+      dry_run:
+        description: "Только показать, что будет сделано"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: video-studio-youtube-fill
+  cancel-in-progress: false
+
+jobs:
+  fill:
+    name: Тексты и расписание
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: video-studio
+        shell: bash
+    env:
+      NO_COLOR: "1"
+    steps:
+      - name: Код репозитория
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video-studio/package-lock.json
+
+      - name: Зависимости (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      - name: Найти ролики и заполнить
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          # Ввод пользователя — только через env, не подставляем в текст команды.
+          ITEMS: ${{ inputs.items }}
+          SCHEDULE: ${{ inputs.schedule }}
+          SCHEDULE_START: ${{ inputs.schedule_start }}
+          ONLY: ${{ inputs.only }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+        run: |
+          args=(--items "$ITEMS" --schedule "$SCHEDULE")
+          if [ -n "$SCHEDULE_START" ]; then args+=(--schedule-start "$SCHEDULE_START"); fi
+          if [ -n "$ONLY" ]; then args+=(--only "$ONLY"); fi
+          if [ -n "$DRY_RUN" ]; then args+=(--dry-run); fi
+          npx tsx src/cli/youtube-fill.ts "${args[@]}"

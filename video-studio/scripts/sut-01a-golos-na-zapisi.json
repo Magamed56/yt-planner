@@ -1,0 +1,96 @@
+{
+  "title": "Почему свой голос на записи звучит чужим",
+  "description": "Почему собственный голос на записи кажется выше и непривычнее, чем в голове. Разбираем, как звук доходит до ушей по воздуху и через кости черепа и какую версию твоего голоса слышат другие.\n#сутьзаминуту #shorts #голос #почемутак",
+  "tags": [
+    "голос",
+    "голос на записи",
+    "костная проводимость",
+    "слух",
+    "звук",
+    "психология",
+    "почему так",
+    "наука",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Твой голос на записи звучит чужим. И виноваты твои кости.",
+      "onScreen": "Голос на записи — *чужой*?",
+      "icon": "mic",
+      "visualQuery": "smartphone voice recording",
+      "imagePrompt": "cinematic close-up of a young person listening to a voice recording on a smartphone, puzzled expression, dark room lit only by the phone screen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Когда ты говоришь, звук доходит до твоих ушей сразу двумя путями. В этом и разгадка.",
+      "onScreen": "Звук идёт *двумя* путями",
+      "icon": "ear",
+      "visualQuery": "human ear close",
+      "imagePrompt": "macro shot of a human ear with soft glowing sound waves flowing around it, dark background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "list",
+      "narration": "Первый путь — по воздуху, снаружи, как у всех. Второй — изнутри, через кости черепа и ткани.",
+      "onScreen": "Два пути *звука*",
+      "items": [
+        "По воздуху — снаружи",
+        "Через кости — изнутри"
+      ],
+      "icon": "audio-waveform",
+      "visualQuery": "sound wave equalizer",
+      "imagePrompt": "glowing sound wave lines passing through a translucent human head silhouette, side view, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Кости лучше проводят низкие частоты. Поэтому в твоей голове голос звучит ниже, глубже и бархатнее.",
+      "onScreen": "В голове голос *ниже*",
+      "icon": "bone",
+      "visualQuery": "skull x-ray scan",
+      "imagePrompt": "x-ray style image of a human skull with warm low-frequency waves glowing inside, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "А микрофон ловит только звук из воздуха. Без костной добавки голос кажется выше, тоньше и будто чужим.",
+      "onScreen": "Микрофон слышит *только* воздух",
+      "icon": "volume-2",
+      "visualQuery": "studio microphone close",
+      "imagePrompt": "close-up of a studio condenser microphone in a dark room, a thin bright sound wave in front of it, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Психологи изучали это ещё в шестидесятых. Свою запись люди часто слушают с неловкостью: голос вроде твой, но непривычный.",
+      "onScreen": "Свой голос — *непривычный*",
+      "icon": "brain",
+      "visualQuery": "person wearing headphones",
+      "imagePrompt": "person in headphones covering face with one hand in mild embarrassment, dim recording studio, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Хорошая новость: на записи почти тот голос, который каждый день слышат все вокруг. Они к нему давно привыкли — привыкнешь и ты.",
+      "onScreen": "Так тебя *слышат* другие",
+      "icon": "users",
+      "visualQuery": "friends talking cafe",
+      "imagePrompt": "group of friends talking and laughing at a cafe table at night, warm bokeh lights in the background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А тебе нравится свой голос на записи? Напиши в комментариях и подпишись.",
+      "onScreen": "Тебе нравится свой *голос*?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "title": "Бактерий в тебе не в 10 раз больше, чем клеток",
+  "description": "Миф «бактерий в теле в 10 раз больше, чем клеток» живёт с 1970-х. В 2016 году учёные пересчитали: около 30 триллионов клеток человека и около 38 триллионов бактерий — почти один к одному.\n#сутьзаминуту #shorts #тело #микробиом",
+  "tags": [
+    "бактерии",
+    "микробиом",
+    "тело человека",
+    "клетки",
+    "биология",
+    "мифы",
+    "наука",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Бактерий в тебе в десять раз больше, чем клеток? Это миф.",
+      "onScreen": "В 10 раз больше? *Миф*",
+      "icon": "microscope",
+      "visualQuery": "bacteria petri dish",
+      "imagePrompt": "glowing bacteria colonies in a petri dish under a microscope light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Эту цифру грубо прикинули ещё в семидесятых, почти на салфетке. А потом её десятилетиями повторяли в учебниках.",
+      "onScreen": "Цифра из *1970-х*",
+      "icon": "book-open",
+      "visualQuery": "old textbooks stack",
+      "imagePrompt": "stack of old biology textbooks with a handwritten napkin calculation on top, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "В две тысячи шестнадцатом году учёные из Израиля и Канады пересчитали всё заново по современным данным.",
+      "onScreen": "2016: большой *пересчёт*",
+      "icon": "calculator",
+      "visualQuery": "scientist laboratory computer",
+      "imagePrompt": "scientist at a computer with data charts in a dark modern laboratory, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "Для среднего взрослого мужчины вышло так. Клеток человека — около тридцати триллионов. Бактерий — около тридцати восьми.",
+      "onScreen": "Итог *подсчёта*",
+      "items": [
+        "Клеток тела — ≈30 трлн",
+        "Бактерий — ≈38 трлн"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "human cells illustration",
+      "imagePrompt": "two glowing clusters of particles of almost equal size side by side, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "То есть примерно один к одному. А вовсе не один к десяти, как писали раньше.",
+      "onScreen": "Почти *поровну*",
+      "stat": {
+        "value": 1.3,
+        "prefix": "≈",
+        "suffix": " : 1",
+        "label": "бактерий на одну клетку тела"
+      },
+      "icon": "scale",
+      "visualQuery": "balance scale weights",
+      "imagePrompt": "brass balance scale perfectly level, dark background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Причём весят все эти бактерии всего около двухсот граммов. Примерно как стакан воды — ведь каждая из них крошечная.",
+      "onScreen": "Все бактерии — ≈ *200* граммов",
+      "icon": "droplet",
+      "visualQuery": "glass of water",
+      "imagePrompt": "a glass of water on a dark table, rim light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "И ещё сюрприз: больше восьмидесяти процентов твоих собственных клеток — это эритроциты, красные клетки крови.",
+      "onScreen": "84% клеток — *эритроциты*",
+      "icon": "heart-pulse",
+      "visualQuery": "red blood cells",
+      "imagePrompt": "red blood cells flowing through a blood vessel, macro, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Какой миф о теле ты слышал чаще всего? Напиши в комментариях и подпишись.",
+      "onScreen": "Какой *миф* слышал ты?",
+      "icon": "message-circle"
+    }
+  ]
+}

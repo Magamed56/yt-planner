@@ -1,0 +1,97 @@
+{
+  "title": "16 рассветов за сутки: как живут на МКС",
+  "description": "МКС облетает Землю примерно за 90 минут на скорости около 28 000 км/ч, поэтому экипаж видит около 16 рассветов и закатов в сутки. Рассказываем, как при этом спят и по какому времени живут на станции.\n#сутьзаминуту #shorts #космос #мкс",
+  "tags": [
+    "мкс",
+    "космос",
+    "космонавты",
+    "орбита",
+    "астронавты",
+    "земля из космоса",
+    "наука",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "На МКС солнце встаёт шестнадцать раз за одни сутки.",
+      "onScreen": "*16* рассветов за сутки",
+      "icon": "sunrise",
+      "visualQuery": "earth from space sunrise",
+      "imagePrompt": "orbital sunrise over the curved earth seen from a space station window, thin blue atmosphere line, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Станция облетает Землю примерно за полтора часа. Один виток — один день и одна ночь.",
+      "onScreen": "Виток — за *полтора* часа",
+      "stat": {
+        "value": 90,
+        "prefix": "≈",
+        "suffix": " мин",
+        "label": "один виток вокруг Земли"
+      },
+      "icon": "orbit",
+      "visualQuery": "space station orbit",
+      "imagePrompt": "space station silhouette crossing the terminator line between day and night on earth, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Летит она со скоростью около двадцати восьми тысяч километров в час, на высоте примерно четырёхсот километров.",
+      "onScreen": "≈28 000 *км/ч*",
+      "icon": "gauge",
+      "visualQuery": "rocket launch night",
+      "imagePrompt": "streak of light of a fast spacecraft against stars, long exposure, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "С такой скоростью от Москвы до Петербурга можно долететь меньше чем за полторы минуты.",
+      "onScreen": "До Петербурга — *меньше* 1,5 минуты",
+      "icon": "plane",
+      "visualQuery": "city lights night aerial",
+      "imagePrompt": "aerial night view of city lights from orbit, a glowing line connecting two cities, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Поэтому примерно каждые сорок пять минут свет сменяется темнотой. За сутки — шестнадцать рассветов и шестнадцать закатов.",
+      "onScreen": "Свет и тьма — каждые *45* минут",
+      "icon": "sun",
+      "visualQuery": "earth night city lights",
+      "imagePrompt": "half-lit earth from orbit, sunlit side and night side with city lights, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Как же тут спать? Экипаж живёт по гринвичскому времени и спит в маленьких каютах, в спальных мешках, пристёгнутых к стене.",
+      "onScreen": "Сон по *расписанию*",
+      "icon": "bed",
+      "visualQuery": "sleeping bag tent",
+      "imagePrompt": "astronaut asleep in a sleeping bag strapped to a wall inside a tiny cabin, floating hair, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Так что утро на станции наступает не с рассветом, а по будильнику. Иначе просыпаться пришлось бы шестнадцать раз в день.",
+      "onScreen": "Утро — по *будильнику*",
+      "icon": "alarm-clock",
+      "visualQuery": "alarm clock bedside",
+      "imagePrompt": "alarm clock floating in zero gravity inside a space station module, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Смог бы ты полгода прожить на МКС? Напиши в комментариях и подпишись.",
+      "onScreen": "Полетел бы ты на *МКС*?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "title": "Монополию придумали, чтобы показать вред монополий",
+  "description": "В 1904 году Элизабет Мэджи запатентовала «Игру помещика» — настолку о том, как аренда земли обогащает одних и разоряет других. Рассказываем, как игра против монополий стала самой известной игрой о монополии.\n#сутьзаминуту #shorts #деньги #экономика",
+  "tags": [
+    "монополия",
+    "настольные игры",
+    "экономика",
+    "деньги",
+    "история",
+    "элизабет мэджи",
+    "игра помещика",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Монополию придумали, чтобы показать, как вредны монополии.",
+      "onScreen": "Игра *против* монополий",
+      "icon": "dice-5",
+      "visualQuery": "board game dice",
+      "imagePrompt": "two dice rolling across a vintage board game, dramatic low light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Тысяча девятьсот четвёртый год. Американка Элизабет Мэджи получает патент на новую настольную игру.",
+      "onScreen": "1904: *патент* на игру",
+      "icon": "file-text",
+      "visualQuery": "vintage patent document",
+      "imagePrompt": "early 1900s patent drawing of a square board game on aged paper, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Она называлась Игра помещика и наглядно показывала, как владельцы земли богатеют на аренде, а арендаторы разоряются.",
+      "onScreen": "«Игра *помещика*»",
+      "icon": "house",
+      "visualQuery": "old town houses",
+      "imagePrompt": "row of small old houses on a street at dusk, one lit window, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "Мэджи придумала два набора правил. В одних выигрывали все, когда богатство росло. В других один игрок забирал всё.",
+      "onScreen": "Два набора *правил*",
+      "items": [
+        "Богатеют все вместе",
+        "Один забирает всё"
+      ],
+      "icon": "split",
+      "visualQuery": "board game pieces",
+      "imagePrompt": "board game pieces split into two groups on a table, contrasting light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Людям больше понравился второй вариант. Игру переделывали, и в тридцать пятом году её продали компании Паркер Бразерс уже как Монополию.",
+      "onScreen": "1935: рождается *Монополия*",
+      "icon": "package",
+      "visualQuery": "toy store shelves",
+      "imagePrompt": "1930s toy shop shelves stacked with board game boxes, warm nostalgic light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Патент Мэджи компания выкупила всего за пятьсот долларов. Без отчислений с продаж.",
+      "onScreen": "Всего *$500* за патент",
+      "stat": {
+        "value": 500,
+        "prefix": "$",
+        "label": "за патент изобретательницы"
+      },
+      "icon": "banknote",
+      "visualQuery": "old dollar bills",
+      "imagePrompt": "a few old paper dollar bills on a wooden desk next to a fountain pen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Ирония: игра против жадности стала одной из самых продаваемых настольных игр в мире. И теперь в ней побеждает тот, кто разорит остальных.",
+      "onScreen": "Игра против *жадности* — о жадности",
+      "icon": "trophy",
+      "visualQuery": "money pile coins",
+      "imagePrompt": "a single game token standing on a pile of coins, everyone else knocked over, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты обычно выигрываешь в Монополию? Напиши в комментариях и подпишись.",
+      "onScreen": "Выигрываешь в *Монополию*?",
+      "icon": "message-circle"
+    }
+  ]
+}

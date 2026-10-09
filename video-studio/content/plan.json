@@ -1,0 +1,1349 @@
+{
+  "channel": "Суть за минуту",
+  "handle": "@sutzaminutu",
+  "timezone": "Europe/Moscow",
+  "slots": [
+    "12:00",
+    "19:00"
+  ],
+  "days": 30,
+  "note": "day — порядковый день публикации (день 1 = первый день выкладки), а не дата. Неделя 1 — готовые сценарии (status script-ready). Для остальных тем сценарий пишется по angle и keyFacts; факты без источника не добавлять.",
+  "pillars": [
+    {
+      "id": "mind",
+      "title": "Мозг и психология",
+      "total": 8,
+      "12:00": 4,
+      "19:00": 4
+    },
+    {
+      "id": "body",
+      "title": "Тело и здоровье",
+      "total": 7,
+      "12:00": 4,
+      "19:00": 3
+    },
+    {
+      "id": "space",
+      "title": "Космос",
+      "total": 7,
+      "12:00": 3,
+      "19:00": 4
+    },
+    {
+      "id": "nature",
+      "title": "Природа и животные",
+      "total": 8,
+      "12:00": 4,
+      "19:00": 4
+    },
+    {
+      "id": "history",
+      "title": "История",
+      "total": 7,
+      "12:00": 4,
+      "19:00": 3
+    },
+    {
+      "id": "tech",
+      "title": "Технологии и ИИ",
+      "total": 8,
+      "12:00": 4,
+      "19:00": 4
+    },
+    {
+      "id": "money",
+      "title": "Деньги и экономика",
+      "total": 7,
+      "12:00": 3,
+      "19:00": 4
+    },
+    {
+      "id": "why",
+      "title": "Почему так?",
+      "total": 8,
+      "12:00": 4,
+      "19:00": 4
+    }
+  ],
+  "items": [
+    {
+      "id": "01a",
+      "day": 1,
+      "slot": "12:00",
+      "pillar": "why",
+      "title": "Почему свой голос на записи звучит чужим",
+      "hook": "Твой голос на записи звучит чужим. И виноваты твои кости.",
+      "angle": "Два пути звука — по воздуху и через кости черепа; костная проводимость подчёркивает низкие частоты, микрофон её не слышит. Развязка: запись — почти то, что слышат другие.",
+      "keyFacts": [
+        {
+          "claim": "Свой голос человек слышит одновременно по воздуху и через кости/ткани головы; костная составляющая усиливает низкие частоты, поэтому изнутри голос кажется ниже.",
+          "source": "Pörschmann C. Influences of bone conduction and air conduction on the sound of one's own voice. Acta Acustica united with Acustica 86(6), 1038–1045 (2000); Stenfelt S., Goode R. L. Bone-conducted sound: physiological and clinical aspects. Otology & Neurotology 26(6), 1245–1261 (2005)"
+        },
+        {
+          "claim": "Микрофон записывает только воздушный звук, поэтому запись звучит выше и «тоньше», чем голос в голове.",
+          "source": "Stenfelt & Goode 2005 (см. выше); Pörschmann 2000"
+        },
+        {
+          "claim": "Неловкость при прослушивании своей записи («voice confrontation») описана психологами в 1960-х.",
+          "source": "Holzman P. S., Rousey C. The voice as a percept. Journal of Personality and Social Psychology 4(1), 79–86 (1966)"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-01a-golos-na-zapisi.json"
+    },
+    {
+      "id": "01b",
+      "day": 1,
+      "slot": "19:00",
+      "pillar": "history",
+      "title": "Клеопатра ближе к нам, чем к строителям пирамид",
+      "hook": "Клеопатра жила ближе к тебе, чем к строителям пирамид.",
+      "angle": "Перспектива времени: пирамида Хеопса ≈ 2560 до н. э., Клеопатра — 30 до н. э., Луна — 1969. Для Клеопатры пирамиды уже были древностью.",
+      "keyFacts": [
+        {
+          "claim": "Великая пирамида (Хеопса/Хуфу) построена около 2560 г. до н. э.; более 3800 лет оставалась самым высоким сооружением, построенным людьми.",
+          "source": "Encyclopaedia Britannica, «Pyramids of Giza» / «Great Pyramid of Giza»; Lehner M. The Complete Pyramids. Thames & Hudson, 1997"
+        },
+        {
+          "claim": "Клеопатра VII умерла в 30 г. до н. э.",
+          "source": "Encyclopaedia Britannica, «Cleopatra»"
+        },
+        {
+          "claim": "От 30 г. до н. э. до 1969 г. — 1998 лет (года нулевого нет); высадка «Аполлона-11» — 20 июля 1969 г.",
+          "source": "Арифметика; NASA, «Apollo 11 Mission Overview»"
+        },
+        {
+          "claim": "Геродот (V в. до н. э.) описал пирамиду Хеопса в «Истории», кн. II.",
+          "source": "Геродот. История, кн. II, 124–127"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-01b-kleopatra-i-piramidy.json"
+    },
+    {
+      "id": "02a",
+      "day": 2,
+      "slot": "12:00",
+      "pillar": "space",
+      "title": "На Венере день длиннее года — и это правда",
+      "hook": "На Венере день длиннее года. И это не ошибка.",
+      "angle": "Оборот вокруг оси 243 сут против года 225 сут; обратное вращение — Солнце встаёт на западе; солнечные сутки ≈ 117 земных; облака серной кислоты, > 460 °C.",
+      "keyFacts": [
+        {
+          "claim": "Сидерический период вращения Венеры — 243,0 земных суток (обратное вращение), орбитальный период — 224,7 суток, солнечные сутки — ≈116,75 земных суток.",
+          "source": "NASA NSSDC, Venus Fact Sheet (nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html)"
+        },
+        {
+          "claim": "Средняя температура поверхности Венеры ≈ 464 °C — выше, чем на Меркурии; облака состоят из капель серной кислоты.",
+          "source": "NASA NSSDC, Venus Fact Sheet; NASA Science, «Venus: Facts»"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-02a-den-na-venere.json"
+    },
+    {
+      "id": "02b",
+      "day": 2,
+      "slot": "19:00",
+      "pillar": "mind",
+      "title": "Почему невозможно пощекотать самого себя",
+      "hook": "Попробуй пощекотать себя. Не получится — и дело в мозге.",
+      "angle": "Мозжечок предсказывает ощущения от собственных движений и гасит их; эксперимент с роботом: задержка 0,2 с делает касание щекотнее.",
+      "keyFacts": [
+        {
+          "claim": "Самовызванное касание ощущается слабее: мозжечок и соматосенсорная кора меньше реагируют на предсказанное прикосновение.",
+          "source": "Blakemore S.-J., Wolpert D. M., Frith C. D. Central cancellation of self-produced tickle sensation. Nature Neuroscience 1(7), 635–640 (1998)"
+        },
+        {
+          "claim": "Если робот передаёт собственное движение на ладонь с задержкой 100–300 мс, ощущение становится щекотнее (эффект растёт с задержкой).",
+          "source": "Blakemore S.-J., Frith C. D., Wolpert D. M. Spatio-temporal prediction modulates the perception of self-produced stimuli. Journal of Cognitive Neuroscience 11(5), 551–559 (1999)"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-02b-shchekotka.json"
+    },
+    {
+      "id": "03a",
+      "day": 3,
+      "slot": "12:00",
+      "pillar": "nature",
+      "title": "Три сердца и голубая кровь: как устроен осьминог",
+      "hook": "У осьминога три сердца. И это даже не самое странное.",
+      "angle": "Два жаберных сердца + системное, гемоцианин на меди, ≈500 млн нейронов, ⅔ — в щупальцах; присоски «пробуют на вкус».",
+      "keyFacts": [
+        {
+          "claim": "У осьминогов два жаберных и одно системное сердце; кислород переносит медьсодержащий гемоцианин (кровь голубая).",
+          "source": "Wells M. J. Octopus: Physiology and Behaviour of an Advanced Invertebrate. Chapman & Hall, 1978; Smithsonian Ocean, «Octopuses»"
+        },
+        {
+          "claim": "При плавании (реактивном движении) системное сердце останавливается — возможно, поэтому осьминоги предпочитают ползать.",
+          "source": "Wells M. J. et al. Blood flow and pressure changes in exercising octopuses (Octopus vulgaris). Journal of Experimental Biology 131, 175–187 (1987); Smithsonian Ocean"
+        },
+        {
+          "claim": "У осьминога ≈500 млн нейронов (одна из крупнейших нервных систем среди беспозвоночных), около ⅔ из них — в щупальцах.",
+          "source": "Hochner B. An embodied view of octopus neurobiology. Current Biology 22(20), R887–R892 (2012)"
+        },
+        {
+          "claim": "Присоски содержат хемотактильные рецепторы — осьминог «пробует на вкус» касанием.",
+          "source": "van Giesen L. et al. Molecular basis of chemotactile sensation in octopus. Cell 183(3), 594–604 (2020)"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-03a-tri-serdtsa-osminoga.json"
+    },
+    {
+      "id": "03b",
+      "day": 3,
+      "slot": "19:00",
+      "pillar": "tech",
+      "title": "Самый знаменитый компьютерный баг был настоящим насекомым",
+      "hook": "Самый знаменитый компьютерный баг был настоящим насекомым. В прямом смысле.",
+      "angle": "9 сентября 1947, Harvard Mark II: мотылёк в реле, вклеен в журнал с подписью «First actual case of bug being found». Шутка: слово bug для неполадок — ещё у Эдисона (1878).",
+      "keyFacts": [
+        {
+          "claim": "9 сентября 1947 г. операторы Harvard Mark II нашли мотылька в реле и вклеили его в журнал с подписью «First actual case of bug being found»; страница хранится в Смитсоновском национальном музее американской истории.",
+          "source": "Smithsonian National Museum of American History, «Log Book With Computer Bug» (americanhistory.si.edu)"
+        },
+        {
+          "claim": "Слово «bug» для мелких технических неполадок использовал Томас Эдисон в письме 1878 г.",
+          "source": "Edison T. A., письмо Т. Пушкашу, 13.11.1878 (Thomas A. Edison Papers, Rutgers University); Oxford English Dictionary, «bug, n.2»"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-03b-pervyj-bag.json"
+    },
+    {
+      "id": "04a",
+      "day": 4,
+      "slot": "12:00",
+      "pillar": "body",
+      "title": "Бактерий в тебе не в 10 раз больше, чем клеток",
+      "hook": "Бактерий в тебе в десять раз больше, чем клеток? Это миф.",
+      "angle": "Разрушение мифа 10:1 (оценка 1972 г.) — пересчёт 2016 г.: ≈30 трлн клеток и ≈38 трлн бактерий, ≈1,3 : 1; бактерии весят ≈0,2 кг; 84% клеток — эритроциты.",
+      "keyFacts": [
+        {
+          "claim": "Соотношение 10:1 восходит к грубой оценке Лаки (1972).",
+          "source": "Luckey T. D. Introduction to intestinal microecology. American Journal of Clinical Nutrition 25(12), 1292–1294 (1972)"
+        },
+        {
+          "claim": "У «эталонного мужчины» (70 кг, 20–30 лет) ≈3,0·10¹³ клеток человека и ≈3,8·10¹³ бактерий (≈1,3 : 1); масса бактерий ≈0,2 кг; ≈84% клеток человека — эритроциты.",
+          "source": "Sender R., Fuchs S., Milo R. Revised estimates for the number of human and bacteria cells in the body. PLoS Biology 14(8), e1002533 (2016)"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-04a-bakterii-v-tele.json"
+    },
+    {
+      "id": "04b",
+      "day": 4,
+      "slot": "19:00",
+      "pillar": "money",
+      "title": "Монополию придумали, чтобы показать вред монополий",
+      "hook": "Монополию придумали, чтобы показать, как вредны монополии.",
+      "angle": "«The Landlord's Game» Элизабет Мэджи (патент 1904) показывала вред земельной монополии; два набора правил; Parker Brothers (1935); патент выкуплен за $500.",
+      "keyFacts": [
+        {
+          "claim": "Элизабет (Лиззи) Мэджи получила патент США № 748 626 на «The Landlord's Game» 5 января 1904 г.; игра иллюстрировала, как арендная плата обогащает землевладельцев.",
+          "source": "US Patent 748,626 (1904); Pilon M. The Monopolists. Bloomsbury, 2015"
+        },
+        {
+          "claim": "У игры были два набора правил — «антимонополистический» (выигрывают все) и «монополистический».",
+          "source": "Pilon M. Monopoly's Inventor: The Progressive Who Didn't Pass 'Go'. The New York Times, 13.02.2015; Pilon 2015"
+        },
+        {
+          "claim": "Parker Brothers выпустила «Монополию» в 1935 г. и выкупила патент Мэджи за $500 без роялти; «Монополия» — одна из самых продаваемых настольных игр.",
+          "source": "Pilon 2015; The New York Times, 13.02.2015"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-04b-monopoliya.json"
+    },
+    {
+      "id": "05a",
+      "day": 5,
+      "slot": "12:00",
+      "pillar": "mind",
+      "title": "Невидимая горилла: почему ты не видишь очевидное",
+      "hook": "Половина зрителей не заметила гориллу прямо у себя перед глазами.",
+      "angle": "Эксперимент Саймонса и Шабри (1999): ≈половина не видит «гориллу»; 2013 — 83% радиологов пропустили гориллу на КТ. Внимание — прожектор.",
+      "keyFacts": [
+        {
+          "claim": "В эксперименте с подсчётом пасов около половины наблюдателей не заметили человека в костюме гориллы.",
+          "source": "Simons D. J., Chabris C. F. Gorillas in our midst: sustained inattentional blindness for dynamic events. Perception 28(9), 1059–1074 (1999)"
+        },
+        {
+          "claim": "83% радиологов (20 из 24) не заметили гориллу, вставленную в КТ лёгких.",
+          "source": "Drew T., Võ M. L.-H., Wolfe J. M. The invisible gorilla strikes again: sustained inattentional blindness in expert observers. Psychological Science 24(9), 1848–1853 (2013)"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-05a-nevidimaya-gorilla.json"
+    },
+    {
+      "id": "05b",
+      "day": 5,
+      "slot": "19:00",
+      "pillar": "space",
+      "title": "16 рассветов за сутки: как живут на МКС",
+      "hook": "На МКС солнце встаёт шестнадцать раз за одни сутки.",
+      "angle": "Виток ≈90 мин, ≈28 000 км/ч, ≈400 км; 16 рассветов/закатов в сутки; живут по GMT, спят в каютах в мешках на стене.",
+      "keyFacts": [
+        {
+          "claim": "МКС совершает виток примерно за 90 минут (≈16 витков в сутки) на скорости ≈28 000 км/ч и высоте ≈400 км; экипаж видит ≈16 рассветов и закатов в сутки.",
+          "source": "NASA, «International Space Station Facts and Figures» (nasa.gov/international-space-station/space-station-facts-and-figures)"
+        },
+        {
+          "claim": "На МКС используется время GMT/UTC; экипаж спит в индивидуальных каютах в спальных мешках, закреплённых на стене.",
+          "source": "NASA, «Sleeping in Space» / ISS crew quarters; ESA, «Sleeping in space»"
+        },
+        {
+          "claim": "Москва — Санкт-Петербург ≈ 630–635 км по прямой: при 7,66 км/с это ≈ 83 с.",
+          "source": "Арифметика (расстояние по ортодромии)"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-05b-16-rassvetov-mks.json"
+    },
+    {
+      "id": "06a",
+      "day": 6,
+      "slot": "12:00",
+      "pillar": "history",
+      "title": "Рогатые шлемы викингов — выдумка художников XIX века",
+      "hook": "Рога викингам приделали художники девятнадцатого века. В бою викинги их не носили.",
+      "angle": "Нет ни одной находки рогатого шлема эпохи викингов; шлем из Гьермундбу (1943) — без рогов; рога — романтизм XIX в. и костюмы Дёплера к «Кольцу нибелунга» (Байройт, 1876); рогатые шлемы Вексё — бронзовый век, ≈900 до н. э.",
+      "keyFacts": [
+        {
+          "claim": "Почти целый шлем эпохи викингов из Гьермундбу (Норвегия, найден в 1943 г., X в.) — купол с «очковой» маской, без рогов; второй такой — шлем из Ярма (Англия, опознан в 2020 г.).",
+          "source": "Museum of Cultural History, University of Oslo (Kulturhistorisk museum), Gjermundbu helmet; Encyclopaedia Britannica, «Viking»"
+        },
+        {
+          "claim": "Образ рогатых викингов закрепили костюмы Карла Эмиля Дёплера к постановке «Кольца нибелунга» Вагнера в Байройте (1876).",
+          "source": "Frank R. The invention of the Viking horned helmet. In: International Scandinavian and Medieval Studies in Memory of Gerd Wolfgang Weber. Trieste: Parnaso, 2000, 199–208; Encyclopaedia Britannica, «Der Ring des Nibelungen»"
+        },
+        {
+          "claim": "Рогатые шлемы из Вексё (Дания) датированы ≈900 г. до н. э. — бронзовый век, задолго до эпохи викингов (793–1066).",
+          "source": "Vandkilde H. et al. Anthropomorphised warlike beings with horns: the Veksø helmets. Praehistorische Zeitschrift 97(1) (2022); National Museum of Denmark"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-06a-vikingi-bez-rogov.json"
+    },
+    {
+      "id": "06b",
+      "day": 6,
+      "slot": "19:00",
+      "pillar": "nature",
+      "title": "Эта акула может быть старше Санкт-Петербурга",
+      "hook": "Эта акула может быть старше Санкт-Петербурга. И это не шутка.",
+      "angle": "Гренландская акула: радиоуглерод хрусталика + «бомбовый пик» 1950-х; самка 392 ± 120 лет; половая зрелость ≈150 лет; самое долгоживущее позвоночное.",
+      "keyFacts": [
+        {
+          "claim": "Возраст определён по радиоуглероду в ядре хрусталика (формируется до рождения) с калибровкой по «бомбовому пику» ядерных испытаний; крупнейшая самка (502 см) — 392 ± 120 лет (95% интервал 272–512); зрелость ≈156 ± 22 года; самое долгоживущее известное позвоночное.",
+          "source": "Nielsen J. et al. Eye lens radiocarbon reveals centuries of longevity in the Greenland shark (Somniosus microcephalus). Science 353(6300), 702–704 (2016)"
+        },
+        {
+          "claim": "Рост гренландской акулы — менее ≈1 см в год.",
+          "source": "Nielsen et al. 2016 (со ссылкой на мечение: Hansen P. M. 1963)"
+        },
+        {
+          "claim": "Санкт-Петербург основан в 1703 г. (323 года в 2026 г.).",
+          "source": "Encyclopaedia Britannica, «Saint Petersburg»"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-06b-grenlandskaya-akula.json"
+    },
+    {
+      "id": "07a",
+      "day": 7,
+      "slot": "12:00",
+      "pillar": "tech",
+      "title": "Интернет лежит на дне океана. Буквально",
+      "hook": "Интернет между континентами лежит на дне океана. Буквально.",
+      "angle": "> 99% межконтинентального трафика — подводные кабели (а не спутники); ≈1,4 млн км; толщина с садовый шланг; главная угроза — якоря и тралы; первый трансатлантический кабель 1858 г.",
+      "keyFacts": [
+        {
+          "claim": "Подводные кабели несут более 99% межконтинентального трафика; их общая длина ≈1,4 млн км; глубоководный кабель — примерно с садовый шланг; большинство повреждений — от рыболовства и якорей.",
+          "source": "TeleGeography, «Submarine Cable Frequently Asked Questions» (www2.telegeography.com/submarine-cable-faqs-frequently-asked-questions); International Cable Protection Committee (iscpc.org)"
+        },
+        {
+          "claim": "Первый трансатлантический телеграфный кабель (1858) проработал около трёх недель.",
+          "source": "Encyclopaedia Britannica, «Atlantic cable» / «Cyrus Field»"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-07a-internet-na-dne.json"
+    },
+    {
+      "id": "07b",
+      "day": 7,
+      "slot": "19:00",
+      "pillar": "why",
+      "title": "Почему от лука текут слёзы: простая химия",
+      "hook": "Лук защищается от тебя газом. Поэтому ты и плачешь.",
+      "angle": "Разрушение клеток → аллииназа → фермент LFS → syn-пропантиаль-S-оксид; раздражает нервы роговицы; защита от поедания; открытие 2002 (Nature) и Шнобелевка 2013; холодный лук и острый нож.",
+      "keyFacts": [
+        {
+          "claim": "Слезоточивый фактор (syn-propanethial-S-oxide) образует отдельный фермент — lachrymatory-factor synthase; открыт японскими исследователями (House Foods) в 2002 г.",
+          "source": "Imai S. et al. An onion enzyme that makes the eyes water. Nature 419, 685 (2002)"
+        },
+        {
+          "claim": "За это открытие авторы получили Шнобелевскую премию по химии 2013 г.",
+          "source": "Improbable Research, Ig Nobel Prize winners 2013 (improbable.com/ig/winners)"
+        },
+        {
+          "claim": "Серосодержащие летучие соединения — химическая защита луковых от поедания; охлаждённая луковица и острый нож уменьшают слёзы.",
+          "source": "Block E. Garlic and Other Alliums: The Lore and the Science. RSC Publishing, 2010; Library of Congress, Everyday Mysteries, «Why does chopping an onion make you cry?»"
+        }
+      ],
+      "status": "script-ready",
+      "script": "scripts/sut-07b-pochemu-luk.json"
+    },
+    {
+      "id": "08a",
+      "day": 8,
+      "slot": "12:00",
+      "pillar": "money",
+      "title": "Почему цены заканчиваются на 99",
+      "hook": "Девяносто девять рублей кажутся дешевле ста. Мозг попался.",
+      "angle": "Эффект левой цифры: мы оцениваем цену по первой цифре; полевые эксперименты: окончание на 9 повышает продажи.",
+      "keyFacts": [
+        {
+          "claim": "Эффект левой цифры: 2,99 воспринимается заметно дешевле 3,00.",
+          "source": "Thomas M., Morwitz V. Penny wise and pound foolish: the left-digit effect in price cognition. Journal of Consumer Research 32(1), 54–64 (2005)"
+        },
+        {
+          "claim": "В полевых экспериментах цены, оканчивающиеся на 9, повышали спрос.",
+          "source": "Anderson E. T., Simester D. I. Effects of $9 price endings on retail sales: evidence from field experiments. Quantitative Marketing and Economics 1, 93–110 (2003)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "08b",
+      "day": 8,
+      "slot": "19:00",
+      "pillar": "body",
+      "title": "Утром ты выше, чем вечером. Примерно на сантиметр",
+      "hook": "Утром ты выше, чем вечером. Это легко проверить.",
+      "angle": "Межпозвоночные диски днём под нагрузкой теряют жидкость и сжимаются, ночью восстанавливаются. Связка с роликом про рост астронавтов.",
+      "keyFacts": [
+        {
+          "claim": "За день рост уменьшается в среднем примерно на сантиметр (до ≈1% роста, у разных людей по-разному) из-за сжатия межпозвоночных дисков; ночью восстанавливается.",
+          "source": "Reilly T., Tyrrell A. R., Troup J. D. G. Circadian variation in human stature. Chronobiology International 1(2), 121–126 (1984); Tyrrell A. R., Reilly T., Troup J. D. G. Circadian variation in stature and the effects of spinal loading. Spine 10(2), 161–164 (1985)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "09a",
+      "day": 9,
+      "slot": "12:00",
+      "pillar": "history",
+      "title": "Мамонты ещё жили, когда строили пирамиды",
+      "hook": "Когда строили пирамиды, на Земле ещё жили мамонты.",
+      "angle": "Мамонты острова Врангеля дожили примерно до 4000 лет назад; пирамида Хеопса — ≈4500 лет назад.",
+      "keyFacts": [
+        {
+          "claim": "Популяция шерстистых мамонтов на острове Врангеля существовала до ≈4000 лет назад.",
+          "source": "Vartanyan S. L., Garutt V. E., Sher A. V. Holocene dwarf mammoths from Wrangel Island in the Siberian Arctic. Nature 362, 337–340 (1993); Dehasque M. et al. Temporal dynamics of woolly mammoth genome erosion prior to extinction. Cell 187(14), 3531–3540 (2024)"
+        },
+        {
+          "claim": "Пирамида Хеопса построена ≈2560 г. до н. э.",
+          "source": "Encyclopaedia Britannica, «Pyramids of Giza»"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "09b",
+      "day": 9,
+      "slot": "19:00",
+      "pillar": "space",
+      "title": "Солнце, которое ты видишь, — восьмиминутной давности",
+      "hook": "Ты никогда не видел Солнце таким, какое оно сейчас.",
+      "angle": "Свет идёт от Солнца ≈8 мин 20 с; смотреть в небо — смотреть в прошлое; свет Проксимы Центавра идёт ≈4,2 года.",
+      "keyFacts": [
+        {
+          "claim": "1 а. е. = 149 597 870 700 м; скорость света 299 792 458 м/с → ≈499 с (8 мин 19 с).",
+          "source": "IAU 2012 Resolution B2; BIPM, SI Brochure, 9th ed. (2019)"
+        },
+        {
+          "claim": "Проксима Центавра — ближайшая к Солнцу звезда, ≈4,2 светового года.",
+          "source": "NASA Science, «Proxima Centauri b» / ESO"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "10a",
+      "day": 10,
+      "slot": "12:00",
+      "pillar": "nature",
+      "title": "Кошки не чувствуют сладкое. Совсем",
+      "hook": "Торт для кошки не сладкий. Она просто не чувствует сахар.",
+      "angle": "Ген сладкого рецептора Tas1r2 у кошек — нефункциональный «псевдоген»; так же у ряда других хищников.",
+      "keyFacts": [
+        {
+          "claim": "У домашней кошки и других кошачьих ген Tas1r2 (часть рецептора сладкого) — псевдоген.",
+          "source": "Li X. et al. Pseudogenization of a sweet-receptor gene accounts for cats' indifference toward sugar. PLoS Genetics 1(1), e3 (2005)"
+        },
+        {
+          "claim": "Утрата рецептора сладкого независимо произошла у многих хищных млекопитающих.",
+          "source": "Jiang P. et al. Major taste loss in carnivorous mammals. PNAS 109(13), 4956–4961 (2012)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "10b",
+      "day": 10,
+      "slot": "19:00",
+      "pillar": "mind",
+      "title": "В каждом твоём глазу есть дыра. Проверь сам",
+      "hook": "В каждом твоём глазу есть дыра. Ты её не видишь.",
+      "angle": "Слепое пятно: диск зрительного нерва без фоторецепторов; мозг «дорисовывает» фон. Интерактив: закрой глаз и найди пятно на экране.",
+      "keyFacts": [
+        {
+          "claim": "В диске зрительного нерва нет палочек и колбочек — это слепое пятно, ≈15° от точки фиксации к виску.",
+          "source": "Purves D. et al. Neuroscience, 6th ed. Oxford University Press, 2018"
+        },
+        {
+          "claim": "Слепое пятно открыл Эдм Мариотт (1660-е).",
+          "source": "Mariotte E. Nouvelle découverte touchant la veüe. Paris, 1668"
+        },
+        {
+          "claim": "Мозг заполняет пробел окружающим узором (perceptual filling-in).",
+          "source": "Ramachandran V. S., Gregory R. L. Perceptual filling in of artificially induced scotomas in human vision. Nature 350, 699–702 (1991)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "11a",
+      "day": 11,
+      "slot": "12:00",
+      "pillar": "tech",
+      "title": "Твой телефон в миллионы раз мощнее компьютера «Аполлона»",
+      "hook": "У компьютера «Аполлона» было около четырёх килобайт памяти.",
+      "angle": "Бортовой компьютер AGC: 2048 слов ОЗУ (≈4 КБ), 36 864 слова ПЗУ (≈72 КБ), ≈1 МГц; ПЗУ «плели» вручную. Телефон с 8 ГБ ОЗУ — в ≈2 млн раз больше.",
+      "keyFacts": [
+        {
+          "claim": "AGC: 2048 16-битных слов стираемой памяти и 36 864 слова постоянной (тросовой) памяти, тактовая частота 1,024 МГц.",
+          "source": "Hall E. C. Journey to the Moon: The History of the Apollo Guidance Computer. AIAA, 1996; Mindell D. A. Digital Apollo. MIT Press, 2008"
+        },
+        {
+          "claim": "8 ГБ / 4 КБ ≈ 2 млн.",
+          "source": "Арифметика"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "11b",
+      "day": 11,
+      "slot": "19:00",
+      "pillar": "why",
+      "title": "Почему небо голубое, а закат красный",
+      "hook": "Небо голубое не из-за моря. Всё дело в рассеянии.",
+      "angle": "Рэлеевское рассеяние ∝ 1/λ⁴: синий рассеивается в ≈5 раз сильнее красного; на закате путь света длиннее; почему не фиолетовое.",
+      "keyFacts": [
+        {
+          "claim": "Интенсивность рэлеевского рассеяния обратно пропорциональна четвёртой степени длины волны.",
+          "source": "Strutt J. W. (Lord Rayleigh). On the light from the sky, its polarization and colour. Philosophical Magazine 41, 107–120 (1871)"
+        },
+        {
+          "claim": "Небо не фиолетовое из-за спектра Солнца и чувствительности глаза.",
+          "source": "Smith G. S. Human color vision and the unsaturated blue color of the daytime sky. American Journal of Physics 73(7), 590–597 (2005); NASA Space Place, «Why is the sky blue?»"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "12a",
+      "day": 12,
+      "slot": "12:00",
+      "pillar": "body",
+      "title": "Почему пальцы морщатся в воде — это не набухание",
+      "hook": "Морщинки на пальцах в ванне включает твоя нервная система.",
+      "angle": "Сморщивание — сужение сосудов под управлением симпатических нервов: при перерезанных нервах пальцы не морщатся. Зачем — спорят (гипотеза сцепления).",
+      "keyFacts": [
+        {
+          "claim": "При повреждении пальцевых нервов кожа в воде не морщится.",
+          "source": "Lewis T., Pickering G. W. Circulatory changes in the fingers in some diseases of the nervous system. Clinical Science 2, 149–175 (1936)"
+        },
+        {
+          "claim": "Сморщивание вызвано сужением сосудов (вазоконстрикцией).",
+          "source": "Wilder-Smith E., Chow A. Water-immersion wrinkling is due to vasoconstriction. Muscle & Nerve 27(3), 307–311 (2003)"
+        },
+        {
+          "claim": "Гипотеза «лучшего сцепления» подтверждалась в одной работе и не подтвердилась в другой — вопрос открыт.",
+          "source": "Kareklas K., Nettle D., Smulders T. V. Biology Letters 9, 20120999 (2013); Haseleu J. et al. PLoS ONE 9(1), e84949 (2014)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "12b",
+      "day": 12,
+      "slot": "19:00",
+      "pillar": "history",
+      "title": "Оксфорд старше империи ацтеков",
+      "hook": "Оксфордский университет старше империи ацтеков.",
+      "angle": "Преподавание в Оксфорде велось уже в 1096 г.; Теночтитлан основан в 1325 г., Тройственный союз ацтеков — 1428 г.",
+      "keyFacts": [
+        {
+          "claim": "Преподавание в Оксфорде существовало в той или иной форме с 1096 г.",
+          "source": "University of Oxford, «Introduction and history» (ox.ac.uk/about/introduction-and-history)"
+        },
+        {
+          "claim": "Теночтитлан основан ≈1325 г.; Тройственный союз (ядро державы ацтеков) — 1428 г.",
+          "source": "Encyclopaedia Britannica, «Tenochtitlán», «Aztec»"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "13a",
+      "day": 13,
+      "slot": "12:00",
+      "pillar": "space",
+      "title": "Сатурн плавал бы в воде. Почему он такой лёгкий",
+      "hook": "Сатурн менее плотный, чем вода. Он бы плавал.",
+      "angle": "Средняя плотность Сатурна ≈0,69 г/см³ — меньше, чем у воды; планета в основном из водорода и гелия. Оговорка: ванны такого размера нет.",
+      "keyFacts": [
+        {
+          "claim": "Средняя плотность Сатурна — 687 кг/м³ (вода — 1000 кг/м³).",
+          "source": "NASA NSSDC, Saturn Fact Sheet"
+        },
+        {
+          "claim": "Сатурн состоит в основном из водорода и гелия.",
+          "source": "NASA Science, «Saturn: Facts»"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "13b",
+      "day": 13,
+      "slot": "19:00",
+      "pillar": "nature",
+      "title": "Тихоходки пережили открытый космос. Как?",
+      "hook": "Это животное выжило в открытом космосе. Без скафандра.",
+      "angle": "Миссия FOTON-M3 (2007): 10 дней в вакууме — выжили почти все; под полным солнечным УФ — лишь единицы (честно говорим об этом); состояние «бочонка» (криптобиоз); размер ≈0,5 мм.",
+      "keyFacts": [
+        {
+          "claim": "Высушенные тихоходки пережили 10 дней в открытом космосе на низкой орбите (FOTON-M3, 2007): вакуум почти не снизил выживаемость, а под полным солнечным УФ выжили лишь единицы.",
+          "source": "Jönsson K. I. et al. Tardigrades survive exposure to space in low Earth orbit. Current Biology 18(17), R729–R731 (2008)"
+        },
+        {
+          "claim": "Устойчивость обеспечивается криптобиозом (ангидробиозом) — почти полной остановкой обмена веществ.",
+          "source": "Møbjerg N. et al. Survival in extreme environments – on the current knowledge of adaptations in tardigrades. Acta Physiologica 202(3), 409–420 (2011)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "14a",
+      "day": 14,
+      "slot": "12:00",
+      "pillar": "mind",
+      "title": "Почему ты видишь лица в розетках и облаках",
+      "hook": "Розетка смотрит на тебя? Это мозг так устроен.",
+      "angle": "Парейдолия: в мозге есть зона, специализированная на лицах, и она срабатывает «с запасом»; обезьяны тоже видят лица в предметах.",
+      "keyFacts": [
+        {
+          "claim": "Веретенообразная извилина содержит зону, избирательно реагирующую на лица (FFA).",
+          "source": "Kanwisher N., McDermott J., Chun M. M. The fusiform face area. Journal of Neuroscience 17(11), 4302–4311 (1997)"
+        },
+        {
+          "claim": "Макаки-резусы тоже воспринимают «лица» в неживых предметах.",
+          "source": "Taubert J. et al. Face pareidolia in the rhesus monkey. Current Biology 27(16), 2505–2509 (2017)"
+        },
+        {
+          "claim": "Иллюзорные лица мозг обрабатывает за доли секунды, как настоящие.",
+          "source": "Wardle S. G. et al. Rapid and dynamic processing of face pareidolia in the human brain. Nature Communications 11, 4518 (2020)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "14b",
+      "day": 14,
+      "slot": "19:00",
+      "pillar": "tech",
+      "title": "Капча: ты бесплатно помогал оцифровывать книги",
+      "hook": "Вводя капчу, ты, возможно, оцифровывал старые книги.",
+      "angle": "reCAPTCHA: одно слово проверочное, второе — нераспознанное из сканов; так оцифровали архивы газет и книг; Google купила проект в 2009 г.",
+      "keyFacts": [
+        {
+          "claim": "reCAPTCHA использовала ввод людей для распознавания слов из отсканированных книг и газет (архив The New York Times, Internet Archive).",
+          "source": "von Ahn L. et al. reCAPTCHA: Human-based character recognition via Web security measures. Science 321(5895), 1465–1468 (2008)"
+        },
+        {
+          "claim": "Google приобрела reCAPTCHA в 2009 г.",
+          "source": "Google Official Blog, «Teaching computers to read: Google acquires reCAPTCHA» (16.09.2009)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "15a",
+      "day": 15,
+      "slot": "12:00",
+      "pillar": "why",
+      "title": "Почему лёд скользкий? Физики спорят до сих пор",
+      "hook": "Почему лёд скользкий? Учёные до сих пор спорят.",
+      "angle": "Давление коньков почти не плавит лёд (миф); «предплавленный» жидкоподобный слой на поверхности (идея Фарадея) и нагрев трением; спор продолжается.",
+      "keyFacts": [
+        {
+          "claim": "Объяснение «давление плавит лёд» не работает при обычных температурах; рассматриваются поверхностный жидкоподобный слой и трение.",
+          "source": "Rosenberg R. Why is ice slippery? Physics Today 58(12), 50–54 (2005)"
+        },
+        {
+          "claim": "Молекулярное моделирование и эксперименты 2018 г.: поверхностные молекулы слабо связаны и «перекатываются».",
+          "source": "Weber B. et al. Molecular insight into the slipperiness of ice. Journal of Physical Chemistry Letters 9(11), 2838–2842 (2018)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "15b",
+      "day": 15,
+      "slot": "19:00",
+      "pillar": "money",
+      "title": "Деньги-камни: на острове Яп платили валунами",
+      "hook": "На одном острове платили камнями выше человеческого роста.",
+      "angle": "Камни раи с Палау; владение меняется без перемещения камня — все помнят, чей он; камень на дне моря всё равно считался деньгами. Аналогия с банковскими записями.",
+      "keyFacts": [
+        {
+          "claim": "Камни раи диаметром до ≈3,6 м добывали на Палау; при сделке камень часто не перемещали — менялся владелец в памяти общины.",
+          "source": "Gillilland C. L. C. The Stone Money of Yap: A Numismatic Survey. Smithsonian Studies in History and Technology 23 (1975)"
+        },
+        {
+          "claim": "История о камне, утонувшем при перевозке, но продолжавшем считаться богатством семьи.",
+          "source": "Furness W. H. The Island of Stone Money: Uap of the Carolines. Lippincott, 1910; Friedman M. The Island of Stone Money. Hoover Institution Working Paper E-91-3 (1991)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "16a",
+      "day": 16,
+      "slot": "12:00",
+      "pillar": "history",
+      "title": "В Средние века не верили в плоскую Землю",
+      "hook": "Средневековые учёные знали, что Земля — шар.",
+      "angle": "Шарообразность Земли знали с античности (Эратосфен измерил окружность ≈240 до н. э.); учебник «О сфере» Сакробоско (XIII в.); миф о «плоской Земле Средневековья» — XIX век.",
+      "keyFacts": [
+        {
+          "claim": "Эратосфен оценил окружность Земли около 240 г. до н. э.",
+          "source": "Encyclopaedia Britannica, «Eratosthenes»"
+        },
+        {
+          "claim": "Образованные европейцы Средневековья считали Землю шаром; миф о вере в плоскую Землю распространился в XIX в. (в т. ч. после биографии Колумба В. Ирвинга, 1828).",
+          "source": "Russell J. B. Inventing the Flat Earth: Columbus and Modern Historians. Praeger, 1991"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "16b",
+      "day": 16,
+      "slot": "19:00",
+      "pillar": "space",
+      "title": "Луна улетает от Земли на 3,8 см в год",
+      "hook": "Луна убегает от Земли со скоростью роста твоих ногтей.",
+      "angle": "Лазерная локация отражателей «Аполлонов»: ≈3,8 см/год; причина — приливы; сутки Земли удлиняются (≈1,8 мс за столетие).",
+      "keyFacts": [
+        {
+          "claim": "Лазерная локация уголковых отражателей «Аполлонов» показывает удаление Луны ≈3,8 см в год.",
+          "source": "Williams J. G., Boggs D. H. Secular tidal changes in lunar orbit and Earth rotation. Celestial Mechanics and Dynamical Astronomy 126, 89–129 (2016); NASA, Apollo 11 Laser Ranging Retroreflector"
+        },
+        {
+          "claim": "Продолжительность суток растёт в среднем на ≈1,8 мс за столетие.",
+          "source": "Stephenson F. R., Morrison L. V., Hohenkerk C. Y. Measurement of the Earth's rotation: 720 BC to AD 2015. Proceedings of the Royal Society A 472, 20160404 (2016)"
+        },
+        {
+          "claim": "Ногти на руках растут в среднем ≈3,5 мм в месяц (≈4 см в год).",
+          "source": "Yaemsiri S., Hou N., Slining M. M., He K. Growth rate of human fingernails and toenails in healthy American young adults. JEADV 24(4), 420–423 (2010)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "17a",
+      "day": 17,
+      "slot": "12:00",
+      "pillar": "nature",
+      "title": "Акулы старше деревьев. И это доказано",
+      "hook": "Акулы появились раньше, чем на Земле выросло первое дерево.",
+      "angle": "Древнейшие достоверные акулы — более 400 млн лет назад; первые деревья — ≈390–385 млн лет назад (Wattieza, Гилбоа; ископаемый лес в Сомерсете, 2024).",
+      "keyFacts": [
+        {
+          "claim": "Древнейший сочленённый скелет хрящевой рыбы (Doliodus) — ≈409 млн лет.",
+          "source": "Miller R. F., Cloutier R., Turner S. The oldest articulated chondrichthyan from the Early Devonian period. Nature 425, 501–504 (2003)"
+        },
+        {
+          "claim": "Древнейшие известные деревья (Wattieza, Гилбоа) — ≈385 млн лет.",
+          "source": "Stein W. E. et al. Giant cladoxylopsid trees resolve the enigma of the Earth's earliest forest stumps at Gilboa. Nature 446, 904–907 (2007)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "17b",
+      "day": 17,
+      "slot": "19:00",
+      "pillar": "mind",
+      "title": "Почему ты не помнишь себя до трёх лет",
+      "hook": "Ты прожил три года, которых совсем не помнишь.",
+      "angle": "Детская амнезия: самые ранние воспоминания взрослых — обычно с 3–3,5 лет; младенцы запоминают, но воспоминания не сохраняются надолго.",
+      "keyFacts": [
+        {
+          "claim": "Самые ранние автобиографические воспоминания взрослых в среднем относятся к возрасту ≈3–3,5 лет.",
+          "source": "Rubin D. C. The distribution of early childhood memories. Memory 8(4), 265–269 (2000)"
+        },
+        {
+          "claim": "Дети раннего возраста формируют воспоминания, но забывают их быстрее взрослых.",
+          "source": "Bauer P. J. A complementary processes account of the development of childhood amnesia. Psychological Review 122(2), 204–231 (2015)"
+        },
+        {
+          "claim": "По фМРТ гиппокамп младенцев (с ≈1 года) уже кодирует новые воспоминания.",
+          "source": "Yates T. S. et al. Hippocampal encoding of memories in human infants. Science 387 (2025)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "18a",
+      "day": 18,
+      "slot": "12:00",
+      "pillar": "tech",
+      "title": "Первый сайт в мире до сих пор открывается",
+      "hook": "Первому сайту в мире больше тридцати лет. И он работает.",
+      "angle": "info.cern.ch: Тим Бернерс-Ли, CERN, 1991; 30 апреля 1993 CERN открыл WWW для всех бесплатно; сайт восстановлен в 2013 г. (по адресу info.cern.ch — восстановленная копия: самая ранняя найденная версия — 1992 г.; так и говорим).",
+      "keyFacts": [
+        {
+          "claim": "Первый сайт (info.cern.ch) был посвящён самому проекту WWW и работал на компьютере NeXT Тима Бернерс-Ли в CERN (1991).",
+          "source": "CERN, «The birth of the Web» (home.cern/science/computing/birth-web)"
+        },
+        {
+          "claim": "30 апреля 1993 г. CERN передал программное обеспечение WWW в общественное достояние.",
+          "source": "CERN, «The birth of the Web»; CERN Document Server, «Statement concerning CERN W3 software release into public domain» (1993)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "18b",
+      "day": 18,
+      "slot": "19:00",
+      "pillar": "why",
+      "title": "Зачем на джинсах маленький кармашек",
+      "hook": "Этот маленький кармашек на джинсах придумали для часов.",
+      "angle": "Кармашек — для карманных часов; заклёпки — патент Джейкоба Дэвиса и Ливая Страусса 20 мая 1873 г.",
+      "keyFacts": [
+        {
+          "claim": "Маленький карман на джинсах изначально предназначался для карманных часов.",
+          "source": "Levi Strauss & Co., официальный блог Off The Cuff / архив компании (levistrauss.com)"
+        },
+        {
+          "claim": "Патент США № 139 121 на укрепление карманов заклёпками выдан 20 мая 1873 г. Дж. Дэвису и Levi Strauss & Co.",
+          "source": "US Patent 139,121 (1873)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "19a",
+      "day": 19,
+      "slot": "12:00",
+      "pillar": "money",
+      "title": "Цены удваивались каждые 15 часов: рекорд инфляции",
+      "hook": "Здесь цены удваивались каждые пятнадцать часов.",
+      "angle": "Венгрия, 1946 — самая высокая гиперинфляция в истории: месячная инфляция ≈4,19·10¹⁶%, цены удваивались ≈каждые 15 ч; 1 августа 1946 — форинт.",
+      "keyFacts": [
+        {
+          "claim": "Венгрия, июль 1946: месячная инфляция ≈4,19·10¹⁶%, время удвоения цен ≈15 ч — рекорд в истории.",
+          "source": "Hanke S. H., Krus N. World Hyperinflations. Cato Working Paper No. 8 (2012); In: Routledge Handbook of Major Events in Economic History, 2013"
+        },
+        {
+          "claim": "1 августа 1946 г. пенгё заменили форинтом.",
+          "source": "Magyar Nemzeti Bank (Банк Венгрии), история форинта"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "19b",
+      "day": 19,
+      "slot": "19:00",
+      "pillar": "body",
+      "title": "Мышцы болят после спорта не из-за молочной кислоты",
+      "hook": "Мышцы болят на второй день. Молочная кислота тут ни при чём.",
+      "angle": "Лактат выводится в течение часа-двух после нагрузки, а крепатура пиковая через 24–72 ч — из-за микроповреждений волокон и воспаления (особенно при эксцентрической работе). Без медицинских советов.",
+      "keyFacts": [
+        {
+          "claim": "Отсроченная мышечная боль (DOMS) пиковая через 24–72 ч и связана с микроповреждениями и воспалением, а не с лактатом.",
+          "source": "Cheung K., Hume P., Maxwell L. Delayed onset muscle soreness: treatment strategies and performance factors. Sports Medicine 33(2), 145–164 (2003)"
+        },
+        {
+          "claim": "Уровень лактата не связан с последующей болью: после бега под гору боль сильнее при меньшем лактате.",
+          "source": "Schwane J. A. et al. Delayed-onset muscular soreness and plasma CPK and LDH activities after downhill running. Medicine & Science in Sports & Exercise 15(1), 51–56 (1983)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "20a",
+      "day": 20,
+      "slot": "12:00",
+      "pillar": "space",
+      "title": "На Марсе закат голубой. Объясняем почему",
+      "hook": "На Марсе всё наоборот: небо рыжее, а закат голубой.",
+      "angle": "Мелкая пыль марсианской атмосферы рассеивает синий свет вперёд, ближе к направлению на Солнце; снимки Curiosity (2015) и Spirit (2005).",
+      "keyFacts": [
+        {
+          "claim": "Curiosity снял голубой закат в кратере Гейл (2015, сол 956).",
+          "source": "NASA/JPL, «Sunset on Mars» (2015, PIA19400)"
+        },
+        {
+          "claim": "Голубое свечение у Солнца объясняется рассеянием на мелкой пыли, вытянутым вперёд.",
+          "source": "Lemmon M. T. et al. Atmospheric imaging results from the Mars Exploration Rovers: Spirit and Opportunity. Science 306(5702), 1753–1756 (2004)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "20b",
+      "day": 20,
+      "slot": "19:00",
+      "pillar": "nature",
+      "title": "Вомбаты какают кубиками. Физики выяснили как",
+      "hook": "Это животное какает кубиками. И физики знают почему.",
+      "angle": "Кишечник вомбата с участками разной жёсткости формирует грани; Шнобелевская премия по физике 2019 г.",
+      "keyFacts": [
+        {
+          "claim": "Кубическую форму задают участки стенки кишечника с разной жёсткостью.",
+          "source": "Yang P. J. et al. Intestines of non-uniform stiffness mold the corners of wombat feces. Soft Matter 17, 475–488 (2021)"
+        },
+        {
+          "claim": "Исследование получило Шнобелевскую премию по физике 2019 г.",
+          "source": "Improbable Research, Ig Nobel Prize winners 2019"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "21a",
+      "day": 21,
+      "slot": "12:00",
+      "pillar": "mind",
+      "title": "Назови цвет, а не слово: тест, который ломает мозг",
+      "hook": "Назови цвет слова. Спорим, споткнёшься?",
+      "angle": "Эффект Струпа (1935): чтение автоматично, мозгу трудно его подавить. Интерактив прямо в ролике.",
+      "keyFacts": [
+        {
+          "claim": "Называть цвет чернил дольше, если слово обозначает другой цвет.",
+          "source": "Stroop J. R. Studies of interference in serial verbal reactions. Journal of Experimental Psychology 18(6), 643–662 (1935)"
+        },
+        {
+          "claim": "Эффект — один из самых воспроизводимых в психологии; объясняется автоматизмом чтения.",
+          "source": "MacLeod C. M. Half a century of research on the Stroop effect: an integrative review. Psychological Bulletin 109(2), 163–203 (1991)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "21b",
+      "day": 21,
+      "slot": "19:00",
+      "pillar": "tech",
+      "title": "Wi‑Fi и микроволновка работают на одной частоте",
+      "hook": "Твой роутер и микроволновка работают на одной частоте.",
+      "angle": "Диапазон ISM 2,4–2,5 ГГц: микроволновка 2,45 ГГц, Wi‑Fi 2,4 ГГц; миф про «резонанс воды»; сетка на дверце — клетка Фарадея.",
+      "keyFacts": [
+        {
+          "claim": "Диапазон 2400–2500 МГц выделен для промышленных, научных и медицинских (ISM) применений; микроволновые печи работают на 2,45 ГГц.",
+          "source": "ITU Radio Regulations, п. 5.150; FCC 47 CFR Part 18"
+        },
+        {
+          "claim": "Wi‑Fi (IEEE 802.11b/g/n) использует диапазон 2,4 ГГц, и работающая микроволновка может создавать помехи.",
+          "source": "IEEE 802.11-2020; Wi‑Fi Alliance"
+        },
+        {
+          "claim": "2,45 ГГц — не «резонансная частота воды»: нагрев диэлектрический, частота выбрана из-за регулирования и глубины прогрева.",
+          "source": "Chaplin M. Water and microwaves. London South Bank University, Water Structure and Science"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "22a",
+      "day": 22,
+      "slot": "12:00",
+      "pillar": "why",
+      "title": "Почему после дождя так приятно пахнет",
+      "hook": "Запах дождя во многом делают бактерии. И у него есть имя.",
+      "angle": "Петрикор (термин 1964 г.), геосмин от почвенных бактерий Streptomyces; капли выбивают ароматы в воздух; озон перед грозой.",
+      "keyFacts": [
+        {
+          "claim": "Термин «петрикор» ввели Беар и Томас (1964).",
+          "source": "Bear I. J., Thomas R. G. Nature of argillaceous odour. Nature 201, 993–995 (1964)"
+        },
+        {
+          "claim": "Геосмин — вещество с запахом земли, выделяемое актиномицетами (Streptomyces).",
+          "source": "Gerber N. N., Lechevalier H. A. Geosmin, an earthy-smelling substance isolated from actinomycetes. Applied Microbiology 13(6), 935–938 (1965)"
+        },
+        {
+          "claim": "Капли дождя при ударе о почву образуют аэрозоль, переносящий запахи.",
+          "source": "Joung Y. S., Buie C. R. Aerosol generation by raindrop impact on soil. Nature Communications 6, 6083 (2015)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "22b",
+      "day": 22,
+      "slot": "19:00",
+      "pillar": "money",
+      "title": "Правило 72: как за секунду посчитать удвоение",
+      "hook": "Есть формула, которая за секунду считает, когда удвоятся деньги.",
+      "angle": "72 / ставка (%) ≈ годы до удвоения; то же для цен при инфляции; известно с 1494 г. (Пачоли). Математика, не финансовый совет.",
+      "keyFacts": [
+        {
+          "claim": "Время удвоения при сложном проценте ≈ 72 / r (r в %), т. к. ln 2 ≈ 0,693 и 72 удобно делится.",
+          "source": "Математика сложных процентов; любой учебник финансовой математики"
+        },
+        {
+          "claim": "Правило 72 приведено в «Сумме арифметики» Луки Пачоли (1494).",
+          "source": "Pacioli L. Summa de arithmetica, geometria, proportioni et proportionalità. Venezia, 1494"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "23a",
+      "day": 23,
+      "slot": "12:00",
+      "pillar": "body",
+      "title": "В каждой твоей клетке спрятано два метра ДНК",
+      "hook": "В каждой твоей клетке свёрнуто два метра ДНК.",
+      "angle": "≈6,4 млрд пар оснований × 0,34 нм ≈ 2 м в ядре диаметром ≈6 мкм; упаковка на гистонах (нуклеосомы).",
+      "keyFacts": [
+        {
+          "claim": "ДНК диплоидной клетки человека в растянутом виде — около 2 м; она упакована в ядро диаметром ≈6 мкм с помощью гистонов.",
+          "source": "Alberts B. et al. Molecular Biology of the Cell, 6th ed. Garland Science, 2014; Annunziato A. DNA packaging: nucleosomes and chromatin. Nature Education 1(1):26 (2008)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "23b",
+      "day": 23,
+      "slot": "19:00",
+      "pillar": "history",
+      "title": "Наполеон не был коротышкой. Откуда миф",
+      "hook": "Наполеон был обычного роста. Миф помогли создать карикатуристы.",
+      "angle": "Рост ≈168–170 см — средний для эпохи; путаница французских и английских дюймов; британские карикатуры (Гилрей, «Little Boney»).",
+      "keyFacts": [
+        {
+          "claim": "Рост Наполеона — около 5 футов 7 дюймов (≈170 см) в английских мерах; путаница с французскими единицами породила миф о «коротышке».",
+          "source": "Roberts A. Napoleon: A Life. Viking, 2014; Encyclopaedia Britannica, «Napoleon I»"
+        },
+        {
+          "claim": "Британский карикатурист Джеймс Гилрей изображал Наполеона крошечным («Little Boney»).",
+          "source": "British Museum, коллекция карикатур James Gillray"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "24a",
+      "day": 24,
+      "slot": "12:00",
+      "pillar": "nature",
+      "title": "У жирафа столько же шейных позвонков, сколько у тебя",
+      "hook": "У жирафа и у тебя одинаковое число шейных позвонков.",
+      "angle": "Почти у всех млекопитающих 7 шейных позвонков (исключения — ленивцы и ламантины); у жирафа каждый — очень длинный.",
+      "keyFacts": [
+        {
+          "claim": "Почти у всех млекопитающих 7 шейных позвонков; исключения — ленивцы и ламантины.",
+          "source": "Galis F. Why do almost all mammals have seven cervical vertebrae? Journal of Experimental Zoology 285(1), 19–26 (1999)"
+        },
+        {
+          "claim": "У жирафа 7 удлинённых шейных позвонков.",
+          "source": "Badlangana N. L., Adams J. W., Manger P. R. The giraffe cervical vertebral column. Zoological Journal of the Linnean Society 155(3), 736–757 (2009)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "24b",
+      "day": 24,
+      "slot": "19:00",
+      "pillar": "mind",
+      "title": "Миф о «семи предметах» в памяти: на деле около четырёх",
+      "hook": "В голове помещается не семь вещей. Меньше.",
+      "angle": "Миллер (1956) писал о «семи плюс-минус два», поздние работы показывают предел рабочей памяти ≈4 «куска»; поэтому номера разбивают на группы.",
+      "keyFacts": [
+        {
+          "claim": "Статья Миллера «Магическое число семь плюс-минус два» (1956).",
+          "source": "Miller G. A. The magical number seven, plus or minus two. Psychological Review 63(2), 81–97 (1956)"
+        },
+        {
+          "claim": "Ёмкость рабочей памяти при контроле группировки — около 4 единиц.",
+          "source": "Cowan N. The magical number 4 in short-term memory. Behavioral and Brain Sciences 24(1), 87–114 (2001)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "25a",
+      "day": 25,
+      "slot": "12:00",
+      "pillar": "tech",
+      "title": "Как нейросеть пишет текст: угадывает следующий кусочек",
+      "hook": "Нейросеть пишет ответ по одному кусочку слова за раз.",
+      "angle": "Языковые модели обучены предсказывать следующий токен; архитектура «трансформер» (2017); отсюда уверенные, но иногда неверные ответы («галлюцинации»).",
+      "keyFacts": [
+        {
+          "claim": "Архитектура «трансформер» предложена в 2017 г.",
+          "source": "Vaswani A. et al. Attention Is All You Need. NeurIPS 2017"
+        },
+        {
+          "claim": "Языковые модели GPT обучаются предсказывать следующий токен текста.",
+          "source": "Radford A. et al. Language Models are Unsupervised Multitask Learners. OpenAI, 2019"
+        },
+        {
+          "claim": "Модели могут генерировать гладкий, но фактически неверный текст («галлюцинации»).",
+          "source": "Ji Z. et al. Survey of hallucination in natural language generation. ACM Computing Surveys 55(12), 1–38 (2023)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "25b",
+      "day": 25,
+      "slot": "19:00",
+      "pillar": "why",
+      "title": "Почему море солёное, а реки — нет",
+      "hook": "Соль в море принесли реки. Пресные реки.",
+      "angle": "Дождь слегка кислый и растворяет породы; реки несут ионы в океан; вода испаряется — соли копятся; плюс гидротермальные источники; ≈35 г соли на литр.",
+      "keyFacts": [
+        {
+          "claim": "Соли в океан приносят реки (выветривание пород) и гидротермальные источники; средняя солёность ≈3,5% (≈35 г/л).",
+          "source": "NOAA Ocean Service, «Why is the ocean salty?» (oceanservice.noaa.gov/facts/whysalty.html); USGS Water Science School"
+        },
+        {
+          "claim": "Если всю соль океана разложить по суше, слой был бы толще 150 м (500 футов).",
+          "source": "NOAA Ocean Service, «Why is the ocean salty?»"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "26a",
+      "day": 26,
+      "slot": "12:00",
+      "pillar": "money",
+      "title": "Зачёркнутая цена: как тебя «якорят» в магазине",
+      "hook": "Случайное число на колесе меняло ответы людей. Так работает якорь.",
+      "angle": "Эксперимент Тверски и Канемана: колесо фортуны (10 или 65) сдвигало оценки; зачёркнутая «старая цена» — такой же якорь.",
+      "keyFacts": [
+        {
+          "claim": "Случайное число с колеса (10 или 65) сдвигало оценки доли африканских стран в ООН (медианы 25% и 45%).",
+          "source": "Tversky A., Kahneman D. Judgment under uncertainty: heuristics and biases. Science 185(4157), 1124–1131 (1974)"
+        },
+        {
+          "claim": "Эффект якоря воспроизводится в оценках цен и переговорах.",
+          "source": "Furnham A., Boo H. C. A literature review of the anchoring effect. Journal of Socio-Economics 40(1), 35–42 (2011)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "26b",
+      "day": 26,
+      "slot": "19:00",
+      "pillar": "body",
+      "title": "Сахар делает детей гиперактивными? Проверили — нет",
+      "hook": "Дети не «бесятся» от сахара. Это проверили ещё в девяностых.",
+      "angle": "Метаанализ 1995 г. не нашёл влияния сахара на поведение детей; родители, которым сказали «был сахар», видели гиперактивность при плацебо. Без советов о питании.",
+      "keyFacts": [
+        {
+          "claim": "Метаанализ двойных слепых исследований: сахар не влияет на поведение и когнитивные функции детей.",
+          "source": "Wolraich M. L., Wilson D. B., White J. W. The effect of sugar on behavior or cognition in children: a meta-analysis. JAMA 274(20), 1617–1621 (1995)"
+        },
+        {
+          "claim": "Матери, ожидавшие эффекта сахара, оценивали детей как более гиперактивных при плацебо.",
+          "source": "Hoover D. W., Milich R. Effects of sugar ingestion expectancies on mother-child interactions. Journal of Abnormal Child Psychology 22(4), 501–515 (1994)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "27a",
+      "day": 27,
+      "slot": "12:00",
+      "pillar": "history",
+      "title": "Почему римский бетон стоит две тысячи лет",
+      "hook": "Купол Пантеона без арматуры стоит почти два тысячелетия.",
+      "angle": "Пантеон (≈125 г.) — крупнейший купол из неармированного бетона; морской бетон крепнет в морской воде; известковые включения «залечивают» трещины.",
+      "keyFacts": [
+        {
+          "claim": "Купол Пантеона (диаметр 43,3 м, ≈125 г. н. э.) — крупнейший в мире купол из неармированного бетона.",
+          "source": "Encyclopaedia Britannica, «Pantheon»"
+        },
+        {
+          "claim": "В римском морском бетоне при контакте с водой растут кристаллы Al-тоберморита и филлипсита, упрочняя его.",
+          "source": "Jackson M. D. et al. Phillipsite and Al-tobermorite mineral cements produced through low-temperature water-rock reactions in Roman marine concrete. American Mineralogist 102(7), 1435–1450 (2017)"
+        },
+        {
+          "claim": "Известковые включения при «горячем замесе» позволяют бетону самозалечивать трещины.",
+          "source": "Seymour L. M. et al. Hot mixing: Mechanistic insights into the durability of ancient Roman concrete. Science Advances 9(1), eadd1602 (2023)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "27b",
+      "day": 27,
+      "slot": "19:00",
+      "pillar": "space",
+      "title": "В космосе люди вырастают. До 3%",
+      "hook": "В космосе ты стал бы выше. Ненадолго.",
+      "angle": "Без гравитации позвоночник распрямляется, диски расширяются — астронавты вытягиваются до 3%; после возвращения рост возвращается. Связка с роликом «утром ты выше».",
+      "keyFacts": [
+        {
+          "claim": "В невесомости астронавты становятся выше до 3% из-за расширения позвоночника; после возвращения рост восстанавливается.",
+          "source": "NASA Human Research Program; NASA, «Twins Study» (2019); Sayson J. V., Hargens A. R. Pathophysiology of low back pain during exposure to microgravity. Aviation, Space, and Environmental Medicine 79(4), 365–373 (2008)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "28a",
+      "day": 28,
+      "slot": "12:00",
+      "pillar": "mind",
+      "title": "Мы используем только 10% мозга? Разбираем миф",
+      "hook": "Ты используешь весь мозг. Десять процентов — это миф.",
+      "angle": "Разбор мифа: томография показывает работу всех отделов; мозг ≈2% массы тела, но ≈20% энергии; повреждение любой области даёт последствия.",
+      "keyFacts": [
+        {
+          "claim": "Мозг — около 2% массы тела, но потребляет около 20% энергии организма.",
+          "source": "Raichle M. E., Gusnard D. A. Appraising the brain's energy budget. PNAS 99(16), 10237–10239 (2002)"
+        },
+        {
+          "claim": "«10% мозга» — миф без научной основы.",
+          "source": "Beyerstein B. L. Whence cometh the myth that we only use 10% of our brains? In: Della Sala S. (ed.) Mind Myths. Wiley, 1999; Lilienfeld S. O. et al. 50 Great Myths of Popular Psychology. Wiley-Blackwell, 2010"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "28b",
+      "day": 28,
+      "slot": "19:00",
+      "pillar": "tech",
+      "title": "QR-код придумали для автозапчастей",
+      "hook": "QR-код придумали не для меню, а для автозапчастей.",
+      "angle": "Denso Wave, 1994, Масахиро Хара — учёт деталей на автозаводах; до 7089 цифр; читается при повреждении до ≈30%; патент не применяли — код бесплатный.",
+      "keyFacts": [
+        {
+          "claim": "QR-код разработан Denso Wave в 1994 г. для учёта автокомпонентов; компания не требует плату за использование стандарта.",
+          "source": "DENSO WAVE, «History of QR Code» (qrcode.com/en/history/)"
+        },
+        {
+          "claim": "QR-код вмещает до 7089 цифр и при уровне коррекции H восстанавливается при повреждении до ≈30%.",
+          "source": "ISO/IEC 18004:2015; DENSO WAVE, qrcode.com"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "29a",
+      "day": 29,
+      "slot": "12:00",
+      "pillar": "why",
+      "title": "Почему железо холоднее дерева при той же температуре",
+      "hook": "Ложка и доска в комнате одинаково тёплые. Рука думает иначе.",
+      "angle": "Кожа чувствует поток тепла, а не температуру; теплопроводность стали в сотни раз выше, чем у дерева; поэтому на морозе язык прилипает к металлу (в ролике — «не проверяй»).",
+      "keyFacts": [
+        {
+          "claim": "Теплопроводность углеродистой стали ≈50 Вт/(м·К), древесины ≈0,1–0,2 Вт/(м·К) — разница в сотни раз.",
+          "source": "Incropera F. P. et al. Fundamentals of Heat and Mass Transfer, 7th ed. Wiley, 2011 (табл. теплофизических свойств)"
+        },
+        {
+          "claim": "Ощущение «холодно/тепло» при касании определяется скоростью теплоотвода от кожи.",
+          "source": "Ho H.-N., Jones L. A. Contribution of thermal cues to material discrimination and localization. Perception & Psychophysics 68(1), 118–128 (2006)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "29b",
+      "day": 29,
+      "slot": "19:00",
+      "pillar": "money",
+      "title": "У ацтеков деньги росли на деревьях — это какао",
+      "hook": "У ацтеков деньги буквально росли на деревьях.",
+      "angle": "Какао-бобы были мелкой монетой: по прейскуранту 1545 г. индейка стоила 100 бобов; встречались «фальшивые» бобы.",
+      "keyFacts": [
+        {
+          "claim": "Какао-бобы служили деньгами в Мезоамерике; по прейскуранту из Тласкалы (1545) хорошая индейка стоила 100 бобов.",
+          "source": "Coe S. D., Coe M. D. The True History of Chocolate. Thames & Hudson, 1996"
+        },
+        {
+          "claim": "Существовали подделки — пустые оболочки, набитые землёй.",
+          "source": "Бернардино де Саагун. Флорентийский кодекс, кн. 10; Coe & Coe 1996"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "30a",
+      "day": 30,
+      "slot": "12:00",
+      "pillar": "body",
+      "title": "Мурашки по коже — наследство от шерсти предков",
+      "hook": "Мурашки — это шерсть, которой у тебя больше нет.",
+      "angle": "Пилоэрекция: мышцы, поднимающие волосы; у зверей — утепление и «стать больше»; у человека рефлекс остался. Бонус: эти же нервы помогают стволовым клеткам волос.",
+      "keyFacts": [
+        {
+          "claim": "Мурашки — сокращение мышц, поднимающих волосы (пилоэрекция); у животных распушённая шерсть утепляет и делает зверя крупнее на вид.",
+          "source": "Darwin C. The Expression of the Emotions in Man and Animals. John Murray, 1872; Encyclopaedia Britannica, «goose bumps»"
+        },
+        {
+          "claim": "Симпатические нервы и мышцы-подниматели волоса образуют нишу, регулирующую стволовые клетки волосяного фолликула.",
+          "source": "Shwartz Y. et al. Cell types promoting goosebumps form a niche to regulate hair follicle stem cells. Cell 182(3), 578–593 (2020)"
+        }
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "30b",
+      "day": 30,
+      "slot": "19:00",
+      "pillar": "nature",
+      "title": "Медуза, которая умеет молодеть",
+      "hook": "Эта медуза умеет возвращаться в детство. И не раз.",
+      "angle": "Turritopsis dohrnii при стрессе превращается обратно в полип; «бессмертие» биологическое, но её всё равно едят и губят болезни.",
+      "keyFacts": [
+        {
+          "claim": "Медузы Turritopsis способны превращаться обратно в полипы (трансдифференцировка клеток).",
+          "source": "Piraino S. et al. Reversing the life cycle: medusae transforming into polyps and cell transdifferentiation in Turritopsis nutricula. Biological Bulletin 190(3), 302–312 (1996)"
+        },
+        {
+          "claim": "Геном T. dohrnii сравнили со «смертными» родственниками в поисках механизмов омоложения.",
+          "source": "Pascual-Torner M. et al. Comparative genomics of mortal and immortal cnidarians unveils novel keys behind rejuvenation. PNAS 119(36), e2118763119 (2022)"
+        }
+      ],
+      "status": "planned"
+    }
+  ]
+}

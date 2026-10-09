@@ -1,0 +1,98 @@
+{
+  "title": "Эта акула может быть старше Санкт-Петербурга",
+  "description": "Гренландская полярная акула — самое долгоживущее позвоночное из известных: возраст крупной самки оценили примерно в 392 ± 120 лет по радиоуглероду в хрусталике глаза. Рассказываем, как это измерили.\n#сутьзаминуту #shorts #природа #океан",
+  "tags": [
+    "гренландская акула",
+    "акулы",
+    "долгожители",
+    "животные",
+    "океан",
+    "природа",
+    "биология",
+    "наука",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Эта акула может быть старше Санкт-Петербурга. И это не шутка.",
+      "onScreen": "Старше *Петербурга*?",
+      "icon": "fish",
+      "visualQuery": "shark deep ocean",
+      "imagePrompt": "huge slow greenland shark gliding through dark icy arctic water, faint light beams, floating particles, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это гренландская полярная акула. Она медленно плавает в ледяной воде Арктики и Северной Атлантики.",
+      "onScreen": "Гренландская *полярная* акула",
+      "icon": "snowflake",
+      "visualQuery": "arctic ice ocean",
+      "imagePrompt": "underside of arctic sea ice seen from below, cold blue light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Растёт она очень медленно — меньше сантиметра в год. Зато в длину бывает больше пяти метров.",
+      "onScreen": "Растёт *медленнее* сантиметра в год",
+      "icon": "ruler",
+      "visualQuery": "measuring tape ruler",
+      "imagePrompt": "long shark silhouette next to a glowing measuring scale in dark water, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Возраст узнали по хрусталику глаза. Его центр формируется ещё до рождения и потом почти не меняется.",
+      "onScreen": "Возраст — по *хрусталику* глаза",
+      "icon": "eye",
+      "visualQuery": "fish eye close",
+      "imagePrompt": "extreme close-up of a shark eye in dark water, reflective lens, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Учёные измерили в нём радиоуглерод. А меткой времени послужил след ядерных испытаний пятидесятых годов.",
+      "onScreen": "Метка — *ядерные* испытания",
+      "icon": "radiation",
+      "visualQuery": "laboratory test tubes",
+      "imagePrompt": "laboratory with sample vials and a mass spectrometer, cool blue light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Самой крупной самке оказалось около трёхсот девяноста двух лет. С учётом погрешности — скорее всего, не меньше двухсот семидесяти двух.",
+      "onScreen": "Возраст — *≈392* года",
+      "stat": {
+        "value": 392,
+        "prefix": "≈",
+        "suffix": " года",
+        "label": "возраст самой крупной самки, ±120 лет"
+      },
+      "icon": "hourglass",
+      "visualQuery": "old shipwreck underwater",
+      "imagePrompt": "old wooden shipwreck on a dark sea floor with a large shark passing by, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Взрослой такая акула становится примерно к ста пятидесяти годам. Это самое долгоживущее позвоночное из известных науке.",
+      "onScreen": "Взрослая — к *150* годам",
+      "icon": "award",
+      "visualQuery": "shark silhouette dark water",
+      "imagePrompt": "silhouette of a large shark against a faint surface light, deep arctic water, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Какое животное поразило тебя своим возрастом? Пиши в комментариях и подпишись.",
+      "onScreen": "Кто поразил тебя *возрастом*?",
+      "icon": "message-circle"
+    }
+  ]
+}

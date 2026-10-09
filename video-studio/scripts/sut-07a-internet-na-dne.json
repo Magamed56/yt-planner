@@ -1,0 +1,97 @@
+{
+  "title": "Интернет лежит на дне океана. Буквально",
+  "description": "Больше 99% межконтинентального интернет-трафика идёт не через спутники, а по подводным кабелям общей длиной почти 1,5 млн км. Рассказываем, какой толщины кабель, что ему угрожает и когда протянули первый.\n#сутьзаминуту #shorts #технологии #интернет",
+  "tags": [
+    "интернет",
+    "подводный кабель",
+    "технологии",
+    "оптоволокно",
+    "спутники",
+    "океан",
+    "связь",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Интернет между континентами лежит на дне океана. Буквально.",
+      "onScreen": "Интернет — на *дне* океана",
+      "icon": "cable",
+      "visualQuery": "ocean floor underwater",
+      "imagePrompt": "thick fiber optic cable lying on the dark ocean floor, faint light pulses inside it, deep blue haze, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Кажется, что данные летают через спутники. Но спутники передают лишь крошечную долю мирового трафика.",
+      "onScreen": "Спутники — *не* главное",
+      "icon": "satellite",
+      "visualQuery": "satellite dish sky",
+      "imagePrompt": "communication satellite orbiting earth at night, small and distant, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Больше девяноста девяти процентов данных между континентами идёт именно по подводным кабелям. Таких кабелей — сотни.",
+      "onScreen": "Почти всё — по *кабелям*",
+      "stat": {
+        "value": 99,
+        "prefix": ">",
+        "suffix": "%",
+        "label": "межконтинентального трафика — по кабелям"
+      },
+      "icon": "network",
+      "visualQuery": "fiber optic cables light",
+      "imagePrompt": "glowing world map with bright lines of cables crossing the oceans, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Их общая длина — почти полтора миллиона километров. Этого хватит, чтобы больше трёх раз дотянуться до Луны.",
+      "onScreen": "Кабели — *3,5* пути до Луны",
+      "icon": "moon",
+      "visualQuery": "moon night sky",
+      "imagePrompt": "a thin glowing line stretching from earth toward the moon in space, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "А толщиной глубоководный кабель — примерно с садовый шланг. Внутри — тонкие стеклянные волокна, по которым бежит свет.",
+      "onScreen": "Толщиной с *садовый* шланг",
+      "icon": "waves",
+      "visualQuery": "fiber optic strands",
+      "imagePrompt": "cross-section of a submarine cable with glowing glass fibers in the center, macro, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Главная угроза для них — не акулы, а якоря кораблей и рыболовные тралы. Ремонтируют кабели специальные суда.",
+      "onScreen": "Враг кабеля — *якорь*",
+      "icon": "anchor",
+      "visualQuery": "ship anchor chain",
+      "imagePrompt": "heavy ship anchor and chain sinking through murky water, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "А первый кабель через Атлантику проложили ещё в тысяча восемьсот пятьдесят восьмом. Он передавал телеграммы и проработал меньше месяца.",
+      "onScreen": "1858: первый *кабель* через океан",
+      "icon": "history",
+      "visualQuery": "old telegraph machine",
+      "imagePrompt": "antique telegraph key and coiled cable on a wooden desk, 19th century atmosphere, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты знал, что интернет лежит на дне океана? Напиши в комментариях и подпишись.",
+      "onScreen": "А ты это *знал*?",
+      "icon": "message-circle"
+    }
+  ]
+}

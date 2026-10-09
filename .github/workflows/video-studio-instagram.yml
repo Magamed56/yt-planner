@@ -1,0 +1,159 @@
+# video-studio: публикация Reels из очереди — по одному ролику за запуск.
+#
+# У API Instagram нет отложенной публикации, поэтому расписание делает этот workflow:
+#   1. «video-studio: ролик» → mode = batch, upload = …instagram → каждый ролик ложится в
+#      релиз GitHub с файлом instagram.json — это и есть очередь.
+#   2. Здесь каждый запуск берёт САМЫЙ СТАРЫЙ такой релиз без отметки instagram-published.json,
+#      публикует его видео в Instagram и добавляет в релиз эту отметку.
+# Дубля не будет и при сбое: перед публикацией сверяется текст последних постов аккаунта.
+# Нужны секреты IG_USER_ID и IG_ACCESS_TOKEN (video-studio/docs/instagram-setup.md).
+
+name: "video-studio: Instagram по расписанию"
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Необязательно: тег релиза для публикации (пусто — следующий в очереди)"
+        type: string
+        required: false
+      dry_run:
+        description: "Только показать, что будет опубликовано"
+        type: boolean
+        default: false
+  # Два раза в день, как YouTube-слоты в channel.json (12:00 и 19:00 по Москве = 09:00 и 16:00 UTC).
+  # Раскомментируйте, когда очередь заполнена. Минуты не нулевые: в :00 GitHub запускает с опозданием.
+  # schedule:
+  #   - cron: "4 9 * * *"
+  #   - cron: "4 16 * * *"
+
+permissions:
+  contents: write # скачать файлы релиза и добавить в него отметку о публикации
+
+concurrency:
+  group: video-studio-instagram
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Reels из очереди
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: video-studio
+        shell: bash
+    env:
+      GH_REPO: ${{ github.repository }}
+      TAG_INPUT: ${{ inputs.tag }}
+      DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+      IG_API_VERSION: ${{ vars.IG_API_VERSION }}
+      IG_AI_GENERATED: ${{ vars.IG_AI_GENERATED }}
+      NO_COLOR: "1"
+    steps:
+      - name: Код репозитория
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Следующий ролик в очереди
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Релизы со старых к новым; в очереди — с instagram.json и без instagram-published.json.
+          gh api "repos/$GH_REPO/releases?per_page=100" --paginate \
+            --jq '.[] | {tag: .tag_name, created: .created_at, assets: [.assets[].name]}' > "$RUNNER_TEMP/releases.jsonl"
+          if [ -n "$TAG_INPUT" ]; then
+            tag=$(jq -rs --arg t "$TAG_INPUT" 'map(select(.tag == $t)) | .[0] // empty | if (.assets | index("instagram-published.json")) then "PUBLISHED" else .tag end' "$RUNNER_TEMP/releases.jsonl")
+            if [ -z "$tag" ]; then
+              echo "::error::Релиз «$TAG_INPUT» не найден."
+              exit 1
+            fi
+            if [ "$tag" = "PUBLISHED" ]; then
+              echo "::error::Релиз «$TAG_INPUT» уже опубликован в Instagram (в нём есть instagram-published.json). Удалите этот файл из релиза, если нужно ещё раз."
+              exit 1
+            fi
+          else
+            tag=$(jq -rs 'map(select((.assets | index("instagram.json")) and ((.assets | index("instagram-published.json")) | not))) | sort_by(.created) | .[0].tag // empty' "$RUNNER_TEMP/releases.jsonl")
+          fi
+          left=$(jq -rs 'map(select((.assets | index("instagram.json")) and ((.assets | index("instagram-published.json")) | not))) | length' "$RUNNER_TEMP/releases.jsonl")
+          if [ -z "$tag" ]; then
+            echo "::notice::Очередь Instagram пуста — публиковать нечего."
+            echo "📭 Очередь Instagram пуста. Наполнить: «video-studio: ролик» → mode = batch, upload с instagram." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          {
+            echo "tag=$tag"
+            echo "left=$left"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Файлы ролика
+        id: files
+        if: steps.pick.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.pick.outputs.tag }}
+          LEFT: ${{ steps.pick.outputs.left }}
+        run: |
+          dir="$RUNNER_TEMP/reel"
+          mkdir -p "$dir"
+          gh release download "$TAG" --dir "$dir" --pattern video.mp4 --pattern instagram.txt --pattern instagram.json
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          {
+            echo "## 📸 Instagram: \`$TAG\`"
+            echo ""
+            echo "В очереди было: $LEFT."
+            echo ""
+            echo '```'
+            cat "$dir/instagram.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Node.js 22
+        if: steps.pick.outputs.tag != '' && env.DRY_RUN == ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video-studio/package-lock.json
+
+      - name: Зависимости (npm ci)
+        if: steps.pick.outputs.tag != '' && env.DRY_RUN == ''
+        run: npm ci --no-audit --no-fund
+
+      # Без токена записи GitHub: этому шагу нужны только секреты Instagram.
+      - name: Публикация в Instagram
+        id: publish
+        if: steps.pick.outputs.tag != '' && env.DRY_RUN == ''
+        env:
+          DIR: ${{ steps.files.outputs.dir }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: npx tsx src/cli/upload.ts "$DIR" --to instagram
+
+      - name: Отметить релиз как опубликованный
+        if: steps.publish.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.pick.outputs.tag }}
+          DIR: ${{ steps.files.outputs.dir }}
+        run: |
+          cp "$DIR/instagram-result.json" "$DIR/instagram-published.json"
+          for i in 1 2 3; do
+            if gh release upload "$TAG" "$DIR/instagram-published.json" --clobber; then
+              exit 0
+            fi
+            echo "Не удалось добавить отметку (попытка $i), повторяю…"
+            sleep $((i * 10))
+          done
+          echo "::warning::Пост вышел, но отметку в релиз добавить не удалось. Следующий запуск не продублирует пост (сверяет текст последних постов), но лучше добавьте файл instagram-published.json в релиз $TAG вручную."
+
+      - name: Сводка при ошибке
+        if: failure()
+        run: |
+          {
+            echo "## ❌ Публикация в Instagram не удалась"
+            echo ""
+            echo "Откройте шаг с красным крестиком — в конце лога строка «✖ Ошибка:» с причиной и подсказкой."
+            echo "Частые причины: истёк токен (IG_ACCESS_TOKEN живёт ~60 дней, см. docs/instagram-setup.md), нет секретов IG_USER_ID / IG_ACCESS_TOKEN, лимит публикаций."
+          } >> "$GITHUB_STEP_SUMMARY"

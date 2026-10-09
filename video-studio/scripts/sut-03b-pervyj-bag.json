@@ -1,0 +1,91 @@
+{
+  "title": "Самый знаменитый компьютерный баг был настоящим насекомым",
+  "description": "9 сентября 1947 года в компьютере Harvard Mark II нашли мотылька, застрявшего в реле, и вклеили его в рабочий журнал. Рассказываем, почему этот мотылёк не был первым «багом» и где сейчас хранится та самая страница.\n#сутьзаминуту #shorts #технологии #программирование",
+  "tags": [
+    "баг",
+    "программирование",
+    "история технологий",
+    "компьютеры",
+    "harvard mark ii",
+    "эдисон",
+    "технологии",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Самый знаменитый компьютерный баг был настоящим насекомым. В прямом смысле.",
+      "onScreen": "Знаменитый баг был *насекомым*",
+      "icon": "bug",
+      "visualQuery": "moth insect macro",
+      "imagePrompt": "macro of a small moth resting on a vintage electromechanical relay, warm tungsten light, dust particles, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Девятое сентября тысяча девятьсот сорок седьмого года. Гарвардский университет, огромный релейный компьютер Марк два.",
+      "onScreen": "1947. Компьютер *Mark II*",
+      "icon": "cpu",
+      "visualQuery": "vintage computer room",
+      "imagePrompt": "1940s room filled with tall relay computer cabinets and cables, black and white film look tinted blue, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Машина начинает сбоить. Инженеры открывают панель и находят в одном из реле застрявшего мотылька.",
+      "onScreen": "В реле — *мотылёк*",
+      "icon": "search",
+      "visualQuery": "old electrical relays",
+      "imagePrompt": "flashlight beam revealing rows of old electrical relays inside an open panel, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "quote",
+      "narration": "Мотылька аккуратно вклеили скотчем в рабочий журнал и подписали: первый настоящий случай обнаружения бага.",
+      "onScreen": "Первый настоящий случай *обнаружения* бага",
+      "icon": "quote",
+      "visualQuery": "old logbook handwriting",
+      "imagePrompt": "old handwritten logbook page with a moth taped to it, desk lamp light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Но в этой подписи спрятана шутка. Словом баг инженеры называли неполадки задолго до компьютеров.",
+      "onScreen": "Слово «баг» *старше* компьютеров",
+      "icon": "book-open",
+      "visualQuery": "old engineering blueprints",
+      "imagePrompt": "stack of yellowed engineering notebooks and blueprints, soft vintage light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Ещё Томас Эдисон в тысяча восемьсот семьдесят восьмом году называл багами мелкие неполадки в своих изобретениях.",
+      "onScreen": "Эдисон, *1878* год",
+      "icon": "lightbulb",
+      "visualQuery": "vintage light bulb filament",
+      "imagePrompt": "glowing carbon filament of an early light bulb in a dark workshop, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Так что инженеры нашли баг в самом буквальном смысле. А страница с мотыльком до сих пор хранится в Смитсоновском музее американской истории.",
+      "onScreen": "Мотылёк теперь — *музейный* экспонат",
+      "icon": "landmark",
+      "visualQuery": "museum display case",
+      "imagePrompt": "an old notebook page displayed in a museum glass case under a spotlight, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А какой самый странный баг встречал ты? Напиши в комментариях и подпишись.",
+      "onScreen": "Твой самый странный *баг*?",
+      "icon": "message-circle"
+    }
+  ]
+}

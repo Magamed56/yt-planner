@@ -1,0 +1,73 @@
+{
+  "title": "Почему ты забываешь 66% выученного за сутки",
+  "description": "Кривая забывания Эббингауза и три научных способа запоминать надолго: интервальные повторения, активное вспоминание и объяснение другим.",
+  "tags": ["память", "мозг", "учёба", "лайфхаки", "эббингауз", "shorts"],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Через сутки ты забудешь почти всё, что выучил сегодня.",
+      "onScreen": "Через 24 часа ты *забудешь* почти всё",
+      "icon": "brain",
+      "visualQuery": "tired student night desk",
+      "imagePrompt": "cinematic close-up of a glowing human brain made of light particles fading into darkness, dramatic lighting"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Это доказал Герман Эббингауз ещё в тысяча восемьсот восемьдесят пятом году. Уже через день в памяти остаётся лишь около трети нового.",
+      "onScreen": "Кривая забывания, 1885",
+      "stat": { "value": 66, "suffix": "%", "label": "нового забывается за первые сутки" },
+      "icon": "trending-down",
+      "visualQuery": "old library books vintage",
+      "imagePrompt": "vintage 19th century scientist notebook with a hand drawn declining curve, warm candle light"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Но мозг не ленится. Он просто экономит энергию и стирает всё, что считает ненужным.",
+      "onScreen": "Мозг не ленится. Он *экономит* энергию",
+      "icon": "battery-low",
+      "visualQuery": "neurons abstract blue",
+      "imagePrompt": "abstract neural network of glowing blue neurons, some connections dimming, macro shot"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "Есть три способа обмануть кривую забывания. Повторяй через интервалы. Вспоминай без подсказок. И объясняй другим.",
+      "onScreen": "3 способа *запомнить* надолго",
+      "items": ["Повторяй через интервалы", "Вспоминай без подсказок", "Объясняй другим"],
+      "icon": "list-checks",
+      "visualQuery": "notebook writing hand",
+      "imagePrompt": "top-down view of a clean desk with notebook and flashcards, soft morning light"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Лучше всего работают интервальные повторения: через день, через три дня, через неделю. И знание держится месяцами.",
+      "onScreen": "День. Три дня. *Неделя.*",
+      "icon": "calendar-check",
+      "visualQuery": "calendar time lapse",
+      "imagePrompt": "minimal calendar pages flying in the air, motion blur, cinematic teal and orange"
+    },
+    {
+      "id": "s6",
+      "kind": "quote",
+      "narration": "Как писал Сенека: обучая других, мы учимся сами.",
+      "onScreen": "Обучая других, мы *учимся* сами",
+      "icon": "quote",
+      "visualQuery": "teacher explaining blackboard",
+      "imagePrompt": "marble bust of an ancient roman philosopher, dramatic rim light, dark background"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "Подпишись, чтобы не забыть следующий лайфхак для мозга.",
+      "onScreen": "*Подпишись*, чтобы не забыть",
+      "icon": "bell-ring"
+    }
+  ]
+}

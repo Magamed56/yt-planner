@@ -1,0 +1,95 @@
+{
+  "title": "Почему от лука текут слёзы: простая химия",
+  "description": "Когда ты режешь лук, клетки рвутся, и ферменты превращают их содержимое в летучий газ, который раздражает глаза. Разбираем, зачем луку эта защита, за что дали Шнобелевскую премию и как плакать меньше.\n#сутьзаминуту #shorts #химия #почемутак",
+  "tags": [
+    "лук",
+    "почему плачут от лука",
+    "химия",
+    "кухня",
+    "шнобелевская премия",
+    "почему так",
+    "наука",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Лук защищается от тебя газом. Поэтому ты и плачешь.",
+      "onScreen": "Лук стреляет *газом*",
+      "icon": "flask-conical",
+      "visualQuery": "onion cutting board",
+      "imagePrompt": "half-cut onion on a dark cutting board with faint glowing vapor rising, macro, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Пока луковица целая, вещества в её клетках разделены. Нож рвёт клетки, и они смешиваются.",
+      "onScreen": "Нож *смешивает* вещества",
+      "icon": "utensils-crossed",
+      "visualQuery": "knife slicing onion",
+      "imagePrompt": "knife slicing an onion in slow motion, tiny droplets in the air, backlight, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "В итоге получается летучий газ с длинным названием — син-пропантиаль-эс-оксид. Он легко испаряется и разлетается по воздуху.",
+      "onScreen": "Летучий *слезоточивый* газ",
+      "icon": "wind",
+      "visualQuery": "steam vapor dark",
+      "imagePrompt": "thin wisps of vapor rising and curling in a dark kitchen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Он долетает до глаз и раздражает нервные окончания роговицы. Мозг сразу включает защиту — слёзы смывают раздражитель.",
+      "onScreen": "Слёзы *смывают* газ",
+      "icon": "droplet",
+      "visualQuery": "eye tear close",
+      "imagePrompt": "extreme close-up of an eye with a single tear, soft light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Зачем это луку? Так он отпугивает животных и насекомых, которые пытаются его съесть. Это химическая самооборона.",
+      "onScreen": "Это *защита* от едоков",
+      "icon": "leaf",
+      "visualQuery": "onion field farm",
+      "imagePrompt": "onions growing in a field at dusk, low sun through the leaves, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Фермент, который делает этот газ, японские учёные открыли в две тысячи втором году. За это им позже дали Шнобелевскую премию.",
+      "onScreen": "*Шнобелевка* за слёзы",
+      "icon": "award",
+      "visualQuery": "scientist microscope lab",
+      "imagePrompt": "scientist looking into a microscope next to onion samples, lab at night, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "Хочешь плакать меньше? Охлади луковицу перед нарезкой и возьми острый нож — он меньше давит клетки.",
+      "onScreen": "Как плакать *меньше*",
+      "items": [
+        "Охлади луковицу",
+        "Режь острым ножом"
+      ],
+      "icon": "snowflake",
+      "visualQuery": "sharp kitchen knife",
+      "imagePrompt": "sharp chef knife next to a chilled onion with frost, dark kitchen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А как ты спасаешься от слёз, когда режешь лук? Пиши в комментариях и подпишись.",
+      "onScreen": "Как ты режешь *лук*?",
+      "icon": "message-circle"
+    }
+  ]
+}

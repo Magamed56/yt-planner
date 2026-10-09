@@ -1,0 +1,96 @@
+{
+  "title": "Почему невозможно пощекотать самого себя",
+  "description": "Почему щекотно бывает только от чужих прикосновений. Разбираем, как мозжечок предсказывает ощущения от твоих движений и что показал эксперимент британских нейробиологов с роботом.\n#сутьзаминуту #shorts #мозг #психология",
+  "tags": [
+    "мозг",
+    "щекотка",
+    "мозжечок",
+    "нейробиология",
+    "психология",
+    "почему так",
+    "наука",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Попробуй пощекотать себя. Не получится — и дело в мозге.",
+      "onScreen": "Себя *не* пощекотать",
+      "icon": "hand",
+      "visualQuery": "hand fingers close",
+      "imagePrompt": "cinematic close-up of fingers about to touch an open palm, dark background, soft rim light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Каждый раз, когда ты двигаешься, мозг заранее рассчитывает, что ты почувствуешь. Это как прогноз погоды для кожи.",
+      "onScreen": "Мозг *предсказывает* ощущения",
+      "icon": "brain",
+      "visualQuery": "brain anatomy model",
+      "imagePrompt": "translucent glowing human brain with light pulses running ahead along its pathways, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Ключевую роль тут играет мозжечок. Он сравнивает прогноз с реальностью и приглушает ожидаемое.",
+      "onScreen": "Мозжечок *глушит* ожидаемое",
+      "icon": "gauge",
+      "visualQuery": "glowing neurons network",
+      "imagePrompt": "close-up of the cerebellum region of a glowing brain model, fine branching neurons, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "А щекотно, когда касание нельзя точно предсказать. Своё движение мозг знает заранее — и щекотки почти нет.",
+      "onScreen": "Предсказал — значит, *не* щекотно",
+      "icon": "zap",
+      "visualQuery": "feather touching skin",
+      "imagePrompt": "a white feather lightly touching the sole of a foot, macro, soft light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Британские нейробиологи проверили это с помощью робота. Человек сам двигал рукоятку, а робот повторял движение и касался его ладони.",
+      "onScreen": "Эксперимент с *роботом*",
+      "icon": "bot",
+      "visualQuery": "robotic arm laboratory",
+      "imagePrompt": "small robotic arm gently touching a human palm in a dark laboratory, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Когда робот касался сразу, ощущения были слабыми. Но с задержкой всего в две десятых секунды они усиливались.",
+      "onScreen": "Задержка — и *щекотно*",
+      "stat": {
+        "value": 0.2,
+        "suffix": " с",
+        "label": "задержки — и уже щекотнее"
+      },
+      "icon": "timer",
+      "visualQuery": "stopwatch close up",
+      "imagePrompt": "macro of a stopwatch hand frozen in motion, glowing blue dial, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Вывод: мозг постоянно отличает твои действия от чужих. Поэтому по-настоящему щекотно бывает только от другого человека.",
+      "onScreen": "Щекотно — только от *чужих*",
+      "icon": "users",
+      "visualQuery": "friends laughing together",
+      "imagePrompt": "two friends laughing on a sofa at night, one tickling the other, warm lamp light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты сильно боишься щекотки? Признавайся в комментариях и подписывайся.",
+      "onScreen": "Ты боишься *щекотки*?",
+      "icon": "message-circle"
+    }
+  ]
+}

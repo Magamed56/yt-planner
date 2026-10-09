@@ -1,0 +1,91 @@
+{
+  "title": "Рогатые шлемы викингов — выдумка художников XIX века",
+  "description": "Археологи не нашли ни одного рогатого шлема эпохи викингов, а самый известный почти целый шлем — простой железный купол без рогов. Рассказываем, как рога «приделали» викингам художники и опера XIX века.\n#сутьзаминуту #shorts #история #викинги",
+  "tags": [
+    "викинги",
+    "история",
+    "мифы",
+    "шлем викинга",
+    "скандинавия",
+    "вагнер",
+    "средневековье",
+    "факты",
+    "сутьзаминуту",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Рога викингам приделали художники девятнадцатого века. В бою викинги их не носили.",
+      "onScreen": "Рога викингов — *выдумка*",
+      "icon": "shield",
+      "visualQuery": "viking helmet museum",
+      "imagePrompt": "simple rounded iron viking age helmet on a museum stand, dramatic spotlight, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Археологи нашли много мечей, топоров и щитов эпохи викингов. Но ни одного шлема с рогами.",
+      "onScreen": "Рогатых шлемов: *ноль*",
+      "icon": "pickaxe",
+      "visualQuery": "archaeology excavation site",
+      "imagePrompt": "archaeologists brushing soil off a rusted sword at an excavation site, overcast light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Почти целый шлем викинга нашли в Норвегии в тысяча девятьсот сорок третьем. Простой железный купол с защитой для глаз. Никаких рогов.",
+      "onScreen": "Настоящий шлем — *без* рогов",
+      "icon": "hard-hat",
+      "visualQuery": "iron helmet artifact",
+      "imagePrompt": "close-up of a corroded iron helmet with a spectacle-shaped eye guard, dark museum, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Рога появились в эпоху романтизма, когда викингов начали воспевать в картинах и книгах.",
+      "onScreen": "Рога придумали *романтики*",
+      "icon": "palette",
+      "visualQuery": "old oil painting",
+      "imagePrompt": "romantic 19th century style oil painting of a stormy fjord with a longship, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "А окончательно образ закрепила опера. В тысяча восемьсот семьдесят шестом году художник Карл Эмиль Дёплер одел героев Кольца нибелунга Вагнера в рогатые шлемы.",
+      "onScreen": "1876: рога из *оперы*",
+      "icon": "drama",
+      "visualQuery": "opera stage theater",
+      "imagePrompt": "grand opera stage with dramatic red curtains and a performer in a horned helmet, theatrical lighting, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Публике понравилось. Рога подхватили иллюстраторы, комиксы и кино — и миф прижился.",
+      "onScreen": "Миф подхватило *кино*",
+      "icon": "clapperboard",
+      "visualQuery": "film reel projector",
+      "imagePrompt": "old film projector beam in a dark cinema, dust floating in the light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Рогатые шлемы в Скандинавии всё же находили. Но бронзового века — больше чем на полторы тысячи лет старше викингов. И скорее для обрядов.",
+      "onScreen": "Рога были — в *бронзовом* веке",
+      "icon": "hourglass",
+      "visualQuery": "bronze age artifact",
+      "imagePrompt": "ancient bronze ceremonial helmet with curved horns in a dim museum vitrine, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Какой исторический миф разобрать следующим? Пиши в комментариях и подписывайся.",
+      "onScreen": "Какой *миф* разобрать дальше?",
+      "icon": "message-circle"
+    }
+  ]
+}
