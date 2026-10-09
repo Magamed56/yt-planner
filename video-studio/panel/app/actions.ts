@@ -12,7 +12,7 @@ import { dispatchOnce } from "@/lib/dispatch";
 import { buildFirstComment, commentBlocker, commentProblem, commentUrl, ctaQuestion, type OwnComment } from "@/lib/first-comment";
 import { assetText, dispatchWorkflow, getVariable, GithubError, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
-import { canRetry } from "@/lib/ops";
+import { canRetry, confirmStale } from "@/lib/ops";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
 import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
@@ -196,13 +196,15 @@ function textChanges(v: ChannelVideo, i: FillItem): string[] {
 // Как youtube-fill: тексты из week1-videos.json и content/videos.json, ролики канала с поиском
 // (100 единиц квоты: только что загруженное видео плейлист показывает с задержкой), время —
 // следующие свободные слоты после уже занятых.
-async function computeFill() {
+// search — искать ролики ещё и поиском YouTube (≈ 100 единиц квоты): плейлист «Загрузки»
+// (≈ 5 единиц) показывает свежую загрузку не сразу. Без поиска — когда хватает плейлиста.
+async function computeFill(search = true) {
   const [channel, week1, later, planJson, videos, orderRaw] = await Promise.all([
     loadChannel(),
     readJson(`${STUDIO_DIR}/content/week1-videos.json`),
     readJson(`${STUDIO_DIR}/content/videos.json`),
     readJson(`${STUDIO_DIR}/content/plan.json`),
-    channelVideos({ search: true }),
+    channelVideos({ search }),
     getVariable(QUEUE_ORDER_VAR).catch(() => null),
   ]);
   const items: FillItem[] = [];
@@ -258,21 +260,40 @@ export async function fillPreviewAction(): Promise<FillPreview | ActionResult> {
   });
 }
 
+export interface NewUpload {
+  code: string;
+  title: string;
+  videoId: string;
+  publishAt: string | null; // слот, который ролик получит (его же проверим перед записью)
+  whenLabel: string | null;
+  cover: string | null;
+}
+
 export interface NewUploads extends ActionResult {
-  found: { code: string; title: string; whenLabel: string | null }[];
+  found: NewUpload[];
   withoutTexts: string[]; // загружены, но текстов для них нет
   pending: string[]; // YouTube ещё обрабатывает
   duplicates: string[];
 }
 
 // Кнопка «Найти новые загрузки»: что загрузили в Studio руками и какое время им достанется.
+// Сначала — плейлист «Загрузки» (≈ 5 единиц квоты); поиск (≈ 100) — только если там нового нет.
 export async function findNewUploadsAction(): Promise<NewUploads | ActionResult> {
   return guarded(async () => {
-    const { tz, report, updates, withoutTexts } = await computeFill();
+    let fill = await computeFill(false);
+    if (!fill.updates.some(isNewUpload)) fill = await computeFill(true);
+    const { tz, report, updates, withoutTexts } = fill;
     return {
       ok: true,
       message: "",
-      found: updates.filter(isNewUpload).map((p) => ({ code: p.match.item.id, title: p.match.item.title, whenLabel: p.publishAt ? slotLabel(p.publishAt, tz) : null })),
+      found: updates.filter(isNewUpload).map((p) => ({
+        code: p.match.item.id,
+        title: p.match.item.title,
+        videoId: p.match.video.videoId,
+        publishAt: p.publishAt ?? null,
+        whenLabel: p.publishAt ? slotLabel(p.publishAt, tz) : null,
+        cover: p.match.video.thumbnailUrl ?? null,
+      })),
       withoutTexts,
       pending: report.pending.map((x) => x.item.id),
       duplicates: report.duplicates.map((d) => d.item.id),
@@ -282,15 +303,30 @@ export async function findNewUploadsAction(): Promise<NewUploads | ActionResult>
 
 // Тексты и время — сразу из панели, тем же кодом, что youtube-fill (videos.update): результат
 // за секунды, и секреты YT_* в GitHub для этого не нужны. onlyNew — только свежие загрузки.
-async function applyFill(codes: string[], onlyNew: boolean): Promise<ActionResult> {
+// confirmed — что показали владельцу («08a → чт 12:00»): если с тех пор слот заняли или ролик
+// уже заполнен, эту строку не трогаем и говорим почему — ничего не ставится дважды.
+async function applyFill(codes: string[], onlyNew: boolean, confirmed: Map<string, { videoId: string; publishAt: string | null }> = new Map()): Promise<ActionResult> {
   const want = new Set(codes.map((c) => c.trim().toLowerCase()).filter((c) => PLAN_CODE.test(c)));
   if (!want.size) return fail("Отметьте ролики, которым ставить тексты и время.");
-  const { tz, updates } = await computeFill();
-  const todo = updates.filter((p) => want.has(p.match.item.id) && !p.skip && (!onlyNew || isNewUpload(p)));
-  if (!todo.length) return fail("Заполнять нечего: ролики уже заполнены или YouTube их пока не показывает — обновите страницу.");
+  // Без поиска, если плейлист «Загрузки» уже показывает все нужные ролики (≈ 5 единиц квоты).
+  let fill = await computeFill(false);
+  const seen = (f: typeof fill) => [...want].every((c) => f.updates.some((p) => p.match.item.id === c));
+  if (!seen(fill)) fill = await computeFill(true);
+  const { tz, updates } = fill;
+  const problems: string[] = [];
+  const todo = updates.filter((p) => {
+    const code = p.match.item.id;
+    if (!want.has(code) || p.skip || (onlyNew && !isNewUpload(p))) return false;
+    const c = confirmed.get(code);
+    if (c && confirmStale(c, { videoId: p.match.video.videoId, publishAt: p.publishAt ?? null })) {
+      problems.push(`${code}: ${c.publishAt ? `слот ${slotLabel(c.publishAt, tz)}` : "слот"} уже занят или ролик изменился — нажмите «Найти новые загрузки» ещё раз`);
+      return false;
+    }
+    return true;
+  });
+  if (!todo.length) return fail(problems.length ? `Не вышло — ${problems.join("; ")}` : "Заполнять нечего: ролики уже заполнены или YouTube их пока не показывает — обновите страницу.");
   const done: string[] = [];
   const filled: { code: string; videoId: string }[] = [];
-  const problems: string[] = [];
   for (const p of todo) {
     try {
       const r = await applyUpdate({ auth: youtubeAuth }, p);
@@ -309,8 +345,14 @@ async function applyFill(codes: string[], onlyNew: boolean): Promise<ActionResul
   return { ok: done.length > 0, message };
 }
 
-export async function fillNewUploadsAction(codes: string[]): Promise<ActionResult> {
-  return guarded(() => applyFill(codes, true));
+// Коды (карточка ролика) или строки, показанные в «Найти новые загрузки», — с проверкой слота.
+export async function fillNewUploadsAction(items: (string | { code: string; videoId: string; publishAt: string | null })[]): Promise<ActionResult> {
+  return guarded(() => {
+    const list = Array.isArray(items) ? items : [];
+    const confirmed = new Map(list.flatMap((x) => (typeof x === "object" && x && typeof x.code === "string" && typeof x.videoId === "string" ? [[x.code.toLowerCase(), { videoId: x.videoId, publishAt: typeof x.publishAt === "string" ? x.publishAt : null }] as const] : [])));
+    const codes = list.map((x) => (typeof x === "string" ? x : String(x?.code ?? "")));
+    return applyFill(codes, true, confirmed);
+  });
 }
 
 export async function fillApplyAction(codes: string[]): Promise<ActionResult> {

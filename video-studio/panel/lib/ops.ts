@@ -159,3 +159,12 @@ export function pickCleanup(files: ReleaseVideo[], keepDays: number, now: number
     return Number.isFinite(t) && now - t > keepDays * DAY_MS;
   });
 }
+
+// ---- «Найти новые загрузки»: показанное владельцу против того, что YouTube отдаёт сейчас ----
+
+// Показали «08a → чт 12:00»: если перед записью у кода другой ролик или другой слот (его
+// успели занять), строку не трогаем — ничего не ставится дважды и не туда.
+export function confirmStale(shown: { videoId: string; publishAt: string | null } | undefined, now: { videoId: string; publishAt: string | null }): boolean {
+  if (!shown) return false;
+  return shown.videoId !== now.videoId || (shown.publishAt ?? null) !== (now.publishAt ?? null);
+}

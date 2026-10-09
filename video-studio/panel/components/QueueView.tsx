@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
+import { type NewUpload, fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
 import { setBadge } from "@/lib/badge";
 import type { CoverageLevel, PanelState, Reminder, Row } from "@/lib/state";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/stages";
@@ -10,6 +10,7 @@ import AppShell, { RunwayRing } from "./AppShell";
 import BoardView, { movable, queued, type BoardCell } from "./BoardView";
 import DownloadSheet from "./DownloadSheet";
 import FeedView from "./FeedView";
+import FillConfirmSheet from "./FillConfirmSheet";
 import NowCard from "./NowCard";
 import PipelineStrip from "./PipelineStrip";
 import PulseCard from "./PulseCard";
@@ -88,6 +89,8 @@ export default function QueueView({ state, initialMode, initialSelected = null }
   const [chosen, setChosen] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  // Найденные новые загрузки — список с подтверждением (вместо окна браузера).
+  const [fillAsk, setFillAsk] = useState<{ found: NewUpload[]; notes: string[] } | null>(null);
   const done = (r: { ok: boolean; message: string }) => {
     setToast({ text: r.message, ok: r.ok });
     if (r.ok) router.refresh();
@@ -124,6 +127,7 @@ export default function QueueView({ state, initialMode, initialSelected = null }
   // Карточка ролика — в адресе (?v=08a): одно «Назад» (и свайп назад на iPhone) закрывает её.
   function openSheet(code: string) {
     if (code === selected) return;
+    if (!busy) setFillAsk(null);
     setSelected(code);
     if (ourSheet()) window.history.replaceState({ ...window.history.state, sheet: code }, "", queueUrl(mode, code));
     else window.history.pushState({ sheet: code }, "", queueUrl(mode, code));
@@ -205,10 +209,21 @@ export default function QueueView({ state, initialMode, initialSelected = null }
       if (!r.found.length) {
         return setToast({ text: `Новых загрузок нет. ${extra || "Только что загруженное видео YouTube иногда показывает через пару минут."}`, ok: !extra });
       }
-      const list = r.found.map((f) => `${f.code} «${f.title}» → ${f.whenLabel ?? "без времени"}`).join("\n");
-      if (!window.confirm(`Нашёл новые загрузки:\n${list}\n\nПоставить им название, описание, теги и время выхода?${extra ? `\n\n${extra}` : ""}`)) return;
-      const done = await fillNewUploadsAction(r.found.map((f) => f.code));
+      closeSheet();
+      setFillAsk({ found: r.found, notes: extra ? [extra] : [] });
+    } catch (e) {
+      setToast({ text: e instanceof Error ? e.message : String(e), ok: false });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function applyFound(items: NewUpload[]) {
+    setBusy(true);
+    try {
+      const done = await fillNewUploadsAction(items.map(({ code, videoId, publishAt }) => ({ code, videoId, publishAt })));
       setToast({ text: done.message, ok: done.ok });
+      setFillAsk(null);
       if (done.ok) router.refresh();
     } catch (e) {
       setToast({ text: e instanceof Error ? e.message : String(e), ok: false });
@@ -336,7 +351,7 @@ export default function QueueView({ state, initialMode, initialSelected = null }
       runwayDays={state.runwayDays}
       runwayLabel={state.runwayLabel}
     >
-      <div className={`workspace${current || (chosen && saving) ? " with-sheet" : ""}`}>
+      <div className={`workspace${current || (chosen && saving) || fillAsk ? " with-sheet" : ""}`}>
         <main>
           <section className="hero">
             <RunwayRing days={state.runwayDays} size={76} />
@@ -461,6 +476,12 @@ export default function QueueView({ state, initialMode, initialSelected = null }
           <>
             <div className="backdrop" onClick={closeSheet} />
             <VideoSheet key={current.code} row={current} state={state} onClose={closeSheet} />
+          </>
+        )}
+        {fillAsk && (
+          <>
+            <div className="backdrop" onClick={() => !busy && setFillAsk(null)} />
+            <FillConfirmSheet found={fillAsk.found} notes={fillAsk.notes} busy={busy} onApply={(items) => void applyFound(items)} onClose={() => setFillAsk(null)} />
           </>
         )}
         {chosen && saving && (
