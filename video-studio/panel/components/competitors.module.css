@@ -1,0 +1,62 @@
+/* Экран «Похожие каналы» — свой модуль, чтобы не задевать общий globals.css. */
+.add {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.add input {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.remove {
+  margin-left: 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  padding: 0 2px;
+}
+
+.remove:hover {
+  color: var(--error);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+}
+
+.list li {
+  padding: 8px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.list a {
+  color: var(--text);
+}
+
+.subhead {
+  font-size: 14px;
+  margin: 14px 0 0;
+}
+
+.error {
+  color: var(--error);
+}

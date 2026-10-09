@@ -42,7 +42,7 @@ with `videos.insert` from our unverified API project. No quota increase is neede
 **API project number.** 594586455322
 
 **Organization / who we are.** An individual creator running the YouTube channel “Суть за минуту”
-(https://youtube.com/@sutzaminutu): short educational videos in Russian that explain one fact in
+(https://www.youtube.com/channel/UCBMfWLydXjrPllxIkjgdbzw): short educational videos in Russian that explain one fact in
 about a minute, two Shorts per day, each with sources listed in the description. All content is
 produced by the channel owner with an automated pipeline: the owner approves topics and facts with
 sources, the pipeline writes a script, synthesizes the voice-over (disclosed with
