@@ -2,7 +2,7 @@
 // googleapis), список роликов — общий код youtube-fill, но без поиска (он стоит 100 единиц
 // квоты из 10 000 в сутки, а панель обновляют часто). Перенос — videos.update части status.
 import { accessToken, explainApiError, type Auth } from "../../src/pipeline/google-api";
-import { listChannelVideos, type ChannelVideo } from "../../src/pipeline/youtube-fill";
+import { listChannel, listChannelVideos, type ChannelListing, type ChannelVideo } from "../../src/pipeline/youtube-fill";
 
 const API = "https://www.googleapis.com/youtube/v3";
 
@@ -38,6 +38,12 @@ export const youtubeAuth: Auth = {
 
 export function channelVideos(opts: { search?: boolean } = {}): Promise<ChannelVideo[]> {
   return listChannelVideos({ auth: youtubeAuth }, 200, { search: opts.search ?? false });
+}
+
+// Ролики и цифры канала одним проходом (экран «Статистика»): channels.list и так вызывается
+// ради плейлиста «Загрузки», part=statistics квоту не добавляет. Без поиска — как очередь.
+export function channelOverview(): Promise<ChannelListing> {
+  return listChannel({ auth: youtubeAuth }, 200, { search: false });
 }
 
 async function yt<T>(path: string, init: RequestInit = {}): Promise<T> {
