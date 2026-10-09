@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { AbsoluteFill, Easing, useVideoConfig } from "remotion";
+import { AbsoluteFill, Easing, Sequence, useVideoConfig } from "remotion";
+import { BrandSting, STING_FRAMES } from "./brand/BrandSting";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import type { RenderScene, VideoProps } from "../types";
 import { AudioLayer } from "./components/AudioLayer";
@@ -76,6 +77,11 @@ export const Video: React.FC<VideoCompositionProps> = (props) => {
           </TransitionSeries>
           {props.showCaptions ? <Captions captions={props.captions} theme={theme} /> : null}
           {props.showProgressBar ? <ProgressBar theme={theme} /> : null}
+          {props.brandIntro ? (
+            <Sequence durationInFrames={STING_FRAMES} name="Бренд-заставка" layout="none">
+              <BrandSting theme={theme} />
+            </Sequence>
+          ) : null}
         </LayoutContext.Provider>
       </FontGate>
       <AudioLayer props={props} />

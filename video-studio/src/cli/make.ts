@@ -14,7 +14,7 @@ import { parseArgs } from "node:util";
 import { FPS, THEME_NAMES, type Format, type ThemeName, type VideoScript } from "../types";
 import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult } from "../pipeline/contracts";
 import { makeSfx, prepareMusic } from "../pipeline/audio/index";
-import { applyChannelDefaults, type ChannelConfig } from "../pipeline/channel";
+import { applyChannelDefaults, applyPillarVoice, brandIntroEnabled, type ChannelConfig } from "../pipeline/channel";
 import { loadChannel } from "../pipeline/channel-file";
 import { coverFrame, frameToMs, renderCover } from "../pipeline/cover";
 import { buildInstagramCaption, instagramEnvHelp, missingInstagramEnv, publishRunDir, writeInstagramAssets, type InstagramMeta, type RunDirPublishResult } from "../pipeline/instagram";
@@ -250,6 +250,10 @@ async function main() {
   }
   // Рубрика темы из content/plan.json (для сценариев sut-08a-….json): реальные фото для истории/природы/космоса.
   const pillar = planPillar(args.script);
+  // Голос и темп рубрики (channel.json → voiceByPillar) — до умолчаний канала: важнее голоса
+  // канала, но слабее --voice и переменных окружения.
+  const pillarVoice = applyPillarVoice(channel, pillar);
+  if (pillarVoice.length) console.log(`  рубрика «${pillar}»: голос — ${pillarVoice.join(", ")}`);
   // Голос Gemini, его манера и подпись «облачка» — из канала, если не заданы в окружении.
   const applied = applyChannelDefaults(channel);
   if (channel.file) console.log(`  канал: «${channel.name ?? "без названия"}» (${rel(channel.file)})${applied.length ? `, умолчания: ${applied.join(", ")}` : ""}`);
@@ -375,20 +379,22 @@ async function main() {
   });
 
   // 4. Музыка и звук перехода
+  // Бренд-заставка ≤ 0,5 с поверх начала хука: channel.json → brandIntro, BRAND_INTRO=off|on.
+  const brandIntro = brandIntroEnabled(channel);
   const { music, whooshSrc, sfx } = await steps.run("Музыка и звук перехода", async () => {
     fs.rmSync(path.join(publicDir, "music"), { recursive: true, force: true });
     fs.rmSync(path.join(publicDir, "sfx"), { recursive: true, force: true });
     const durationMs = estimateDurationMs(voices.map((v) => v.durationMs));
     const music = await prepareMusic(publicDir, { durationMs, mood: args.mood || process.env.MUSIC_MOOD?.trim() || undefined, seed: slug });
     if (!music) console.log("  без музыки (MUSIC=none)");
-    // Свист переходов (3 варианта) + звуки монтажа: пункты, удар цифры (SFX=whoosh|off).
-    const { whooshSrc, sfx } = await makeSfx(publicDir);
+    // Свист переходов (3 варианта) + звуки монтажа: пункты, удар цифры, искра заставки (SFX=whoosh|off).
+    const { whooshSrc, sfx } = await makeSfx(publicDir, { sting: brandIntro });
     return { music, whooshSrc, sfx };
   });
 
   // 5. Props композиции
   const props = await steps.run("Сборка таймлинии (props.json)", async () => {
-    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, sfx, format, theme: script.theme, channelName: channel.name });
+    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, sfx, brandIntro, format, theme: script.theme, channelName: channel.name });
     writeJson(path.join(runDir, "props.json"), p);
     console.log(`  длительность ${(p.durationInFrames / FPS).toFixed(1)} с (${p.durationInFrames} кадров), голос ${(voiceDurationMs / 1000).toFixed(1)} с, слов в субтитрах: ${p.captions.length}`);
     return p;
