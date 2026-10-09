@@ -7,11 +7,13 @@ import { channelVideos } from "./youtube";
 
 export const STUDIO_DIR = "video-studio";
 
-// Запуски и шаги идущих (их обычно 0–2) — для полоски прогресса. Шаги не пришли — без этапов.
+// Запуски и шаги идущих (их обычно 0–2) — для полоски прогресса; и шаги последнего упавшего
+// за двое суток запуска ролика — на каком этапе он сломался. Шаги не пришли — без этапов.
 export async function runsWithSteps(): Promise<{ runs: GhRun[]; steps: Record<number, GhStep[]> }> {
   const runs = await listRuns();
   const active = runs.filter((r) => r.status !== "completed").slice(0, 3);
-  const pairs = await Promise.all(active.map(async (r) => [r.id, await runSteps(r.id).catch(() => [])] as const));
+  const failed = runs.find((r) => r.status === "completed" && (r.conclusion === "failure" || r.conclusion === "timed_out") && r.path.endsWith("/video-studio.yml") && Date.now() - Date.parse(r.created_at) < 2 * 86_400_000);
+  const pairs = await Promise.all([...active, ...(failed ? [failed] : [])].map(async (r) => [r.id, await runSteps(r.id).catch(() => [])] as const));
   return { runs, steps: Object.fromEntries(pairs) };
 }
 

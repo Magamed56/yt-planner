@@ -31,6 +31,16 @@ export function decideReserve(
 
 // ---- повтор упавших сборок (идея 55) ----
 
+const FAILED_RUN_FRESH_MS = 2 * 86_400_000;
+
+// Последний завершённый запуск конвейера, если он упал не больше двух суток назад: о нём
+// напоминают панель, карточка «Сейчас» и утреннее уведомление. Проверки и прочее — не в счёт.
+export function failedRun(runs: RunInfo[], nowMs: number): RunInfo | null {
+  const last = runs.find((r) => !r.active && r.kind !== "other" && r.kind !== "check");
+  return last?.conclusion === "failure" && nowMs - Date.parse(last.createdAt) < FAILED_RUN_FRESH_MS ? last : null;
+}
+
+
 const RETRY_KINDS = new Set(["draft", "batch", "render"]);
 const RETRY_CONCLUSIONS = new Set(["failure", "timed_out"]);
 export const RETRY_MAX = 3;
@@ -43,6 +53,27 @@ export const retryCost = (r: RunInfo) => (r.kind === "draft" ? 0 : Math.max(1, r
 // попытки — перезапустить один раз. Не трогаем то, что уже готово или запущено заново (в том
 // числе только что этим же запуском автопилота — launched), и не выходим за лимит озвучек
 // budget (общий с автопилотом).
+// Какие коды упавшего запуска ещё нужно сделать: не готовые и не запущенные заново позже (в том
+// числе только что этим же запуском автопилота — launched). Общее у автоповтора и «Повторить».
+function retryTodo(r: RunInfo, runs: RunInfo[], rows: Pick<Row, "code" | "stage">[], launched: { batch: string[]; draft: string[] }): { todo: string[]; covered: boolean } {
+  const stage = new Map(rows.map((x) => [x.code, x.stage]));
+  // Черновику достаточно сценария, сборке нужно видео (или ролик уже дальше по этапам).
+  const done = (code: string) => {
+    const st = stage.get(code);
+    return st !== undefined && st !== "topic" && (r.kind === "draft" || st !== "script");
+  };
+  const t = Date.parse(r.createdAt);
+  const later = runs.filter((x) => x.id !== r.id && RETRY_KINDS.has(x.kind) && Date.parse(x.createdAt) > t && (x.active || x.conclusion === "success"));
+  // Сценарий черновика пишет и пакет, а видео черновик не соберёт.
+  const isCovered = (code: string) =>
+    launched.batch.includes(code) || (r.kind === "draft" && launched.draft.includes(code)) || later.some((x) => x.codes.includes(code) && (x.kind !== "draft" || r.kind === "draft"));
+  const todo = r.codes.filter((c) => !done(c) && !isCovered(c));
+  return { todo, covered: r.codes.length ? !todo.length : later.some((x) => x.title === r.title) };
+}
+
+// Упавшие (failure/timed_out) за последние сутки запуски «video-studio: ролик» с первой
+// попытки — перезапустить один раз. Не трогаем то, что уже готово или запущено заново, и не
+// выходим за лимит озвучек budget (общий с автопилотом).
 export function pickRetries(
   runs: RunInfo[],
   rows: Pick<Row, "code" | "stage">[],
@@ -50,12 +81,6 @@ export function pickRetries(
   budget: number,
   launched: { batch: string[]; draft: string[] } = { batch: [], draft: [] },
 ): { runs: RunInfo[]; skipped: string[] } {
-  const stage = new Map(rows.map((r) => [r.code, r.stage]));
-  // Черновику достаточно сценария, сборке нужно видео (или ролик уже дальше по этапам).
-  const done = (kind: string, code: string) => {
-    const s = stage.get(code);
-    return s !== undefined && s !== "topic" && (kind === "draft" || s !== "script");
-  };
   const failed = runs
     .filter((r) => {
       const t = Date.parse(r.createdAt);
@@ -66,15 +91,7 @@ export function pickRetries(
   const skipped: string[] = [];
   let left = budget;
   for (const r of failed) {
-    const t = Date.parse(r.createdAt);
-    const later = runs.filter((x) => x.id !== r.id && RETRY_KINDS.has(x.kind) && Date.parse(x.createdAt) > t && (x.active || x.conclusion === "success"));
-    // Сценарий черновика пишет и пакет, а видео черновик не соберёт.
-    const covered = (code: string) =>
-      launched.batch.includes(code) ||
-      (r.kind === "draft" && launched.draft.includes(code)) ||
-      later.some((x) => x.codes.includes(code) && (x.kind !== "draft" || r.kind === "draft"));
-    const todo = r.codes.filter((c) => !done(r.kind, c) && !covered(c));
-    if (r.codes.length ? !todo.length : later.some((x) => x.title === r.title)) {
+    if (retryTodo(r, runs, rows, launched).covered) {
       skipped.push(`«${r.title}» — уже готово или запущено заново`);
       continue;
     }
@@ -91,6 +108,19 @@ export function pickRetries(
     out.push(r);
   }
   return { runs: out, skipped };
+}
+
+// «Повторить» руками (карточка «Сейчас», «Запуски»): упавший запуск ролика, не отменённый,
+// меньше трёх попыток, а его ролики ещё не готовы и не запущены заново. Повтор — это
+// rerun-failed-jobs, не новый запуск: защита от повторного запуска (lib/dispatch.ts) его не держит.
+export const RETRY_ATTEMPTS_MAX = 3;
+export function canRetry(run: RunInfo, state: Pick<PanelState, "runs" | "rows">): { ok: true; cost: number } | { ok: false; reason: string } {
+  if (run.active) return { ok: false, reason: "запуск ещё идёт" };
+  if (!RETRY_KINDS.has(run.kind)) return { ok: false, reason: "повтор — только у сценариев и сборок" };
+  if (!RETRY_CONCLUSIONS.has(run.conclusion ?? "")) return { ok: false, reason: run.conclusion === "cancelled" ? "запуск отменён — запустите заново" : "запуск не падал" };
+  if (run.attempt >= RETRY_ATTEMPTS_MAX) return { ok: false, reason: `уже ${run.attempt} попытки — смотрите лог` };
+  if (retryTodo(run, state.runs, state.rows, { batch: [], draft: [] }).covered) return { ok: false, reason: "уже готово или запущено заново" };
+  return { ok: true, cost: retryCost(run) };
 }
 
 // ---- уборка видео из релизов (идея 62) ----

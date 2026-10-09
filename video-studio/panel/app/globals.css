@@ -2580,3 +2580,11 @@ a.btn[aria-disabled] {
 a.code-chip {
   text-decoration: none;
 }
+.run-failed {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  color: var(--error);
+}

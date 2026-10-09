@@ -129,7 +129,7 @@ test("каждый вид дела: кнопка одна и действует 
     videos: [...full, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })],
   });
   const by = Object.fromEntries(list.map((t) => [t.id, t]));
-  assert.deepEqual(by.run!.action, { kind: "href", label: "Запуски", href: "/runs" });
+  assert.deepEqual(by.run!.action, { kind: "retry", label: "Повторить", runId: 3 });
   assert.deepEqual(by.run!.secondary, { label: "Лог ↗", href: "https://github.com/x/y/actions/runs/3" });
   assert.equal(by.run!.title, "Не удался запуск «batch: 10a,10b»");
   assert.deepEqual(by.problem!.codes, ["07a"]);
@@ -137,7 +137,20 @@ test("каждый вид дела: кнопка одна и действует 
   assert.deepEqual(by.fill!.codes, ["09a"]);
   assert.deepEqual(by.fill!.action, { kind: "find", label: "Найти новые загрузки" });
   assert.equal(by.upload!.action?.kind, "download");
-  for (const t of list) assert.ok(!t.action || ["download", "find", "open"].includes(t.action.kind) || (t.action.kind === "href" && t.action.href.startsWith("/")), "кнопка — внутри панели");
+  for (const t of list) assert.ok(!t.action || ["download", "find", "open", "retry"].includes(t.action.kind) || (t.action.kind === "href" && t.action.href.startsWith("/")), "кнопка — внутри панели");
+});
+
+test("упавшая сборка: этап из шагов, «Повторить» — если ролики ещё не готовы, иначе «Запуски»", () => {
+  const steps = { 3: [{ name: "Сборка ролика 10a", status: "completed", conclusion: "failure", number: 5, started_at: null, completed_at: null }] };
+  const t = todo({ runs: [failedRun], runSteps: steps }).find((x) => x.id === "run")!;
+  assert.equal(t.title, "Не удался запуск «batch: 10a,10b» на этапе «Озвучка и видео»");
+  assert.deepEqual(t.action, { kind: "retry", label: "Повторить", runId: 3 });
+  const st = buildState({ ...base, runs: [failedRun], runSteps: steps });
+  assert.equal(st.runs[0]!.failedStep, "Сборка ролика 10a");
+  assert.match(st.reminders.find((r) => r.kind === "run")!.text, /не удался на этапе «Озвучка и видео»/);
+  // 10a и 10b уже собраны другим запуском — повторять нечего, ведём в «Запуски».
+  const built = todo({ runs: [failedRun], releases: [release(5, "10a"), release(6, "10b")] }).find((x) => x.id === "run")!;
+  assert.deepEqual(built.action, { kind: "href", label: "Запуски", href: "/runs" });
 });
 
 test("порядок: срочное → важное (по сроку) → остальное; при равенстве — по виду", () => {

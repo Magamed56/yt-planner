@@ -9,7 +9,7 @@ import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import { ASSET_CHUNK, assetHeaders, assetType, contentDisposition, parseContentRange, planRange } from "../lib/asset-range";
 import type { GhRelease } from "../lib/github";
 import { addDispatch, dispatchConflict, parseDispatches, type RunLike } from "../lib/dispatch-guard";
-import { decideReserve, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
+import { canRetry, DAY_MS, decideReserve, failedRun, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
 import { rebuildInputs, DEFAULT_REBUILD } from "../lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, countWords, parseTags, SCRIPT_LIMITS, scriptEditOf, scriptFileText, type ScriptEdit } from "../lib/script-edit";
 import { buildState, DEFAULT_AUTOPILOT, parseAutopilot, type Row, type RunInfo } from "../lib/state";
@@ -343,6 +343,32 @@ async function main() {
     assert.equal(whole["Cache-Control"], "private, no-store");
     assert.equal(contentDisposition("ролик «1».mp4", true), `attachment; filename="_____ _1_.mp4"; filename*=UTF-8''%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%20%C2%AB1%C2%BB.mp4`);
     assert.equal(parseContentRange("bytes */20"), null);
+  });
+
+  await test("«Повторить» руками: упавший, не отменённый, меньше 3 попыток, ролики ещё не готовы", () => {
+    const failed = run({ id: 7, title: "batch: 08a,08b", codes: ["08a", "08b"] });
+    const rows = rowsOf([
+      ["08a", "script"],
+      ["08b", "topic"],
+    ]);
+    assert.deepEqual(canRetry(failed, { runs: [failed], rows }), { ok: true, cost: 2 });
+    assert.deepEqual(canRetry(run({ kind: "draft", codes: ["08b"] }), { runs: [], rows }), { ok: true, cost: 0 }, "черновик голос не тратит");
+    const no = (r: RunInfo, rs = rows) => {
+      const c = canRetry(r, { runs: [r], rows: rs });
+      return c.ok ? "можно" : c.reason;
+    };
+    assert.match(no(run({ codes: ["08a"], conclusion: "cancelled" })), /отменён/);
+    assert.match(no(run({ codes: ["08a"], attempt: 3 })), /уже 3 попытки/);
+    assert.match(no(run({ codes: ["08a"], active: true, status: "in_progress", conclusion: null })), /ещё идёт/);
+    assert.match(no(run({ codes: ["08a"], kind: "fill" })), /только у сценариев и сборок/);
+    assert.equal(no(failed, rowsOf([["08a", "video"], ["08b", "studio"]])), "уже готово или запущено заново");
+    // Тот же ролик потом собрали удачно — повторять нечего.
+    const later = run({ id: 8, codes: ["08a", "08b"], conclusion: "success", createdAt: "2026-10-08T22:00:00Z" });
+    assert.equal(canRetry(failed, { runs: [later, failed], rows }).ok, false);
+    // Последний упавший за двое суток — для «Сейчас» и напоминания.
+    assert.equal(failedRun([later, failed], now), null, "последний закончился удачно");
+    assert.equal(failedRun([failed], now)?.id, 7);
+    assert.equal(failedRun([failed], now + 3 * DAY_MS), null, "старше двух суток — не напоминаем");
   });
 
   await test("повтор платного запуска: идёт или только что запускали — отказ; после сбоя и другой workflow — можно", () => {

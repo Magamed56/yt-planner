@@ -9,13 +9,16 @@ import { applyUpdate, fillItemsOf, matchVideos, planUpdates, type ChannelVideo, 
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
 import { dispatchOnce } from "@/lib/dispatch";
-import { assetText, dispatchWorkflow, getVariable, GithubError, readFileWithSha, readJson, setVariable, writeFile } from "@/lib/github";
+import { assetText, dispatchWorkflow, getVariable, GithubError, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
+import { canRetry } from "@/lib/ops";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
 import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
 import { SESSION_COOKIE } from "@/lib/session";
 import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, parseQueueOrder, QUEUE_ORDER_VAR, queueSort, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
+import { parseUsage, usageSummary } from "@/lib/stats";
+import { plural } from "@/lib/stages";
 import { channelVideos, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
 
 export interface ActionResult {
@@ -79,6 +82,40 @@ export async function videosAction(codes: string[]): Promise<DispatchResult | Ac
     if (!list.length) return fail("Отметьте ролики из плана.");
     const dispatched = await dispatchOnce("video-studio.yml", { mode: "batch", plan: list.join(","), upload: "release" }, "batch", list, channel.schedule.timezone);
     return { ...ok(`Запущено: ${codesLabel(list)} — недостающие сценарии, затем сборка (≈ 8–10 минут на ролик). Видео появится в карточке ролика.`), dispatched };
+  });
+}
+
+// ---- повтор упавшего запуска ----
+
+export interface RetryPreview extends ActionResult {
+  attempt: number; // какая попытка будет
+}
+
+// Что будет стоить повтор — перед подтверждением: озвучки заново и сколько уже потрачено
+// сегодня из бесплатного лимита Gemini (content/usage.jsonl читаем только здесь, по нажатию).
+export async function retryPreviewAction(runId: number): Promise<RetryPreview | ActionResult> {
+  return guarded(async () => {
+    const [state, usageText] = await Promise.all([loadState(), readFile(`${STUDIO_DIR}/content/usage.jsonl`).catch(() => null)]);
+    const run = state.runs.find((r) => r.id === runId);
+    if (!run) return fail("Этого запуска нет в списке — обновите страницу.");
+    const can = canRetry(run, state);
+    if (!can.ok) return fail(`Не повторяю «${run.title}»: ${can.reason}.`);
+    const parsed = usageText ? parseUsage(usageText) : null;
+    const g = parsed?.records.length ? usageSummary(parsed.records, new Date(), state.timezone).gemini : null;
+    const what = can.cost ? `озвучит заново ${can.cost} ${plural(can.cost, "ролик", "ролика", "роликов")}` : "перепишет сценарии (Claude)";
+    return { ok: true, message: `Повтор «${run.title}» ${what}${g ? ` · Gemini сегодня ${g.today}/${g.limit}` : ""}.`, attempt: run.attempt + 1 };
+  });
+}
+
+export async function retryRunAction(runId: number): Promise<ActionResult> {
+  return guarded(async () => {
+    const state = await loadState();
+    const run = state.runs.find((r) => r.id === runId);
+    if (!run) return fail("Этого запуска нет в списке — обновите страницу.");
+    const can = canRetry(run, state);
+    if (!can.ok) return fail(`Не повторяю «${run.title}»: ${can.reason}.`);
+    await rerunFailedJobs(run.id);
+    return ok(`Запущена попытка ${run.attempt + 1}: «${run.title}». Те же настройки, что в первый раз; следите в «Запусках».`);
   });
 }
 

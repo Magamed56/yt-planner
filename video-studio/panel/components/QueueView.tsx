@@ -12,6 +12,7 @@ import DownloadSheet from "./DownloadSheet";
 import FeedView from "./FeedView";
 import NowCard from "./NowCard";
 import PipelineStrip from "./PipelineStrip";
+import { useRetry } from "./RetryConfirm";
 import VideoSheet from "./VideoSheet";
 
 type Filter = "ahead" | "all" | Stage;
@@ -86,6 +87,10 @@ export default function QueueView({ state, initialMode, initialSelected = null }
   const [chosen, setChosen] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const retry = useRetry((r) => {
+    setToast({ text: r.message, ok: r.ok });
+    if (r.ok) router.refresh();
+  });
   // Подсказку про перетаскивание можно убрать — запоминаем в браузере (может не быть доступа).
   const [hintHidden, setHintHidden] = useState(false);
   useEffect(() => {
@@ -342,10 +347,11 @@ export default function QueueView({ state, initialMode, initialSelected = null }
           <NowCard
             todos={todos}
             doneUntil={state.runwayLabel}
-            disabled={busy || chosen !== null}
+            disabled={busy || retry.busy || chosen !== null}
             onDownload={saveWaiting}
             onFind={() => void findNew()}
             onOpen={openSheet}
+            onRetry={(id) => void retry.start(id)}
           />
 
           <div className="page-head">
@@ -492,7 +498,8 @@ export default function QueueView({ state, initialMode, initialSelected = null }
           </button>
         </div>
       )}
-      {toast && !pickedRow && !choosingBar && (
+      {retry.bar}
+      {toast && !pickedRow && !choosingBar && !retry.open && (
         <div className={`toast${toast.ok ? "" : " err"}`} role="status">
           <span>{toast.text}</span>
           {toast.undo && (

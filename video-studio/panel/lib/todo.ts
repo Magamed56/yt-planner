@@ -2,7 +2,8 @@
 // утреннего уведомления, чтобы все три говорили одно и то же. Чистая функция по уже собранному
 // состоянию панели, без сети; проверяет scripts/todo-test.ts.
 import { plural, type Stage } from "./stages";
-import { failedRun, type PanelState, type Row } from "./state";
+import { canRetry, failedRun } from "./ops";
+import type { PanelState, Row } from "./state";
 
 export type TodoLevel = "error" | "warn" | "info";
 
@@ -10,7 +11,8 @@ export type TodoAction =
   | { kind: "download"; label: string; codes: string[] } // видео и обложки — лист «Скачать»
   | { kind: "find"; label: string } // «Найти новые загрузки»
   | { kind: "open"; label: string; code: string } // карточка ролика
-  | { kind: "href"; label: string; href: string }; // страница панели
+  | { kind: "href"; label: string; href: string } // страница панели
+  | { kind: "retry"; label: string; runId: number }; // повтор упавшего запуска (с подтверждением)
 
 export interface Todo {
   id: "youtube" | "run" | "problem" | "upload" | "fill" | "runway";
@@ -81,15 +83,16 @@ export function buildTodo(state: PanelState, now: Date): Todo[] {
 
   const run = failedRun(state.runs, nowMs);
   if (run) {
+    const where = run.failedStage ? ` на этапе «${run.failedStage}»` : "";
     todos.push({
       id: "run",
       level: "error",
-      title: `Не удался запуск «${run.title}»`,
-      detail: `${run.createdLabel} — причина в логе`,
-      push: `не удался запуск «${run.title}»`,
+      title: `Не удался запуск «${run.title}»${where}`,
+      detail: `${run.createdLabel}${run.attempt > 1 ? ` · попытка ${run.attempt}` : ""} — подробности в логе`,
+      push: `не удался запуск «${run.title}»${where}`,
       deadline: null,
       codes: [],
-      action: { kind: "href", label: "Запуски", href: "/runs" },
+      action: canRetry(run, state).ok ? { kind: "retry", label: "Повторить", runId: run.id } : { kind: "href", label: "Запуски", href: "/runs" },
       secondary: { label: "Лог ↗", href: run.url },
     });
   }

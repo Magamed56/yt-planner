@@ -17,6 +17,7 @@ export interface NowHandlers {
   onDownload: (codes: string[]) => void;
   onFind: () => void;
   onOpen: (code: string) => void;
+  onRetry: (runId: number) => void;
 }
 
 function TodoItem({ t, disabled, h }: { t: Todo; disabled: boolean; h: NowHandlers }) {
@@ -57,6 +58,11 @@ function TodoItem({ t, disabled, h }: { t: Todo; disabled: boolean; h: NowHandle
             )}
             {a?.kind === "open" && (
               <button className="btn small primary" disabled={disabled} onClick={() => h.onOpen(a.code)}>
+                {a.label}
+              </button>
+            )}
+            {a?.kind === "retry" && (
+              <button className="btn small primary" disabled={disabled} onClick={() => h.onRetry(a.runId)}>
                 {a.label}
               </button>
             )}

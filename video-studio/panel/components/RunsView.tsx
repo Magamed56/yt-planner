@@ -14,12 +14,13 @@ import {
   type FillPreview,
 } from "@/app/actions";
 import { setBadge } from "@/lib/badge";
-import { pickCleanup } from "@/lib/ops";
+import { canRetry, pickCleanup } from "@/lib/ops";
 import { notePending, usePending } from "@/lib/pending";
 import type { AutopilotSettings, PanelState, RunInfo } from "@/lib/state";
 import { STAGE_LABEL, codesLabel } from "@/lib/stages";
 import { badgeCount, buildTodo } from "@/lib/todo";
 import AppShell from "./AppShell";
+import { useRetry } from "./RetryConfirm";
 import RunProgressBar from "./RunProgressBar";
 
 const KEEP_OPTIONS = [0, 3, 7, 14, 30, 60, 90, 180];
@@ -57,6 +58,10 @@ export default function RunsView({ state }: { state: PanelState }) {
   const cleanup = pickCleanup(state.releaseVideos, auto.keepReleaseDays, Date.parse(state.generatedAt));
   const keepOptions = KEEP_OPTIONS.includes(auto.keepReleaseDays) ? KEEP_OPTIONS : [...KEEP_OPTIONS, auto.keepReleaseDays].sort((a, b) => a - b);
 
+  const retry = useRetry((r) => {
+    setToast({ text: r.message, ok: r.ok });
+    if (r.ok) router.refresh();
+  });
   // Только что запущенные — «в очереди», пока GitHub не покажет запуск: второе нажатие не нужно.
   const pending = usePending();
   const queuedNow = picked.some((c) => pending.has(c)) || pickedTopics.some((c) => pending.has(c));
@@ -321,6 +326,21 @@ export default function RunsView({ state }: { state: PanelState }) {
                     лог ↗
                   </a>
                   {r.active && r.progress && <RunProgressBar progress={r.progress} runId={r.id} />}
+                  {!r.active && (r.conclusion === "failure" || r.conclusion === "timed_out") && (
+                    <div className="run-failed small">
+                      <span>
+                        {r.failedStage ? `Упал на этапе «${r.failedStage}»` : "Не удался"}
+                        {r.failedStep && r.failedStep !== r.failedStage ? ` (шаг «${r.failedStep}»)` : ""}
+                        {r.attempt > 1 ? ` · попытка ${r.attempt}` : ""}
+                        {r.durationLabel ? ` · шёл ${r.durationLabel}` : ""}
+                      </span>
+                      {canRetry(r, state).ok && (
+                        <button className="btn small primary" disabled={retry.busy || busy !== null} onClick={() => void retry.start(r.id)}>
+                          Повторить
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -346,7 +366,8 @@ export default function RunsView({ state }: { state: PanelState }) {
           </button>
         </section>
       </main>
-      {toast && (
+      {retry.bar}
+      {toast && !retry.open && (
         <div className={`toast${toast.ok ? "" : " err"}`} role="status">
           <span>{toast.text}</span>
           <button className="btn small ghost" onClick={() => setToast(null)} aria-label="Скрыть">
