@@ -1,8 +1,11 @@
 // Визуал сцены (контракт — src/pipeline/contracts.ts):
 //   findVisual(scene, ctx) → { visual, credit }
 // Источники — VISUALS (порядок через запятую, по умолчанию
-// pexels,pixabay,cloudflare; none — без визуала). Источник без ключа тихо
-// пропускается (одно сообщение за запуск). Файл всегда скачивается в
+// pexels,pixabay,wikimedia,openverse,cloudflare; none — без визуала). Источник
+// без ключа тихо пропускается (одно сообщение за запуск); реальные фото
+// (wikimedia, openverse) ключа не требуют. Для сцен про реальные объекты
+// (ctx.realFirst — рубрики VISUALS_REAL_PILLARS, или VISUALS_PREFER=real)
+// реальные фото идут первыми. Файл всегда скачивается в
 // ctx.publicDir/visuals/<id сцены>.<ext> — никаких ссылок на чужие серверы.
 // Для одной сцены функция НИКОГДА не бросает: при неудаче — { type: "none" },
 // и композиция покажет чистую моушен-графику.
@@ -16,19 +19,34 @@ import { downloadToFile } from "./http";
 import { cloudflareProvider } from "./providers/cloudflare";
 import { pexelsProvider } from "./providers/pexels";
 import { pixabayProvider } from "./providers/pixabay";
+import { openverseProvider } from "./providers/openverse";
 import { pollinationsProvider } from "./providers/pollinations";
+import { wikimediaProvider } from "./providers/wikimedia";
 import { buildQueries } from "./query";
 import { envNumber, MB } from "./util";
-import { VisualError, type Candidate, type Stage, type VisualDeps, type VisualProvider } from "./types";
+import { VisualError, type Candidate, type Env, type Stage, type VisualDeps, type VisualHints, type VisualProvider } from "./types";
 
 export const VISUAL_PROVIDERS: Record<string, VisualProvider> = {
   pexels: pexelsProvider,
   pixabay: pixabayProvider,
+  wikimedia: wikimediaProvider,
+  openverse: openverseProvider,
   cloudflare: cloudflareProvider,
   pollinations: pollinationsProvider,
 };
 
-export const DEFAULT_VISUALS = "pexels,pixabay,cloudflare";
+export const DEFAULT_VISUALS = "pexels,pixabay,wikimedia,openverse,cloudflare";
+
+// Рубрики канала (channel.json → pillars), где важен НАСТОЯЩИЙ объект, а не
+// похожая стоковая картинка: история, природа, космос. VISUALS_REAL_PILLARS —
+// свой список через запятую (none — никогда).
+export const DEFAULT_REAL_PILLARS = "history,nature,space";
+
+export function realFirstForPillar(pillar: string | null | undefined, env: Env = process.env): boolean {
+  if (!pillar) return false;
+  const raw = (env.VISUALS_REAL_PILLARS ?? DEFAULT_REAL_PILLARS).trim().toLowerCase();
+  return raw.split(/[,;\s]+/).filter(Boolean).includes(pillar.trim().toLowerCase());
+}
 
 const NONE: VisualResult = { visual: { type: "none" }, credit: null };
 
@@ -92,7 +110,13 @@ interface Step {
 // всех, потом запасные варианты (фото, кроп) — живое видео лучше фото, даже
 // если фото нашлось у источника, стоящего раньше. Порядок VISUALS при этом
 // сохраняется, а AI-генерация остаётся там, где её поставил пользователь.
-export function buildPlan(providers: { provider: VisualProvider; key: string }[], format: VisualContext["format"], preferImages: boolean): Step[] {
+// realFirst — реальные фото (kind "photo") переезжают в начало плана.
+export function buildPlan(
+  providers: { provider: VisualProvider; key: string }[],
+  format: VisualContext["format"],
+  preferImages: boolean,
+  realFirst = false,
+): Step[] {
   const plan: Step[] = [];
   let group: { provider: VisualProvider; key: string }[] = [];
   const flush = () => {
@@ -110,7 +134,8 @@ export function buildPlan(providers: { provider: VisualProvider; key: string }[]
     for (const stage of p.provider.stages(format)) plan.push({ ...p, stage });
   }
   flush();
-  return preferImages ? plan.filter((s) => s.stage.media === "image") : plan;
+  const ordered = realFirst ? [...plan.filter((s) => s.provider.kind === "photo"), ...plan.filter((s) => s.provider.kind !== "photo")] : plan;
+  return preferImages ? ordered.filter((s) => s.stage.media === "image") : ordered;
 }
 
 const safeId = (id: string) => id.replace(/[^a-zA-Z0-9_-]/g, "_") || "scene";
@@ -131,15 +156,16 @@ async function save(c: Candidate, scene: ScriptScene, ctx: VisualContext, deps: 
     const isVideo = c.type === "video";
     const maxBytes = envNumber(deps.env, isVideo ? "VISUALS_MAX_VIDEO_MB" : "VISUALS_MAX_IMAGE_MB", isVideo ? 60 : 15) * MB;
     const timeout = envNumber(deps.env, "VISUALS_DOWNLOAD_TIMEOUT_MS", isVideo ? 120_000 : 45_000);
-    await downloadToFile(deps.fetch, `${label}: скачивание`, c.url, abs, timeout, maxBytes);
+    await downloadToFile(deps.fetch, `${label}: скачивание`, c.url, abs, timeout, maxBytes, c.headers);
   } else {
     throw new VisualError(`${label}: у кандидата нет ни ссылки, ни данных.`);
   }
   const credit = creditText(c.credit);
-  return c.type === "video" ? { type: "video", src: rel, durationSec: c.durationSec ?? 0, credit } : { type: "image", src: rel, credit };
+  if (c.type === "video") return { type: "video", src: rel, durationSec: c.durationSec ?? 0, credit };
+  return c.fit === "contain" ? { type: "image", src: rel, credit, fit: "contain" } : { type: "image", src: rel, credit };
 }
 
-export async function findVisual(scene: ScriptScene, ctx: VisualContext, overrides: Partial<VisualDeps> = {}): Promise<VisualResult> {
+export async function findVisual(scene: ScriptScene, ctx: VisualContext & VisualHints, overrides: Partial<VisualDeps> = {}): Promise<VisualResult> {
   const env = overrides.env ?? process.env;
   const deps: VisualDeps = {
     fetch: overrides.fetch ?? ((input, init) => fetch(input, init)),
@@ -152,6 +178,9 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext, overrid
   try {
     const providers = parseVisualsList(env.VISUALS, deps.log);
     if (providers.length === 0) return NONE;
+    // Карта и столбики (scene.map / scene.compare) рисуются композицией сами —
+    // фото под ними не нужно, квоты стоков не тратим (как specialLayout в remotion/lib/cues.ts).
+    if (scene.kind !== "hook" && scene.kind !== "cta" && (scene.map || (scene.compare?.items?.length ?? 0) >= 2)) return NONE;
 
     const ready: { provider: VisualProvider; key: string }[] = [];
     for (const p of providers) {
@@ -166,11 +195,12 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext, overrid
     if (ready.length === 0) return NONE;
 
     const queries = buildQueries(scene);
-    const preferImages = (env.VISUALS_PREFER ?? "").trim().toLowerCase() === "image";
-    for (const step of buildPlan(ready, ctx.format, preferImages)) {
+    const prefer = (env.VISUALS_PREFER ?? "").trim().toLowerCase();
+    const realFirst = Boolean(ctx.realFirst) || prefer === "real";
+    for (const step of buildPlan(ready, ctx.format, prefer === "image", realFirst)) {
       const { provider } = step;
       if (disabled.has(provider.name)) continue;
-      if (provider.kind === "stock" && queries.length === 0) continue;
+      if (provider.kind !== "ai" && queries.length === 0) continue;
       let candidates: Candidate[];
       try {
         candidates = await step.stage.run({ scene, ctx, queries, deps, key: step.key });

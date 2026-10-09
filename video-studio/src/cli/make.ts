@@ -11,15 +11,16 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { FPS, THEME_NAMES, layoutScenes, type Format, type ThemeName, type VideoScript } from "../types";
+import { FPS, THEME_NAMES, layoutScenes, type Format, type ThemeName, type VideoProps, type VideoScript } from "../types";
 import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult } from "../pipeline/contracts";
-import { makeWhoosh, prepareMusic } from "../pipeline/audio/index";
-import { applyChannelDefaults, type ChannelConfig } from "../pipeline/channel";
+import { makeSfx, prepareMusic } from "../pipeline/audio/index";
+import { applyChannelDefaults, applyPillarVoice, brandIntroEnabled, type ChannelConfig } from "../pipeline/channel";
 import { loadChannel } from "../pipeline/channel-file";
 import { coverFrame, frameToMs, renderCover } from "../pipeline/cover";
 import { buildInstagramCaption, instagramEnvHelp, missingInstagramEnv, publishRunDir, writeInstagramAssets, type InstagramMeta, type RunDirPublishResult } from "../pipeline/instagram";
 import { buildYoutubeMeta, descriptionTxt, youtubeChapters } from "../pipeline/meta";
 import { buildVideoProps } from "../pipeline/props";
+import { qcMode, qcSummary, runQc, writeQc, type QcReport } from "../pipeline/qc";
 import { checkBrowserEnv, preparePublicDir, renderVideo, type RenderResult } from "../pipeline/render";
 import { generateScript, lintScript, ScriptGenerationError } from "../pipeline/script/index";
 // Журнал расхода (content/usage.jsonl) и «уже было на канале» — см. src/pipeline/script/.
@@ -29,7 +30,8 @@ import { appendUsage, countPostRequests, llmUsageRecord, ttsUsageRecord, type Ll
 import { GEMINI_DEFAULT_MODEL } from "../pipeline/voice/providers/gemini";
 import { slugify } from "../pipeline/slug";
 import { captionsToSrt } from "../pipeline/srt";
-import { findVisual } from "../pipeline/visuals/index";
+import { parsePlan, scriptCode } from "../pipeline/plan";
+import { findVisual, realFirstForPillar } from "../pipeline/visuals/index";
 import { readVisualsManifest, reusableEntry, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { getVoiceProvider, resolvePiperVoice } from "../pipeline/voice/index";
 import { EDGE_DEFAULT_VOICE } from "../pipeline/voice/providers/edge";
@@ -261,6 +263,12 @@ async function main() {
   } catch (e) {
     throw new UserError(errText(e));
   }
+  // Рубрика темы из content/plan.json (для сценариев sut-08a-….json): реальные фото для истории/природы/космоса.
+  const pillar = planPillar(args.script);
+  // Голос и темп рубрики (channel.json → voiceByPillar) — до умолчаний канала: важнее голоса
+  // канала, но слабее --voice и переменных окружения.
+  const pillarVoice = applyPillarVoice(channel, pillar);
+  if (pillarVoice.length) console.log(`  рубрика «${pillar}»: голос — ${pillarVoice.join(", ")}`);
   // Голос Gemini, его манера и подпись «облачка» — из канала, если не заданы в окружении.
   const applied = applyChannelDefaults(channel);
   if (channel.file) console.log(`  канал: «${channel.name ?? "без названия"}» (${rel(channel.file)})${applied.length ? `, умолчания: ${applied.join(", ")}` : ""}`);
@@ -374,7 +382,9 @@ async function main() {
     const prev = readVisualsManifest(publicDir);
     const next: Record<string, ManifestEntry> = {};
     const minDur = (i: number) => voices[i].durationMs / 1000 + 0.8;
-    const keys = script.scenes.map((scene) => visualKey(scene, format, process.env));
+    const realFirst = realFirstForPillar(pillar);
+    if (realFirst) console.log(`  рубрика «${pillar}»: сначала реальные фото (Wikimedia Commons, Openverse)`);
+    const keys = script.scenes.map((scene) => visualKey(scene, format, process.env, { realFirst }));
     const reused = script.scenes.map((scene, i) => reusableEntry(prev[scene.id], keys[i], publicDir, minDur(i)));
     // Клипы, которые остаются, — сразу в usedIds: заново подобранные сцены их не повторят.
     const usedIds = new Set<string>(reused.flatMap((e) => (e?.candidateId ? [e.candidateId] : [])));
@@ -389,7 +399,7 @@ async function main() {
         candidateId = old.candidateId;
       } else {
         const before = new Set(usedIds);
-        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds });
+        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds, realFirst });
         candidateId = [...usedIds].find((id) => !before.has(id)) ?? null;
       }
       next[scene.id] = { key: keys[i], result: r, candidateId, minDurationSec: minDur(i) };
@@ -406,20 +416,23 @@ async function main() {
   });
 
   // 4. Музыка и звук перехода
-  const { music, whooshSrc } = await steps.run("Музыка и звук перехода", async () => {
+  // Бренд-заставка ≤ 0,5 с поверх начала хука: channel.json → brandIntro, BRAND_INTRO=off|on.
+  const brandIntro = brandIntroEnabled(channel);
+  const { music, whooshSrc, sfx } = await steps.run("Музыка и звук перехода", async () => {
     fs.rmSync(path.join(publicDir, "music"), { recursive: true, force: true });
     fs.rmSync(path.join(publicDir, "sfx"), { recursive: true, force: true });
     // Длина — по той же раскладке, что у props: с паузами викторины и карточками глав.
     const durationMs = Math.round((layoutScenes(script.scenes.map((s, i) => ({ ...s, audioDurationMs: Math.max(0, Math.round(voices[i]!.durationMs)) }))).durationInFrames / FPS) * 1000);
     const music = await prepareMusic(publicDir, { durationMs, mood: args.mood || process.env.MUSIC_MOOD?.trim() || undefined, seed: slug });
     if (!music) console.log("  без музыки (MUSIC=none)");
-    const whooshSrc = await makeWhoosh(publicDir);
-    return { music, whooshSrc };
+    // Свист переходов (3 варианта) + звуки монтажа: пункты, удар цифры, искра заставки (SFX=whoosh|off).
+    const { whooshSrc, sfx } = await makeSfx(publicDir, { sting: brandIntro });
+    return { music, whooshSrc, sfx };
   });
 
   // 5. Props композиции
   const props = await steps.run("Сборка таймлинии (props.json)", async () => {
-    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, format, theme: script.theme, channelName: channel.name });
+    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, sfx, brandIntro, format, theme: script.theme, channelName: channel.name });
     writeJson(path.join(runDir, "props.json"), p);
     console.log(`  длительность ${(p.durationInFrames / FPS).toFixed(1)} с (${p.durationInFrames} кадров), голос ${(voiceDurationMs / 1000).toFixed(1)} с, слов в субтитрах: ${p.captions.length}`);
     return p;
@@ -454,6 +467,7 @@ async function main() {
   // 7. Рендер
   let render: RenderResult | null = null;
   let cover: string | null = null;
+  let qcFile: string | null = null;
   if (args.render) {
     render = await steps.run("Рендер видео и обложки", async () => {
       const r = await renderVideo({ runDir, props, concurrency: args.concurrency });
@@ -466,6 +480,8 @@ async function main() {
       } catch (e) {
         console.warn(`  ⚠ обложку Reels сделать не удалось: ${errText(e).split("\n")[0]} — Instagram возьмёт кадр по thumb_offset`);
       }
+      // QC (pipeline/qc.ts) — до загрузки: битый ролик не должен уйти на YouTube.
+      qcFile = await checkRender(r, props, runDir);
       return r;
     });
   } else steps.skip("Рендер видео и обложки", "--no-render");
@@ -515,6 +531,7 @@ async function main() {
       cost: rel(path.join(runDir, "cost.json")),
       instagramCaption: rel(files.igCaption),
       cover: cover ? rel(cover) : null,
+      qc: qcFile ? rel(qcFile) : null,
     },
     costUsd: files.cost.totalUsd,
     renderSec: render ? Number((render.renderMs / 1000).toFixed(1)) : null,
@@ -544,6 +561,52 @@ async function main() {
     instagram_url: instagram?.permalink ?? instagram?.mediaId,
   });
   ghSummary(summaryMarkdown(result, render, script));
+}
+
+// ---- QC готового видео ----
+
+// qc.json рядом с видео и сводка в лог. Серьёзная проблема (нет звука, не та
+// длительность или размер) — видео переименовывается в video-qc-failed.mp4
+// (релиз и загрузка его не возьмут) и запуск падает; QC=warn — только
+// предупреждения, QC=off — без проверки. Сбой самой проверки ролик не губит.
+async function checkRender(render: RenderResult, props: VideoProps, runDir: string): Promise<string | null> {
+  const mode = qcMode();
+  if (mode === "off") {
+    console.log("  QC пропущен (QC=off)");
+    return null;
+  }
+  let report: QcReport;
+  try {
+    report = await runQc(render.videoFile, props, { mode });
+  } catch (e) {
+    console.warn(`  ⚠ QC не выполнен: ${errText(e).split("\n")[0]}`);
+    return null;
+  }
+  const file = writeQc(runDir, report);
+  for (const line of qcSummary(report)) console.log(`  ${line}`);
+  if (report.ok) return file;
+  const failed = path.join(path.dirname(render.videoFile), "video-qc-failed.mp4");
+  fs.rmSync(failed, { force: true });
+  fs.renameSync(render.videoFile, failed);
+  const errors = report.issues.filter((i) => i.severity === "error").map((i) => i.message.split(" — ")[0]);
+  throw new UserError(
+    `QC не пройден: ${errors.join("; ")}.\n  Видео переименовано в ${rel(failed)}, чтобы его не опубликовали; подробности — ${rel(file)}.\n  Опубликовать всё равно: QC=warn npm run make -- … (или исправьте причину и соберите заново).`,
+  );
+}
+
+// ---- Рубрика ролика ----
+
+// Сценарий из плана (scripts/sut-08a-….json) → рубрика темы в content/plan.json.
+// Нет кода, плана или темы — null, всё по умолчанию (битый план не валит сборку).
+function planPillar(scriptFile: string | undefined): string | null {
+  const code = scriptFile ? scriptCode(scriptFile) : null;
+  if (!code) return null;
+  try {
+    const plan = parsePlan(JSON.parse(fs.readFileSync(path.join(ROOT, "content", "plan.json"), "utf8").replace(/^﻿/, "")));
+    return plan.items.find((it) => it.id === code)?.pillar?.trim() || null;
+  } catch {
+    return null;
+  }
 }
 
 // ---- Папка ролика ----

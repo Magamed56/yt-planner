@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Html5Audio, Sequence, useVideoConfig } from "remotion";
 import type { RenderScene, VideoProps } from "../../types";
+import { sceneCues } from "../lib/cues";
 import { resolveSrc } from "./MediaLayer";
 
 // Весь звук ролика — отдельным слоем ВНЕ TransitionSeries, на абсолютных
@@ -86,19 +87,57 @@ export const AudioLayer: React.FC<{ props: VideoProps }> = ({ props }) => {
           volume={(f) => volumes[Math.max(0, Math.min(volumes.length - 1, Math.round(f)))]}
         />
       ) : null}
-      {props.whooshSrc && props.transitionFrames > 0
-        ? props.scenes.slice(1).map((s) => (
-            <Sequence
-              key={`whoosh-${s.id}`}
-              name={`Свист ${s.id}`}
-              from={Math.max(0, s.startFrame - WHOOSH_LEAD_FRAMES)}
-              durationInFrames={Math.round(fps * 2)}
-              layout="none"
-            >
-              <Html5Audio src={resolveSrc(props.whooshSrc as string)} volume={props.sfxVolume} />
-            </Sequence>
-          ))
+      {props.transitionFrames > 0
+        ? props.scenes.slice(1).map((s, i) => {
+            // Варианты свиста по кругу и чуть разная громкость — склейки не звучат одинаково.
+            const variants = props.sfx?.whooshes?.length ? props.sfx.whooshes : props.whooshSrc ? [props.whooshSrc] : [];
+            if (variants.length === 0) return null;
+            return (
+              <Sequence
+                key={`whoosh-${s.id}`}
+                name={`Свист ${s.id}`}
+                from={Math.max(0, s.startFrame - WHOOSH_LEAD_FRAMES)}
+                durationInFrames={Math.round(fps * 2)}
+                layout="none"
+              >
+                <Html5Audio src={resolveSrc(variants[i % variants.length]!)} volume={props.sfxVolume * WHOOSH_GAIN[i % WHOOSH_GAIN.length]!} />
+              </Sequence>
+            );
+          })
         : null}
+      <SceneSfx props={props} />
     </>
   );
+};
+
+// Звуки под голосом — заметно тише свиста переходов (тот звучит в паузе между
+// сценами): «пузырёк» пункта, удар и нарастание у крупной цифры, искра заставки.
+const WHOOSH_GAIN = [1, 0.86, 0.93];
+const POP_GAIN = 0.5;
+const IMPACT_GAIN = 0.9;
+const RISE_GAIN = 0.38;
+const STING_GAIN = 0.45;
+const RISE_FRAMES = 36; // длина rise.wav (1,2 с): его конец совпадает с ударом
+
+const SceneSfx: React.FC<{ props: VideoProps }> = ({ props }) => {
+  const { fps } = useVideoConfig();
+  const sfx = props.sfx;
+  const cues = useMemo(() => (sfx ? props.scenes.map((s) => sceneCues(s, fps)) : []), [sfx, props.scenes, fps]);
+  if (!sfx) return null;
+  const v = props.sfxVolume;
+  const at = (from: number, key: string, name: string, src: string, volume: number, frames: number) => (
+    <Sequence key={key} name={name} from={Math.max(0, Math.round(from))} durationInFrames={frames} layout="none">
+      <Html5Audio src={resolveSrc(src)} volume={volume} />
+    </Sequence>
+  );
+  const out: React.ReactNode[] = [];
+  if (sfx.sting && props.brandIntro) out.push(at(0, "sting", "Искра заставки", sfx.sting, v * STING_GAIN, Math.round(fps)));
+  props.scenes.forEach((s, i) => {
+    const c = cues[i];
+    if (!c) return;
+    if (sfx.pop) c.pops.forEach((f, k) => out.push(at(s.startFrame + f, `pop-${s.id}-${k}`, `Пункт ${s.id}`, sfx.pop!, v * POP_GAIN, Math.round(fps * 0.5))));
+    if (sfx.rise) c.rises.forEach((f, k) => out.push(at(s.startFrame + f - RISE_FRAMES, `rise-${s.id}-${k}`, `Нарастание ${s.id}`, sfx.rise!, v * RISE_GAIN, RISE_FRAMES + 2)));
+    if (sfx.impact) c.impacts.forEach((f, k) => out.push(at(s.startFrame + f, `impact-${s.id}-${k}`, `Удар ${s.id}`, sfx.impact!, v * IMPACT_GAIN, Math.round(fps))));
+  });
+  return <>{out}</>;
 };

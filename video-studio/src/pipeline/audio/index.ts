@@ -10,14 +10,17 @@ import { existsSync, statSync } from "node:fs";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { MusicChoice } from "../contracts";
+import type { SfxSet } from "../../types";
 import { hashString } from "./dsp";
 import { creditFor, listTracks, MUSIC_EXTENSIONS, pickTrack, type LibraryTrack } from "./library";
 import { synthAmbient } from "./music";
 import { envPath } from "./paths";
+import { synthImpact, synthPop, synthRise, synthSting } from "./sfx";
 import { encodeWav16 } from "./wav";
-import { synthWhoosh } from "./whoosh";
+import { WHOOSH_VARIANTS, synthWhoosh } from "./whoosh";
 
 export { MUSIC_MOODS, resolveMood, synthAmbient, type MusicMood } from "./music";
+export { synthImpact, synthPop, synthRise, synthSting } from "./sfx";
 export { synthWhoosh } from "./whoosh";
 
 export interface PrepareMusicOptions {
@@ -91,4 +94,30 @@ export async function makeWhoosh(publicDir: string): Promise<string> {
   await mkdir(path.dirname(dest), { recursive: true });
   await writeFile(dest, encodeWav16(synthWhoosh(44100)));
   return rel;
+}
+
+// Весь набор звуков монтажа (переходы, пункты, цифры, заставка) — локальный
+// синтез за доли секунды. SFX=whoosh — только свист переходов (как раньше),
+// SFX=off — без звуков монтажа; громкость — SFX_VOLUME.
+export async function makeSfx(publicDir: string, opts: { sting?: boolean } = {}): Promise<{ whooshSrc: string | null; sfx: SfxSet | null }> {
+  const mode = (process.env.SFX ?? "").trim().toLowerCase();
+  if (mode === "off" || mode === "none" || mode === "0") return { whooshSrc: null, sfx: null };
+  const dir = path.join(publicDir, "sfx");
+  await mkdir(dir, { recursive: true });
+  const put = async (name: string, audio: ReturnType<typeof synthWhoosh>) => {
+    await writeFile(path.join(dir, name), encodeWav16(audio));
+    return `sfx/${name}`;
+  };
+  // Первый вариант — прежний whoosh.wav: старые props.json ссылаются на него.
+  const whooshes: string[] = [];
+  for (const [i, v] of WHOOSH_VARIANTS.entries()) whooshes.push(await put(i === 0 ? "whoosh.wav" : `whoosh-${i + 1}.wav`, synthWhoosh(44100, v)));
+  if (mode === "whoosh") return { whooshSrc: whooshes[0]!, sfx: null };
+  const sfx: SfxSet = {
+    whooshes,
+    pop: await put("pop.wav", synthPop(44100)),
+    impact: await put("impact.wav", synthImpact(44100)),
+    rise: await put("rise.wav", synthRise(44100)),
+    sting: opts.sting ? await put("sting.wav", synthSting(44100)) : null,
+  };
+  return { whooshSrc: whooshes[0]!, sfx };
 }

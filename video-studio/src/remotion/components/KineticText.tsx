@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Easing, interpolate, interpolateColors, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import type { RenderScene } from "../../types";
+import { countFrames, formatLike, numberInfo } from "../lib/numbers";
 import { fitTokens, parseMarkup, type FontSpec, type TextRun, type TextToken } from "../lib/text";
 import { accentFrame, scheduleTokens } from "../lib/timing";
 import { withAlpha, type Theme } from "../theme";
@@ -40,6 +41,7 @@ export interface KineticTextProps {
   firstAt?: number; // первое слово не позже этого кадра (хук: кадр 0 не пустой)
   impact?: number; // «удар» блока при появлении каждого слова (0..1), для pop
   dim?: number; // karaoke: непрозрачность ещё не произнесённых слов
+  numbers?: boolean; // числа в тексте подсвечиваются и докручиваются (по умолчанию да)
 }
 
 export function useFittedTokens(text: string, font: FontSpec, box: { w: number; h: number }, maxFontSize: number, minFontSize?: number, maxLines?: number) {
@@ -155,6 +157,7 @@ export const KineticText: React.FC<KineticTextProps> = (p) => {
                   color={color}
                   shadow={p.shadow !== false}
                   dim={p.dim ?? 0.24}
+                  numbers={p.numbers !== false}
                 />
               </React.Fragment>
             ))}
@@ -164,6 +167,60 @@ export const KineticText: React.FC<KineticTextProps> = (p) => {
     </div>
   );
 };
+
+// Пока число бежит, его ширина меняется: держим место под итоговое значение
+// (невидимая копия), а бегущие цифры рисуем поверх по центру — соседние слова
+// и переносы строк не дёргаются.
+const CountBox: React.FC<{ final: string; shown: string }> = ({ final, shown }) => (
+  <span style={{ position: "relative", display: "inline-block" }}>
+    <span style={{ visibility: "hidden" }}>{final}</span>
+    <span style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap" }}>{shown}</span>
+  </span>
+);
+
+// Число в слове («84%», «≈28 000»): цвет акцента и счёт от нуля, пока слово
+// появляется; в конце — короткий «толчок» (pop 0..1). Годы, дроби и мелкие
+// целые — только подсветка; акцентное слово (*…*) сохраняет свой стиль, у
+// него только счёт. null — в слове нет числа. Берут и пункты списка.
+export function numberRender(
+  token: TextToken,
+  o: { frame: number; appearAt: number; counting: boolean; theme: Theme; fontSize: number; shadow?: string },
+): { render: (run: TextRun) => React.ReactNode; pop: number } | null {
+  const num = numberInfo(token.text);
+  if (!num) return null;
+  const start = o.appearAt + 2;
+  const len = countFrames(num.value);
+  const counting = num.count && o.counting;
+  const k = counting ? interpolate(o.frame, [start, start + len], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) }) : 1;
+  const pop = token.accent ? 0 : interpolate(o.frame - (counting ? start + len : o.appearAt + 4), [0, 9], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const style: React.CSSProperties | undefined = token.accent
+    ? undefined
+    : { color: o.theme.accent, textShadow: `0 0 ${o.fontSize * 0.32}px ${withAlpha(o.theme.accent, 0.42)}${o.shadow ? `, ${o.shadow}` : ""}` };
+  const offsets = new Map<TextRun, number>();
+  token.runs.reduce((acc, r) => (offsets.set(r, acc), acc + r.text.length), 0);
+  const render = (run: TextRun): React.ReactNode => {
+    const text = run.text;
+    const offset = offsets.get(run) ?? 0;
+    const ns = num.start - offset;
+    const ne = ns + num.raw.length;
+    if (ns < 0 || ne > text.length) return text; // число разрезано разметкой — без анимации
+    const a = Math.max(0, num.hlStart - offset);
+    const b = Math.min(text.length, num.hlEnd - offset);
+    const digits = k >= 1 ? num.raw : <CountBox final={num.raw} shown={formatLike(num, num.value * k)} />;
+    return (
+      <>
+        {text.slice(0, a)}
+        <span style={style}>
+          {text.slice(a, ns)}
+          {digits}
+          {text.slice(ne, b)}
+        </span>
+        {text.slice(b)}
+      </>
+    );
+  };
+  return { render, pop };
+}
 
 const RISE_FRAMES = 12;
 const riseEase = Easing.bezier(0.16, 1, 0.3, 1); // easeOutExpo-подобная: быстрый старт, мягкая посадка
@@ -182,7 +239,8 @@ const Word: React.FC<{
   color: string;
   shadow: boolean;
   dim: number;
-}> = ({ token, appearAt, frame, fps, theme, entrance, highlight, highlightAt, fontSize, color, shadow, dim }) => {
+  numbers: boolean;
+}> = ({ token, appearAt, frame, fps, theme, entrance, highlight, highlightAt, fontSize, color, shadow, dim, numbers }) => {
   const local = frame - appearAt;
   const clamp = {
     extrapolateLeft: "clamp",
@@ -232,10 +290,15 @@ const Word: React.FC<{
   const shine = token.accent ? interpolate(frame - highlightAt, [10, 26], [0, 1], clamp) : 0;
   const baseShadow = shadow ? `0 ${fontSize * 0.04}px ${fontSize * 0.18}px rgba(0,0,0,0.38)` : undefined;
 
+  const nums = numbers
+    ? numberRender(token, { frame, appearAt, counting: entrance !== "karaoke", theme, fontSize, shadow: baseShadow })
+    : null;
+  const numPop = nums?.pop ?? 0;
+
   const renderRuns = (accentColor: string, runs = token.runs) =>
     runs.map((r, i) => (
       <span key={i} style={r.accent ? { color: accentColor } : undefined}>
-        {r.text}
+        {nums ? nums.render(r) : r.text}
       </span>
     ));
   // Маркер/подчёркивание — только под самим словом: пунктуация по краям
@@ -348,8 +411,13 @@ const Word: React.FC<{
         transform,
         transformOrigin: "50% 100%",
         opacity,
-        // Пружина акцента слегка «подпрыгивает» слово в момент произнесения.
-        scale: token.accent ? String(1 + 0.06 * Math.sin(Math.min(1, Math.max(0, hl)) * Math.PI)) : undefined,
+        // Пружина акцента слегка «подпрыгивает» слово в момент произнесения;
+        // число — когда докрутилось.
+        scale: token.accent
+          ? String(1 + 0.06 * Math.sin(Math.min(1, Math.max(0, hl)) * Math.PI))
+          : numPop > 0 && numPop < 1
+            ? String(1 + 0.08 * Math.sin(numPop * Math.PI))
+            : undefined,
       }}
     >
       {inner}

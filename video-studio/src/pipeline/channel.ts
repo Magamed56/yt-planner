@@ -27,6 +27,17 @@ export interface ChannelConfig {
   cta: { subscribe: string | null; comment: string | null; onScreenComment: string | null };
   links: { youtube: string | null; instagram: string | null };
   disclaimer: string | null;
+  // Голос по рубрике (channel.json → voiceByPillar: { "history": { "voice": "Charon", "rate": "-5%" } }).
+  // Нет записи для рубрики — голос канала как раньше.
+  voiceByPillar: Record<string, PillarVoice>;
+  brandIntro: boolean; // бренд-заставка ≤ 0,5 с поверх начала хука (по умолчанию да)
+}
+
+export interface PillarVoice {
+  provider: string | null; // gemini | edge | piper | … (иначе — как выбрано для канала)
+  voice: string | null; // Charon (gemini) · ru-RU-SvetlanaNeural (edge) · ru_RU-irina-medium (piper)
+  rate: string | null; // темп: "+5%", "-10%" (edge, piper)
+  style: string | null; // манера для Gemini TTS
 }
 
 export const DEFAULT_SCHEDULE: ChannelSchedule = { perDay: 2, publishTimesLocal: ["12:00", "19:00"], timezone: "Europe/Moscow" };
@@ -105,7 +116,55 @@ export function channelFromJson(json: unknown, env: Readonly<Record<string, stri
     cta: { subscribe: str(cta.subscribe), comment: str(cta.comment), onScreenComment: str(cta.onScreenComment) },
     links: { youtube: str(links.youtube), instagram: str(links.instagram) },
     disclaimer: str(raw.disclaimer),
+    voiceByPillar: parseVoiceByPillar(raw.voiceByPillar),
+    brandIntro: raw.brandIntro !== false,
   };
+}
+
+function parseVoiceByPillar(v: unknown): Record<string, PillarVoice> {
+  const out: Record<string, PillarVoice> = {};
+  for (const [id, cfg] of Object.entries(obj(v))) {
+    const c = obj(cfg);
+    const pv: PillarVoice = { provider: str(c.provider)?.toLowerCase() ?? null, voice: str(c.voice), rate: str(c.rate), style: str(c.style) };
+    if (id.trim() && (pv.provider || pv.voice || pv.rate || pv.style)) out[id.trim()] = pv;
+  }
+  return out;
+}
+
+// Голос рубрики → переменные окружения, но только туда, где пусто: явный
+// --voice и переменные GitHub Actions сильнее (TTS_PROVIDER=auto — «не задан»).
+// Применять ДО applyChannelDefaults — тогда голос рубрики важнее голоса канала.
+// Куда класть имя голоса, видно по его виду: «…Neural» — Edge, «ru_RU-…» — Piper,
+// одно слово с заглавной (Charon) — Gemini.
+export function applyPillarVoice(ch: ChannelConfig, pillar: string | null | undefined, env: NodeJS.ProcessEnv = process.env): string[] {
+  const pv = pillar ? ch.voiceByPillar[pillar] : undefined;
+  if (!pv) return [];
+  const applied: string[] = [];
+  const empty = (k: string) => !env[k]?.trim();
+  const set = (k: string, v: string | null) => {
+    if (!v || !empty(k)) return;
+    env[k] = v;
+    applied.push(`${k}=${v}`);
+  };
+  if (pv.provider && (empty("TTS_PROVIDER") || env.TTS_PROVIDER!.trim().toLowerCase() === "auto")) {
+    env.TTS_PROVIDER = pv.provider;
+    applied.push(`TTS_PROVIDER=${pv.provider}`);
+  }
+  if (pv.voice) {
+    const gemini = pv.provider === "gemini" || (!pv.provider && /^[A-Z][a-z]+$/.test(pv.voice));
+    set(gemini ? "GEMINI_TTS_VOICE" : "TTS_VOICE", pv.voice);
+  }
+  set("TTS_RATE", pv.rate);
+  set("GEMINI_TTS_STYLE", pv.style);
+  return applied;
+}
+
+// Бренд-заставка: BRAND_INTRO=off|on сильнее channel.json → brandIntro.
+export function brandIntroEnabled(ch: Pick<ChannelConfig, "brandIntro">, env: Readonly<Record<string, string | undefined>> = process.env): boolean {
+  const v = env.BRAND_INTRO?.trim().toLowerCase();
+  if (v && /^(off|none|0|false|no|нет)$/.test(v)) return false;
+  if (v && /^(on|1|true|yes|да)$/.test(v)) return true;
+  return ch.brandIntro;
 }
 
 // Умолчания конвейера из канала — только туда, где переменная не задана:

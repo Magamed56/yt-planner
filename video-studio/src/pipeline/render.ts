@@ -91,7 +91,8 @@ export async function getBrowserOptions(log: Log = console.log): Promise<Browser
             onProgress: ({ percent, alreadyAvailable }) => {
               if (alreadyAvailable) return;
               const p = Math.round(percent * 100);
-              if (p - lastShown >= 25 || p === 100) {
+              // 100% Remotion сообщает много раз (пока распаковывает) — печатаем один.
+              if (p - lastShown >= 25 || (p === 100 && lastShown < 100)) {
                 lastShown = p;
                 log(`[браузер] ${p}%`);
               }
@@ -111,13 +112,90 @@ export async function getBrowserOptions(log: Log = console.log): Promise<Browser
   return chromeMode ? { chromeMode } : {};
 }
 
+// ---- Качество кодирования ----
+// YouTube перекодирует любой загруженный ролик, и чем чище исходник, тем меньше
+// артефактов после его сжатия (стоковое видео, тёмные градиенты, мелкий текст).
+// Рекомендация YouTube для 1080p30 SDR — ≈ 8 Мбит/с, AAC-LC 48 кГц, GOP в
+// половину частоты кадров, moov в начале файла (faststart: телефон начинает
+// играть сразу) — faststart Remotion для .mp4 делает сам.
+//   VIDEO_QUALITY = high (по умолчанию) | max | standard (прежнее: CRF 21, быстрее)
+//   VIDEO_CRF (0–51, меньше — лучше), VIDEO_BITRATE (например 16M — вместо CRF),
+//   X264_PRESET (ultrafast … veryslow) — тонкая настройка поверх пресета.
+export type VideoQuality = "standard" | "high" | "max";
+export const X264_PRESETS = ["ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow"] as const;
+export type X264Preset = (typeof X264_PRESETS)[number];
+
+type Rate = `${number}${"k" | "K" | "M"}`; // формат битрейта у Remotion: "16M", "320k"
+
+export interface EncoderSettings {
+  quality: VideoQuality;
+  crf: number | null; // постоянное качество
+  videoBitrate: Rate | null; // либо средний битрейт (тогда crf = null)
+  encodingMaxRate: Rate | null;
+  encodingBufferSize: Rate | null;
+  x264Preset: X264Preset;
+  gopSize: number | null;
+  audioBitrate: Rate;
+  sampleRate: number;
+}
+
+const QUALITY_PRESETS: Record<VideoQuality, Omit<EncoderSettings, "quality">> = {
+  // Как было до 10.2026: быстрый черновик.
+  standard: { crf: 21, videoBitrate: null, encodingMaxRate: null, encodingBufferSize: null, x264Preset: "medium", gopSize: null, audioBitrate: "320k", sampleRate: 48000 },
+  // Почти без потерь на глаз: CRF 15, preset slow, ключевой кадр каждые 0,5 с.
+  high: { crf: 15, videoBitrate: null, encodingMaxRate: null, encodingBufferSize: null, x264Preset: "slow", gopSize: Math.round(FPS / 2), audioBitrate: "320k", sampleRate: 48000 },
+  // Гарантированный поток: средний 16 Мбит/с даже на статичной графике.
+  max: { crf: null, videoBitrate: "16M", encodingMaxRate: "24M", encodingBufferSize: "32M", x264Preset: "slow", gopSize: Math.round(FPS / 2), audioBitrate: "320k", sampleRate: 48000 },
+};
+
+export function encoderSettings(env: Record<string, string | undefined> = process.env): EncoderSettings {
+  const raw = (env.VIDEO_QUALITY ?? "").trim().toLowerCase();
+  const quality: VideoQuality = raw === "standard" || raw === "max" || raw === "high" ? raw : "high";
+  if (raw && raw !== quality) console.warn(`[рендер] VIDEO_QUALITY="${raw}" не понят — беру high (варианты: high, max, standard).`);
+  const s: EncoderSettings = { quality, ...QUALITY_PRESETS[quality] };
+  const preset = env.X264_PRESET?.trim().toLowerCase();
+  if (preset) {
+    if ((X264_PRESETS as readonly string[]).includes(preset)) s.x264Preset = preset as X264Preset;
+    else console.warn(`[рендер] X264_PRESET="${preset}" не понят — оставляю ${s.x264Preset}.`);
+  }
+  const bitrate = env.VIDEO_BITRATE?.trim();
+  const crf = Number(env.VIDEO_CRF?.trim());
+  if (bitrate && /^\d+(\.\d+)?[kKmM]$/.test(bitrate)) {
+    const mbps = parseFloat(bitrate) / (/[kK]$/.test(bitrate) ? 1000 : 1);
+    s.crf = null;
+    s.videoBitrate = `${Math.round(mbps * 1000)}K`;
+    s.encodingMaxRate = `${Math.round(mbps * 1.5 * 1000)}K`;
+    s.encodingBufferSize = `${Math.round(mbps * 2 * 1000)}K`;
+  } else if (env.VIDEO_CRF?.trim() && Number.isFinite(crf) && crf >= 0 && crf <= 51) {
+    s.crf = Math.round(crf);
+    s.videoBitrate = null;
+    s.encodingMaxRate = null;
+    s.encodingBufferSize = null;
+  }
+  return s;
+}
+
+// Поля renderMedia из настроек: crf и videoBitrate Remotion вместе не принимает.
+export function encoderOptions(s: EncoderSettings) {
+  return {
+    ...(s.crf !== null ? { crf: s.crf } : { videoBitrate: s.videoBitrate, encodingMaxRate: s.encodingMaxRate, encodingBufferSize: s.encodingBufferSize }),
+    x264Preset: s.x264Preset,
+    gopSize: s.gopSize,
+    audioBitrate: s.audioBitrate,
+    sampleRate: s.sampleRate,
+  };
+}
+
+export const describeEncoder = (s: EncoderSettings): string =>
+  `${s.quality}: x264 ${s.crf !== null ? `CRF ${s.crf}` : `${s.videoBitrate}bit/s`}, preset ${s.x264Preset}${s.gopSize ? `, GOP ${s.gopSize}` : ""}, AAC ${s.audioBitrate} ${s.sampleRate / 1000} кГц`;
+
 export interface RenderOptions {
   runDir: string; // publicDir = <runDir>/public — уже со всеми ассетами
   props: VideoProps;
   videoFile?: string; // по умолчанию <runDir>/video.mp4
   thumbnailFile?: string | null; // по умолчанию <runDir>/thumbnail.png; null — без обложки
   concurrency?: number | null;
-  crf?: number;
+  crf?: number; // поверх VIDEO_QUALITY
   frameRange?: [number, number] | null; // быстрый предпросмотр части ролика
   colorSpace?: "default" | "bt709";
   log?: Log;
@@ -135,6 +213,7 @@ export interface RenderResult {
   bundleMs: number;
   renderMs: number;
   totalMs: number;
+  encoder?: EncoderSettings; // с какими настройками кодировали (для qc.json)
 }
 
 const fmtSec = (sec: number) => {
@@ -209,6 +288,9 @@ export async function renderVideo(opts: RenderOptions): Promise<RenderResult> {
     );
 
     fs.mkdirSync(path.dirname(videoFile), { recursive: true });
+    const enc = encoderSettings();
+    if (opts.crf !== undefined) Object.assign(enc, { crf: opts.crf, videoBitrate: null, encodingMaxRate: null, encodingBufferSize: null });
+    log(`[рендер] кодирование — ${describeEncoder(enc)}`);
     const tr = Date.now();
     let lastPct = -1;
     let lastAt = 0;
@@ -219,7 +301,7 @@ export async function renderVideo(opts: RenderOptions): Promise<RenderResult> {
       inputProps,
       codec: "h264",
       audioCodec: "aac",
-      crf: opts.crf ?? 21,
+      ...encoderOptions(enc),
       // JPEG 90 вместо 80: на тёмных градиентах фона меньше «ступенек».
       imageFormat: "jpeg",
       jpegQuality: 90,
@@ -291,6 +373,7 @@ export async function renderVideo(opts: RenderOptions): Promise<RenderResult> {
       bundleMs,
       renderMs,
       totalMs: Date.now() - t0,
+      encoder: enc,
     };
   } catch (e) {
     if (interrupted) throw new Error("Рендер прерван пользователем.");

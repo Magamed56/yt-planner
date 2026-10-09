@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AbsoluteFill, Img, Loop, OffthreadVideo, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import type { SceneVisual } from "../../types";
+import { useLayout } from "../lib/layout";
 import { withAlpha, type Theme } from "../theme";
 
 // Пути из props — относительно publicDir; http(s)/data: — как есть.
@@ -39,6 +40,12 @@ export const MediaLayer: React.FC<{
   };
 
   const strong = dim === "strong";
+  // Реальное фото другой ориентации (горизонтальное в Shorts) на сцене, где
+  // визуал — главный, показываем целиком «карточкой» поверх своей размытой
+  // копии: обрезка по центру потеряла бы сам объект (пирамиду, шлем, акулу).
+  if (visual.type === "image" && visual.fit === "contain" && !strong) {
+    return <ContainedImage src={resolveSrc(visual.src)} theme={theme} p={p} dir={dir} onError={onError} />;
+  }
   return (
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: theme.bgFrom }}>
       {visual.type === "image" ? (
@@ -62,6 +69,55 @@ export const MediaLayer: React.FC<{
       />
       <AbsoluteFill
         style={{ background: `radial-gradient(ellipse 90% 75% at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%)` }}
+      />
+    </AbsoluteFill>
+  );
+};
+
+// Фото целиком: размытая копия на весь кадр + карточка с мягким наездом.
+// Размер карточки — по самой картинке (max-width/max-height у <img>), так что
+// скругление и тень всегда облегают фото, каких бы пропорций оно ни было.
+const ContainedImage: React.FC<{ src: string; theme: Theme; p: number; dir: number; onError: () => void }> = ({ src, theme, p, dir, onError }) => {
+  const layout = useLayout();
+  const { width, content, safe, unit } = layout;
+  const shorts = layout.format === "shorts";
+  // Shorts: карточка в верхних двух третях контентной зоны (ниже — подпись сцены);
+  // горизонтальный ролик: справа, слева остаётся место под подпись.
+  const area = shorts
+    ? { x: 0, y: content.y, w: width, h: content.h * 0.64 }
+    : { x: width * 0.5, y: safe.y, w: safe.x + safe.w - width * 0.5, h: content.h };
+  const maxW = shorts ? width * 0.88 : area.w;
+  const radius = Math.round(28 * unit);
+  const zoom = interpolate(p, [0, 1], [1.02, 1.1]);
+  return (
+    <AbsoluteFill style={{ overflow: "hidden", backgroundColor: theme.bgFrom }}>
+      <Img
+        src={src}
+        onError={onError}
+        style={{ width: "100%", height: "100%", objectFit: "cover", filter: `blur(${Math.round(40 * unit)}px) saturate(1.15)`, transform: `scale(${1.25 + 0.05 * p})` }}
+      />
+      <AbsoluteFill style={{ background: withAlpha(theme.bgFrom, 0.45) }} />
+      <div style={{ position: "absolute", left: area.x, top: area.y, width: area.w, height: area.h, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "inline-block",
+            overflow: "hidden",
+            borderRadius: radius,
+            border: `${Math.max(2, 3 * unit)}px solid ${withAlpha(theme.text, 0.18)}`,
+            boxShadow: `0 ${30 * unit}px ${80 * unit}px rgba(0,0,0,0.55)`,
+            lineHeight: 0,
+          }}
+        >
+          <Img
+            src={src}
+            onError={onError}
+            style={{ display: "block", maxWidth: maxW, maxHeight: area.h, width: "auto", height: "auto", transform: `scale(${zoom}) translateX(${dir * interpolate(p, [0, 1], [-1, 1])}%)` }}
+          />
+        </div>
+      </div>
+      {/* Низ кадра — на тёмной подложке: там подпись сцены и субтитры */}
+      <AbsoluteFill
+        style={{ background: `linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.85) 100%)` }}
       />
     </AbsoluteFill>
   );

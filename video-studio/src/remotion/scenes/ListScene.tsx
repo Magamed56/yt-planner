@@ -1,11 +1,12 @@
 import React, { useMemo } from "react";
 import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { Check } from "lucide-react";
-import { KineticText, useFittedTokens } from "../components/KineticText";
+import { KineticText, numberRender, useFittedTokens } from "../components/KineticText";
 import { FONT_BODY, FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
+import { listRevealFrames } from "../lib/cues";
 import { fitTokens, parseMarkup, type FontSpec } from "../lib/text";
-import { listItemFrames, voiceFrames } from "../lib/timing";
+import { voiceFrames } from "../lib/timing";
 import { withAlpha } from "../theme";
 import { SceneFrame, clamp, type SceneProps } from "./common";
 
@@ -67,9 +68,8 @@ export const ListScene: React.FC<SceneProps> = (p) => {
   }, [items, textW, textMaxH, shorts, unit]);
   const rowH = Math.max(badge, ...fitted.map((f) => f.fit.lines.length * f.fit.fontSize * ITEM_FONT.lineHeight)) + padY * 2;
 
-  const titleTokens = parseMarkup(p.scene.onScreen).length;
-  const titleDone = 6 + titleTokens * 3 + 6;
-  const reveal = useMemo(() => listItemFrames(items, p.scene, fps, titleDone), [items, p.scene, fps, titleDone]);
+  // Те же кадры берёт AudioLayer для «пузырька» — звук ровно в момент появления пункта.
+  const reveal = useMemo(() => listRevealFrames(p.scene, fps), [p.scene, fps]);
   const activeIdx = reveal.reduce((acc, f, i) => (frame >= f ? i : acc), -1);
   // Последний пункт «закрывается» галочкой ближе к концу голоса.
   const voiceEnd = p.scene.audioStartFrame + voiceFrames(p.scene, fps);
@@ -201,16 +201,20 @@ export const ListScene: React.FC<SceneProps> = (p) => {
               >
                 {fit.lines.map((ln, li) => (
                   <div key={li} style={{ whiteSpace: "nowrap" }}>
-                    {ln.map((ti, j) => (
-                      <React.Fragment key={ti}>
-                        {j > 0 ? " " : null}
-                        {tokens[ti].runs.map((r, ri) => (
-                          <span key={ri} style={r.accent ? { color: p.theme.accent } : undefined}>
-                            {r.text}
-                          </span>
-                        ))}
-                      </React.Fragment>
-                    ))}
+                    {ln.map((ti, j) => {
+                      // Число в пункте («≈30 трлн») докручивается, пока карточка въезжает.
+                      const nr = numberRender(tokens[ti], { frame, appearAt: reveal[i] + 3, counting: true, theme: p.theme, fontSize: fs });
+                      return (
+                        <React.Fragment key={ti}>
+                          {j > 0 ? " " : null}
+                          {tokens[ti].runs.map((r, ri) => (
+                            <span key={ri} style={r.accent ? { color: p.theme.accent } : undefined}>
+                              {nr ? nr.render(r) : r.text}
+                            </span>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })}
                   </div>
                 ))}
               </div>

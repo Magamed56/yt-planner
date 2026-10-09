@@ -41,6 +41,7 @@ export interface FixtureOptions {
   channelName?: string | null;
   showCaptions?: boolean;
   transitionFrames?: number;
+  brandIntro?: boolean;
 }
 
 export function buildFixtureProps(script: VideoScript, opts: FixtureOptions = {}): VideoProps {
@@ -67,6 +68,7 @@ export function buildFixtureProps(script: VideoScript, opts: FixtureOptions = {}
     durationInFrames: laid.durationInFrames,
     music: opts.music ?? null,
     whooshSrc: opts.whooshSrc ?? null,
+    brandIntro: opts.brandIntro ?? false,
     sfxVolume: 0.5,
     showCaptions: opts.showCaptions ?? true,
     showProgressBar: true,
