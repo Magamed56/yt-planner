@@ -5,6 +5,8 @@
 # Так поломка видна до слияния, а не после выхода ролика или деплоя панели на Vercel.
 # Повторить у себя — команды из video-studio/CLAUDE.md, раздел «Команды».
 # Пуш в claude/… с открытым PR проверяется дважды: пуш — саму ветку, PR — её слияние с базой.
+# Обязательной (required) в правилах ветки не делайте: из-за фильтра paths PR без изменений
+# в video-studio эту проверку не получит и навсегда останется «ожидающим».
 
 name: "video-studio: проверки"
 
@@ -85,8 +87,9 @@ jobs:
             n=$((n + 1))
             echo "::group::$f"
             # Без GITHUB_OUTPUT/STEP_SUMMARY: код конвейера пишет туда сам, тест не должен портить сводку.
-            # timeout — зависший тест не съест все 20 минут.
-            if env -u GITHUB_OUTPUT -u GITHUB_STEP_SUMMARY timeout 300 npx tsx "$f"; then
+            # timeout — зависший тест не съест все 20 минут. tsx без npx: npx выходит по SIGTERM
+            # сразу, а tsx с тестом остаются жить; так -k добивает их всей группой.
+            if env -u GITHUB_OUTPUT -u GITHUB_STEP_SUMMARY timeout -k 10 300 node_modules/.bin/tsx "$f"; then
               ok=1
             else
               ok=0
