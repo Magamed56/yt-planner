@@ -1,17 +1,22 @@
 // Офлайн-проверка операций панели: настройки автопилота, запас сценариев, повтор упавших
-// сборок, уборка видео из релизов.
+// сборок, уборка видео из релизов, правка сценария, пересборка.
 // Сеть и ключи не нужны. Запуск из папки video-studio: npx tsx panel/scripts/ops-test.ts
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import type { GhRelease } from "../lib/github";
 import { decideReserve, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
+import { rebuildInputs, DEFAULT_REBUILD } from "../lib/rebuild";
+import { applyScriptEdit, checkScriptEdit, countWords, parseTags, SCRIPT_LIMITS, scriptEditOf, scriptFileText, type ScriptEdit } from "../lib/script-edit";
 import { buildState, DEFAULT_AUTOPILOT, parseAutopilot, type Row, type RunInfo } from "../lib/state";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const json = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
+// validate.ts и schema.ts тянут zod (он есть только в node_modules video-studio): путь — строкой,
+// чтобы проверка типов панели (next build) их не разбирала.
+const pipeline = (rel: string) => import(pathToFileURL(path.join(studio, "src", "pipeline", "script", rel)).href) as Promise<Record<string, unknown>>;
 
 let passed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -215,6 +220,77 @@ async function main() {
       state.releaseVideos.map((f) => [f.code, f.assetId, f.publishedAt]),
       [["01a", 10, "2026-10-01T09:00:00Z"]],
     );
+  });
+
+  await test("правка сценария: без изменений файл тот же; пределы как в schema.ts; итог проходит validateScript", async () => {
+    const file = fs.readdirSync(path.join(studio, "scripts")).find((f) => /^sut-\d{2}[a-z]-.+\.json$/.test(f))!;
+    const text = fs.readFileSync(path.join(studio, "scripts", file), "utf8").replace(/\r\n/g, "\n");
+    const original = JSON.parse(text) as unknown;
+    const edit = scriptEditOf(original);
+    assert.deepEqual(checkScriptEdit(edit), [], "настоящий сценарий проходит проверку панели");
+    assert.equal(scriptFileText(applyScriptEdit(original, edit)), text, "без правок файл не меняется");
+
+    const { LIMITS } = (await pipeline("schema.ts")) as { LIMITS: Record<string, number> };
+    for (const [k, v] of Object.entries(SCRIPT_LIMITS)) assert.equal(v, LIMITS[k], `предел ${k}`);
+    const { validateScript } = (await pipeline("validate.ts")) as { validateScript: (j: unknown) => unknown };
+
+    const changed: ScriptEdit = {
+      ...edit,
+      title: "  Новое название  ",
+      tags: parseTags("наука, факты,  наука ,"),
+      scenes: edit.scenes.map((s, i) => (i === 1 ? { ...s, narration: "Новый текст диктора.", onScreen: "Новый *акцент*" } : s)),
+    };
+    assert.deepEqual(changed.tags, ["наука", "факты"]);
+    assert.deepEqual(checkScriptEdit(changed), []);
+    const saved = applyScriptEdit(original, changed) as { title: string; scenes: Record<string, unknown>[] };
+    assert.equal(saved.title, "Новое название");
+    assert.equal(saved.scenes[1]!.onScreen, "Новый *акцент*");
+    assert.deepEqual(Object.keys(saved.scenes[1]!), Object.keys((original as { scenes: object[] }).scenes[1]!), "остальные поля сцены на месте");
+    validateScript(JSON.parse(scriptFileText(saved)));
+
+    const bad: ScriptEdit = {
+      ...edit,
+      title: "",
+      tags: Array.from({ length: 12 }, (_, i) => `очень-длинный-тег-номер-${i}-${"ж".repeat(20)}`),
+      scenes: edit.scenes.map((s, i) => (i === 0 ? { ...s, onScreen: "раз два три четыре пять шесть семь восемь девять" } : i === 1 ? { ...s, onScreen: "непарная *звезда" } : s)),
+    };
+    const problems = checkScriptEdit(bad).join("\n");
+    assert.match(problems, /Название пустое/);
+    assert.match(problems, /суммарно \d+ символов/);
+    assert.match(problems, /Сцена 1.*9 слов/);
+    assert.match(problems, /Сцена 2.*непарная/);
+    assert.equal(countWords("*Слово* — и ещё 2"), 4);
+    const list = edit.scenes.findIndex((s) => s.kind === "list");
+    if (list >= 0) {
+      const one = { ...edit, scenes: edit.scenes.map((s, i) => (i === list ? { ...s, items: ["один пункт"] } : s)) };
+      assert.match(checkScriptEdit(one).join("\n"), /от 2 до 4 пунктов/);
+    }
+    // Файл успели поменять: сцен стало меньше — правку не накладываем.
+    const shorter = { ...(original as object), scenes: (original as { scenes: unknown[] }).scenes.slice(1) };
+    assert.throws(() => applyScriptEdit(shorter, edit), /откройте правку заново/);
+  });
+
+  await test("пересборка: голос, имя голоса, палитра, музыка → входные данные workflow", () => {
+    assert.deepEqual(rebuildInputs("08a", DEFAULT_REBUILD), { mode: "batch", plan: "08a", upload: "release", voice: "auto", theme: "auto" });
+    assert.deepEqual(rebuildInputs("08a", { voice: "edge", voiceName: " ru-RU-SvetlanaNeural ", theme: "sunset", music: false }), {
+      mode: "batch",
+      plan: "08a",
+      upload: "release",
+      voice: "edge",
+      theme: "sunset",
+      voice_name: "ru-RU-SvetlanaNeural",
+      music: "none",
+    });
+    assert.throws(() => rebuildInputs("08a", { ...DEFAULT_REBUILD, voice: "elevenlabs" }), /озвучка/);
+    assert.throws(() => rebuildInputs("08a", { ...DEFAULT_REBUILD, theme: "neon" }), /палитра/);
+    assert.throws(() => rebuildInputs("08a", { ...DEFAULT_REBUILD, voiceName: "Charon; rm -rf" }), /Имя голоса/);
+  });
+
+  // workflow: в video-studio.yml есть выбор music (auto, none), и он доходит до MUSIC.
+  await test("workflow: поле music (auto | none) и MUSIC=none при выключенной музыке", () => {
+    const yml = fs.readFileSync(path.join(studio, "..", ".github", "workflows", "video-studio.yml"), "utf8").replace(/\r\n/g, "\n");
+    assert.match(yml, /\n {6}music:\n(?: {8}.+\n)*? {8}options: \[auto, none\]/);
+    assert.match(yml, /MUSIC: \$\{\{ inputs\.music == 'none' && 'none' \|\| vars\.MUSIC \}\}/);
   });
 
   console.log(`\nВсе проверки операций пройдены: ${passed}.`);

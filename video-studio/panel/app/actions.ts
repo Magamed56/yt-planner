@@ -8,8 +8,10 @@ import { parsePlan, PLAN_CODE } from "../../src/pipeline/plan";
 import { applyUpdate, fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
-import { assetText, dispatchWorkflow, readJson, setVariable } from "@/lib/github";
-import { STUDIO_DIR } from "@/lib/load";
+import { assetText, dispatchWorkflow, GithubError, readFileWithSha, readJson, setVariable, writeFile } from "@/lib/github";
+import { loadState, STUDIO_DIR } from "@/lib/load";
+import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/lib/rebuild";
+import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
 import { SESSION_COOKIE } from "@/lib/session";
 import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
 import { channelVideos, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
@@ -339,6 +341,80 @@ export async function captionAction(assetId: number): Promise<(ActionResult & { 
   return guarded(async () => {
     if (!Number.isInteger(assetId) || assetId <= 0) return fail("Неверный файл.");
     return { ok: true, message: "", text: await assetText(assetId) };
+  });
+}
+
+// ---- правка сценария и пересборка: только пока ролик не загружен в YouTube ----
+
+// Строка очереди по коду — с той же проверкой YouTube и запусков, что видит панель.
+async function rowFor(code: string) {
+  const c = String(code ?? "").trim().toLowerCase();
+  if (!PLAN_CODE.test(c)) throw new Error("Неверный код ролика — обновите страницу.");
+  const state = await loadState();
+  const row = state.rows.find((r) => r.code === c);
+  if (!row) throw new Error(`Ролика ${c} нет в плане — обновите страницу.`);
+  return { state, row };
+}
+
+export interface ScriptForEdit extends ActionResult {
+  sha: string; // версия файла: сохранение не затрёт чужую правку
+  edit: ScriptEdit;
+}
+
+export async function scriptForEditAction(path: string): Promise<ScriptForEdit | ActionResult> {
+  return guarded(async () => {
+    if (!/^scripts\/[\w.-]+\.json$/.test(path)) return fail("Неверный путь к сценарию.");
+    const file = await readFileWithSha(`${STUDIO_DIR}/${path}`);
+    if (!file) return fail("Сценарий не найден в ветке — обновите страницу.");
+    let json: unknown;
+    try {
+      json = JSON.parse(file.text);
+    } catch {
+      return fail("Файл сценария — битый JSON: поправьте его на GitHub.");
+    }
+    return { ok: true, message: "", sha: file.sha, edit: scriptEditOf(json) };
+  });
+}
+
+export interface ScriptSaved extends ActionResult {
+  saved: boolean; // файл изменился — видео нужно собрать заново
+}
+
+export async function saveScriptAction(code: string, sha: string, edit: ScriptEdit): Promise<ScriptSaved | ActionResult> {
+  return guarded(async () => {
+    const { state, row } = await rowFor(code);
+    const lock = editLock(row, state.youtubeError);
+    if (lock) return fail(lock);
+    const clean = scriptEditOf(edit); // поля от браузера приводим к строкам и спискам заново
+    const problems = checkScriptEdit(clean);
+    if (problems.length) return fail(`Не сохранено. ${problems.join(" ")}`);
+    const path = `${STUDIO_DIR}/${row.scriptPath}`;
+    const file = await readFileWithSha(path);
+    if (!file) return fail("Сценарий не найден в ветке — обновите страницу.");
+    if (file.sha !== sha) return fail("Сценарий успели изменить (запуск или правка на GitHub) — откройте правку заново.");
+    const text = scriptFileText(applyScriptEdit(JSON.parse(file.text), clean));
+    if (text === file.text.replace(/\r\n/g, "\n")) return { ok: true, message: "Изменений нет — сохранять нечего.", saved: false };
+    await writeFile(path, text, sha, `video-studio: правка сценария ${row.code} из панели`);
+    const next = row.stage === "script" ? "«Собрать видео»" : "«Собрать заново»";
+    return { ok: true, message: `Сценарий ${row.code} сохранён в GitHub. В видео и тексты для YouTube правка попадёт после сборки — ${next}.`, saved: true };
+  });
+}
+
+export async function rebuildAction(code: string, opts: RebuildOptions): Promise<ActionResult> {
+  return guarded(async () => {
+    const { state, row } = await rowFor(code);
+    const lock = editLock(row, state.youtubeError);
+    if (lock) return fail(lock);
+    const o: RebuildOptions = { voice: String(opts?.voice ?? "auto"), voiceName: String(opts?.voiceName ?? ""), theme: String(opts?.theme ?? "auto"), music: opts?.music !== false };
+    try {
+      await dispatchWorkflow("video-studio.yml", rebuildInputs(row.code, o));
+    } catch (e) {
+      // Поле music появилось в workflow вместе с этой кнопкой: пока PR не слит, GitHub его не знает.
+      if (e instanceof GithubError && e.status === 422 && /music/.test(e.message)) throw new Error("В workflow ветки ещё нет поля music — слейте PR с ним или соберите с музыкой.");
+      throw e;
+    }
+    const what = row.release || row.localVideo ? "пересборка" : "сборка";
+    return ok(`Запущена ${what} ${row.code}: ${rebuildLabel(o)}. ≈ 8–10 минут в GitHub Actions — новое видео появится в карточке ролика.`);
   });
 }
 

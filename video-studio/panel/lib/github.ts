@@ -74,6 +74,32 @@ export async function readJson(path: string): Promise<unknown | null> {
   }
 }
 
+// Файл ветки с его sha (нужен для записи: GitHub примет новую версию, только если файл с тех
+// пор не менялся). null — файла нет. Через contents API — файлы до 1 МБ (план, сценарии).
+export async function readFileWithSha(path: string): Promise<{ text: string; sha: string } | null> {
+  const res = await gh(`/repos/${repoName()}/contents/${encPath(path)}?ref=${encodeURIComponent(branchName())}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw await failure(res, `файл ${path}`);
+  const j = (await res.json()) as { type?: string; sha?: string; content?: string; encoding?: string };
+  if (j.type !== "file" || !j.sha || j.encoding !== "base64" || typeof j.content !== "string") {
+    throw new GithubError(`GitHub, файл ${path}: не удалось прочитать (слишком большой или не файл).`, 0);
+  }
+  return { text: Buffer.from(j.content, "base64").toString("utf8"), sha: j.sha };
+}
+
+// Новая версия файла коммитом в ветку. sha — версия, которую правили: если файл успели
+// поменять (запуск записал сценарий, правка на GitHub), GitHub ответит 409 — ничего не затрём.
+export async function writeFile(path: string, text: string, sha: string, message: string): Promise<void> {
+  const res = await gh(`/repos/${repoName()}/contents/${encPath(path)}`, {
+    method: "PUT",
+    body: JSON.stringify({ message, content: Buffer.from(text, "utf8").toString("base64"), sha, branch: branchName() }),
+  });
+  if (res.status === 409) {
+    throw new GithubError(`Файл ${path} успели изменить в ветке ${branchName()} — обновите страницу и повторите.`, res.status);
+  }
+  if (!res.ok) throw await failure(res, `запись ${path}`);
+}
+
 // Имена файлов папки ветки ([] — папки нет).
 export async function listDir(path: string): Promise<string[]> {
   const res = await gh(`/repos/${repoName()}/contents/${encPath(path)}?ref=${encodeURIComponent(branchName())}`);

@@ -6,20 +6,116 @@ import {
   draftAction,
   fillNewUploadsAction,
   moveVideoAction,
+  rebuildAction,
+  saveScriptAction,
+  scriptForEditAction,
   scriptTextAction,
   undoMoveAction,
   videosAction,
   type ActionResult,
   type ScriptText,
 } from "@/app/actions";
+import { DEFAULT_REBUILD, editLock, rebuildLabel, THEME_LABEL, THEMES, VOICE_LABEL, VOICES, type RebuildOptions } from "@/lib/rebuild";
+import { checkScriptEdit, parseTags, SCRIPT_LIMITS, type SceneEdit, type ScriptEdit } from "@/lib/script-edit";
 import type { PanelState, Row, SlotCell } from "@/lib/state";
 import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import Dots from "./Dots";
 import Thumb from "./Thumb";
 
 type Undo = { videoId: string; publishAt: string }[];
+type Editing = { sha: string; edit: ScriptEdit; tags: string; problems: string[] };
 
 const mb = (bytes: number) => `${(bytes / 1_048_576).toFixed(1)} МБ`;
+
+const KIND_LABEL: Record<string, string> = { hook: "хук", statement: "мысль", list: "список", stat: "цифра", quote: "цитата", media: "кадр", cta: "призыв" };
+
+// Плеер прямо в карточке: файл из релиза через /api/asset (редирект на временную ссылку GitHub).
+// preload="none" — ничего не качается, пока не нажали ▶. type="video/mp4" у <source>: GitHub
+// отдаёт файл как application/octet-stream, а Safari на iPhone без явного типа может не играть.
+function Preview({ mp4Id, poster }: { mp4Id: number; poster: string | null }) {
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+  return (
+    <>
+      <video key={attempt} className="preview" controls playsInline preload="none" poster={poster ?? undefined}>
+        <source src={`/api/asset/${mp4Id}${attempt ? `?r=${attempt}` : ""}`} type="video/mp4" onError={() => setFailed(true)} />
+      </video>
+      {failed && (
+        <p className="small flag">
+          Видео не открылось — временная ссылка GitHub могла истечь.{" "}
+          <button
+            className="btn small"
+            onClick={() => {
+              setFailed(false);
+              setAttempt(attempt + 1);
+            }}
+          >
+            Ещё раз
+          </button>
+        </p>
+      )}
+    </>
+  );
+}
+
+// Форма правки: название, описание, теги и тексты сцен. Структура сцен (вид, цифры, визуал) — как была.
+function ScriptForm({ value, busy, onChange, onSave, onCancel }: { value: Editing; busy: boolean; onChange: (v: Editing) => void; onSave: () => void; onCancel: () => void }) {
+  const { edit } = value;
+  const setEdit = (patch: Partial<ScriptEdit>) => onChange({ ...value, edit: { ...edit, ...patch } });
+  const setScene = (i: number, patch: Partial<SceneEdit>) => setEdit({ scenes: edit.scenes.map((s, k) => (k === i ? { ...s, ...patch } : s)) });
+  return (
+    <div className="script-form">
+      <label>
+        Название <span className="muted">{edit.title.trim().length}/{SCRIPT_LIMITS.title}</span>
+        <input value={edit.title} onChange={(e) => setEdit({ title: e.target.value })} />
+      </label>
+      <label>
+        Описание
+        <textarea rows={4} value={edit.description} onChange={(e) => setEdit({ description: e.target.value })} />
+      </label>
+      <label>
+        Теги через запятую
+        <input value={value.tags} onChange={(e) => onChange({ ...value, tags: e.target.value })} />
+      </label>
+      {edit.scenes.map((s, i) => (
+        <fieldset key={s.id || i}>
+          <legend>
+            {i + 1}. {KIND_LABEL[s.kind] ?? s.kind}
+          </legend>
+          <label>
+            Диктор
+            <textarea rows={3} value={s.narration} onChange={(e) => setScene(i, { narration: e.target.value })} />
+          </label>
+          <label>
+            На экране <span className="muted">до 7 слов, акцент — *слово*</span>
+            <input value={s.onScreen} onChange={(e) => setScene(i, { onScreen: e.target.value })} />
+          </label>
+          {s.kind === "list" && (
+            <label>
+              Пункты списка — по одному в строке (2–4)
+              <textarea rows={4} value={(s.items ?? []).join("\n")} onChange={(e) => setScene(i, { items: e.target.value.split("\n") })} />
+            </label>
+          )}
+        </fieldset>
+      ))}
+      {value.problems.length > 0 && (
+        <ul className="problems">
+          {value.problems.map((p, i) => (
+            <li key={i}>{p}</li>
+          ))}
+        </ul>
+      )}
+      <div className="btn-row">
+        <button className="btn primary" disabled={busy} onClick={onSave}>
+          {busy ? "Сохраняю…" : "Сохранить"}
+        </button>
+        <button className="btn" disabled={busy} onClick={onCancel}>
+          Отмена
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function VideoSheet({ row, state, onClose }: { row: Row; state: PanelState; onClose: () => void }) {
   const router = useRouter();
@@ -28,7 +124,12 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   const [script, setScript] = useState<ScriptText | null>(null);
   const [caption, setCaption] = useState<string | null>(null);
   const [showSlots, setShowSlots] = useState(false);
+  const [editing, setEditing] = useState<Editing | null>(null);
+  const [scriptSaved, setScriptSaved] = useState(false);
+  const [rebuild, setRebuild] = useState<RebuildOptions>(DEFAULT_REBUILD);
   const locked = busy || Boolean(row.running);
+  // Править сценарий и пересобирать — только пока ролик не загружен в YouTube.
+  const lock = editLock(row, state.youtubeError);
 
   async function run(action: () => Promise<ActionResult>, confirmText?: string) {
     if (confirmText && !window.confirm(confirmText)) return;
@@ -50,6 +151,42 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
     const r = await scriptTextAction(row.scriptPath).finally(() => setBusy(false));
     if ("scenes" in r) setScript(r as ScriptText);
     else setToast({ text: r.message, ok: false });
+  }
+
+  async function openEditor() {
+    if (!row.scriptPath) return;
+    setBusy(true);
+    try {
+      const r = await scriptForEditAction(row.scriptPath);
+      if ("edit" in r) setEditing({ sha: r.sha, edit: r.edit, tags: r.edit.tags.join(", "), problems: [] });
+      else setToast({ text: r.message, ok: false });
+    } catch (e) {
+      setToast({ text: e instanceof Error ? e.message : String(e), ok: false });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveEditor() {
+    if (!editing) return;
+    const edit = { ...editing.edit, tags: parseTags(editing.tags) };
+    // Та же проверка, что на сервере, — сразу, без запроса.
+    const problems = checkScriptEdit(edit);
+    if (problems.length) return setEditing({ ...editing, problems });
+    setBusy(true);
+    try {
+      const r = await saveScriptAction(row.code, editing.sha, edit);
+      setToast({ text: r.message, ok: r.ok });
+      if (r.ok) {
+        setEditing(null);
+        setScript(null); // показанный текст устарел
+        if ("saved" in r && r.saved) setScriptSaved(true);
+      }
+    } catch (e) {
+      setToast({ text: e instanceof Error ? e.message : String(e), ok: false });
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function copyCaption() {
@@ -243,6 +380,60 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
 
       {row.release && (
         <section>
+          <h4>Посмотреть</h4>
+          <Preview mp4Id={row.release.mp4.id} poster={cover ? `/api/asset/${cover.id}` : row.cover} />
+        </section>
+      )}
+
+      {!lock && (row.stage === "script" || row.stage === "video") && (
+        <section>
+          <details className="rebuild">
+            <summary>{row.stage === "video" ? "Пересобрать: другой голос, палитра, музыка" : "Собрать с другим голосом, палитрой, без музыки"}</summary>
+            <p className="muted small">Новое видео появится в карточке вместо прежнего (прежнее останется в своём релизе). ≈ 8–10 минут в GitHub Actions.</p>
+            <div className="rebuild-fields">
+              <label>
+                Голос
+                <select value={rebuild.voice} onChange={(e) => setRebuild({ ...rebuild, voice: e.target.value })}>
+                  {VOICES.map((v) => (
+                    <option key={v} value={v}>
+                      {VOICE_LABEL[v]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Имя голоса
+                <input placeholder="необязательно: Charon, ru-RU-SvetlanaNeural" value={rebuild.voiceName} onChange={(e) => setRebuild({ ...rebuild, voiceName: e.target.value })} />
+              </label>
+              <label>
+                Палитра
+                <select value={rebuild.theme} onChange={(e) => setRebuild({ ...rebuild, theme: e.target.value })}>
+                  {THEMES.map((t) => (
+                    <option key={t} value={t}>
+                      {THEME_LABEL[t]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="check">
+                <input type="checkbox" checked={rebuild.music} onChange={(e) => setRebuild({ ...rebuild, music: e.target.checked })} /> Фоновая музыка
+              </label>
+            </div>
+            <div className="btn-row">
+              <button
+                className="btn"
+                disabled={locked}
+                onClick={() => run(() => rebuildAction(row.code, rebuild), `${row.stage === "video" ? "Пересобрать" : "Собрать"} ${row.code}: ${rebuildLabel(rebuild)}? ≈ 8–10 минут в GitHub Actions.`)}
+              >
+                {row.stage === "video" ? "Пересобрать" : "Собрать"}
+              </button>
+            </div>
+          </details>
+        </section>
+      )}
+
+      {row.release && (
+        <section>
           <h4>Файлы ролика</h4>
           <p className="muted small">Instagram ждёт токен EAA (проверка Meta) — пока Reels с телефона: видео, обложка и подпись.</p>
           <div className="btn-row">
@@ -300,16 +491,40 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       {row.scriptPath && (
         <section>
           <h4>Сценарий</h4>
-          {script ? (
-            <div className="scenes">
-              {script.scenes.map((s, i) => (
-                <p key={i}>{s.narration}</p>
-              ))}
-            </div>
+          {editing ? (
+            <ScriptForm value={editing} busy={busy} onChange={setEditing} onSave={saveEditor} onCancel={() => setEditing(null)} />
           ) : (
-            <button className="btn small" disabled={busy} onClick={loadScript}>
-              Показать текст
-            </button>
+            <>
+              {script && (
+                <div className="scenes">
+                  {script.scenes.map((s, i) => (
+                    <p key={i}>{s.narration}</p>
+                  ))}
+                </div>
+              )}
+              <div className="btn-row">
+                {!script && (
+                  <button className="btn small" disabled={busy} onClick={loadScript}>
+                    Показать текст
+                  </button>
+                )}
+                {!lock && (
+                  <button className="btn small" disabled={locked} onClick={openEditor}>
+                    ✏️ Править
+                  </button>
+                )}
+                {scriptSaved && !lock && (
+                  <button
+                    className="btn small primary"
+                    disabled={locked}
+                    onClick={() => run(() => rebuildAction(row.code, DEFAULT_REBUILD), `Собрать ${row.code} по исправленному сценарию (≈ 8–10 минут в GitHub Actions)?`)}
+                  >
+                    {row.stage === "script" ? "Собрать видео" : "Собрать заново"}
+                  </button>
+                )}
+              </div>
+              {lock && <p className="muted small">{lock}</p>}
+            </>
           )}
           <p className="small">
             <a href={`${gh}/blob/${state.branch}/video-studio/${row.scriptPath}`} target="_blank" rel="noreferrer">
