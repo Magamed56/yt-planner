@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parsePlan, type ContentPlan } from "../../src/pipeline/plan";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
+import { ASSET_CHUNK, assetHeaders, assetType, contentDisposition, parseContentRange, planRange } from "../lib/asset-range";
 import type { GhRelease } from "../lib/github";
 import { decideReserve, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
 import { moveItem, movableIds, reorderPlan, sortByPillars } from "../lib/plan-order";
@@ -344,6 +345,43 @@ async function main() {
     const yml = fs.readFileSync(path.join(studio, "..", ".github", "workflows", "video-studio.yml"), "utf8").replace(/\r\n/g, "\n");
     assert.match(yml, /\n {6}music:\n(?: {8}.+\n)*? {8}options: \[auto, none\]/);
     assert.match(yml, /MUSIC: \$\{\{ inputs\.music == 'none' && 'none' \|\| vars\.MUSIC \}\}/);
+  });
+
+  await test("файл через панель: диапазоны кусками ≤ 4 МБ, 416, video/mp4, inline или attachment", () => {
+    const size = 20_000_000;
+    assert.deepEqual(planRange(null, size), { status: 200 });
+    assert.deepEqual(planRange("bytes=0-1", size), { status: 206, start: 0, end: 1 }); // проба Safari
+    assert.deepEqual(planRange("bytes=0-", size), { status: 206, start: 0, end: ASSET_CHUNK - 1 });
+    assert.deepEqual(planRange("bytes=19000000-", size), { status: 206, start: 19_000_000, end: size - 1 });
+    assert.deepEqual(planRange("bytes=0-", size, 0), { status: 206, start: 0, end: size - 1 }, "скачивание файлом — без куска");
+    assert.deepEqual(planRange("bytes=-500", size), { status: 206, start: size - 500, end: size - 1 });
+    assert.deepEqual(planRange("bytes=0-99999999", 1000), { status: 206, start: 0, end: 999 });
+    assert.deepEqual(planRange("bytes=0-1, 5-6", size), { status: 206, start: 0, end: 1 });
+    assert.deepEqual(planRange("bytes=5-3", size), { status: 200 }, "кривой диапазон — файл целиком");
+    assert.deepEqual(planRange("items=0-5", size), { status: 200 });
+    assert.deepEqual(planRange(`bytes=${size}-`, size), { status: 416 });
+    assert.deepEqual(planRange("bytes=-0", size), { status: 416 });
+
+    assert.equal(assetType("08a-x.mp4", "application/octet-stream"), "video/mp4");
+    assert.equal(assetType("cover.jpg", "application/octet-stream"), "image/jpeg");
+    assert.equal(assetType("thumbnail.png", "image/png"), "image/png");
+    const part = assetHeaders("08a-x.mp4", "video/mp4", size, { status: 206, start: 4, end: 9 }, false);
+    assert.deepEqual(part, {
+      "Content-Type": "video/mp4",
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "private, no-store",
+      "Content-Disposition": `inline; filename="08a-x.mp4"; filename*=UTF-8''08a-x.mp4`,
+      "Content-Range": `bytes 4-9/${size}`,
+      "Content-Length": "6",
+    });
+    assert.deepEqual(parseContentRange(part["Content-Range"]!), { start: 4, end: 9, total: size });
+    const whole = assetHeaders("08a-x.mp4", "video/mp4", size, { status: 200 }, true);
+    assert.equal(whole["Content-Length"], String(size));
+    assert.match(whole["Content-Disposition"]!, /^attachment; filename="08a-x\.mp4"/);
+    assert.equal(whole["Content-Range"], undefined);
+    assert.equal(assetHeaders("x.mp4", "video/mp4", size, { status: 416 }, false)["Content-Range"], `bytes */${size}`);
+    assert.equal(contentDisposition("ролик «1».mp4", true), `attachment; filename="_____ _1_.mp4"; filename*=UTF-8''%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%20%C2%AB1%C2%BB.mp4`);
+    assert.equal(parseContentRange("bytes */20"), null);
   });
 
   console.log(`\nВсе проверки операций пройдены: ${passed}.`);

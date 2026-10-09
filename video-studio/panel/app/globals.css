@@ -1301,3 +1301,16 @@ h4 {
   width: 40px;
   padding: 0;
 }
+
+/* «Сохранить в Фото» на телефоне: кнопка, прогресс скачивания, подсказка */
+.save-phone {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin-top: 10px;
+}
+.save-phone progress {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--accent);
+}

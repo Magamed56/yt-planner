@@ -20,6 +20,7 @@ import { checkScriptEdit, parseTags, SCRIPT_LIMITS, type SceneEdit, type ScriptE
 import type { PanelState, Row, SlotCell } from "@/lib/state";
 import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import Dots from "./Dots";
+import SaveToPhone from "./SaveToPhone";
 import Thumb from "./Thumb";
 
 type Undo = { videoId: string; publishAt: string }[];
@@ -29,20 +30,19 @@ const mb = (bytes: number) => `${(bytes / 1_048_576).toFixed(1)} МБ`;
 
 const KIND_LABEL: Record<string, string> = { hook: "хук", statement: "мысль", list: "список", stat: "цифра", quote: "цитата", media: "кадр", cta: "призыв" };
 
-// Плеер прямо в карточке: файл из релиза через /api/asset (редирект на временную ссылку GitHub).
-// preload="none" — ничего не качается, пока не нажали ▶. type="video/mp4" у <source>: GitHub
-// отдаёт файл как application/octet-stream, а Safari на iPhone без явного типа может не играть.
+// Плеер прямо в карточке: файл из релиза через /api/asset/<id>/file — video/mp4 с диапазонами
+// (206), иначе Safari на iPhone не играет. preload="none" — ничего не качается, пока не нажали ▶.
 function Preview({ mp4Id, poster }: { mp4Id: number; poster: string | null }) {
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
   return (
     <>
       <video key={attempt} className="preview" controls playsInline preload="none" poster={poster ?? undefined}>
-        <source src={`/api/asset/${mp4Id}${attempt ? `?r=${attempt}` : ""}`} type="video/mp4" onError={() => setFailed(true)} />
+        <source src={`/api/asset/${mp4Id}/file${attempt ? `?r=${attempt}` : ""}`} type="video/mp4" onError={() => setFailed(true)} />
       </video>
       {failed && (
         <p className="small flag">
-          Видео не открылось — временная ссылка GitHub могла истечь.{" "}
+          Видео не открылось — GitHub не ответил вовремя.{" "}
           <button
             className="btn small"
             onClick={() => {
@@ -305,6 +305,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
                   YouTube Studio ↗
                 </a>
               </div>
+              <SaveToPhone id={row.release.mp4.id} name={row.release.mp4.name} size={row.release.mp4.size} what="видео" />
             </>
           ) : (
             <p>
@@ -459,6 +460,10 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
               Релиз ↗
             </a>
           </div>
+          {/* На телефоне — сразу в «Фото» (кнопки видны только там, где можно делиться файлами). */}
+          {row.stage !== "video" && <SaveToPhone id={row.release.mp4.id} name={row.release.mp4.name} size={row.release.mp4.size} what="видео" />}
+          {cover && <SaveToPhone id={cover.id} name={cover.name} size={cover.size} what="обложку Reels" />}
+          {row.release.thumb && <SaveToPhone id={row.release.thumb.id} name={row.release.thumb.name} size={row.release.thumb.size} what="обложку YouTube" />}
           {caption && <div className="caption">{caption}</div>}
         </section>
       )}

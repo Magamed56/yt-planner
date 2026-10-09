@@ -207,6 +207,14 @@ export async function assetDownloadUrl(assetId: number): Promise<string> {
   throw new GithubError("GitHub не дал ссылку на файл релиза — попробуйте ещё раз.", res.status);
 }
 
+// Имя, размер и тип файла релиза — для заголовков ответа панели (Content-Length, Range).
+export async function assetInfo(assetId: number): Promise<{ name: string; size: number; contentType: string | null }> {
+  const res = await gh(`/repos/${repoName()}/releases/assets/${assetId}`);
+  if (!res.ok) throw await failure(res, "файл релиза");
+  const j = (await res.json()) as { name?: string; size?: number; content_type?: string };
+  return { name: j.name || `file-${assetId}`, size: Number(j.size) || 0, contentType: j.content_type || null };
+}
+
 // Небольшой текстовый файл релиза (подпись Reels).
 export async function assetText(assetId: number): Promise<string> {
   const res = await gh(`/repos/${repoName()}/releases/assets/${assetId}`, { accept: "application/octet-stream" });
