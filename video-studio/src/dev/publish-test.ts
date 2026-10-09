@@ -601,6 +601,10 @@ await test("youtube-fill для панели: список без поиска (
   assert.deepEqual(again.map((i) => [i.id, i.title]), [["08a", a.title], ["08b", "Пересобран"]]);
   assert.equal(fillItemsOf({ about: "x", videos: list }).length, 2);
   assert.deepEqual(fillItemsOf(null), []);
+
+  // Вычеркнули строку в Studio и оставили лишнюю пустую — это не правка, ролик не переписываем.
+  const gap = vid({ videoId: "G", fileName: `${a.file}.mp4`, privacyStatus: "public", title: a.title, description: `${a.description.replace("\n\n", "\n\n\n")}  `, tags: a.tags, categoryId: a.categoryId });
+  assert.equal(planUpdates(matchVideos([a], [gap]), { schedule: channel.schedule, mode: "none" })[0]!.textsChanged, false);
 });
 
 await test("channel.json, прочитанный панелью из GitHub, = channel.json с диска", () => {

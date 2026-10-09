@@ -173,9 +173,16 @@ export interface PlannedUpdate {
 // иначе каждый запуск заново переписывает уже заполненные ролики.
 const sameTags = (a: string[], b: string[]) => [...a].sort().join("\n") === [...b].sort().join("\n");
 
+// Пустые строки и пробелы в концах строк — не правка: вычеркнув строку в Studio, обычно
+// оставляют лишнюю пустую. Из-за неё ролик не считаем «отличающимся» и не переписываем.
+const sameText = (a: string, b: string) => {
+  const norm = (s: string) => s.replace(/\r\n/g, "\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  return norm(a) === norm(b);
+};
+
 const textsMatch = (v: ChannelVideo, i: FillItem) =>
   v.title.trim() === i.title.trim() &&
-  v.description.trim() === i.description.trim() &&
+  sameText(v.description, i.description) &&
   v.categoryId === i.categoryId &&
   sameTags(v.tags, i.tags);
 
