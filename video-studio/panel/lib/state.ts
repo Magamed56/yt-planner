@@ -8,7 +8,9 @@ import type { GhRelease, GhRun, GhStep } from "./github";
 import { expectedMs, minutesLabel, runProgress, stageOf, type RunProgress } from "./progress";
 import { failedRun, releaseVideosOf, type ReleaseVideo } from "./ops";
 import { STAGES, codesLabel, plural, runLabel, shiftDateKey, type Stage } from "./stages";
+import type { StatsHistory } from "./history";
 import { typicalRatio } from "./insights";
+import { buildPulse, type Pulse } from "./pulse";
 import { isShorts, rowStats, viewsPerDay, type RowStats } from "./stats";
 
 export { STAGES, STAGE_LABEL, codesLabel, plural, type Stage } from "./stages";
@@ -194,6 +196,7 @@ export interface PanelState {
   topicsUntil: string | null; // ISO: когда выйдет последний ролик плана (ориентир)
   topicsUntilLabel: string | null;
   topicsDays: number | null; // на сколько дней хватит плана
+  pulse: Pulse; // «Пульс»: ряд за неделю, события, последние вышедшие
   reminders: Reminder[];
   runs: RunInfo[];
   slotGrid: SlotCell[]; // слоты на SLOT_GRID_DAYS дней вперёд — перенос и «конвейер»
@@ -222,6 +225,7 @@ export interface StateInput {
   repo: string;
   branch: string;
   queueOrder?: string[]; // PANEL_QUEUE_ORDER
+  history?: StatsHistory | null; // PANEL_STATS_HISTORY — для «Пульса» (в состояние — только сжатое)
   runSteps?: Record<number, GhStep[]>; // шаги идущих запусков (по id)
 }
 
@@ -644,6 +648,7 @@ export function buildState(input: StateInput): PanelState {
     topicsUntil: planEnd,
     topicsUntilLabel: planEnd ? labelOf(planEnd) : null,
     topicsDays: planEnd ? Math.max(0, Math.floor((ms(planEnd) - nowMs) / DAY_MS)) : null,
+    pulse: buildPulse(input.history ?? null, rows, runs, now),
     reminders,
     runs,
     slotGrid,

@@ -12,6 +12,7 @@ import DownloadSheet from "./DownloadSheet";
 import FeedView from "./FeedView";
 import NowCard from "./NowCard";
 import PipelineStrip from "./PipelineStrip";
+import PulseCard from "./PulseCard";
 import { usePlanExtend, useRetry } from "./RetryConfirm";
 import VideoSheet from "./VideoSheet";
 
@@ -356,6 +357,7 @@ export default function QueueView({ state, initialMode, initialSelected = null }
             onRetry={(id) => void retry.start(id)}
             onExtend={(n) => void extend.start(n)}
           />
+          {mode === "feed" && <PulseCard pulse={state.pulse} timeZone={state.timezone} onOpen={openSheet} />}
 
           <div className="page-head">
             <h1>{mode === "calendar" ? "Календарь" : "Лента"}</h1>

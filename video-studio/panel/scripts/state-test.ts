@@ -224,6 +224,22 @@ test("автопилот: на 3 дня всё готово; на 8 — нуже
   assert.deepEqual(parseAutopilot('{"enabled":true,"days":40}'), { ...parseAutopilot(null), enabled: true, days: 3 });
 });
 
+test("пульс: события недели (вышел, упал запуск), последние вышедшие, без истории — пустой ряд", () => {
+  assert.deepEqual(state.pulse.series, []);
+  assert.equal(state.pulse.yesterday, null);
+  assert.deepEqual(
+    state.pulse.events.map((e) => [e.kind, e.text]),
+    [
+      ["failed", "упал запуск «Заполнение YouTube · 01a (проверка)»"],
+      ["published", "вышел 01a"],
+      ["built", "собран 08b"],
+    ],
+  );
+  // У 01a в подставном YouTube нет цифр просмотров — в полоске только ролики с цифрами.
+  assert.deepEqual(state.pulse.recent, []);
+  assert.ok(JSON.stringify(state.pulse).length < 3000, "в состояние — только сжатое");
+});
+
 test("превью автопилота: следующий запуск 06:00 МСК, сборка — то же решение, что примет cron в это время", () => {
   const withKey = buildState({ ...input, secretNames: ["ANTHROPIC_API_KEY", "GEMINI_API_KEY"] });
   assert.equal(nextCronAt(now).toISOString(), "2026-10-09T03:00:00.000Z");

@@ -3,6 +3,7 @@
 import { branchName, getVariable, GithubError, listDir, listReleases, listRuns, listSecretNames, readJson, repoName, runSteps, type GhRun, type GhStep } from "./github";
 import type { ChannelVideo } from "../../src/pipeline/youtube-fill";
 import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, buildState, parseAutopilot, parseAutopilotLast, parseQueueOrder, QUEUE_ORDER_VAR, type PanelState } from "./state";
+import { HISTORY_VAR, parseHistory } from "./history";
 import { channelVideos } from "./youtube";
 
 export const STUDIO_DIR = "video-studio";
@@ -26,7 +27,7 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     (videos) => ({ videos, error: null as string | null }),
     (e: unknown) => ({ videos: null, error: errorText(e) }),
   );
-  const [planJson, channelJson, scriptFiles, week1, later, releases, runInfo, secretNames, autopilotRaw, lastRaw, orderRaw, yt] = await Promise.all([
+  const [planJson, channelJson, scriptFiles, week1, later, releases, runInfo, secretNames, autopilotRaw, lastRaw, orderRaw, historyRaw, yt] = await Promise.all([
     readJson(`${STUDIO_DIR}/content/plan.json`),
     readJson(`${STUDIO_DIR}/channel.json`),
     listDir(`${STUDIO_DIR}/scripts`),
@@ -38,6 +39,7 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     getVariable(AUTOPILOT_VAR).catch(() => null),
     getVariable(AUTOPILOT_LAST_VAR).catch(() => null),
     getVariable(QUEUE_ORDER_VAR).catch(() => null),
+    getVariable(HISTORY_VAR).catch(() => null),
     youtube,
   ]);
   if (planJson === null) {
@@ -60,5 +62,6 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     repo: repoName(),
     branch: branchName(),
     queueOrder: parseQueueOrder(orderRaw),
+    history: parseHistory(historyRaw),
   });
 }
