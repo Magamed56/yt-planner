@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addCompetitorAction, removeCompetitorAction, type CompetitorsResult } from "@/app/competitors/actions";
@@ -54,10 +55,15 @@ export default function CompetitorsView({
     });
 
   return (
-    <AppShell active="runs" updated={shell.updated} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
+    <AppShell active="stats" updated={shell.updated} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
       <main className="page">
         <div className="page-head">
           <h1>Похожие каналы</h1>
+          <div className="actions">
+            <Link href="/stats" className="btn small ghost">
+              ← Статистика
+            </Link>
+          </div>
         </div>
         <p className="muted small">
           Что выстрелило у похожих каналов за 30 дней — подсказка для новых тем. Берутся только открытые данные YouTube (≈3 единицы квоты на

@@ -13,5 +13,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!login|privacy|terms|api/cron|_next/static|_next/image|favicon.ico|icon.svg).*)"],
+  // Открытые страницы — только ровно эти пути (не «/login-что-угодно»).
+  matcher: ["/((?!(?:login|privacy|terms|api/cron)(?:/|$)|_next/static|_next/image|favicon.ico|icon.svg).*)"],
 };

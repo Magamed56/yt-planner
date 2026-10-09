@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { plural } from "@/lib/stages";
 import type { Goal, StatsData, VideoStat } from "@/lib/stats";
@@ -59,6 +60,11 @@ export default function StatsView({ stats, shell }: { stats: StatsData; shell: S
       <main className="page stats-page">
         <div className="page-head">
           <h1>Статистика</h1>
+          <div className="actions">
+            <Link href="/competitors" className="btn small">
+              Похожие каналы →
+            </Link>
+          </div>
         </div>
         {stats.youtubeError && <p className="notice error">YouTube недоступен: {stats.youtubeError}. Цифры роликов и канала появятся, когда он ответит.</p>}
 
