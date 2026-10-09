@@ -13,6 +13,7 @@ import { buildPlan, findVisual, pickRendition, realFirstForPillar, resetVisualsS
 import { judgeConfig, parseVerdict } from "../pipeline/visuals/judge";
 import { PICK_RULES_VERSION, visualKey } from "../pipeline/visuals/manifest";
 import { authorText, htmlToText, licenseFamily } from "../pipeline/visuals/providers/open-licenses";
+import { rankOpenverse } from "../pipeline/visuals/providers/openverse";
 import { rankCommonsPages } from "../pipeline/visuals/providers/wikimedia";
 import { nonPhotoKind, photoFit, photoQueries, slugText, stockFit, subjectCategories, topicAnchors, visualQuery } from "../pipeline/visuals/relevance";
 import type { ScriptScene } from "../types";
@@ -861,6 +862,41 @@ await test("Служебные категории Commons и слова-омон
   assert.match(durian.why, /мимоходом/);
   // Название без слов («IMG 4821»), всё в категориях — берём.
   assert.ok(photoFit(visualQuery({ visualQuery: "cat tongue close up" }, { topicQueries: Q10A }), { title: "IMG 4821", categories: "Cat tongues|Tabby cats|Pages with maps" }).ok);
+});
+
+await test("Commons: ошибка API видна в логе, пустая выдача тоже; Openverse без запроса сцены не тратит лимит", async ({ publicDir, cacheDir }) => {
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/")) return json(200, { error: { code: "badvalue", info: "Unrecognized value for parameter" } });
+    return null;
+  });
+  const r = await findVisual(scene({ id: "s2", visualQuery: "hourglass sand" }), ctxFor(publicDir), { fetch: fn, env: { VISUALS: "wikimedia" }, log, cacheDir });
+  assert.equal(r.visual.type, "none");
+  assert.ok(logs.some((l) => l.includes("ошибка API badvalue")), logs.join("\n"));
+  assert.equal(calls.length, 1, "после ошибки API дальше не спрашиваем");
+
+  resetVisualsState();
+  logs.length = 0;
+  const { fn: fn2 } = mockFetch((c) => (c.url.startsWith("https://commons.wikimedia.org/") ? json(200, { batchcomplete: true }) : null));
+  await findVisual(scene({ id: "s3", visualQuery: "hourglass sand wooden table" }), ctxFor(publicDir), { fetch: fn2, env: { VISUALS: "wikimedia" }, log, cacheDir });
+  assert.ok(logs.some((l) => l.includes("ни одного фото от 1080 px")), logs.join("\n"));
+
+  // Сцена без visualQuery: проверять «по теме» не с чем — Openverse не спрашиваем.
+  resetVisualsState();
+  const { fn: fn3, calls: calls3 } = mockFetch(() => json(200, { results: [] }));
+  const r3 = await findVisual(scene({ id: "s4", visualQuery: undefined }), ctxFor(publicDir), { fetch: fn3, env: { VISUALS: "openverse" }, log, cacheDir });
+  assert.equal(r3.visual.type, "none");
+  assert.equal(calls3.length, 0);
+});
+
+await test("Openverse: машинные теги («illustration» с accuracy) не делают фото рисунком", () => {
+  const q = visualQuery({ visualQuery: "hourglass sand" });
+  const base = { id: "a1", title: "Hourglass with sand", url: "https://live.staticflickr.com/1/a1_b.jpg", creator: "Ann", license: "by", license_version: "2.0", source: "flickr", width: 1600, height: 2400 };
+  const deps = { fetch: (() => Promise.reject(new Error("сеть не нужна"))) as never, env: {}, log, cacheDir: tmpRoot, now: Date.now };
+  const ctx = ctxFor(tmpRoot);
+  const machine = rankOpenverse([{ ...base, tags: [{ name: "hourglass", accuracy: null }, { name: "illustration", accuracy: 0.93 }] }], q, { ctx, deps });
+  assert.deepEqual(machine.map((c) => c.id), ["openverse:a1"]);
+  const author = rankOpenverse([{ ...base, tags: [{ name: "illustration", accuracy: null }] }], q, { ctx, deps });
+  assert.deepEqual(author, [], "тег автора «illustration» — верим");
 });
 
 await rm(tmpRoot, { recursive: true, force: true });

@@ -28,7 +28,9 @@ export interface OpenverseImage {
   width?: number | null;
   height?: number | null;
   mature?: boolean;
-  tags?: { name?: string | null }[] | null; // теги Flickr/iNaturalist — как категории у Commons
+  // Теги Flickr/iNaturalist — как категории у Commons. accuracy — у машинных
+  // тегов (распознавание картинки): «illustration», «art» на обычном фото.
+  tags?: { name?: string | null; accuracy?: number | null }[] | null;
 }
 
 const SOURCE_TITLES: Record<string, string> = {
@@ -75,7 +77,9 @@ export function rankOpenverse(results: OpenverseImage[], query: VisualQuery | st
     const author = authorText(r.creator);
     if (!author && (family === "cc-by" || family === "cc-by-sa")) continue;
     const title = htmlToText(r.title, 200);
-    const tags = (r.tags ?? []).map((t) => t?.name ?? "").filter(Boolean).slice(0, 30).join("|");
+    // Только теги автора: машинные («art», «illustration» с accuracy) ошибаются
+    // и на обычных фото, а правило «не фото» поверило бы им.
+    const tags = (r.tags ?? []).filter((t) => t?.accuracy == null).map((t) => t?.name ?? "").filter(Boolean).slice(0, 30).join("|");
     // Теги Flickr бывают «в нагрузку» ко всему альбому — они весят как категории, не как название.
     const fit = photoFit(q, { title, categories: tags, author });
     if (!fit.ok) continue;
@@ -107,8 +111,11 @@ const stage: Stage = {
   async run(input) {
     const { deps, scene } = input;
     const q = input.query ?? visualQuery(scene);
+    // Без visualQuery проверке «по теме» не с чем сравнивать — все кандидаты
+    // отсеялись бы, а запрос съел бы суточный лимит (≈ 200) впустую.
+    if (q.terms.length === 0) return [];
     // Предмет кадра без стиля — как у Commons (relevance.ts → photoQueries).
-    const text = photoQueries(q)[0] ?? input.queries[0];
+    const text = photoQueries(q)[0];
     if (!text) return [];
     const timeout = envNumber(deps.env, "VISUALS_TIMEOUT_MS", 20_000);
     // Один запрос на сцену: у анонимного доступа суточный лимит.

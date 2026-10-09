@@ -22,9 +22,9 @@
 
 import { getJson } from "../http";
 import { extFromUrl } from "../query";
-import { photoFit, photoQueries, visualQuery, type VisualQuery } from "../relevance";
+import { photoFit, photoQueries, subjectCategories, visualQuery, type VisualQuery } from "../relevance";
 import { envNumber } from "../util";
-import type { Candidate, Stage, StageInput, VisualProvider } from "../types";
+import { VisualError, type Candidate, type Stage, type StageInput, type VisualProvider } from "../types";
 import { allowedLicenses, authorText, authorWithLicense, bigEnough, byRelevance, fitFor, htmlToText, licenseFamily, licenseLabel, userAgent } from "./open-licenses";
 
 export const COMMONS_API = "https://commons.wikimedia.org/w/api.php";
@@ -151,7 +151,8 @@ export function rankCommonsPages(pages: CommonsPage[], query: VisualQuery | stri
         author: authorWithLicense(author, licenseLabel(family, m.LicenseShortName?.value)),
         url: ii.descriptionurl ?? `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g, "_"))}`,
       },
-      meta: { title, text: [description, categories.replace(/\|/g, ", ")].filter(Boolean).join(" | ").slice(0, 400), score: Math.round(score * 1000) / 1000 },
+      // Судье — без служебных категорий («Pages with maps», лицензии): меньше шума и токенов.
+      meta: { title, text: [description, subjectCategories(categories).replace(/\|/g, ", ")].filter(Boolean).join(" | ").slice(0, 400), score: Math.round(score * 1000) / 1000 },
       score,
       order: p.index ?? 0,
     });
@@ -174,12 +175,21 @@ const stage: Stage = {
     for (const text of photoQueries(q)) {
       tried.push(text);
       const data = await getJson<CommonsResponse>(deps.fetch, "Wikimedia Commons", commonsSearchUrl(text, ctx.format, minShort), { headers }, timeout);
+      // Ошибку параметров MediaWiki отдаёт с HTTP 200 — без этой проверки она
+      // выглядела бы как «ничего не нашлось» на каждой сцене.
+      if (data.error) throw new VisualError(`Wikimedia Commons: ошибка API ${data.error.code ?? ""} — ${(data.error.info ?? "").slice(0, 160)}`.trim());
       const pages = data.query?.pages ?? [];
       seen += pages.length;
       const ranked = rankCommonsPages(pages, q, input);
       if (ranked.length) return ranked;
     }
-    if (seen > 0) deps.log.info(`[визуал] ${scene.id}: Wikimedia Commons — ${seen} файлов по «${tried.join("» / «")}», но ни одного фото по теме сцены.`);
+    if (tried.length) {
+      deps.log.info(
+        seen > 0
+          ? `[визуал] ${scene.id}: Wikimedia Commons — ${seen} файлов по «${tried.join("» / «")}», но ни одного фото по теме сцены.`
+          : `[визуал] ${scene.id}: Wikimedia Commons — по «${tried.join("» / «")}» ни одного фото от ${minShort} px.`,
+      );
+    }
     return [];
   },
 };
