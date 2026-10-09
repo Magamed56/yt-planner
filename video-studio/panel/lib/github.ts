@@ -207,6 +207,12 @@ export async function setVariable(name: string, value: string): Promise<void> {
   if (!created.ok) throw await failure(created, `переменная ${name}`);
 }
 
+// Удалить переменную (404 — её и так нет).
+export async function deleteVariable(name: string): Promise<void> {
+  const res = await gh(`/repos/${repoName()}/actions/variables/${encodeURIComponent(name)}`, { method: "DELETE" });
+  if (!res.ok && res.status !== 404) throw await failure(res, `переменная ${name}`);
+}
+
 // Имена секретов Actions (значения GitHub не отдаёт). null — токену не дали права Secrets: Read.
 export async function listSecretNames(): Promise<string[] | null> {
   const res = await gh(`/repos/${repoName()}/actions/secrets?per_page=100`);

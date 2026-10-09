@@ -2183,3 +2183,48 @@ video.frame {
   display: grid;
   gap: 4px;
 }
+
+/* ---- TikTok: шаги подключения, профиль ---- */
+.steps {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+.steps code,
+.card code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--bg);
+  font: 600 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+.copy-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.tt-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.tt-profile > div {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.tt-profile b {
+  font: 800 17px var(--display);
+}
+.thumb.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+.card h3.tag-h {
+  margin-top: 14px;
+}

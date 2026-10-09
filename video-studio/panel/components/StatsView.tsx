@@ -106,6 +106,9 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
             <span className="small muted">YouTube · обновлено {shell.updated}</span>
           </div>
           <div className="actions">
+            <Link href="/tiktok" className="btn small">
+              TikTok →
+            </Link>
             <Link href="/competitors" className="btn small">
               Похожие каналы →
             </Link>
