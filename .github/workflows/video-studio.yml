@@ -717,10 +717,33 @@ jobs:
             echo "Уведомления не настроены (секреты PANEL_URL и PANEL_NOTIFY_SECRET) — пропускаю."
             exit 0
           fi
-          body=$(jq -n --arg b "${PLAN:-новый ролик} — загрузите в Studio" '{title: "Видео готово", body: $b, url: "/"}')
+          # Один ролик — нажатие открывает сразу его карточку в панели (/?v=08a), несколько — ленту.
+          url="/"
+          if [[ "${PLAN:-}" =~ ^[0-9]{2}[a-z]$ ]]; then url="/?v=$PLAN"; fi
+          body=$(jq -n --arg b "${PLAN:-новый ролик} — загрузите в Studio" --arg u "$url" '{title: "Видео готово", body: $b, url: $u}')
           curl -fsS --max-time 30 -X POST "${PANEL_URL%/}/api/notify" \
             -H "Authorization: Bearer $PANEL_NOTIFY_SECRET" -H "Content-Type: application/json" -d "$body" > /dev/null
           echo "Уведомление отправлено."
+
+      # Сборка или сценарий упали — сразу на телефон, а не утренней сводкой: в «Запусках» панели
+      # видно, на каком этапе, и есть «Повторить». Те же секреты; без них шаг молчит.
+      - name: Уведомить телефон о сбое
+        if: failure() && env.PLAN != ''
+        continue-on-error: true
+        env:
+          PANEL_URL: ${{ secrets.PANEL_URL }}
+          PANEL_NOTIFY_SECRET: ${{ secrets.PANEL_NOTIFY_SECRET }}
+        run: |
+          if [ -z "$PANEL_URL" ] || [ -z "$PANEL_NOTIFY_SECRET" ]; then
+            echo "Уведомления не настроены (секреты PANEL_URL и PANEL_NOTIFY_SECRET) — пропускаю."
+            exit 0
+          fi
+          what="сборка"
+          if [ "${MODE:-}" = "draft" ]; then what="сценарий"; fi
+          body=$(jq -n --arg b "$PLAN — $what не удалась. Откройте «Запуски»: там этап и «Повторить»" '{title: "Сборка не удалась", body: $b, url: "/runs"}')
+          curl -fsS --max-time 30 -X POST "${PANEL_URL%/}/api/notify" \
+            -H "Authorization: Bearer $PANEL_NOTIFY_SECRET" -H "Content-Type: application/json" -d "$body" > /dev/null
+          echo "Уведомление о сбое отправлено."
 
       # Без релиза пакет живёт только в артефакте — на 3 дня (квота хранилища артефактов мала).
       - name: Артефакт пакета
