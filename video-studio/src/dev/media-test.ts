@@ -57,6 +57,8 @@ await test("Счётчик stat-сцены по речи: самая длинн�
   assert.deepEqual(spokenNumberRun(w), { from: 3, to: 5 });
   const pct = words(["Двое", "из", "трёх", "и", "восемьдесят", "три", "процента", "врачей"]);
   assert.deepEqual(spokenNumberRun(pct, "%"), { from: 4, to: 6 }, "при % — фраза со словом «процент»");
+  const year = words(["в", "тысяча", "восемьсот", "восемьдесят", "пятом", "году", "почти", "две", "трети"]);
+  assert.deepEqual(spokenNumberRun(year), { from: 7, to: 7 }, "год пропускаем");
   const scene = { kind: "stat" as const, onScreen: "x", narration: "x", stat: { value: 243, label: "дня" }, audioStartFrame: 8, audioDurationMs: 3000, words: w, durationInFrames: 120 };
   const win = statCountWindow(scene, 30);
   // «три» кончается на 2350 мс → 8 + 70,5 кадра; +2 — цифра встаёт сразу после слова.

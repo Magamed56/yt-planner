@@ -41,6 +41,11 @@ export function spokenNumberRun(words: WordTiming[], suffix?: string): { from: n
     if (!isNumeralWord(words[i]!.text)) continue;
     let j = i;
     while (j + 1 < words.length && isNumeralWord(words[j + 1]!.text)) j++;
+    // «…восемьдесят пятом году» — это год, а не цифра сцены.
+    if (words.slice(j + 1, j + 3).some((w) => normalizeWord(w.text).startsWith("год"))) {
+      i = j;
+      continue;
+    }
     const percent = (suffix ?? "").includes("%") && words.slice(i, j + 1).some((w) => normalizeWord(w.text).startsWith("процент"));
     const score = j - i + 1 + (percent ? 2 : 0);
     if (!best || score > best.score) best = { from: i, to: j, score };
