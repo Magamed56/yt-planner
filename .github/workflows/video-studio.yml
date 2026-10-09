@@ -622,6 +622,24 @@ jobs:
             echo "Следующий шаг: mode = **batch**, plan = \`$PLAN\`, upload = **release** — или кнопка «Собрать видео» в панели." >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # Уведомление на телефон через панель: «видео готово — загрузите в Studio». Нужны секреты
+      # PANEL_URL (адрес панели) и PANEL_NOTIFY_SECRET (тот же, что в Vercel); без них шаг молчит.
+      - name: Уведомить телефон
+        if: success() && (env.MODE == 'batch' || env.MODE == 'render') && contains(env.UPLOAD, 'release')
+        continue-on-error: true
+        env:
+          PANEL_URL: ${{ secrets.PANEL_URL }}
+          PANEL_NOTIFY_SECRET: ${{ secrets.PANEL_NOTIFY_SECRET }}
+        run: |
+          if [ -z "$PANEL_URL" ] || [ -z "$PANEL_NOTIFY_SECRET" ]; then
+            echo "Уведомления не настроены (секреты PANEL_URL и PANEL_NOTIFY_SECRET) — пропускаю."
+            exit 0
+          fi
+          body=$(jq -n --arg b "${PLAN:-новый ролик} — загрузите в Studio" '{title: "Видео готово", body: $b, url: "/"}')
+          curl -fsS --max-time 30 -X POST "${PANEL_URL%/}/api/notify" \
+            -H "Authorization: Bearer $PANEL_NOTIFY_SECRET" -H "Content-Type: application/json" -d "$body" > /dev/null
+          echo "Уведомление отправлено."
+
       # Без релиза пакет живёт только в артефакте — на 3 дня (квота хранилища артефактов мала).
       - name: Артефакт пакета
         if: always() && env.MODE == 'batch' && !contains(env.UPLOAD, 'release') && !contains(env.UPLOAD, 'instagram')

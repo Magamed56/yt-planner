@@ -30,6 +30,7 @@ export interface AutopilotRun {
   did: string[]; // что сделано
   notes: string[]; // что пропущено и почему
   errors: string[]; // что не вышло (GitHub отказал)
+  state?: PanelState; // загруженная очередь — её же берёт утренняя сводка на телефон (без лишней квоты)
 }
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -128,5 +129,5 @@ export async function runAutopilot(source: "cron" | "manual", now = new Date()):
   };
   // Без права Variables: Write отметка не сохранится — сами запуски от этого не зависят.
   await setVariable(AUTOPILOT_LAST_VAR, JSON.stringify(last)).catch(() => {});
-  return { last, did, notes, errors };
+  return { last, did, notes, errors, state };
 }
