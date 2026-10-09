@@ -9,8 +9,12 @@ import os from "node:os";
 import path from "node:path";
 import type { VisualContext } from "../pipeline/contracts";
 import { buildYoutubeMeta } from "../pipeline/meta";
-import { buildPlan, findVisual, pickRendition, realFirstForPillar, resetVisualsState, VISUAL_PROVIDERS } from "../pipeline/visuals/index";
+import { buildPlan, findVisual, pickRendition, realFirstForPillar, resetVisualsState, VISUAL_PROVIDERS, visualsJudgeStats } from "../pipeline/visuals/index";
+import { judgeConfig, parseVerdict } from "../pipeline/visuals/judge";
+import { PICK_RULES_VERSION, visualKey } from "../pipeline/visuals/manifest";
 import { authorText, htmlToText, licenseFamily } from "../pipeline/visuals/providers/open-licenses";
+import { rankCommonsPages } from "../pipeline/visuals/providers/wikimedia";
+import { nonPhotoKind, photoFit, photoQueries, topicAnchors, visualQuery } from "../pipeline/visuals/relevance";
 import type { ScriptScene } from "../types";
 
 const tmpRoot = await mkdtemp(path.join(os.tmpdir(), "video-studio-visuals-test-"));
@@ -76,12 +80,13 @@ const ctxFor = (publicDir: string, over: Partial<VisualContext> = {}): VisualCon
   ...over,
 });
 
-// Ответ Pexels /videos/search (структура — pexels@1.4.0 types.d.ts).
-const pexelsVideo = (id: number, duration: number, files: [number | null, number | null, string][]) => ({
+// Ответ Pexels /videos/search (структура — pexels@1.4.0 types.d.ts). Описания
+// у видео нет — сюжет только в адресе страницы (/video/<сюжет>-<id>/).
+const pexelsVideo = (id: number, duration: number, files: [number | null, number | null, string][], slug = "calendar-pages-time-lapse") => ({
   id,
   width: 1080,
   height: 1920,
-  url: `https://www.pexels.com/video/clip-${id}/`,
+  url: `https://www.pexels.com/video/${slug}-${id}/`,
   image: `https://images.pexels.com/videos/${id}/poster.jpeg`,
   duration,
   user: { id: 1, name: `Author ${id}`, url: `https://www.pexels.com/@a${id}` },
@@ -177,7 +182,7 @@ await test("Pexels: видео — пропуск usedIds и коротких, �
   const ctx = ctxFor(publicDir, { usedIds: new Set(["pexels:video:111"]) });
   const r = await findVisual(scene(), ctx, { fetch: fn, env: { VISUALS: "pexels", PEXELS_API_KEY: "pexels-key" }, log, cacheDir });
   assert.deepEqual(r.visual, { type: "video", src: "visuals/s1.mp4", durationSec: 15, credit: "Pexels: Author 333" });
-  assert.deepEqual(r.credit, { provider: "Pexels", author: "Author 333", url: "https://www.pexels.com/video/clip-333/" });
+  assert.deepEqual(r.credit, { provider: "Pexels", author: "Author 333", url: "https://www.pexels.com/video/calendar-pages-time-lapse-333/" });
   const file = path.join(publicDir, "visuals", "s1.mp4");
   assert.equal(statSync(file).size, 1500);
   assert.ok(noPart(path.dirname(file)));
@@ -435,7 +440,8 @@ await test("Wikimedia: только свободные лицензии без �
   const api = new URL(calls[0].url);
   assert.equal(api.searchParams.get("generator"), "search");
   assert.equal(api.searchParams.get("gsrnamespace"), "6");
-  assert.ok(api.searchParams.get("gsrsearch")!.startsWith("giza pyramid desert filemime:image/jpeg"), api.searchParams.get("gsrsearch")!);
+  assert.equal(api.searchParams.get("gsrsearch"), "giza pyramid desert filetype:bitmap filew:>1079 fileh:>1079", "только растровые файлы от 1080 px по короткой стороне");
+  assert.ok(api.searchParams.get("iiextmetadatafilter")!.includes("Categories"), "категории — тем же запросом");
   assert.equal(api.searchParams.get("iiurlwidth"), "1280");
   assert.ok(calls[0].headers["user-agent"]?.startsWith("video-studio/"), "понятный User-Agent обязателен");
   assert.ok(calls[1].url.startsWith("https://thumb.wikimedia.org/"), "качаем миниатюру из API, а не оригинал");
@@ -511,6 +517,279 @@ await test("Без ключей вообще: реальные фото всё �
   assert.equal(ov.searchParams.get("license"), "by,by-sa,cc0,pdm");
   assert.equal(ov.searchParams.get("excluded_source"), "wikimedia");
   assert.ok(calls.every((c) => !c.url.includes("pexels") && !c.url.includes("pixabay") && !c.url.includes("cloudflare")));
+});
+
+// ---- «По теме»: правила relevance.ts на настоящих данных ----
+
+// Запросы сцен роликов 10a, 11a, 12b (scripts/sut-…json) — для «предмета ролика».
+const Q10A = ["cat sniffing cake", "dna model laboratory", "cat tongue close up", "tiger walking grass", "cat eyes dark", "sea lion rocks", "person petting cat", ""];
+const Q10B = ["human eye macro iris", "eye retina examination doctor", "face profile temple closeup", "old book candle desk", "person covering one eye", "", "brain model blue light", "city street through window", ""];
+const Q11A = ["rocket launch night", "vintage computer panel buttons", "old circuit board closeup", "hand holding smartphone night", "astronaut spacecraft cockpit", "hands weaving copper wire", "moon surface footprint", ""];
+const Q11B = ["blue sky ocean horizon", "sunlight prism rainbow", "old physics book desk", "clear blue sky clouds", "red sunset horizon city", "purple twilight sky", "human eye close up", ""];
+const Q12A = ["wrinkled fingertips water bath", "hand soaking water bowl", "old hospital doctor notebook", "fingertip blood vessels macro", "tire tread wet road", "wet hands holding stones", "fingers bathtub bubbles", ""];
+const Q12B = ["old university stone building", "stone pyramid temple ruins", "old manuscript candle desk", "lake city aerial mountains", "aztec stone carving", "hourglass sand wooden table", "", ""];
+
+await test("Подборы роликов 10a–12b (логи CI 09.10.2026): случайные совпадения слова — мимо, удачные — остаются", () => {
+  // [запросы ролика, visualQuery сцены, название файла Commons, который тогда попал в ролик, брать ли теперь]
+  const cases: [string[], string, string, boolean][] = [
+    [Q10A, "cat tongue close up", "Tongue of the forest", false],
+    [Q10B, "old book candle desk", "Print, Ein façonirter Schreib-Tisch,… (Writing Desk and Chair), ca. 1720 (CH 18416713)", false],
+    [Q10B, "person covering one eye", "DSC 8251 A narrow street scene at sunset with decorative chef statues standing on a fence beside a small restaurant motorbikes riding down the lane and green vines covering the wall on the right", false],
+    [Q10B, "face profile temple closeup", "Full face and profile - geograph.org.uk - 6611409", false],
+    [Q10B, "city street through window", "Through The Window Into The Canal (53045628)", false],
+    [Q11A, "vintage computer panel buttons", "IBM 5155 vintage portable computer, IBM PC DOS, ValorosoIT", false],
+    [Q11A, "old circuit board closeup", "The old banking at the former Brooklands racing circuit - geograph.org.uk - 4794210", false],
+    [Q11A, "hands weaving copper wire", "Hands weaving palaspas", false],
+    [Q11A, "hand holding smartphone night", "DZ3 0627 A night market stall in Sattahip Thailand - vendors weigh durians as a young buyer uses his phone to scan or pay while another customer captures the scene on their smartphone", false],
+    [Q11B, "old physics book desk", "Old Physics Conference and Gallery", false],
+    [Q12A, "hand soaking water bowl", "Fresh strawberries soaking in water next to a hand making a peace sign by the window in bright daylight", false],
+    [Q12A, "old hospital doctor notebook", "Ellis Island hospital window mural (01897)", false],
+    [Q12A, "fingertip blood vessels macro", "Blood lancet", false],
+    [Q12A, "wet hands holding stones", "Toddler boy standing next to his toy car covered with wet sand and showing his dirty hands (51154030954)", false],
+    [Q12B, "old university stone building", "Old Main cornerstone, University of Findlay", false],
+    [Q12B, "stone pyramid temple ruins", "0011122 Bastar Shiv Temple Chhattisgarh 031", false],
+    [Q12B, "old manuscript candle desk", "Primbon, old manuscripts of Indonesia", false],
+    [Q12B, "lake city aerial mountains", "Aerial view of Newfoundland Mountains from the south dllu", false],
+    // Удачные подборы тех же роликов не теряем.
+    [Q10A, "sea lion rocks", "Lion resting on rocks in the Serengeti", false], // не тот «lion» (придуманный пример)
+    [Q10A, "sea lion rocks", "Sea Lion, Sea Lion Rocks, 2006 (01)", true],
+    [Q10A, "cat sniffing cake", "Tabby cat lying on the grass-Dichohecho-01", true],
+    [Q10A, "dna model laboratory", "Template from Crick and Watson’s DNA molecular model, 1953. (9660573227)", true],
+    [Q10A, "tiger walking grass", "Bengal tiger walking on the grass", true],
+    [Q10A, "cat eyes dark", "Tuxedo cat with yellow eyes wearing a harness and bell 06", true],
+    [Q10A, "person petting cat", "Young child and an old person are petting grey cute cat - 51622977008", true],
+    [Q10B, "human eye macro iris", "Iris of the Human Eye", true],
+    [Q10B, "eye retina examination doctor", "Eye (Retina + Sclera)", true],
+    [Q10B, "brain model blue light", "Brain model 12", true],
+    [Q11A, "rocket launch night", "NASA’s Evolved SLS Block 1B Crew Rocket - Night Launch (B1B Crew Night Launch)", true],
+    [Q11A, "astronaut spacecraft cockpit", "Cockpit of the Gemini spacecraft", true],
+    [Q11A, "moon surface footprint", "Buzz Aldrin's Footprint on the Surface of the Moon MET DP-15797-013", true],
+    [Q11B, "blue sky ocean horizon", "The Horizon vs The Blue Skies", true],
+    [Q11B, "sunlight prism rainbow", "Ripples dispersing sunlight into underwater rainbows in Brofjorden", true],
+    [Q11B, "clear blue sky clouds", "Leaning trees over the grassy hillock of Nodong-ri tombs clouds and blue sky in Gyeongju South Korea", true],
+    [Q11B, "red sunset horizon city", "Red Sunset (177370067)", true],
+    [Q11B, "purple twilight sky", "A vivid twilight sky fades from deep purple to fiery orange, casting a warm glow across the horizon", true],
+    [Q11B, "human eye close up", "Human eye close up, anterior view", true],
+    [Q12A, "tire tread wet road", "Tire tread", true],
+    [Q12B, "aztec stone carving", "Piedra del Sol (Aztec Sun Stone) - México", true],
+    [Q12B, "hourglass sand wooden table", "Hourglass with sand", true],
+  ];
+  for (const [topicQueries, q, title, ok] of cases) {
+    const fit = photoFit(visualQuery({ visualQuery: q }, { topicQueries }), { title });
+    assert.equal(fit.ok, ok, `«${q}» → «${title}»: ${fit.why}`);
+  }
+  // Все 39 кадров из логов CI (без придуманного «Lion resting…»): 18 мимо, 21 остаётся.
+  const real = cases.filter(([, , t]) => !t.startsWith("Lion resting"));
+  assert.deepEqual([real.length, real.filter((c) => !c[3]).length], [39, 18]);
+  assert.deepEqual([...topicAnchors(Q10A)], ["cat"], "предмет ролика про кошек");
+  assert.deepEqual([...topicAnchors(Q10B)], ["eye"]);
+  assert.deepEqual([...topicAnchors(Q11B)], [], "«horizon» в 2 сценах из 7 — ещё не тема ролика");
+});
+
+await test("Запросы к Commons: предмет кадра без стиля; имя собственное из imagePrompt — первым", () => {
+  assert.deepEqual(photoQueries(visualQuery({ visualQuery: "cat tongue close up" })), ["cat tongue"], "«close up» только сужает поиск");
+  assert.deepEqual(photoQueries(visualQuery({ visualQuery: "old book candle desk" })), ["book candle desk", "book candle"]);
+  assert.deepEqual(
+    photoQueries(visualQuery({ visualQuery: "rocket launch night", imagePrompt: "cinematic low angle shot of a giant Saturn V style rocket on a launch pad at night, floodlights" })),
+    ["saturn rocket launch", "rocket launch"],
+    "Saturn V из промпта → настоящие запуски «Аполлона»",
+  );
+  // Имя собственное: первое слово с заглавной среди строчных запросов ролика.
+  const q = visualQuery({ visualQuery: "Tenochtitlan model" }, { topicQueries: [...Q12B, "Tenochtitlan model"] });
+  assert.deepEqual(q.proper, ["tenochtitlan"]);
+  assert.equal(q.terms[0]!.weight, 2);
+  assert.deepEqual(visualQuery({ visualQuery: "Old university building" }, { topicQueries: ["Old university building", "Stone ruins", "Aztec stone"] }).proper, [], "все запросы с заглавной — это стиль, а не имена");
+  assert.deepEqual(visualQuery({ visualQuery: "Apollo Guidance Computer DSKY" }).proper, ["apollo", "guidance", "computer", "dsky"]);
+});
+
+await test("Не фото: гравюра, карта, схема, логотип, скан — мимо, если запрос сам их не просит", () => {
+  const q = visualQuery({ visualQuery: "old book candle desk" });
+  assert.match(nonPhotoKind(q, { title: "Print, Ein façonirter Schreib-Tisch (Writing Desk), ca. 1720" }) ?? "", /гравюра/);
+  assert.match(nonPhotoKind(q, { title: "Candle and book", categories: "Engravings by Johann Balthasar Probst|Prints in the Cooper Hewitt" }) ?? "", /гравюра/);
+  assert.match(nonPhotoKind(q, { title: "Desk with books", description: "Etching on laid paper, 1750" }) ?? "", /гравюра/);
+  assert.match(nonPhotoKind(q, { title: "Old book trade district map, Paris 1890" }) ?? "", /карта/);
+  assert.match(nonPhotoKind(q, { title: "Candle flame diagram" }) ?? "", /схема/);
+  assert.match(nonPhotoKind(q, { title: "Book candle logo" }) ?? "", /логотип/);
+  assert.match(nonPhotoKind(q, { title: "Candle making (page 12)" }) ?? "", /скан/);
+  assert.match(nonPhotoKind(q, { title: "Old desk", author: "Internet Archive Book Images" }) ?? "", /скан/);
+  assert.equal(nonPhotoKind(q, { title: "Old book and burning candle on a wooden desk", categories: "Candles|Books|Quality images" }), null);
+  assert.equal(nonPhotoKind(visualQuery({ visualQuery: "Edme Mariotte portrait" }), { title: "Edme Mariotte, engraving" }), null, "портрет просили — гравюра годится");
+  assert.equal(nonPhotoKind(visualQuery({ visualQuery: "old map of Oxford" }), { title: "Map of Oxford, 1850" }), null, "карту просили");
+});
+
+// Реалистичный ответ Commons (generator=search, prop=imageinfo, formatversion=2) для «old book candle desk».
+const deskPages = () => [
+  commonsPage(101, 1, "Print, Ein façonirter Schreib-Tisch,… (Writing Desk and Chair), ca. 1720 (CH 18416713)", {
+    license: "pd",
+    short: "Public domain",
+    artist: "Engraved by Johann Balthasar Probst",
+    description: "Print, Ein façonirter Schreib-Tisch… Engraving on paper",
+    categories: "Prints in the Cooper Hewitt, Smithsonian Design Museum|Engravings by Johann Balthasar Probst|Writing desks",
+  }),
+  commonsPage(102, 2, "Old book shops and candle makers map, Paris (1890)", { license: "pd", short: "Public domain", artist: "Unknown", categories: "Old maps of Paris|Bookshops in Paris" }),
+  { ...commonsPage(103, 3, "Candle flame and book desk diagram", { categories: "Diagrams of candles" }), title: "File:Candle flame and book desk diagram.png" },
+  commonsPage(104, 4, "Old book and candle on a desk", { width: 800, height: 600 }),
+  commonsPage(105, 5, "Desk lamp in the office", {}),
+  commonsPage(107, 7, "Old book with a candle on a desk", { width: 1200, height: 900 }),
+  commonsPage(106, 6, "Old book and burning candle on a wooden desk", {
+    width: 5000,
+    height: 3333,
+    description: "<p>An old open book next to a burning candle on a wooden desk</p>",
+    categories: "Candles|Books on desks|Quality images",
+  }),
+];
+// PNG у страницы 103 — mime тоже PNG.
+const pngFix = (pages: ReturnType<typeof deskPages>) => pages.map((p) => (p.title.endsWith(".png") ? { ...p, imageinfo: p.imageinfo.map((ii) => ({ ...ii, mime: "image/png" })) } : p));
+
+await test("Wikimedia: из гравюры, карты, схемы, мелкого и чужого фото выбирается фото по теме", async ({ publicDir, cacheDir }) => {
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/w/api.php")) return json(200, { batchcomplete: true, query: { pages: pngFix(deskPages()) } });
+    if (c.url.startsWith("https://thumb.wikimedia.org/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    return null;
+  });
+  const ctx = { ...ctxFor(publicDir), topicQueries: Q10B, topic: "В каждом твоём глазу есть дыра" };
+  const r = await findVisual(scene({ id: "s4", visualQuery: "old book candle desk", imagePrompt: "17th century scholar desk with quill, parchment and a candle" }), ctx, { fetch: fn, env: { VISUALS: "wikimedia" }, log, cacheDir });
+  assert.equal(r.credit?.url, "https://commons.wikimedia.org/wiki/File:Old_book_and_burning_candle_on_a_wooden_desk.jpg");
+  assert.ok(logs.some((l) => l.includes("«Old book and burning candle on a wooden desk»")), "в логе — название файла");
+  assert.equal(new URL(calls[0]!.url).searchParams.get("gsrsearch"), "book candle desk filetype:bitmap filew:>1079 fileh:>1079");
+  assert.equal(calls.filter((c) => c.url.includes("api.php")).length, 1, "нашлось с первого запроса");
+
+  // Каждого «плохого» кандидата отсекает своё правило.
+  const q = visualQuery({ visualQuery: "old book candle desk" }, { topicQueries: Q10B });
+  const ranked = rankCommonsPages(pngFix(deskPages()), q, { ctx: ctxFor(publicDir), deps: { fetch: fn, env: {}, log, cacheDir, now: Date.now } });
+  assert.deepEqual(ranked.map((c) => c.id), ["wikimedia:106"], "гравюра, карта, схема, мелкие (800×600, 1200×900) и «Desk lamp» — мимо");
+  assert.ok((ranked[0]!.meta?.score ?? 0) > 1, "фото по теме: высокий балл (+ Quality images)");
+  // Порог можно ослабить: VISUALS_MIN_PHOTO_PX=600 пускает 1200×900, но не 800×600 (уже кадра Shorts).
+  const loose = rankCommonsPages(pngFix(deskPages()), q, { ctx: ctxFor(publicDir), deps: { fetch: fn, env: { VISUALS_MIN_PHOTO_PX: "600" }, log, cacheDir, now: Date.now } });
+  assert.deepEqual(loose.map((c) => c.id), ["wikimedia:106", "wikimedia:107"]);
+});
+
+await test("Wikimedia: ничего по теме → до трёх запросов, затем Openverse, затем моушен-графика (без картинки)", async ({ publicDir, cacheDir }) => {
+  const offTopic = [
+    commonsPage(201, 1, "The old banking at the former Brooklands racing circuit - geograph.org.uk - 4794210"),
+    commonsPage(202, 2, "Circuit de Spa-Francorchamps, aerial", { categories: "Race tracks in Belgium" }),
+    commonsPage(203, 3, "Printed circuit board layout diagram", { categories: "Diagrams" }),
+  ];
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/w/api.php")) return json(200, { query: { pages: offTopic } });
+    if (c.url.startsWith("https://api.openverse.org/")) return json(200, { results: [{ id: "x1", title: "Racing circuit at night", url: "https://live.staticflickr.com/1/x1_b.jpg", creator: "Ann", license: "by", license_version: "2.0", source: "flickr", width: 2048, height: 1536 }] });
+    return null;
+  });
+  const r = await findVisual(scene({ id: "s3", visualQuery: "old circuit board closeup", imagePrompt: "macro shot of a 1960s circuit board with tiny components" }), { ...ctxFor(publicDir), topicQueries: Q11A }, { fetch: fn, env: {}, log, cacheDir });
+  assert.deepEqual(r, { visual: { type: "none" }, credit: null }, "лучше моушен-графика, чем гоночная трасса");
+  const searches = calls.filter((c) => c.url.includes("commons.wikimedia.org")).map((c) => new URL(c.url).searchParams.get("gsrsearch")!.split(" filetype")[0]);
+  assert.deepEqual(searches, ["circuit board"], "один точный запрос: «old» и «closeup» не сужают поиск");
+  assert.ok(logs.some((l) => l.includes("ни одного фото по теме")), logs.join("\n"));
+  assert.ok(logs.some((l) => l.includes("по теме не нашлось")), logs.join("\n"));
+  assert.ok(!calls.some((c) => c.url.includes("staticflickr")), "Openverse «Racing circuit» тоже не скачан");
+});
+
+await test("Стоки тоже проверяются: явный промах по сюжету мимо; имя собственное — только с совпадением", async ({ publicDir, cacheDir }) => {
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://api.pexels.com/videos/search")) {
+      return json(200, { videos: [pexelsVideo(401, 20, [[1080, 1920, "hd"]], "woman-doing-yoga-at-home"), pexelsVideo(402, 20, [[1080, 1920, "hd"]], "close-up-of-a-cat-licking-its-paw")] });
+    }
+    if (c.url.includes("402-hd")) return bytes(700);
+    return null;
+  });
+  const r = await findVisual(scene({ id: "s3", visualQuery: "cat tongue close up" }), { ...ctxFor(publicDir), topicQueries: Q10A }, { fetch: fn, env: { VISUALS: "pexels", PEXELS_API_KEY: "k" }, log, cacheDir });
+  assert.equal(r.credit?.url, "https://www.pexels.com/video/close-up-of-a-cat-licking-its-paw-402/", "йога пропущена");
+  assert.ok(!calls.some((c) => c.url.includes("401-hd")));
+
+  // «Tenochtitlan model»: сток покажет любые руины — берём Commons с настоящим макетом.
+  resetVisualsState();
+  const { fn: fn2, calls: calls2 } = mockFetch((c) => {
+    if (c.url.startsWith("https://api.pexels.com/videos/search")) return json(200, { videos: [pexelsVideo(501, 20, [[1080, 1920, "hd"]], "ancient-ruins-in-the-jungle")] });
+    if (c.url.startsWith("https://api.pexels.com/v1/search")) return json(200, { photos: [{ ...pexelsPhoto(77), alt: "Model of an ancient city" }] });
+    if (c.url.startsWith("https://commons.wikimedia.org/")) return json(200, { query: { pages: [commonsPage(301, 1, "Model of Tenochtitlan, Museo Nacional de Antropología")] } });
+    if (c.url.startsWith("https://thumb.wikimedia.org/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    return null;
+  });
+  const topicQueries = [...Q12B.slice(0, 3), "Tenochtitlan model", ...Q12B.slice(4)];
+  const r2 = await findVisual(scene({ id: "s4", visualQuery: "Tenochtitlan model" }), { ...ctxFor(publicDir), topicQueries }, { fetch: fn2, env: { VISUALS: "pexels,wikimedia", PEXELS_API_KEY: "k" }, log, cacheDir });
+  assert.equal(r2.credit?.provider, "Wikimedia Commons");
+  assert.ok(!calls2.some((c) => c.url.includes("videos.pexels.com") || c.url.includes("images.pexels.com")), "клипы и фото Pexels без «Tenochtitlan» не скачивались");
+});
+
+// Ответ Messages API (как его отдаёт api.anthropic.com).
+const claudeReply = (text: string, usage = { input_tokens: 1200, output_tokens: 2 }) =>
+  json(200, { id: "msg_1", type: "message", role: "assistant", model: "claude-haiku-4-5", content: [{ type: "text", text }], stop_reason: "end_turn", stop_sequence: null, usage });
+
+await test("Судья Claude (VISUALS_JUDGE=claude): выбирает среди прошедших правила, «0» — ни один", async ({ publicDir, cacheDir }) => {
+  const pages = [
+    commonsPage(601, 1, "Old manuscripts of Indonesia on a desk with a candle", { categories: "Manuscripts of Indonesia" }),
+    commonsPage(602, 2, "Medieval manuscript and candle on a desk, Bodleian Library, Oxford", { categories: "Bodleian Library|Manuscripts" }),
+  ];
+  const answers = ["2", "0"];
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/")) return json(200, { query: { pages } });
+    if (c.url.startsWith("https://thumb.wikimedia.org/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    if (c.url === "https://api.anthropic.com/v1/messages") return claudeReply(answers.shift() ?? "0");
+    return null;
+  });
+  const env = { VISUALS: "wikimedia", VISUALS_JUDGE: "claude", ANTHROPIC_API_KEY: "sk-test" };
+  const sc = scene({ id: "s3", visualQuery: "old manuscript candle desk", narration: "Сам Оксфорд пишет: преподавание здесь шло уже с тысяча девяносто шестого года.", onScreen: "Учили уже в *1096*" });
+  const ctx = { ...ctxFor(publicDir), topicQueries: Q12B, topic: "Оксфорд старше империи ацтеков" };
+  const r = await findVisual(sc, ctx, { fetch: fn, env, log, cacheDir });
+  assert.ok(r.credit?.url?.includes("File:Medieval_manuscript_and_candle_on_a_desk"), `судья выбрал №2 — про Оксфорд: ${r.credit?.url}`);
+  const call = calls.find((c) => c.url === "https://api.anthropic.com/v1/messages")!;
+  assert.equal(call.headers["x-api-key"], "sk-test");
+  const body = JSON.parse(String(call.body)) as { model: string; max_tokens: number; temperature?: number; system: string; messages: { content: string }[] };
+  assert.equal(body.model, "claude-haiku-4-5", "самая дешёвая модель проекта");
+  assert.equal(body.temperature, 0);
+  assert.equal(body.max_tokens, 16);
+  assert.ok(body.system.includes("Лучше ни одного"));
+  const user = body.messages[0]!.content;
+  assert.ok(user.includes("Оксфорд старше империи ацтеков") && user.includes("тысяча девяносто шестого") && user.includes("1. Old manuscripts of Indonesia"), user);
+  const stats = visualsJudgeStats();
+  assert.equal(stats.calls, 1);
+  assert.ok(stats.costUsd > 0.001 && stats.costUsd < 0.002, `≈ $0.0012 за вызов: ${stats.costUsd}`);
+
+  // «0» — ни один не подходит: картинки нет.
+  const r2 = await findVisual({ ...sc, id: "s9" }, ctxFor(publicDir), { fetch: fn, env, log, cacheDir });
+  assert.equal(r2.visual.type, "none");
+  assert.ok(logs.some((l) => l.includes("судья Claude — ни один")), logs.join("\n"));
+});
+
+await test("Судья Claude: без ключа или с неверным ключом — подбор по правилам, без падения", async ({ publicDir, cacheDir }) => {
+  const pages = [commonsPage(701, 1, "Hourglass with sand")];
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/")) return json(200, { query: { pages } });
+    if (c.url.startsWith("https://thumb.wikimedia.org/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    if (c.url === "https://api.anthropic.com/v1/messages") return json(401, { type: "error", error: { type: "authentication_error", message: "invalid x-api-key" } });
+    return null;
+  });
+  const sc = scene({ id: "s6", visualQuery: "hourglass sand wooden table" });
+  const r1 = await findVisual(sc, ctxFor(publicDir), { fetch: fn, env: { VISUALS: "wikimedia", VISUALS_JUDGE: "claude" }, log, cacheDir });
+  assert.equal(r1.credit?.provider, "Wikimedia Commons");
+  assert.ok(logs.some((l) => l.includes("не задан ANTHROPIC_API_KEY")), logs.join("\n"));
+  assert.ok(!calls.some((c) => c.url.includes("anthropic")), "без ключа не ходим");
+
+  resetVisualsState();
+  const env = { VISUALS: "wikimedia", VISUALS_JUDGE: "claude", ANTHROPIC_API_KEY: "bad" };
+  const r2 = await findVisual({ ...sc, id: "s7" }, ctxFor(publicDir), { fetch: fn, env, log, cacheDir });
+  const r3 = await findVisual({ ...sc, id: "s8" }, ctxFor(publicDir), { fetch: fn, env, log, cacheDir });
+  assert.equal(r2.credit?.provider, "Wikimedia Commons", "401 → лучший по правилам");
+  assert.equal(r3.credit?.provider, "Wikimedia Commons");
+  assert.equal(calls.filter((c) => c.url.includes("anthropic")).length, 1, "после 401 судью больше не спрашиваем");
+  assert.ok(logs.some((l) => l.includes("до конца запуска подбираю по бесплатным правилам")), logs.join("\n"));
+});
+
+await test("Судья Claude: ответ модели разбирается строго", () => {
+  assert.deepEqual(parseVerdict("2", 3), { kind: "pick", index: 1 });
+  assert.deepEqual(parseVerdict("Ответ: 0", 3), { kind: "none" });
+  assert.equal(parseVerdict("7", 3), null, "номера нет в списке");
+  assert.equal(parseVerdict("не знаю", 3), null);
+  assert.deepEqual(judgeConfig({}), { config: null, problem: null }, "по умолчанию выключен");
+  assert.equal(judgeConfig({ VISUALS_JUDGE: "claude", ANTHROPIC_API_KEY: "k", VISUALS_JUDGE_MODEL: "claude-haiku-5-5" }).config?.model, "claude-haiku-5-5");
+});
+
+await test("Манифест: новая версия правил отбора — старые подборы подбираются заново", () => {
+  const sc = scene();
+  const key = visualKey(sc, "shorts", {});
+  assert.ok(key.includes(`"rules":${PICK_RULES_VERSION}`), key);
+  assert.notEqual(visualKey(sc, "shorts", { VISUALS_JUDGE: "claude" }), key, "включили судью — подобрать заново");
+  assert.equal(visualKey(sc, "shorts", { VISUALS_JUDGE: "off" }), key);
 });
 
 await rm(tmpRoot, { recursive: true, force: true });

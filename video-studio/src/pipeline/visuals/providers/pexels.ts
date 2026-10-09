@@ -6,6 +6,7 @@ import { envNumber } from "../util";
 import { getJson } from "../http";
 import { pickRendition } from "../pick";
 import { extFromUrl } from "../query";
+import { slugText, stockFit } from "../relevance";
 import type { Candidate, Stage, StageInput, VisualProvider } from "../types";
 
 interface PexelsVideoFile {
@@ -46,12 +47,17 @@ function orientation(format: StageInput["ctx"]["format"]): string {
   return format === "shorts" ? "portrait" : "landscape";
 }
 
-export function rankPexelsVideos(videos: PexelsVideo[], input: Pick<StageInput, "ctx">): Candidate[] {
+export function rankPexelsVideos(videos: PexelsVideo[], input: Pick<StageInput, "ctx" | "query">): Candidate[] {
   const { ctx } = input;
   const out: (Candidate & { long: boolean })[] = [];
   for (const v of videos ?? []) {
     const id = `pexels:video:${v.id}`;
     if (ctx.usedIds.has(id) || !(v.duration >= MIN_CLIP_SEC)) continue;
+    // Описания у видео Pexels нет — только адрес страницы с сюжетом
+    // (/video/a-cat-sniffing-a-cake-855029/); явный промах мимо (relevance.ts).
+    const about = slugText(v.url);
+    const fit = input.query ? stockFit(input.query, about) : null;
+    if (fit && !fit.ok) continue;
     const files = (v.video_files ?? [])
       .filter((f) => f.file_type === "video/mp4" && f.width && f.height && f.link)
       .map((f) => ({ url: f.link, width: f.width as number, height: f.height as number, fps: f.fps }));
@@ -66,6 +72,7 @@ export function rankPexelsVideos(videos: PexelsVideo[], input: Pick<StageInput, 
       width: best.width,
       height: best.height,
       credit: { provider: "Pexels", author: v.user?.name ?? null, url: v.url ?? null },
+      meta: { title: about || `Pexels ${v.id}`, ...(fit ? { score: fit.score } : {}) },
       long: v.duration >= ctx.minDurationSec,
     });
   }
@@ -91,13 +98,16 @@ export function sizedPexelsUrl(url: string, w: number, h: number): string {
   }
 }
 
-export function rankPexelsPhotos(photos: PexelsPhoto[], input: Pick<StageInput, "ctx">): Candidate[] {
+export function rankPexelsPhotos(photos: PexelsPhoto[], input: Pick<StageInput, "ctx" | "query">): Candidate[] {
   const { ctx } = input;
   const shorts = ctx.format === "shorts";
   const out: Candidate[] = [];
   for (const p of photos ?? []) {
     const id = `pexels:photo:${p.id}`;
     if (ctx.usedIds.has(id)) continue;
+    const about = p.alt?.trim() || slugText(p.url);
+    const fit = input.query ? stockFit(input.query, about) : null;
+    if (fit && !fit.ok) continue;
     const crop = shorts ? p.src?.portrait : p.src?.landscape;
     const url = crop ? sizedPexelsUrl(crop, shorts ? 1080 : 1920, shorts ? 1920 : 1080) : p.src?.large2x ?? p.src?.original;
     if (!url) continue;
@@ -109,6 +119,7 @@ export function rankPexelsPhotos(photos: PexelsPhoto[], input: Pick<StageInput, 
       width: p.width,
       height: p.height,
       credit: { provider: "Pexels", author: p.photographer ?? null, url: p.url ?? null },
+      meta: { title: about || `Pexels ${p.id}`, ...(fit ? { score: fit.score } : {}) },
     });
   }
   return out;

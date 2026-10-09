@@ -66,7 +66,7 @@ export const ScriptSceneSchema = z.object({
   items: z.array(z.string().trim().min(1).max(LIMITS.item)).min(LIMITS.itemsMin).max(LIMITS.itemsMax).optional().describe("только для list: 2–4 пункта"),
   stat: SceneStatSchema.optional().describe("только для stat"),
   icon: z.string().trim().min(1).max(LIMITS.icon).optional().describe("иконка lucide в kebab-case"),
-  visualQuery: z.string().trim().min(1).max(LIMITS.visualQuery).optional().describe("ENGLISH stock search query, 2-4 concrete nouns"),
+  visualQuery: z.string().trim().min(1).max(LIMITS.visualQuery).optional().describe("ENGLISH photo search query, 2-5 concrete nouns, main subject first (its real Wikipedia name if the scene is about a real object or place)"),
   imagePrompt: z.string().trim().min(1).max(LIMITS.imagePrompt).optional().describe("ENGLISH cinematic image prompt"),
   quiz: z
     .object({

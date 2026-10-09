@@ -9,6 +9,11 @@
 // ctx.publicDir/visuals/<id сцены>.<ext> — никаких ссылок на чужие серверы.
 // Для одной сцены функция НИКОГДА не бросает: при неудаче — { type: "none" },
 // и композиция покажет чистую моушен-графику.
+//
+// «По теме»: каждый источник отсеивает кандидатов правилами relevance.ts
+// (слова запроса в названии/категориях, не гравюра/карта/схема/логотип), а
+// при VISUALS_JUDGE=claude оставшихся ещё смотрит Claude (judge.ts, платно).
+// Лучше сцена без картинки, чем картинка не по теме.
 
 import path from "node:path";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -16,6 +21,7 @@ import type { Credit, VisualContext, VisualResult } from "../contracts";
 import type { SceneVisual, ScriptScene } from "../../types";
 import { defaultCacheDir } from "./cache";
 import { downloadToFile } from "./http";
+import { askJudge, JUDGE_TOP_N, JudgeError, judgeConfig } from "./judge";
 import { cloudflareProvider } from "./providers/cloudflare";
 import { pexelsProvider } from "./providers/pexels";
 import { pixabayProvider } from "./providers/pixabay";
@@ -23,6 +29,7 @@ import { openverseProvider } from "./providers/openverse";
 import { pollinationsProvider } from "./providers/pollinations";
 import { wikimediaProvider } from "./providers/wikimedia";
 import { buildQueries } from "./query";
+import { visualQuery } from "./relevance";
 import { envNumber, MB } from "./util";
 import { VisualError, type Candidate, type Env, type Stage, type VisualDeps, type VisualHints, type VisualProvider } from "./types";
 
@@ -61,10 +68,21 @@ const disabled = new Map<string, string>();
 const strikes = new Map<string, number>();
 const NETWORK_STRIKES = 3;
 
+// Судья Claude (VISUALS_JUDGE=claude): расход за запуск и выключение после
+// ошибки ключа/баланса или трёх сбоев подряд — дальше подбор по правилам.
+const judge = { calls: 0, costUsd: 0, model: null as string | null, off: null as string | null, fails: 0 };
+const JUDGE_CALLS_PER_SCENE = 4;
+
 export function resetVisualsState(): void {
   noticed.clear();
   disabled.clear();
   strikes.clear();
+  Object.assign(judge, { calls: 0, costUsd: 0, model: null, off: null, fails: 0 });
+}
+
+// Сколько стоил судья за этот запуск (make печатает в итог шага «Визуал»).
+export function visualsJudgeStats(): { calls: number; costUsd: number; model: string | null } {
+  return { calls: judge.calls, costUsd: Math.round(judge.costUsd * 1e6) / 1e6, model: judge.model };
 }
 
 function networkStrike(provider: VisualProvider, what: "api" | "download", e: unknown, log: VisualDeps["log"]): void {
@@ -165,6 +183,42 @@ async function save(c: Candidate, scene: ScriptScene, ctx: VisualContext, deps: 
   return c.fit === "contain" ? { type: "image", src: rel, credit, fit: "contain" } : { type: "image", src: rel, credit };
 }
 
+// Кандидаты одного этапа → судье. null — судья выключен или не ответил
+// (берём порядок правил relevance.ts), [] — «ни один не подходит», иначе —
+// только выбранный им файл.
+async function judged(list: Candidate[], scene: ScriptScene, ctx: VisualHints, deps: VisualDeps, tag: string, perScene: { calls: number }): Promise<Candidate[] | null> {
+  const { config, problem } = judgeConfig(deps.env);
+  if (problem) once(`judge:${problem}`, () => deps.log.warn(`[визуал] ${problem}`));
+  if (!config || judge.off || perScene.calls >= JUDGE_CALLS_PER_SCENE) return null;
+  const top = list.slice(0, JUDGE_TOP_N);
+  perScene.calls++;
+  try {
+    const answer = await askJudge(config, scene, ctx.topic, top, deps.fetch);
+    judge.calls++;
+    judge.costUsd += answer.costUsd;
+    judge.model = answer.model;
+    judge.fails = 0;
+    if (answer.verdict.kind === "none") {
+      deps.log.info(`${tag}: судья Claude — ни один из ${top.length} не по теме («${top[0]?.meta?.title ?? top[0]?.id}»…).`);
+      return [];
+    }
+    const pick = top[answer.verdict.index]!;
+    if (answer.verdict.index > 0) deps.log.info(`${tag}: судья Claude выбрал №${answer.verdict.index + 1} из ${top.length} — «${pick.meta?.title ?? pick.id}».`);
+    return [pick];
+  } catch (e) {
+    const err = e instanceof JudgeError ? e : new JudgeError((e as Error)?.message ?? String(e), false);
+    judge.costUsd += err.costUsd;
+    judge.fails++;
+    if (err.disable || judge.fails >= NETWORK_STRIKES) {
+      judge.off = err.message;
+      deps.log.warn(`[визуал] Судья Claude: ${err.message} — до конца запуска подбираю по бесплатным правилам.`);
+    } else {
+      deps.log.warn(`${tag}: судья Claude: ${err.message} — беру лучший по правилам.`);
+    }
+    return null;
+  }
+}
+
 export async function findVisual(scene: ScriptScene, ctx: VisualContext & VisualHints, overrides: Partial<VisualDeps> = {}): Promise<VisualResult> {
   const env = overrides.env ?? process.env;
   const deps: VisualDeps = {
@@ -195,15 +249,18 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
     if (ready.length === 0) return NONE;
 
     const queries = buildQueries(scene);
+    // Разобранный запрос: главные слова, предмет ролика, имена собственные — для проверки «по теме».
+    const query = visualQuery(scene, { topicQueries: ctx.topicQueries });
     const prefer = (env.VISUALS_PREFER ?? "").trim().toLowerCase();
     const realFirst = Boolean(ctx.realFirst) || prefer === "real";
+    const perScene = { calls: 0 };
     for (const step of buildPlan(ready, ctx.format, prefer === "image", realFirst)) {
       const { provider } = step;
       if (disabled.has(provider.name)) continue;
       if (provider.kind !== "ai" && queries.length === 0) continue;
       let candidates: Candidate[];
       try {
-        candidates = await step.stage.run({ scene, ctx, queries, deps, key: step.key });
+        candidates = await step.stage.run({ scene, ctx, queries, query, deps, key: step.key });
         strikes.delete(`${provider.name}:api`);
       } catch (e) {
         const msg = (e as Error)?.message ?? String(e);
@@ -216,14 +273,21 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
         }
         continue;
       }
+      let list = candidates.filter((x) => !ctx.usedIds.has(x.id));
+      if (list.length && provider.kind !== "ai") {
+        const verdict = await judged(list, scene, ctx, deps, tag, perScene);
+        if (verdict) list = verdict;
+      }
       // Пробуем не больше двух кандидатов: битая ссылка CDN — не повод сдаваться.
-      for (const c of candidates.filter((x) => !ctx.usedIds.has(x.id)).slice(0, 2)) {
+      for (const c of list.slice(0, 2)) {
         if (disabled.has(provider.name)) break;
         try {
           const visual = await save(c, scene, ctx, deps, provider.title);
           strikes.delete(`${provider.name}:download`);
           ctx.usedIds.add(c.id);
-          deps.log.info(`${tag}: ${c.type === "video" ? "видео" : "картинка"} — ${creditText(c.credit)}${c.type === "video" ? `, ${c.durationSec} с` : ""}`);
+          // Название файла в логе — чтобы по логу CI было видно, ЧТО попало в ролик.
+          const about = c.meta?.title ? ` — «${c.meta.title.slice(0, 100)}»` : "";
+          deps.log.info(`${tag}: ${c.type === "video" ? "видео" : "картинка"} — ${creditText(c.credit)}${c.type === "video" ? `, ${c.durationSec} с` : ""}${about}`);
           return { visual, credit: c.credit };
         } catch (e) {
           deps.log.warn(`${tag}: ${(e as Error)?.message ?? String(e)}`);
@@ -231,7 +295,7 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
         }
       }
     }
-    deps.log.info(`${tag}: подходящего визуала не нашлось — сцена будет на моушен-графике.`);
+    deps.log.info(`${tag}: подходящего визуала по теме не нашлось — сцена будет на моушен-графике.`);
     return NONE;
   } catch (e) {
     // Страховка: ни одна ошибка визуала не должна ронять сборку ролика.
@@ -242,3 +306,4 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
 
 export { pickRendition } from "./pick";
 export { buildQueries, imagePromptFor } from "./query";
+export { photoFit, photoQueries, stockFit, visualQuery } from "./relevance";

@@ -65,7 +65,8 @@
 - `src/dev/` — dev-скрипты: `stills.ts`, `preview.ts`, `voice-test.ts`, `script-test.ts`, `visuals-test.ts`,
   `publish-test.ts` (канал, слоты, описание, publishAt, Instagram на подменённом fetch).
 - `docs/` — инструкции для человека: `youtube-setup.md` (Studio, расписание), `instagram-setup.md`,
-  `tiktok-setup.md`; `improvements.md` — разбор, что улучшить дальше (по приоритету).
+  `tiktok-setup.md`, `visuals.md` (кадры по теме: ключи стоков, правила `visuals/relevance.ts`,
+  судья Claude); `improvements.md` — разбор, что улучшить дальше (по приоритету).
 - `.github/workflows/video-studio.yml` (в корне репозитория) — draft / render / batch в GitHub Actions
   (batch: ролик i → слот i через `--schedule-slot i --schedule-start <старт>`, релиз на ролик);
   `video-studio-instagram.yml` — публикует самый старый релиз с `instagram.json` без

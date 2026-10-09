@@ -20,8 +20,11 @@
 //   YT_SUGGEST, YT_SUGGEST_TIMEOUT_MS   подсказки поиска YouTube для заголовка/тегов (0 — выключить)
 //   USAGE_LOG         журнал расхода content/usage.jsonl (0 — не писать, путь — свой файл)
 //   PLAN_WEB_SEARCH, PLAN_CHECK_URLS, PLAN_URL_TIMEOUT_MS   источники фактов для plan-extend / plan-sequel
-//   VISUALS           порядок источников через запятую: pexels,pixabay,cloudflare,pollinations,none
+//   VISUALS           порядок источников через запятую: pexels,pixabay,wikimedia,openverse,cloudflare,pollinations,none
 //   PEXELS_API_KEY, PIXABAY_API_KEY, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN
+//   VISUALS_MIN_PHOTO_PX   короткая сторона фото с Commons, px (по умолчанию 1080)
+//   VISUALS_JUDGE, VISUALS_JUDGE_MODEL, VISUALS_JUDGE_TIMEOUT_MS   судья Claude для кадров (claude — платно, по умолчанию выкл.)
+//   WIKIMEDIA_LICENSES, WIKIMEDIA_USER_AGENT, VISUALS_REAL_PILLARS   реальные фото (docs/visuals.md)
 //   MUSIC             auto | none | generated | <путь к файлу>   (по умолчанию auto)
 //   MUSIC_DIR         папка с треками (по умолчанию ./music)
 //   CHANNEL_NAME      имя канала для финальной сцены

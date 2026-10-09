@@ -34,8 +34,10 @@
 ## Чего ждать по качеству (честно)
 
 **Картинка.** Моушен-графика на тёмных градиентах с иконками: аккуратно и динамично, но узнаваемо
-«шаблонно». Со стоковыми видео (Pexels/Pixabay) ролики заметно живее, поэтому ключ Pexels стоит
-завести сразу: он бесплатный.
+«шаблонно». Со стоковыми видео (Pexels/Pixabay) ролики заметно живее, поэтому ключи Pexels и
+Pixabay стоит завести сразу: они бесплатные. Без них кадры берутся только из Wikimedia Commons и
+Openverse, и только по теме сцены; остальные сцены — на моушен-графике. Подробно и пошагово —
+[docs/visuals.md](docs/visuals.md).
 
 **Голос** решает больше всего:
 
@@ -170,8 +172,8 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    | Секрет | Для чего | Где взять (бесплатно) |
    |---|---|---|
    | `GEMINI_API_KEY` | Сценарии (и Gemini TTS) | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
-   | `PEXELS_API_KEY` | Стоковые видео и фото | [pexels.com/api](https://www.pexels.com/api/) |
-   | `PIXABAY_API_KEY` | Ещё стоки | [pixabay.com/api/docs](https://pixabay.com/api/docs/) |
+   | `PEXELS_API_KEY` | Стоковые видео и фото — главное для кадров по теме ([docs/visuals.md](docs/visuals.md)) | [pexels.com/api](https://www.pexels.com/api/) |
+   | `PIXABAY_API_KEY` | Ещё стоковые видео | [pixabay.com/api/docs](https://pixabay.com/api/docs/) |
    | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | AI-картинки (FLUX) | dash.cloudflare.com → Workers AI |
    | `GROQ_API_KEY`, `OPENROUTER_API_KEY` | Запасные LLM | console.groq.com, openrouter.ai |
    | `ANTHROPIC_API_KEY` | Claude (платно) | platform.claude.com |
@@ -181,6 +183,7 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 
 3. **Variables** (вкладка рядом, необязательно): `CHANNEL_NAME` (имя канала в финальной сцене),
    `LLM_PROVIDER`, `LLM_MODEL`, `LLM_FALLBACKS`, `LLM_EFFORT`, `VISUALS`, `VISUALS_PREFER`,
+   `VISUALS_JUDGE` (`claude` — судья Claude для кадров, платно), `VISUALS_JUDGE_MODEL`, `VISUALS_MIN_PHOTO_PX`,
    `TTS_PROVIDER` (только для расписания — при ручном запуске провайдер и голос выбираются кнопкой: поля «Озвучка» и «Голос»), `TTS_VOICE`,
    `TTS_RATE`, `TTS_FALLBACK`, `GEMINI_TTS_MODEL`, `GEMINI_TTS_VOICE`, `GEMINI_TTS_STYLE`,
    `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL`, `MUSIC`, `MUSIC_MOOD`, `LOUDNESS_TARGET`,
@@ -357,7 +360,9 @@ instagram для других языков выключены. Что сдела
 | | Qwen3-TTS (через `openai`) | бесплатно на своём GPU | Apache-2.0, клонирование голоса |
 | | Fish Speech | бесплатно на своём GPU | Некоммерческая лицензия |
 | Визуал | Pexels, Pixabay | бесплатно | Можно в коммерческих роликах, атрибуция не обязательна (мы её добавляем в описание) |
+| | Wikimedia Commons, Openverse | бесплатно, без ключа | Только PD, CC0, CC BY, CC BY-SA; автор, лицензия и ссылка — в описании ролика |
 | | Cloudflare Workers AI (FLUX) | бесплатная суточная квота | Условия Cloudflare и модели |
+| | Судья Claude (`VISUALS_JUDGE=claude`, по желанию) | ≈ $0.01–0.02 за Shorts на `claude-haiku-4-5` | Платно по факту использования; по умолчанию выключен |
 | Рендер | Remotion 4 | бесплатно | См. ниже |
 
 **Remotion** бесплатен для частных лиц, компаний до 3 сотрудников включительно и некоммерческих
@@ -378,7 +383,7 @@ src/types.ts              общий контракт: сценарий, props �
 src/pipeline/contracts.ts контракты модулей и список всех переменных окружения
 src/pipeline/script/      сценарий через LLM + проверка JSON
 src/pipeline/voice/       6 провайдеров озвучки, тайминги слов
-src/pipeline/visuals/     Pexels, Pixabay, Cloudflare, Pollinations
+src/pipeline/visuals/     Pexels, Pixabay, Wikimedia, Openverse, Cloudflare; проверка «по теме» (relevance.ts)
 src/pipeline/audio/       музыка (библиотека или генерация) и звук перехода
 src/pipeline/props.ts     сборка props композиции
 src/pipeline/render.ts    бандл Remotion → MP4 + обложка
@@ -409,6 +414,7 @@ out/                      результаты (в git не попадают)
 | `Нет ни одной доступной LLM` | Задайте `GEMINI_API_KEY` в `.env` (локально) или в секретах (GitHub) |
 | Gemini: 429 / квота | Бесплатная квота на сегодня кончилась — подождите, добавьте `GROQ_API_KEY`/`OPENROUTER_API_KEY` или используйте `--script` |
 | `Сценарий … не прошёл проверку` | В сообщении — список проблем с номерами сцен. Сверьтесь с `examples/demo-ru.json` |
+| Кадры не по теме, в описании только Wikimedia, в логе «Pexels пропущен» | Не заданы `PEXELS_API_KEY` / `PIXABAY_API_KEY` — заведите бесплатные ключи ([docs/visuals.md](docs/visuals.md)). В логе шага «Визуал» видно название каждого взятого файла |
 | Рендер очень медленный или ПК зависает | `RENDER_CONCURRENCY=1`, `VISUALS_PREFER=image`, закройте браузер; или рендерите в GitHub Actions |
 | В логе `Detected differing memory amounts` | Предупреждение Remotion в Docker и облачных контейнерах, на результат не влияет |
 | YouTube: `invalid_grant` | Токен отозван или истёк (приложение в статусе Testing). Переведите в In production и выполните `npm run youtube-auth` |

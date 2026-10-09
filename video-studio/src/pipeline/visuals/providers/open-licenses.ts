@@ -79,50 +79,9 @@ export function authorWithLicense(author: string | null, license: string): strin
   return author ? `${author} (${license})` : `автор не указан (${license})`;
 }
 
-// Слова запроса, которые есть почти в любом заголовке или описывают лишь
-// обстановку («space», «museum», «reef»), — не доказательство, что файл про
-// нужный объект: иначе длинный заголовок с «planet» и «space» обгоняет
-// настоящее фото Венеры.
-const WEAK = new Set(
-  (
-    "a an the of in on at with and or for to from by into over under near old vintage new close closeup up macro view top shot photo image picture detail details dark light night day modern ancient small big large " +
-    "space planet museum desert reef ocean sea sky forest field street city room lab laboratory background landscape nature animal object people person building interior exterior studio display exhibit collection"
-  ).split(" "),
-);
-
-// Значимые слова запроса (латиница, ≥ 3 букв, не служебные).
-export function queryKeywords(q: string): string[] {
-  return [...new Set(q.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !WEAK.has(w)))];
-}
-
-// Сколько значимых слов запроса есть в заголовке файла (по основе:
-// «pyramids» ≈ «pyramid»). Поиск Commons ищет и по описанию/категориям — без
-// этой проверки в выдачу попадают закаты и страницы книг; 0 — файл не берём,
-// а из подходящих первым идёт тот, где совпало больше слов («octopus coral
-// reef»: осьминог на кораллах важнее просто кораллов).
-export function titleScore(title: string, keywords: string[]): number {
-  if (keywords.length === 0) return 1;
-  const t = title.toLowerCase();
-  return keywords.filter((w) => t.includes(w.length >= 6 ? w.slice(0, w.length - 2) : w)).length;
-}
-
-// Сначала больше совпавших слов, при равенстве — порядок выдачи поиска.
+// Сначала выше балл «по теме» (relevance.ts), при равенстве — порядок выдачи поиска.
 export function byRelevance<T extends { score: number; order: number }>(list: T[]): T[] {
   return [...list].sort((a, b) => b.score - a.score || a.order - b.order);
-}
-
-// Не фото: сканы страниц, карты, схемы, логотипы, марки, документы.
-const JUNK_TITLE =
-  /\b(page|pages|pg\.?\s?\d+|p\.\s?\d+|book|bulletin|journal|catalog(ue)?|guide to|account of|maps?|diagram|chart|graph|schematic|plan of|logo|flag|coat of arms|emblem|seal of|stamp|postage|document|letter|newspaper|manuscript|codebook|poster|screenshot|icon|signature|infographic)\b/i;
-const JUNK_AUTHOR = /internet archive book images|biodiversity heritage library/i;
-// Скан книги выдаёт себя подписью («Plate 16», «Fig. 3», «p. 130») или категорией.
-const SCAN_TEXT = /\b(?:plate|fig(?:ure)?|page)\.?\s*[0-9ivxlc]+\b|\bpp?\.\s*\d+\b/i;
-const SCAN_CATEGORY = /\b(book scans?|scanned|internet archive|biodiversity heritage library|pages? from|illustrations? from)\b/i;
-
-export function looksLikeJunk(title: string, author: string | null, extra: { description?: string; credit?: string; categories?: string } = {}): boolean {
-  if (JUNK_TITLE.test(title) || (author ? JUNK_AUTHOR.test(author) : false)) return true;
-  if (SCAN_TEXT.test(`${extra.description ?? ""} ${extra.credit ?? ""}`)) return true;
-  return SCAN_CATEGORY.test(extra.categories ?? "");
 }
 
 // Как показывать фото в кадре: близкое по пропорциям к кадру — на весь экран
@@ -136,9 +95,12 @@ export function fitFor(width: number, height: number, format: "shorts" | "landsc
 
 // Хватает ли пикселей: для cover — закрыть кадр с апскейлом не больше ×1.5,
 // для contain — по ширине (Shorts) или высоте (горизонтальный ролик).
-export function bigEnough(width: number, height: number, format: "shorts" | "landscape"): boolean {
+// minShort — ещё и короткая сторона оригинала не меньше (Commons: 1080 —
+// мелкие файлы там почти всегда старые сканы и плохие снимки).
+export function bigEnough(width: number, height: number, format: "shorts" | "landscape", minShort = 0): boolean {
   const a = width / height;
   if (!(a >= 0.35 && a <= 2.4)) return false; // панорамы и «полоски» не берём
+  if (Math.min(width, height) < minShort) return false;
   const fit = fitFor(width, height, format);
   // Небольшой апскейл (1024 → 1080) на телефоне незаметен.
   if (format === "shorts") return fit === "cover" ? height >= 1280 && width >= 720 : width >= 1000;
