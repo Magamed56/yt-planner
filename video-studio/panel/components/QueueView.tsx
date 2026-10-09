@@ -323,6 +323,7 @@ export default function QueueView({ state, initialMode, initialSelected = null }
       onSection={(s) => (s === "runs" ? router.push("/runs") : switchMode(s))}
       updated={state.updatedLabel}
       generatedAt={state.generatedAt}
+      activeIds={state.runs.filter((r) => r.active).map((r) => r.id)}
       activeRuns={state.runs.filter((r) => r.active).length}
       runwayDays={state.runwayDays}
       runwayLabel={state.runwayLabel}

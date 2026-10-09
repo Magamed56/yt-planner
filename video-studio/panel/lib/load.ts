@@ -8,7 +8,7 @@ import { channelVideos } from "./youtube";
 export const STUDIO_DIR = "video-studio";
 
 // Запуски и шаги идущих (их обычно 0–2) — для полоски прогресса. Шаги не пришли — без этапов.
-async function runsWithSteps(): Promise<{ runs: GhRun[]; steps: Record<number, GhStep[]> }> {
+export async function runsWithSteps(): Promise<{ runs: GhRun[]; steps: Record<number, GhStep[]> }> {
   const runs = await listRuns();
   const active = runs.filter((r) => r.status !== "completed").slice(0, 3);
   const pairs = await Promise.all(active.map(async (r) => [r.id, await runSteps(r.id).catch(() => [])] as const));

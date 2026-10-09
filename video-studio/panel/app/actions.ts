@@ -8,6 +8,7 @@ import { parsePlan, PLAN_CODE } from "../../src/pipeline/plan";
 import { applyUpdate, fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
+import { dispatchOnce } from "@/lib/dispatch";
 import { assetText, dispatchWorkflow, getVariable, GithubError, readFileWithSha, readJson, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
@@ -20,6 +21,11 @@ import { channelVideos, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/y
 export interface ActionResult {
   ok: boolean;
   message: string;
+}
+
+// Запуск в GitHub Actions прошёл: какие ролики «в очереди…» до появления запуска в списке.
+export interface DispatchResult extends ActionResult {
+  dispatched?: { codes: string[]; at: string };
 }
 
 export interface MoveResult extends ActionResult {
@@ -56,21 +62,23 @@ function slotLabel(iso: string, tz: string): string {
 
 // ---- запуски workflow ----
 
-export async function draftAction(codes: string[]): Promise<ActionResult> {
+// Платные запуски (Claude, квота голоса) — через dispatchOnce: второе нажатие по тем же
+// роликам, пока первый запуск идёт или только что запущен, получает отказ, а не второй запуск.
+export async function draftAction(codes: string[]): Promise<DispatchResult | ActionResult> {
   return guarded(async () => {
-    const list = await planCodes(codes);
+    const [list, channel] = await Promise.all([planCodes(codes), loadChannel()]);
     if (!list.length) return fail("Отметьте темы из плана.");
-    await dispatchWorkflow("video-studio.yml", { mode: "draft", plan: list.join(",") });
-    return ok(`Запущено: сценарии ${codesLabel(list)}. Обычно 1–3 минуты на тему — следите в «Запусках».`);
+    const dispatched = await dispatchOnce("video-studio.yml", { mode: "draft", plan: list.join(",") }, "draft", list, channel.schedule.timezone);
+    return { ...ok(`Запущено: сценарии ${codesLabel(list)}. Обычно 1–3 минуты на тему — следите в «Запусках».`), dispatched };
   });
 }
 
-export async function videosAction(codes: string[]): Promise<ActionResult> {
+export async function videosAction(codes: string[]): Promise<DispatchResult | ActionResult> {
   return guarded(async () => {
-    const list = await planCodes(codes);
+    const [list, channel] = await Promise.all([planCodes(codes), loadChannel()]);
     if (!list.length) return fail("Отметьте ролики из плана.");
-    await dispatchWorkflow("video-studio.yml", { mode: "batch", plan: list.join(","), upload: "release" });
-    return ok(`Запущено: ${codesLabel(list)} — недостающие сценарии, затем сборка (≈ 8–10 минут на ролик). Видео появится в карточке ролика.`);
+    const dispatched = await dispatchOnce("video-studio.yml", { mode: "batch", plan: list.join(","), upload: "release" }, "batch", list, channel.schedule.timezone);
+    return { ...ok(`Запущено: ${codesLabel(list)} — недостающие сценарии, затем сборка (≈ 8–10 минут на ролик). Видео появится в карточке ролика.`), dispatched };
   });
 }
 
@@ -446,21 +454,22 @@ export async function saveScriptAction(code: string, sha: string, edit: ScriptEd
   });
 }
 
-export async function rebuildAction(code: string, opts: RebuildOptions): Promise<ActionResult> {
+export async function rebuildAction(code: string, opts: RebuildOptions): Promise<DispatchResult | ActionResult> {
   return guarded(async () => {
     const { state, row } = await rowFor(code);
     const lock = editLock(row, state.youtubeError);
     if (lock) return fail(lock);
     const o: RebuildOptions = { voice: String(opts?.voice ?? "auto"), voiceName: String(opts?.voiceName ?? ""), theme: String(opts?.theme ?? "auto"), music: opts?.music !== false };
+    let dispatched: DispatchResult["dispatched"];
     try {
-      await dispatchWorkflow("video-studio.yml", rebuildInputs(row.code, o));
+      dispatched = await dispatchOnce("video-studio.yml", rebuildInputs(row.code, o), "batch", [row.code], state.timezone);
     } catch (e) {
       // Поле music появилось в workflow вместе с этой кнопкой: пока PR не слит, GitHub его не знает.
       if (e instanceof GithubError && e.status === 422 && /music/.test(e.message)) throw new Error("В workflow ветки ещё нет поля music — слейте PR с ним или соберите с музыкой.");
       throw e;
     }
     const what = row.release || row.localVideo ? "пересборка" : "сборка";
-    return ok(`Запущена ${what} ${row.code}: ${rebuildLabel(o)}. ≈ 8–10 минут в GitHub Actions — новое видео появится в карточке ролика.`);
+    return { ...ok(`Запущена ${what} ${row.code}: ${rebuildLabel(o)}. ≈ 8–10 минут в GitHub Actions — новое видео появится в карточке ролика.`), dispatched };
   });
 }
 

@@ -3,11 +3,13 @@ import { useState } from "react";
 import type { PanelState, Row } from "@/lib/state";
 import { STAGE_LABEL, plural } from "@/lib/stages";
 import CoverMedia, { frameOf } from "./CoverMedia";
+import { usePending } from "@/lib/pending";
 import RunProgressBar from "./RunProgressBar";
 
 // Подпись на обложке: этап и, если нужно, что сделать.
-function chipText(r: Row): string {
+function chipText(r: Row, queued: boolean): string {
   if (r.running) return `в работе: ${r.running}`;
+  if (queued) return "в очереди…";
   if (r.stage === "video") return "Видео — загрузить в Studio";
   if (r.stage === "studio") return "В Studio — нужно время";
   return STAGE_LABEL[r.stage];
@@ -19,7 +21,7 @@ export const RATIO_CLASS = { up: "good", typical: "neutral", down: "warn", fresh
 // Отметка выбора на обложке: «on» — выбран, «off» — можно выбрать, «none» — файлов нет.
 type Mark = "on" | "off" | "none" | null;
 
-function Cover({ row, mark }: { row: Row; mark: Mark }) {
+function Cover({ row, mark, queued }: { row: Row; mark: Mark; queued: boolean }) {
   const [empty, setEmpty] = useState(false);
   const st = row.stage === "published" ? row.stats : null;
   const views = st ? (
@@ -46,7 +48,8 @@ function Cover({ row, mark }: { row: Row; mark: Mark }) {
       {hasMedia ? <CoverMedia src={row.cover} video={frameOf(row)} onFail={() => setEmpty(true)} /> : blank}
       <span className="time">{row.timeLabel}</span>
       {views}
-      {hasMedia && <span className="chip-stage">{chipText(row)}</span>}
+      {hasMedia && <span className="chip-stage">{chipText(row, queued)}</span>}
+      {!hasMedia && queued && !row.running && <span className="chip-stage">в очереди…</span>}
       {check}
     </span>
   );
@@ -74,6 +77,7 @@ export default function FeedView({
   limitDays?: number; // показать столько ближайших дней, остальное — кнопкой
   onMore?: () => void;
 }) {
+  const pending = usePending(); // до раннего return: порядок хуков не меняется
   const days: { key: string; label: string; approx: boolean; today: boolean; future: boolean; rows: Row[] }[] = [];
   for (const r of rows) {
     const key = r.dateKey ?? "none";
@@ -120,10 +124,10 @@ export default function FeedView({
                     disabled={mark === "none"}
                     onClick={() => (chosen ? onToggle?.(r.code) : onOpen(r.code))}
                   >
-                    <Cover row={r} mark={mark} />
+                    <Cover row={r} mark={mark} queued={pending.has(r.code)} />
                     <span className="code">{r.code}</span>
                     <span className="title">{r.title}</span>
-                    {r.running && runOf(r.code)?.progress && <RunProgressBar progress={runOf(r.code)!.progress!} compact />}
+                    {r.running && runOf(r.code)?.progress && <RunProgressBar progress={runOf(r.code)!.progress!} runId={runOf(r.code)!.id} compact />}
                     {r.flags[0] && <span className="hint">{r.flags[0]}</span>}
                   </button>
                 );

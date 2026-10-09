@@ -1,10 +1,13 @@
 "use client";
 // Полоска идущего запуска: этапы, доля готовности, сколько прошло и сколько осталось. Тикает
-// каждую секунду сама (без запросов к серверу); этапы обновляет автообновление страницы.
+// каждую секунду сама (без запросов к серверу); этапы — из лёгкого опроса /api/runs.
 import { useEffect, useState } from "react";
 import { minutesLabel, progressAt, type RunProgress } from "@/lib/progress";
+import { useLiveProgress } from "./LiveRuns";
 
-export default function RunProgressBar({ progress, compact = false }: { progress: RunProgress; compact?: boolean }) {
+// runId — взять свежие этапы из опроса /api/runs (AppShell), иначе — те, что пришли со страницей.
+export default function RunProgressBar({ progress: initial, runId, compact = false }: { progress: RunProgress; runId?: number; compact?: boolean }) {
+  const progress = useLiveProgress(runId, initial);
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     setNow(Date.now());

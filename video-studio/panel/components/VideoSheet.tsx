@@ -22,6 +22,7 @@ import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import { frameOf } from "./CoverMedia";
 import Dots from "./Dots";
 import FilesSaver from "./FilesSaver";
+import { notePending, usePending } from "@/lib/pending";
 import RunProgressBar from "./RunProgressBar";
 import Thumb from "./Thumb";
 
@@ -127,7 +128,8 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   const [editing, setEditing] = useState<Editing | null>(null);
   const [scriptSaved, setScriptSaved] = useState(false);
   const [rebuild, setRebuild] = useState<RebuildOptions>(DEFAULT_REBUILD);
-  const locked = busy || Boolean(row.running);
+  const pending = usePending();
+  const locked = busy || Boolean(row.running) || pending.has(row.code); // только что запущен — ждём GitHub
   const runOf = row.running ? (state.runs.find((r) => r.active && r.codes.includes(row.code)) ?? null) : null;
   // Править сценарий и пересобирать — только пока ролик не загружен в YouTube.
   const lock = editLock(row, state.youtubeError);
@@ -137,6 +139,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
     setBusy(true);
     try {
       const r = await action();
+      notePending(r);
       setToast({ text: r.message, ok: r.ok, undo: "undo" in r ? (r.undo as Undo | undefined) : undefined });
       if (r.ok) router.refresh();
     } catch (e) {
@@ -261,7 +264,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       {row.running && (
         <div className="sheet-running">
           <p>⚙ {row.running}…</p>
-          {runOf?.progress && <RunProgressBar progress={runOf.progress} />}
+          {runOf?.progress && <RunProgressBar progress={runOf.progress} runId={runOf.id} />}
         </div>
       )}
       {row.flags.map((f) => (

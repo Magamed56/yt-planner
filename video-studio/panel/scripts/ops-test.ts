@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import { ASSET_CHUNK, assetHeaders, assetType, contentDisposition, parseContentRange, planRange } from "../lib/asset-range";
 import type { GhRelease } from "../lib/github";
+import { addDispatch, dispatchConflict, parseDispatches, type RunLike } from "../lib/dispatch-guard";
 import { decideReserve, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
 import { rebuildInputs, DEFAULT_REBUILD } from "../lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, countWords, parseTags, SCRIPT_LIMITS, scriptEditOf, scriptFileText, type ScriptEdit } from "../lib/script-edit";
@@ -44,6 +45,7 @@ const now = Date.parse("2026-10-09T03:00:00Z");
 const run = (over: Partial<RunInfo>): RunInfo => ({
   id: 1,
   workflow: "video-studio: ролик",
+  file: "video-studio.yml",
   title: "",
   kind: "batch",
   codes: [],
@@ -341,6 +343,29 @@ async function main() {
     assert.equal(whole["Cache-Control"], "private, no-store");
     assert.equal(contentDisposition("ролик «1».mp4", true), `attachment; filename="_____ _1_.mp4"; filename*=UTF-8''%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%20%C2%AB1%C2%BB.mp4`);
     assert.equal(parseContentRange("bytes */20"), null);
+  });
+
+  await test("повтор платного запуска: идёт или только что запускали — отказ; после сбоя и другой workflow — можно", () => {
+    const t = Date.parse("2026-10-09T11:00:00Z");
+    const iso = (min: number) => new Date(t - min * 60_000).toISOString();
+    const label = (x: string) => x.slice(11, 16);
+    const want = { file: "video-studio.yml", kind: "batch", codes: ["08a", "08b"] };
+    const r = (over: Partial<RunLike>): RunLike => ({ file: "video-studio.yml", kind: "batch", codes: ["08a"], active: false, conclusion: "success", createdAt: iso(30), ...over });
+    assert.equal(dispatchConflict(want, [], [], t, label), null);
+    assert.equal(dispatchConflict(want, [r({ active: true, conclusion: null, createdAt: iso(5), kind: "draft" })], [], t, label), "08a уже в работе (запуск 10:55) — второй раз не запускаю.");
+    assert.match(dispatchConflict(want, [r({ createdAt: iso(1) })], [], t, label)!, /^08a только что запускали \(10:59\)/);
+    assert.equal(dispatchConflict(want, [r({ createdAt: iso(1), conclusion: "failure" })], [], t, label), null, "после сбоя пересобрать сразу можно");
+    assert.equal(dispatchConflict(want, [r({ createdAt: iso(1), kind: "draft" })], [], t, label), null, "сценарий готов — собирать видео можно");
+    assert.equal(dispatchConflict(want, [r({ active: true, file: "video-studio-titles.yml" })], [], t, label), null, "другой workflow не мешает");
+    assert.equal(dispatchConflict(want, [r({ active: true, codes: ["09a"] })], [], t, label), null, "другие ролики не мешают");
+    // Нажали 10 с назад, GitHub ещё не показал запуск — второе нажатие (хоть с другого устройства) — отказ.
+    const pressed = addDispatch([], { ...want, at: iso(1 / 6) }, t);
+    assert.match(dispatchConflict({ ...want, codes: ["08b"] }, [], pressed, t, label)!, /^08b уже запущен \(10:59\), GitHub ещё ставит его в очередь/);
+    // Запуск появился и уже закончился удачно сценарием — запись о нажатии больше не держит.
+    assert.equal(dispatchConflict({ ...want, kind: "batch" }, [r({ kind: "draft", codes: ["08a", "08b"], createdAt: iso(0) })], [{ ...want, kind: "draft", at: iso(1 / 6) }], t, label), null);
+    // Записи старше 10 минут и мусор не читаются.
+    assert.deepEqual(parseDispatches(JSON.stringify([{ ...want, at: iso(11) }, { file: 1 }]), t), []);
+    assert.equal(parseDispatches("oops", t).length, 0);
   });
 
   console.log(`\nВсе проверки операций пройдены: ${passed}.`);

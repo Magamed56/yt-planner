@@ -67,6 +67,7 @@ export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagr
 export interface RunInfo {
   id: number;
   workflow: string;
+  file: string; // файл workflow: «video-studio.yml»
   title: string;
   kind: RunKind;
   codes: string[];
@@ -311,6 +312,7 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
   return {
     id: r.id,
     workflow: r.name,
+    file: r.path.split("/").pop() ?? r.path,
     title: r.display_title,
     kind,
     codes,
@@ -322,6 +324,25 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
     url: r.html_url,
     attempt: r.run_attempt ?? 1,
   };
+}
+
+// Запуски — свежие первыми; у идущих — этапы и «осталось ≈ N мин» по тому, сколько обычно
+// идут удачные запуски того же вида. Нужен и очереди, и лёгкому /api/runs.
+export function runInfos(ghRuns: GhRun[], steps: Record<number, GhStep[]> | undefined, tz: string): RunInfo[] {
+  const f = formatters(tz);
+  const runs = ghRuns.map((r) => runInfo(r, f)).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+  const started = new Map(ghRuns.map((r) => [r.id, r.run_started_at ?? r.created_at]));
+  const history = ghRuns
+    .filter((r) => r.status === "completed" && r.conclusion === "success")
+    .map((r) => {
+      const info = runs.find((x) => x.id === r.id)!;
+      return { kind: info.kind, codes: info.codes.length, ms: ms(r.updated_at) - ms(started.get(r.id)!) };
+    });
+  for (const r of runs) {
+    if (!r.active) continue;
+    r.progress = runProgress(steps?.[r.id] ?? [], started.get(r.id)!, expectedMs(r.kind, r.codes.length, history));
+  }
+  return runs;
 }
 
 // Самый свежий релиз с файлом «08a-….mp4» на каждый код.
@@ -401,20 +422,7 @@ export function buildState(input: StateInput): PanelState {
       .map((p) => p.match.item.id),
   );
 
-  const runs = input.runs.map((r) => runInfo(r, f)).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
-  // Сколько обычно идут удачные запуски того же вида — для «осталось ≈ N мин».
-  const started = new Map(input.runs.map((r) => [r.id, r.run_started_at ?? r.created_at]));
-  const history = input.runs
-    .filter((r) => r.status === "completed" && r.conclusion === "success")
-    .map((r) => {
-      const info = runs.find((x) => x.id === r.id)!;
-      return { kind: info.kind, codes: info.codes.length, ms: ms(r.updated_at) - ms(started.get(r.id)!) };
-    });
-  for (const r of runs) {
-    if (!r.active) continue;
-    const steps = input.runSteps?.[r.id];
-    r.progress = runProgress(steps ?? [], started.get(r.id)!, expectedMs(r.kind, r.codes.length, history));
-  }
+  const runs = runInfos(input.runs, input.runSteps, tz);
   const running = new Map<string, string>();
   for (const r of runs) if (r.active) for (const c of r.codes) if (!running.has(c)) running.set(c, RUNNING_LABEL[r.kind] ?? "идёт запуск");
 

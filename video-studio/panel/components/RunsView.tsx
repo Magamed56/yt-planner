@@ -15,6 +15,7 @@ import {
 } from "@/app/actions";
 import { setBadge } from "@/lib/badge";
 import { pickCleanup } from "@/lib/ops";
+import { notePending, usePending } from "@/lib/pending";
 import type { AutopilotSettings, PanelState, RunInfo } from "@/lib/state";
 import { STAGE_LABEL, codesLabel } from "@/lib/stages";
 import { badgeCount, buildTodo } from "@/lib/todo";
@@ -56,6 +57,9 @@ export default function RunsView({ state }: { state: PanelState }) {
   const cleanup = pickCleanup(state.releaseVideos, auto.keepReleaseDays, Date.parse(state.generatedAt));
   const keepOptions = KEEP_OPTIONS.includes(auto.keepReleaseDays) ? KEEP_OPTIONS : [...KEEP_OPTIONS, auto.keepReleaseDays].sort((a, b) => a - b);
 
+  // Только что запущенные — «в очереди», пока GitHub не покажет запуск: второе нажатие не нужно.
+  const pending = usePending();
+  const queuedNow = picked.some((c) => pending.has(c)) || pickedTopics.some((c) => pending.has(c));
   const toggle = (list: string[], code: string) => (list.includes(code) ? list.filter((c) => c !== code) : [...list, code]);
 
   async function run(key: string, action: () => Promise<ActionResult>, confirmText?: string) {
@@ -63,6 +67,7 @@ export default function RunsView({ state }: { state: PanelState }) {
     setBusy(key);
     try {
       const r = await action();
+      notePending(r);
       setToast({ text: r.message, ok: r.ok });
       if (r.ok) router.refresh();
     } catch (e) {
@@ -100,6 +105,7 @@ export default function RunsView({ state }: { state: PanelState }) {
       active="runs"
       updated={state.updatedLabel}
       generatedAt={state.generatedAt}
+      activeIds={state.runs.filter((r) => r.active).map((r) => r.id)}
       activeRuns={state.runs.filter((r) => r.active).length}
       runwayDays={state.runwayDays}
       runwayLabel={state.runwayLabel}
@@ -114,14 +120,14 @@ export default function RunsView({ state }: { state: PanelState }) {
           <div className="btn-row">
             <button
               className="btn primary"
-              disabled={!picked.length || busy !== null}
+              disabled={!picked.length || busy !== null || queuedNow}
               onClick={() => run("produce", () => videosAction(picked), `Сделать видео: ${codesLabel(picked)}? Сценарии пишет Claude (платно), сборка ≈ 8–10 минут на ролик.`)}
             >
-              Сделать видео ({picked.length})
+              {queuedNow ? "Запускаю… ждём GitHub" : `Сделать видео (${picked.length})`}
             </button>
             <button
               className="btn"
-              disabled={!pickedTopics.length || busy !== null}
+              disabled={!pickedTopics.length || busy !== null || queuedNow}
               onClick={() => run("produce", () => draftAction(pickedTopics), `Только сценарии: ${codesLabel(pickedTopics)}? Это платно (Claude).`)}
             >
               Только сценарии ({pickedTopics.length})
@@ -314,7 +320,7 @@ export default function RunsView({ state }: { state: PanelState }) {
                   <a href={r.url} target="_blank" rel="noreferrer">
                     лог ↗
                   </a>
-                  {r.active && r.progress && <RunProgressBar progress={r.progress} />}
+                  {r.active && r.progress && <RunProgressBar progress={r.progress} runId={r.id} />}
                 </div>
               ))}
             </div>
