@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parsePlan, type ContentPlan } from "../../src/pipeline/plan";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import { ASSET_CHUNK, assetHeaders, assetType, contentDisposition, parseContentRange, planRange } from "../lib/asset-range";
+import { autopilotBuildInputs } from "../lib/autopilot";
 import type { GhRelease } from "../lib/github";
 import { decideReserve, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
 import { moveItem, movableIds, reorderPlan, sortByPillars } from "../lib/plan-order";
@@ -354,6 +355,19 @@ async function main() {
     const yml = fs.readFileSync(path.join(studio, "..", ".github", "workflows", "video-studio.yml"), "utf8").replace(/\r\n/g, "\n");
     assert.match(yml, /\n {6}music:\n(?: {8}.+\n)*? {8}options: \[auto, none\]/);
     assert.match(yml, /MUSIC: \$\{\{ inputs\.music == 'none' && 'none' \|\| vars\.MUSIC \}\}/);
+  });
+
+  // Автопилот не выпускает ролик голосом Edge: при кончившейся квоте Gemini сборка падает и
+  // повторяется; ручные запуски — без поля, запасной голос как раньше.
+  await test("автопилот: voice_fallback = none → TTS_FALLBACK=none; ручная сборка — без него; кэш озвучки в workflow", () => {
+    assert.deepEqual(autopilotBuildInputs(["08a", "08b"]), { mode: "batch", plan: "08a,08b", upload: "release", voice_fallback: "none" });
+    assert.equal(rebuildInputs("08a", DEFAULT_REBUILD).voice_fallback, undefined);
+    const yml = fs.readFileSync(path.join(studio, "..", ".github", "workflows", "video-studio.yml"), "utf8").replace(/\r\n/g, "\n");
+    assert.match(yml, /\n {6}voice_fallback:\n(?: {8}.+\n)*? {8}options: \[auto, none\]/);
+    assert.match(yml, /TTS_FALLBACK: \$\{\{ inputs\.voice_fallback == 'none' && 'none' \|\| vars\.TTS_FALLBACK \}\}/);
+    assert.match(yml, /uses: actions\/cache\/restore@v\d+\n(?: {8}.+\n)*? {10}path: video-studio\/\.cache\/voice/);
+    // Сохранение — и после упавшего запуска: его повтор возьмёт уже озвученное.
+    assert.match(yml, /if: always\(\) && env\.MODE != 'draft' && hashFiles\('video-studio\/\.cache\/voice\/\*\.json'\)[^\n]*\n(?: {8}.+\n)*? {8}uses: actions\/cache\/save@v\d+/);
   });
 
   await test("файл через панель: диапазоны кусками ≤ 4 МБ, 416, video/mp4, inline или attachment", () => {

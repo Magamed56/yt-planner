@@ -17,6 +17,7 @@ import path from "node:path";
 import { RenderInternals } from "@remotion/renderer";
 import { FORMAT_SIZE, FPS, type VideoProps } from "../types";
 import { decodeWav, toMono } from "./audio/wav";
+import type { VoiceUsed } from "./contracts";
 
 export type QcSeverity = "error" | "warn";
 
@@ -66,6 +67,7 @@ export interface QcReport {
   silences: QcSpan[]; // тишина > 1,5 с (без конца ролика)
   blacks: QcSpan[]; // чёрное > 0,5 с
   issues: QcIssue[];
+  voice?: VoiceUsed; // кто озвучил (make дописывает): панель предупреждает о запасном голосе
 }
 
 // Пороги (секунды, дБ, Мбит/с).

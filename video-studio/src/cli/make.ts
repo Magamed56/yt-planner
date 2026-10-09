@@ -12,7 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { FPS, THEME_NAMES, layoutScenes, type Format, type ThemeName, type VideoProps, type VideoScript } from "../types";
-import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult } from "../pipeline/contracts";
+import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult, VoiceUsed } from "../pipeline/contracts";
 import { makeSfx, prepareMusic } from "../pipeline/audio/index";
 import { applyChannelDefaults, applyPillarVoice, brandIntroEnabled, type ChannelConfig } from "../pipeline/channel";
 import { loadChannel } from "../pipeline/channel-file";
@@ -35,6 +35,7 @@ import { parsePlan, scriptCode } from "../pipeline/plan";
 import { findVisual, realFirstForPillar } from "../pipeline/visuals/index";
 import { readVisualsManifest, reusableEntry, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { getVoiceProvider, resolvePiperVoice } from "../pipeline/voice/index";
+import { describeVoice, failureReason, fallbackDisabled, fallbackProviderNames, isQuotaError, providerLabel, voiceFailureSummary, voiceQcIssues, voiceUsed } from "../pipeline/voice/fallback";
 import { EDGE_DEFAULT_VOICE } from "../pipeline/voice/providers/edge";
 import { PRIVACY_VALUES, missingYoutubeEnv, uploadToYoutube, youtubeEnvHelp, type Privacy, type UploadResult } from "../pipeline/youtube";
 import {
@@ -220,7 +221,7 @@ async function synthesizeAll(provider: VoiceProvider, script: VideoScript, publi
 
 function logVoice(scene: VideoScript["scenes"][number], result: VoiceResult): void {
   const src = result.wordsSource === "provider" ? "тайминги от провайдера" : "тайминги оценены по звуку";
-  console.log(`  ${scene.id} (${scene.kind}): ${(result.durationMs / 1000).toFixed(2)} с, ${result.words.length} слов, ${src}`);
+  console.log(`  ${scene.id} (${scene.kind}): ${(result.durationMs / 1000).toFixed(2)} с, ${result.words.length} слов, ${src}${result.cached ? " (из кэша)" : ""}`);
 }
 
 // Имя голоса для описания — только там, где оно понятно зрителю.
@@ -238,19 +239,6 @@ function ttsModel(provider: string): string | null {
   if (provider === "elevenlabs") return env("ELEVENLABS_MODEL");
   if (provider === "openai") return env("OPENAI_TTS_MODEL");
   return null;
-}
-
-function fallbackProviderNames(primary: string): string[] {
-  const raw = process.env.TTS_FALLBACK?.trim().toLowerCase();
-  if (raw === "none" || raw === "off" || raw === "0") return [];
-  if (raw) return raw.split(",").map((v) => v.trim()).filter((v) => v && v !== primary);
-  // Edge — неофициальный API, его могут закрыть или ограничить для IP
-  // датацентров; Piper работает офлайн везде. У Gemini маленькая суточная
-  // квота — кончилась, значит весь ролик озвучит Edge (а если и он недоступен — Piper).
-  // Платные (ElevenLabs) и локальные серверы выбирают осознанно — их молча не подменяем.
-  if (primary === "gemini") return ["edge", "piper"];
-  if (primary === "edge") return ["piper"];
-  return [];
 }
 
 // ---- main ----
@@ -354,31 +342,47 @@ async function main() {
   let voices: VoiceResult[] = [];
   const ttsUsage: UsageRecord[] = []; // → content/usage.jsonl (запросы и символы по провайдерам)
   const usageCode = args.script ? coveredCode(path.basename(args.script)) : null;
+  const requestedVoice = voice.name;
+  let fallbackReason: string | null = null; // почему озвучил запасной провайдер
   voices = await steps.run("Озвучка", async () => {
     console.log(`  провайдер: ${voice.name}`);
     const fallbacks = fallbackProviderNames(voice.name);
+    if (!fallbacks.length && fallbackDisabled()) console.log("  запасной голос выключен (TTS_FALLBACK=none): не вышло основным — запуск упадёт, а не выпустит ролик другим голосом");
+    let primaryError: unknown = undefined;
     try {
       for (;;) {
-        const t0 = Date.now() - 1000; // запас на грубое время изменения файла
         const run = await countPostRequests(() => synthesizeAll(voice, script, publicDir));
         if (run.value) {
-          // Озвучено сейчас (а не взято из кэша прошлого запуска) — по времени файла.
-          const fresh = run.value.map((v, i) => ({ v, i })).filter(({ v }) => fs.existsSync(v.file) && fs.statSync(v.file).mtimeMs >= t0);
+          // Озвучено сейчас, а не взято из кэша (папки ролика или общего между запусками).
+          const fresh = run.value.map((v, i) => ({ v, i })).filter(({ v, i }) => !v.cached && script.scenes[i]!.narration.trim());
           const chars = fresh.reduce((a, { i }) => a + script.scenes[i]!.narration.length, 0);
           const calls = run.posts > 0 ? run.posts : fresh.length;
           if (calls > 0) ttsUsage.push(ttsUsageRecord({ provider: voice.name, model: ttsModel(voice.name), calls, chars, costUsd: voice.name === "elevenlabs" ? null : 0 }, usageCode));
+          const fromCache = run.value.length - fresh.length;
+          if (fromCache && fresh.length === 0) console.log("  вся озвучка — из кэша: запросов к сервису не было");
+          else if (fromCache) console.log(`  из кэша — ${fromCache} сцен, озвучено заново — ${fresh.length}`);
           return run.value;
         }
         const e = run.error;
+        primaryError ??= e;
         // Неудачные запросы тоже тратят квоту (Gemini — ~10 в сутки): пишем и их.
         if (run.posts > 0) ttsUsage.push(ttsUsageRecord({ provider: voice.name, model: ttsModel(voice.name), calls: run.posts, chars: null, costUsd: voice.name === "elevenlabs" ? null : 0 }, usageCode));
         const fb = fallbacks.shift();
         if (!fb) {
+          // Сводка запуска (workflow берёт voice_error в таблицу пакета / «Сводку при ошибке»).
+          const summary = voiceFailureSummary(requestedVoice, primaryError);
+          ghOutput({ voice_error: summary.replace(/[|\r\n]+/g, " ") }); // строка таблицы пакета
+          if (fallbackDisabled() && isQuotaError(primaryError)) {
+            throw new UserError(
+              `Озвучка не удалась: ${summary}.\n  ${errText(primaryError).split("\n")[0]}\n  Запасной голос выключен (TTS_FALLBACK=none), чтобы ролик не вышел другим голосом. ${requestedVoice === "gemini" ? "Квота Gemini обновится в полночь по тихоокеанскому времени" : `Квота ${providerLabel(requestedVoice)} обновится позже`}: панель повторит упавший запуск, вручную — Re-run на следующий день.`,
+            );
+          }
           const alt = voice.name === "piper" ? "--voice edge" : "--voice piper (офлайн)";
           throw new UserError(`Озвучка через ${voice.name} не удалась: ${errText(e)}\n  Попробуйте другой провайдер: ${alt}. Все варианты — npm run make -- --help.`);
         }
         // Весь ролик заново — чтобы в нём был один голос, а не два.
-        console.warn(`  ⚠ ${voice.name} не работает: ${errText(e).split("\n")[0]}\n  Озвучиваю весь ролик запасным провайдером ${fb} (TTS_FALLBACK=none — отключить).`);
+        fallbackReason ??= failureReason(voice.name, e);
+        console.warn(`  ⚠ ${voice.name} не работает: ${errText(e).split("\n")[0]}\n  Озвучиваю весь ролик запасным провайдером ${fb} (TTS_FALLBACK=none — отключить; в qc.json и сводке будет пометка).`);
         voice = getVoiceProvider(fb);
       }
     } finally {
@@ -386,6 +390,8 @@ async function main() {
     }
   });
   const voiceDurationMs = voices.reduce((a, v) => a + v.durationMs, 0);
+  const usedVoice = voiceUsed({ requested: requestedVoice, provider: voice.name, results: voices, model: ttsModel(voice.name), reason: fallbackReason });
+  console.log(`  голос ролика: ${describeVoice(usedVoice)}`);
 
   // 3. Визуал
   const visuals: VisualResult[] = await steps.run("Визуал", async () => {
@@ -493,7 +499,8 @@ async function main() {
         console.warn(`  ⚠ обложку Reels сделать не удалось: ${errText(e).split("\n")[0]} — Instagram возьмёт кадр по thumb_offset`);
       }
       // QC (pipeline/qc.ts) — до загрузки: битый ролик не должен уйти на YouTube.
-      qcFile = await checkRender(r, props, runDir);
+      // В qc.json — и кто озвучил ролик: файл уходит в релиз, панель видит запасной голос.
+      qcFile = await checkRender(r, props, runDir, usedVoice);
       return r;
     });
   } else steps.skip("Рендер видео и обложки", "--no-render");
@@ -531,6 +538,7 @@ async function main() {
     format,
     theme: script.theme ?? "midnight",
     voiceProvider: voice.name,
+    voice: usedVoice,
     durationSec: Number((props.durationInFrames / FPS).toFixed(2)),
     runDir: rel(runDir),
     files: {
@@ -571,6 +579,8 @@ async function main() {
     instagram_caption: result.files.instagramCaption,
     cover: result.files.cover,
     instagram_url: instagram?.permalink ?? instagram?.mediaId,
+    voice: describeVoice(usedVoice).replace(/[|\r\n]+/g, " "),
+    voice_fallback: usedVoice.fallback ? "1" : undefined,
   });
   ghSummary(summaryMarkdown(result, render, script));
 }
@@ -581,7 +591,7 @@ async function main() {
 // длительность или размер) — видео переименовывается в video-qc-failed.mp4
 // (релиз и загрузка его не возьмут) и запуск падает; QC=warn — только
 // предупреждения, QC=off — без проверки. Сбой самой проверки ролик не губит.
-async function checkRender(render: RenderResult, props: VideoProps, runDir: string): Promise<string | null> {
+async function checkRender(render: RenderResult, props: VideoProps, runDir: string, voice: VoiceUsed): Promise<string | null> {
   const mode = qcMode();
   if (mode === "off") {
     console.log("  QC пропущен (QC=off)");
@@ -594,6 +604,8 @@ async function checkRender(render: RenderResult, props: VideoProps, runDir: stri
     console.warn(`  ⚠ QC не выполнен: ${errText(e).split("\n")[0]}`);
     return null;
   }
+  // Запасной голос — предупреждение, не ошибка: ручной запуск с ним — осознанный выбор.
+  report = { ...report, voice, issues: [...report.issues, ...voiceQcIssues(voice)] };
   const file = writeQc(runDir, report);
   for (const line of qcSummary(report)) console.log(`  ${line}`);
   if (report.ok) return file;
@@ -688,6 +700,7 @@ type Result = {
   durationSec: number;
   runDir: string;
   voiceProvider: string;
+  voice: VoiceUsed;
   files: Record<string, string | null>;
   costUsd: number;
   totalSec: number;
@@ -699,7 +712,7 @@ type Result = {
 function printSummary(r: Result, render: RenderResult | null) {
   console.log("\n────────────────────────────────────────");
   console.log(`Готово: «${r.title}»`);
-  console.log(`  длительность ролика: ${r.durationSec.toFixed(1)} с · озвучка: ${r.voiceProvider} · стоимость: $${r.costUsd.toFixed(4)}`);
+  console.log(`  длительность ролика: ${r.durationSec.toFixed(1)} с · озвучка: ${describeVoice(r.voice)} · стоимость: $${r.costUsd.toFixed(4)}`);
   if (render) {
     const loud = render.loudness ? `, ${render.loudness.outputLufs.toFixed(1)} LUFS` : "";
     console.log(`  видео:     ${r.files.video}  (${render.width}×${render.height}, ${(fs.statSync(render.videoFile).size / 1048576).toFixed(1)} МБ${loud})`);
@@ -722,7 +735,7 @@ function summaryMarkdown(r: Result, render: RenderResult | null, script: VideoSc
     "|---|---|",
     `| Формат | ${r.format === "shorts" ? "Shorts 1080×1920" : "горизонтальный 1920×1080"} |`,
     `| Длительность | ${r.durationSec.toFixed(1)} с, ${script.scenes.length} сцен |`,
-    `| Озвучка | ${r.voiceProvider} |`,
+    `| Озвучка | ${escapeMd(describeVoice(r.voice))} |`,
     `| Стоимость | $${r.costUsd.toFixed(4)} |`,
     `| Время сборки | ${fmtDuration(r.totalSec * 1000)}${render ? ` (рендер ${fmtDuration(render.renderMs)})` : ""} |`,
     `| Папка | \`video-studio/${r.runDir}\` |`,

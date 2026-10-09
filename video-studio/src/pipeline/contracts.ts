@@ -8,6 +8,10 @@
 //   TTS_VOICE         голос провайдера (edge: ru-RU-DmitryNeural, piper: ru_RU-dmitri-medium, …)
 //   TTS_RATE          темп для edge, например "+5%"
 //   TTS_LANGUAGE      язык озвучки (en, kk, uz…; ставит make по сценарию): голос по умолчанию, язык Gemini TTS
+//   TTS_FALLBACK      запасные провайдеры через запятую (по умолчанию gemini → edge,piper); none — не подменять
+//   TTS_CACHE         0 — не брать уже озвученные сцены из кэша (ни из папки ролика, ни из общего)
+//   TTS_CACHE_DIR     общий кэш озвучки между запусками (по умолчанию ./.cache/voice; none — выключить)
+//   TTS_CACHE_DAYS    сколько дней хранить записи общего кэша (по умолчанию 14)
 //   GEMINI_API_KEY    общий ключ AI Studio — и для сценариев, и для Gemini TTS
 //   GEMINI_TTS_MODEL, GEMINI_TTS_VOICE, GEMINI_TTS_STYLE
 //   ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL
@@ -37,6 +41,21 @@ export interface VoiceResult {
   durationMs: number;
   words: WordTiming[]; // никогда не пустой при непустом тексте
   wordsSource: "provider" | "estimated";
+  voice?: string; // каким голосом озвучено (Charon, ru-RU-DmitryNeural, ru_RU-dmitri-medium)
+  fallbackModel?: string; // запасная модель того же провайдера (Gemini после суточной квоты основной)
+  cached?: boolean; // взято из кэша (папки ролика или общего) — запроса к сервису не было
+}
+
+// Кто на самом деле озвучил ролик — в qc.json (уходит в релиз) и result.json: панель
+// предупреждает о ролике «не тем» голосом до загрузки в Studio.
+export interface VoiceUsed {
+  provider: string; // gemini | edge | piper | …
+  name: string | null; // голос
+  model: string | null; // модель TTS, где она настраивается (Gemini, ElevenLabs, OpenAI-совместимый)
+  requested: string; // какой провайдер был основным
+  fallback: boolean; // озвучил запасной провайдер, а не основной (квота или сбой)
+  modelFallback: boolean; // тот же провайдер, но запасная модель (голос тот же, качество может отличаться)
+  reason: string | null; // почему не основной: «квота Gemini закончилась», первая строка ошибки
 }
 
 export interface VoiceOptions {

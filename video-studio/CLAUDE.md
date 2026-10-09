@@ -38,7 +38,8 @@
   `buildTimelineCaptions()` (единственное место расчёта тайминга, его же использует композиция).
 - `src/pipeline/contracts.ts` — интерфейсы модулей и **полный список переменных окружения**
   (их же документирует `.env.example`). Меняй контракты только аддитивно.
-- `src/pipeline/{script,voice,visuals,audio}/` — модули конвейера; `props.ts` (сборка props),
+- `src/pipeline/{script,voice,visuals,audio}/` — модули конвейера (озвучка: общий кэш между запусками —
+  `voice/shared-cache.ts`, `.cache/voice`; запасной голос и поле `voice` в qc.json — `voice/fallback.ts`); `props.ts` (сборка props),
   `render.ts` (bundle → renderMedia/renderStill), `youtube.ts` (resumable-загрузка, publishAt),
   `srt.ts`, `meta.ts` (описание/теги, подвал канала), `slug.ts`, `channel.ts` (channel.json, слоты
   расписания через Intl — DST-безопасно), `instagram.ts` (Reels: контейнер → rupload → статус →
@@ -86,6 +87,7 @@ npm run make -- --script scripts/x.json --no-render      # всё, кроме р
 npm run script -- --topic "тема"            # черновик сценария → scripts/<slug>.json
 npx tsx src/dev/stills.ts                   # кадры композиции → out/dev/stills
 npx tsx src/dev/script-test.ts && npx tsx src/dev/visuals-test.ts && npx tsx src/dev/publish-test.ts   # тесты без сети
+npx tsx src/dev/voice-test.ts               # озвучка без сети: кэш, запасной голос (--live — настоящий синтез)
 npx tsx panel/scripts/state-test.ts         # очередь панели без сети; сборка панели: cd panel && npm run build
 npm run upload -- out/<slug> --to youtube,instagram --schedule      # публикация готового ролика
 ```

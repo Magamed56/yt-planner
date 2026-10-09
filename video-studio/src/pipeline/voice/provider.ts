@@ -13,6 +13,7 @@ import { applyFades, normalizeLoudness, removeDc } from "../audio/dsp";
 import { encodeWav16, toMono, type PcmAudio } from "../audio/wav";
 import { audioFileDurationMs } from "./duration";
 import { TtsError, sleep } from "./http";
+import { pruneSharedOnce, readShared, sharedCacheDir, writeShared } from "./shared-cache";
 import { findSplitPoints, splitAudio } from "./split";
 import { normalizeText, rateMultiplier } from "./text";
 import { alignToTokens, analyzeSpeech, estimateWordTimings, estimateWordsUniform, finalize } from "./timing";
@@ -69,12 +70,29 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
     if (!clean) return writeSilence(outFileBase);
 
     const key = keyOf(voice, clean);
-    const cached = await readCache(outFileBase, key);
+    const cached = await fromCaches(clean, outFileBase, key, voice);
     if (cached) return cached;
 
     const ctx: RawContext = { voice, rate: rateMultiplier(process.env.TTS_RATE), signal: opts.signal };
     const result = await withRetry(raw, () => raw.synthesizeRaw(clean, ctx), opts.signal);
-    return finish(result, clean, outFileBase, key);
+    return finish(result, clean, outFileBase, key, voice);
+  }
+
+  // Сначала кэш в папке ролика (готовый файл), затем общий (shared-cache.ts): из сырого
+  // звука сцена собирается заново той же постобработкой, без запроса к сервису.
+  async function fromCaches(clean: string, outFileBase: string, key: string, voice: string): Promise<VoiceResult | null> {
+    const local = await readCache(outFileBase, key);
+    if (local) return { ...local, voice, cached: true };
+    const dir = sharedCacheDir();
+    if (!dir) return null;
+    await pruneSharedOnce(dir);
+    const hit = await readShared(dir, key);
+    if (!hit) return null;
+    try {
+      return { ...(await finish(hit, clean, outFileBase, key, voice, false)), cached: true };
+    } catch {
+      return null; // запись не разобралась — озвучим заново
+    }
   }
 
   async function synthesizeMany(items: { text: string; outFileBase: string }[], opts: VoiceOptions = {}): Promise<VoiceResult[]> {
@@ -84,7 +102,7 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
     const out: (VoiceResult | null)[] = [];
     for (const p of prepared) {
       await mkdir(path.dirname(p.outFileBase), { recursive: true });
-      out.push(!p.clean ? await writeSilence(p.outFileBase) : await readCache(p.outFileBase, keyOf(voice, p.clean)));
+      out.push(!p.clean ? await writeSilence(p.outFileBase) : await fromCaches(p.clean, p.outFileBase, keyOf(voice, p.clean), voice));
     }
 
     // Подряд идущие неозвученные сцены — в группы не длиннее maxChars.
@@ -115,13 +133,14 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       const parts = splitAudio(result.audio, cuts);
       for (const [k, i] of g.entries()) {
         const p = prepared[i]!;
-        out[i] = await finish({ kind: "pcm", audio: parts[k]!, fallback: result.fallback }, p.clean, p.outFileBase, keyOf(voice, p.clean));
+        out[i] = await finish({ kind: "pcm", audio: parts[k]!, fallback: result.fallback }, p.clean, p.outFileBase, keyOf(voice, p.clean), voice);
       }
     }
     return out as VoiceResult[];
   }
 
-  async function finish(result: RawAudio, clean: string, outFileBase: string, key: string): Promise<VoiceResult> {
+  // store = false — звук уже из общего кэша, класть его туда снова незачем.
+  async function finish(result: RawAudio, clean: string, outFileBase: string, key: string, voice: string, store = true): Promise<VoiceResult> {
       let file: string;
       let durationMs: number;
       let words: WordTiming[] | null = null;
@@ -158,7 +177,9 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       durationMs = Math.round(Math.max(durationMs, words.at(-1)?.endMs ?? 0));
       const out: VoiceResult = { file, durationMs, words, wordsSource };
       await writeCache(outFileBase, key, out, result.fallback);
-      return out;
+      const shared = store && !result.fallback ? sharedCacheDir() : null;
+      if (shared) await writeShared(shared, key, result, { provider: raw.name, voice, chars: clean.length });
+      return { ...out, voice, ...(result.fallback ? { fallbackModel: result.fallback } : {}) };
   }
 
   return raw.batchMaxChars ? { name: raw.name, synthesize, synthesizeMany } : { name: raw.name, synthesize };
@@ -183,7 +204,8 @@ async function withRetry(raw: RawProvider, fn: () => Promise<RawAudio>, signal?:
       return await fn();
     } catch (e) {
       last = e;
-      const retryable = e instanceof TtsError ? e.retryable : false;
+      // Суточная квота до завтра не вернётся — повтор только шумит в логе.
+      const retryable = e instanceof TtsError ? e.retryable && !/PerDay/i.test(e.quotaId ?? "") : false;
       if (!retryable || i === attempts || signal?.aborted) break;
       console.warn(`[озвучка] ${raw.name}: ${(e as Error).message} Повторяю (попытка ${i + 1} из ${attempts})…`);
       await sleep(1500 * i, signal);

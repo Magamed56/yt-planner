@@ -13,6 +13,14 @@ import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, codesLabel, parseAutopilot, type Aut
 // (сюда же входят повторы упавших сборок).
 export const AUTOPILOT_MAX = 6;
 
+// Входные данные сборки автопилота. voice_fallback = none: кончилась квота Gemini — ролик не
+// озвучивается молча голосом Edge, а запуск падает («квота Gemini закончилась — ролик соберётся
+// при повторе»): его перезапускает повтор упавших, а ролик без видео автопилот берёт и назавтра.
+// Ручные «Собрать видео» и «Пересобрать» оставляют запасной голос (с пометкой в qc.json).
+export function autopilotBuildInputs(codes: string[]): Record<string, string> {
+  return { mode: "batch", plan: codes.join(","), upload: "release", voice_fallback: "none" };
+}
+
 export function decideAutopilot(state: PanelState, settings: Pick<AutopilotSettings, "enabled" | "days">, now: Date): { codes: string[]; skip: string | null } {
   // Без YouTube не видно расписания: ориентиры дат съехали бы, и собралось бы лишнее.
   if (state.youtubeError) return { codes: [], skip: `YouTube недоступен (${state.youtubeError}) — пропускаю, чтобы не собрать лишнего` };
@@ -61,7 +69,7 @@ export async function runAutopilot(source: "cron" | "manual", now = new Date()):
     if (skip) notes.push(skip);
     else {
       try {
-        await dispatchWorkflow("video-studio.yml", { mode: "batch", plan: codes.join(","), upload: "release" });
+        await dispatchWorkflow("video-studio.yml", autopilotBuildInputs(codes));
         built.push(...codes);
         did.push(`${codesLabel(codes)} — сценарии и видео (batch, в релиз)`);
       } catch (e) {
