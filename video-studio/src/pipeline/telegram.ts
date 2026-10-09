@@ -540,7 +540,9 @@ const writeRecord = (file: string, data: unknown) => fs.writeFileSync(file, JSON
 export function telegramAlreadySent(runDir: string): string | null {
   const prev = readRecord(path.join(runDir, TG_RESULT_FILE));
   if (!prev) return null;
-  const again = `npm run upload -- ${path.relative(process.cwd(), runDir) || "."} --to telegram --force`;
+  const rel = path.relative(process.cwd(), runDir);
+  const shown = !rel ? "." : rel.startsWith("..") || path.isAbsolute(rel) ? runDir : rel; // вне проекта — полный путь
+  const again = `npm run upload -- ${/\s/.test(shown) ? `"${shown}"` : shown} --to telegram --force`;
   if (prev.status === "posted") return `Этот ролик уже отправлен в Telegram (${prev.url ?? `сообщение ${prev.messageId ?? "?"}`}). Ещё раз: ${again}`;
   return `Прошлая отправка в Telegram (${prev.startedAt}) оборвалась — неизвестно, вышел ли пост. Проверьте канал: если поста нет — ${again}`;
 }
