@@ -40,6 +40,8 @@ jobs:
       IG_API_VERSION: ${{ vars.IG_API_VERSION }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
     steps:
       - name: Код репозитория
         uses: actions/checkout@v7
@@ -51,10 +53,31 @@ jobs:
           {
             echo "### 🔑 Секреты video-studio"
             echo ""
-            for k in YT_CLIENT_ID YT_CLIENT_SECRET YT_REFRESH_TOKEN IG_USER_ID IG_ACCESS_TOKEN GEMINI_API_KEY ANTHROPIC_API_KEY; do
+            for k in YT_CLIENT_ID YT_CLIENT_SECRET YT_REFRESH_TOKEN IG_USER_ID IG_ACCESS_TOKEN GEMINI_API_KEY ANTHROPIC_API_KEY PIXABAY_API_KEY PEXELS_API_KEY; do
               if [ -n "${!k}" ]; then echo "- \`$k\` — есть"; else echo "- \`$k\` — нет"; fi
             done
           } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # Ключ стоков — пробным поиском фото и видео (по 3 результата); сам ключ в лог не попадает.
+      - name: Pixabay — ключ работает?
+        if: env.PIXABAY_API_KEY != ''
+        continue-on-error: true
+        run: |
+          check() {
+            local code body
+            body=$(curl -sS --max-time 20 -w '\n%{http_code}' "https://pixabay.com/api/$1?key=${PIXABAY_API_KEY}&q=ocean&per_page=3&safesearch=true") || { echo "- Pixabay $2: нет связи" | tee -a "$GITHUB_STEP_SUMMARY"; return 1; }
+            code=${body##*$'\n'}
+            body=${body%$'\n'*}
+            if [ "$code" = "200" ]; then
+              hits=$(printf '%s' "$body" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("totalHits", 0))')
+              echo "- Pixabay $2: ✅ ключ работает (по запросу «ocean» найдено $hits)" | tee -a "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- Pixabay $2: ❌ HTTP $code — $(printf '%s' "$body" | head -c 200)" | tee -a "$GITHUB_STEP_SUMMARY"
+              return 1
+            fi
+          }
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          check "" "фото" && check "videos/" "видео"
 
       - name: Node.js 22
         if: env.IG_ACCESS_TOKEN != '' || env.YT_REFRESH_TOKEN != ''
