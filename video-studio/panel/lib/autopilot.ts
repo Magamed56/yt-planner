@@ -13,6 +13,14 @@ import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, codesLabel, parseAutopilot, type Aut
 // Что собрать — чистое правило в lib/autopilot-rules.ts: его же считает превью в «Запусках».
 export { AUTOPILOT_MAX, decideAutopilot } from "./autopilot-rules";
 
+// Входные данные сборки автопилота. voice_fallback = none: кончилась квота Gemini — ролик не
+// озвучивается молча голосом Edge, а запуск падает («квота Gemini закончилась — ролик соберётся
+// при повторе»): его перезапускает повтор упавших, а ролик без видео автопилот берёт и назавтра.
+// Ручные «Собрать видео» и «Пересобрать» оставляют запасной голос (с пометкой в qc.json).
+export function autopilotBuildInputs(codes: string[]): Record<string, string> {
+  return { mode: "batch", plan: codes.join(","), upload: "release", voice_fallback: "none" };
+}
+
 export interface AutopilotRun {
   last: AutopilotLast;
   did: string[]; // что сделано
@@ -49,7 +57,7 @@ export async function runAutopilot(source: "cron" | "manual", now = new Date()):
     if (skip) notes.push(skip);
     else {
       try {
-        await dispatchWorkflow("video-studio.yml", { mode: "batch", plan: codes.join(","), upload: "release" });
+        await dispatchWorkflow("video-studio.yml", autopilotBuildInputs(codes));
         built.push(...codes);
         did.push(`${codesLabel(codes)} — сценарии и видео (batch, в релиз)`);
       } catch (e) {
