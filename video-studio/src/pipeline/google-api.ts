@@ -47,7 +47,7 @@ export function explainApiError(status: number, body: string): string {
   if (reason === "invalidTags") return "YouTube отклонил теги (суммарно больше 500 символов).";
   if (reason === "invalidPublishAt") return "YouTube отклонил время публикации (оно в прошлом или в неверном формате) — выберите слот позже: --schedule или --publish-at <ISO-время>.";
   if (reason === "insufficientPermissions" || (status === 403 && /insufficient|scope/i.test(message)))
-    return "у токена не хватает прав (нужны youtube.upload и youtube) — получите YT_REFRESH_TOKEN заново: npm run youtube-auth или OAuth Playground (docs/youtube-setup.md).";
+    return "у токена не хватает прав (нужны youtube.upload и youtube, для субтитров — youtube.force-ssl) — получите YT_REFRESH_TOKEN заново: npm run youtube-auth или OAuth Playground (docs/youtube-setup.md).";
   if (reason === "forbidden") return `YouTube запретил действие (видео с другого канала? токен выпущен для другого аккаунта?): ${message}`;
   return `HTTP ${status}${reason ? ` ${reason}` : ""}: ${message}`;
 }

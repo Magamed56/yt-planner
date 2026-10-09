@@ -18,8 +18,9 @@ export type Privacy = "private" | "unlisted" | "public";
 export const PRIVACY_VALUES: Privacy[] = ["private", "unlisted", "public"];
 
 // youtube.upload — загрузка; youtube — найти свои ролики и поправить им тексты и расписание
-// (npm run youtube-fill для роликов, загруженных в Studio руками).
-export const YT_SCOPES = ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube"];
+// (npm run youtube-fill для роликов, загруженных в Studio руками); youtube.force-ssl — субтитры
+// (captions.list/insert принимают только его: npm run captions-translate).
+export const YT_SCOPES = ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube", "https://www.googleapis.com/auth/youtube.force-ssl"];
 
 export interface UploadInput {
   videoFile: string;

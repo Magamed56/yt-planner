@@ -118,10 +118,11 @@ npm run youtube-fill
    → шестерёнка справа вверху → галочка **«Use your own OAuth credentials»** → вставьте Client ID
    и Client secret.
 5. Слева внизу, в поле **«Input your own scopes»**, вставьте строку
-   `https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube`
+   `https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl`
+   (последнее — право на субтитры для `npm run captions-translate`)
    → **Authorize APIs** → войдите в аккаунт, где канал (если спросят, выберите канал
    «Суть за минуту») → «Приложение не проверено» → **«Дополнительно» → «Перейти на страницу…»** →
-   разрешите оба пункта.
+   разрешите все пункты.
 6. **Step 2 → «Exchange authorization code for tokens»**. Скопируйте **Refresh token**.
 
 **С компьютера**: `README.md`, раздел **«Загрузка на YouTube»** (`npm run youtube-auth`, тип клиента
@@ -262,5 +263,6 @@ Google, а тексты и время ставятся через API — для
 | `invalid_grant` | Ключ YouTube устарел. Выполните `npm run youtube-auth` и обновите секрет `YT_REFRESH_TOKEN` |
 | `исчерпана суточная квота` | На сегодня загрузки закончились. Повторите после 10:00 по Москве: `npm run upload -- out/<папка> --schedule` |
 | Ролик не «Запланировано», а «Ограниченный доступ» | Проект Google не проверен, см. раздел выше |
-| `у токена не хватает прав` | Ключ получен только с правом загрузки. Получите `YT_REFRESH_TOKEN` заново с двумя правами (шаг 6) и обновите секрет |
+| `у токена не хватает прав` | Ключ получен только с правом загрузки. Получите `YT_REFRESH_TOKEN` заново со всеми тремя правами (шаг 6) и обновите секрет |
+| `нет права на субтитры (youtube.force-ssl)` | Ключ выпущен до перевода субтитров. `npm run youtube-auth -- --save`, затем новый `YT_REFRESH_TOKEN` — в секреты GitHub, в Vercel и в `.env` второго компьютера |
 | В таблице «не найден» | Ролик не загружен на этот канал или YouTube его ещё не показывает. Подождите 5 минут, проверьте код в имени файла или названии, запустите снова |
