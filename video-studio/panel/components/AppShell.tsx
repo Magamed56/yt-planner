@@ -6,9 +6,9 @@ import { logoutAction } from "@/app/actions";
 import { plural } from "@/lib/stages";
 
 export type Section = "feed" | "calendar" | "runs";
-// «Статистика» — отдельная страница: на главной не переключается без перезагрузки, как лента.
-type Nav = Section | "stats";
-const NAV: Nav[] = ["feed", "calendar", "runs", "stats"];
+// Пункты меню: лента и календарь на главной переключаются без перезагрузки, остальные — ссылки.
+type NavItem = Section | "plan" | "stats";
+const NAV: NavItem[] = ["feed", "calendar", "plan", "runs", "stats"];
 
 // Кольцо-секундомер из знака канала: заполнено на столько дней расписания из недели.
 export function RunwayRing({ days, size = 52 }: { days: number | null; size?: number }) {
@@ -39,7 +39,7 @@ export function RunwayRing({ days, size = 52 }: { days: number | null; size?: nu
   );
 }
 
-const ICONS: Record<Nav, React.ReactNode> = {
+const ICONS: Record<NavItem, React.ReactNode> = {
   feed: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
   calendar: (
     <>
@@ -47,13 +47,14 @@ const ICONS: Record<Nav, React.ReactNode> = {
       <path d="M16 2v4M8 2v4M3 10h18" />
     </>
   ),
+  plan: <path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />,
   runs: <path d="m6 4 14 8-14 8z" />,
   stats: <path d="M3 21h18M7 17v-5M12 17V5M17 17V9" />,
 };
-const LABEL: Record<Nav, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски", stats: "Статистика" };
-const HREF: Record<Nav, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs", stats: "/stats" };
+const LABEL: Record<NavItem, string> = { feed: "Лента", calendar: "Календарь", plan: "План", runs: "Запуски", stats: "Статистика" };
+const HREF: Record<NavItem, string> = { feed: "/", calendar: "/?view=calendar", plan: "/plan", runs: "/runs", stats: "/stats" };
 
-function Icon({ section }: { section: Nav }) {
+function Icon({ section }: { section: NavItem }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {ICONS[section]}
@@ -70,7 +71,7 @@ export default function AppShell({
   runwayLabel,
   children,
 }: {
-  active: Nav;
+  active: NavItem;
   onSection?: (s: Section) => void; // на главной лента и календарь переключаются без перезагрузки
   updated: string;
   activeRuns: number;
@@ -92,7 +93,7 @@ export default function AppShell({
     return () => clearInterval(timer);
   }, [activeRuns, router]);
 
-  const link = (s: Nav, className?: string, withIcon = true) => (
+  const link = (s: NavItem, className?: string, withIcon = true) => (
     <Link
       key={s}
       href={HREF[s]}

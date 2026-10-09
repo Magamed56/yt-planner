@@ -74,6 +74,32 @@ export async function readJson(path: string): Promise<unknown | null> {
   }
 }
 
+// Файл ветки с его sha (нужен для записи: GitHub примет новую версию, только если файл с тех
+// пор не менялся). null — файла нет. Через contents API — файлы до 1 МБ (план, сценарии).
+export async function readFileWithSha(path: string): Promise<{ text: string; sha: string } | null> {
+  const res = await gh(`/repos/${repoName()}/contents/${encPath(path)}?ref=${encodeURIComponent(branchName())}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw await failure(res, `файл ${path}`);
+  const j = (await res.json()) as { type?: string; sha?: string; content?: string; encoding?: string };
+  if (j.type !== "file" || !j.sha || j.encoding !== "base64" || typeof j.content !== "string") {
+    throw new GithubError(`GitHub, файл ${path}: не удалось прочитать (слишком большой или не файл).`, 0);
+  }
+  return { text: Buffer.from(j.content, "base64").toString("utf8"), sha: j.sha };
+}
+
+// Новая версия файла коммитом в ветку. sha — версия, которую правили: если файл успели
+// поменять (запуск записал сценарий, правка на GitHub), GitHub ответит 409 — ничего не затрём.
+export async function writeFile(path: string, text: string, sha: string, message: string): Promise<void> {
+  const res = await gh(`/repos/${repoName()}/contents/${encPath(path)}`, {
+    method: "PUT",
+    body: JSON.stringify({ message, content: Buffer.from(text, "utf8").toString("base64"), sha, branch: branchName() }),
+  });
+  if (res.status === 409) {
+    throw new GithubError(`Файл ${path} успели изменить в ветке ${branchName()} — обновите страницу и повторите.`, res.status);
+  }
+  if (!res.ok) throw await failure(res, `запись ${path}`);
+}
+
 // Имена файлов папки ветки ([] — папки нет).
 export async function listDir(path: string): Promise<string[]> {
   const res = await gh(`/repos/${repoName()}/contents/${encPath(path)}?ref=${encodeURIComponent(branchName())}`);
@@ -116,6 +142,7 @@ export interface GhRun {
   created_at: string;
   updated_at: string;
   html_url: string;
+  run_attempt?: number; // 1 — первая попытка; после «Re-run» GitHub отдаёт последнюю
 }
 
 export async function listRuns(): Promise<GhRun[]> {
@@ -132,6 +159,19 @@ export async function dispatchWorkflow(file: string, inputs: Record<string, stri
     body: JSON.stringify({ ref: branchName(), inputs }),
   });
   if (!res.ok) throw await failure(res, `запуск ${file}`);
+}
+
+// Повтор упавших заданий запуска (та же ветка и входные данные; номер попытки станет 2).
+export async function rerunFailedJobs(runId: number): Promise<void> {
+  const res = await gh(`/repos/${repoName()}/actions/runs/${runId}/rerun-failed-jobs`, { method: "POST" });
+  if (!res.ok) throw await failure(res, `повтор запуска ${runId}`);
+}
+
+// Удалить один файл релиза (сам релиз и остальные файлы остаются). 404 — уже удалён.
+export async function deleteReleaseAsset(assetId: number): Promise<void> {
+  const res = await gh(`/repos/${repoName()}/releases/assets/${assetId}`, { method: "DELETE" });
+  if (res.ok || res.status === 404) return;
+  throw await failure(res, `удаление файла релиза ${assetId}`);
 }
 
 export async function getVariable(name: string): Promise<string | null> {
@@ -165,6 +205,14 @@ export async function assetDownloadUrl(assetId: number): Promise<string> {
   if (res.status >= 300 && res.status < 400 && location) return location;
   if (!res.ok) throw await failure(res, "файл релиза");
   throw new GithubError("GitHub не дал ссылку на файл релиза — попробуйте ещё раз.", res.status);
+}
+
+// Имя, размер и тип файла релиза — для заголовков ответа панели (Content-Length, Range).
+export async function assetInfo(assetId: number): Promise<{ name: string; size: number; contentType: string | null }> {
+  const res = await gh(`/repos/${repoName()}/releases/assets/${assetId}`);
+  if (!res.ok) throw await failure(res, "файл релиза");
+  const j = (await res.json()) as { name?: string; size?: number; content_type?: string };
+  return { name: j.name || `file-${assetId}`, size: Number(j.size) || 0, contentType: j.content_type || null };
 }
 
 // Небольшой текстовый файл релиза (подпись Reels).
