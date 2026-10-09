@@ -12,19 +12,21 @@ import path from "node:path";
 import { formatLocal, isoNoMs, nthSlot, parseScheduleStart, upcomingSlots, type ChannelConfig } from "../pipeline/channel";
 import { UserError } from "./common";
 
-export type UploadTarget = "youtube" | "instagram";
+export type UploadTarget = "youtube" | "instagram" | "telegram";
 
 export function parseUploadTargets(raw: string | undefined, flag = "--upload"): Set<UploadTarget> {
   const out = new Set<UploadTarget>();
   if (!raw) return out;
   for (const part of raw.toLowerCase().split(/[,+\s]+/).filter(Boolean)) {
     if (part === "none") continue;
+    // both/all — как раньше, YouTube и Instagram: Telegram только явно (нужны свои ключи).
     if (part === "both" || part === "all") {
       out.add("youtube");
       out.add("instagram");
     } else if (part === "youtube" || part === "yt") out.add("youtube");
     else if (part === "instagram" || part === "ig" || part === "reels") out.add("instagram");
-    else throw new UserError(`${flag}: youtube, instagram или оба через запятую (youtube,instagram), а не «${part}». Релизы GitHub делает workflow.`);
+    else if (part === "telegram" || part === "tg") out.add("telegram");
+    else throw new UserError(`${flag}: youtube, instagram, telegram или несколько через запятую (youtube,telegram), а не «${part}». Релизы GitHub делает workflow.`);
   }
   return out;
 }

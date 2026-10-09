@@ -1,6 +1,6 @@
 // Одна команда → готовый ролик:
 //   тема (LLM) или готовый JSON → озвучка → визуал → музыка → props →
-//   субтитры/описание/стоимость → рендер MP4 + обложки → (YouTube, Instagram).
+//   субтитры/описание/стоимость → рендер MP4 + обложки → (YouTube, Instagram, Telegram).
 // Умолчания канала (имя, голос, хэштеги, подвал описания, слоты) — из channel.json.
 //
 //   npm run make -- --demo
@@ -18,6 +18,7 @@ import { applyChannelDefaults, applyPillarVoice, brandIntroEnabled, type Channel
 import { loadChannel } from "../pipeline/channel-file";
 import { coverFrame, frameToMs, renderCover } from "../pipeline/cover";
 import { buildInstagramCaption, instagramEnvHelp, missingInstagramEnv, publishRunDir, writeInstagramAssets, type InstagramMeta, type RunDirPublishResult } from "../pipeline/instagram";
+import { publishTelegramRunDir, telegramAlreadySent, telegramConfig, type TelegramRunDirResult } from "../pipeline/telegram";
 import { buildYoutubeMeta, descriptionTxt, youtubeChapters } from "../pipeline/meta";
 import { buildVideoProps } from "../pipeline/props";
 import { qcMode, qcSummary, runQc, writeQc, type QcReport } from "../pipeline/qc";
@@ -76,12 +77,12 @@ const HELP = `Сборка ролика одной командой.
   --out    out/                куда класть папку ролика (по умолчанию out/)
   --no-render                  только подготовить звук, визуал и props.json
   --concurrency N              сколько кадров рендерить параллельно (иначе RENDER_CONCURRENCY / авто)
-  --upload youtube|instagram|youtube,instagram   опубликовать после рендера
+  --upload youtube|instagram|telegram   опубликовать после рендера (можно несколько через запятую)
   --privacy private|unlisted|public   видимость на YouTube (по умолчанию private)
 ${SCHEDULE_HELP}
 
-Instagram публикуется сразу (у API нет отложенной публикации); по расписанию —
-через workflow, см. docs/instagram-setup.md. Настройки канала — channel.json.
+Instagram и Telegram публикуются сразу (у их API нет отложенной публикации); по расписанию —
+через workflow, см. docs/instagram-setup.md и docs/telegram-setup.md. Настройки канала — channel.json.
 `;
 
 const safeId = (id: string) => id.replace(/[^a-zA-Z0-9_-]/g, "_") || "scene";
@@ -283,6 +284,7 @@ async function main() {
     const missing = missingInstagramEnv();
     if (missing.length) throw new UserError(`--upload instagram: не заданы ${missing.join(", ")}.\n${instagramEnvHelp()}`);
   }
+  if (args.upload.has("telegram")) telegramConfig(); // ключи Telegram — до долгого рендера
   if (args.render) checkBrowserEnv();
 
   const steps = new Steps(7 + args.upload.size);
@@ -535,6 +537,17 @@ async function main() {
     else instagram = await steps.run("Публикация в Instagram", () => publishRunDir(runDir, { log: (m) => console.log(`  ${m}`) }));
   }
 
+  // 10. Telegram
+  let telegram: TelegramRunDirResult | null = null;
+  if (args.upload.has("telegram")) {
+    // Пересборка того же сценария — та же папка с отметкой прошлой отправки: не дублируем пост
+    // и не валим сборку после долгого рендера (как дубль у Instagram).
+    const sent = render ? telegramAlreadySent(runDir) : null;
+    if (!render) steps.skip("Отправка в Telegram", "нет видео: указан --no-render");
+    else if (sent) steps.skip("Отправка в Telegram", sent);
+    else telegram = await steps.run("Отправка в Telegram", () => publishTelegramRunDir(runDir, { log: (m) => console.log(`  ${m}`) }));
+  }
+
   const totalMs = Date.now() - tStart;
   const result = {
     slug,
@@ -564,6 +577,7 @@ async function main() {
     timings: steps.timings.map((t) => ({ step: t.name, sec: Number((t.ms / 1000).toFixed(1)) })),
     youtube,
     instagram: instagram ? { mediaId: instagram.mediaId, permalink: instagram.permalink, publishedAt: instagram.publishedAt, duplicate: instagram.duplicate } : null,
+    telegram: telegram ? { messageId: telegram.messageId, url: telegram.url, postedAt: telegram.postedAt } : null,
   };
   writeJson(path.join(runDir, "result.json"), result);
 
@@ -585,6 +599,7 @@ async function main() {
     instagram_url: instagram?.permalink ?? instagram?.mediaId,
     voice: describeVoice(usedVoice).replace(/[|\r\n]+/g, " "),
     voice_fallback: usedVoice.fallback ? "1" : undefined,
+    telegram_url: telegram?.url,
   });
   ghSummary(summaryMarkdown(result, render, script));
 }
@@ -711,6 +726,7 @@ type Result = {
   timings: { step: string; sec: number }[];
   youtube: UploadResult | null;
   instagram: { mediaId: string; permalink: string | null; publishedAt: string; duplicate: boolean } | null;
+  telegram: { messageId: number; url: string | null; postedAt: string } | null;
 };
 
 function printSummary(r: Result, render: RenderResult | null) {
@@ -728,6 +744,7 @@ function printSummary(r: Result, render: RenderResult | null) {
   console.log(`  стоимость: ${r.files.cost}`);
   if (r.youtube) console.log(`  YouTube:   ${r.youtube.url} (${r.youtube.privacy}${r.youtube.publishAt ? `, выйдет ${r.youtube.publishAt}` : ""}) · редактировать: ${r.youtube.studioUrl}`);
   if (r.instagram) console.log(`  Instagram: ${r.instagram.permalink ?? r.instagram.mediaId}${r.instagram.duplicate ? " (уже был опубликован)" : ""}`);
+  if (r.telegram) console.log(`  Telegram:  ${r.telegram.url ?? `сообщение ${r.telegram.messageId}`}`);
   console.log(`  общее время: ${fmtDuration(r.totalSec * 1000)}  (${r.timings.map((t) => `${t.step.split(" (")[0].toLowerCase()} ${t.sec} с`).join(", ")})`);
 }
 
@@ -746,6 +763,7 @@ function summaryMarkdown(r: Result, render: RenderResult | null, script: VideoSc
   ];
   if (r.youtube) lines.push(`| YouTube | ${r.youtube.url} (${r.youtube.privacy}${r.youtube.publishAt ? `, выйдет ${r.youtube.publishAt}` : ""}) |`);
   if (r.instagram) lines.push(`| Instagram | ${r.instagram.permalink ?? r.instagram.mediaId} |`);
+  if (r.telegram) lines.push(`| Telegram | ${r.telegram.url ?? `сообщение ${r.telegram.messageId}`} |`);
   lines.push("", "<details><summary>Этапы</summary>", "", ...r.timings.map((t) => `- ${escapeMd(t.step)}: ${t.sec} с`), "", "</details>", "");
   return lines.join("\n");
 }
