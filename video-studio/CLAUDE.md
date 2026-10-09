@@ -74,7 +74,8 @@
   `instagram-published.json` (расписание закомментировано); `video-studio-youtube-fill.yml` —
   `youtube-fill` кнопкой из GitHub; `video-studio-titles.yml` — `npm run title-ideas -- <коды>`
   (новые названия для слабого старта → `content/title-ideas.json`, общий модуль
-  `src/pipeline/title-ideas.ts`, LLM — `script/title-gen.ts`; применяет панель).
+  `src/pipeline/title-ideas.ts`, LLM — `script/title-gen.ts`; применяет панель);
+  `video-studio-ci.yml` — проверки на PR и пуш в `claude/**` (см. «Команды»).
 - `.claude/skills/` — официальные скиллы Remotion (skills@1.7.1, версия 4.0.534, `skills-lock.json`).
   Обновить: `DISABLE_TELEMETRY=1 npx -y skills@1.7.1 update -p -y`.
 
@@ -92,6 +93,13 @@ npx tsx src/dev/voice-test.ts               # озвучка без сети: к
 npx tsx panel/scripts/state-test.ts         # очередь панели без сети; сборка панели: cd panel && npm run build
 npm run upload -- out/<slug> --to youtube,instagram --schedule      # публикация готового ролика
 ```
+
+CI — `.github/workflows/video-studio-ci.yml` (в корне репозитория): на каждый PR и пуш в `claude/**`
+с изменениями в video-studio — `tsc`, все `src/dev/*-test.ts` и `panel/scripts/*-test.ts`
+(кроме `voice-test.ts`), затем `tsc` и `next build` панели как на Vercel — без переменных и без
+`node_modules` video-studio (npm-импорт в общем коде упадёт здесь, а не при деплое; локальная сборка
+его не ловит). Новый `*-test.ts` подхватывается сам, поэтому обязан обходиться без сети и ключей;
+сетевой проверке — другое имя или исключение в workflow.
 
 В песочнице без доступа к remotion.media браузер задаётся явно:
 `REMOTION_BROWSER_EXECUTABLE=<путь к headless_shell> REMOTION_CHROME_MODE=headless-shell`.
