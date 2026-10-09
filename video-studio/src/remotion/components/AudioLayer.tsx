@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Html5Audio, Sequence, useVideoConfig } from "remotion";
 import type { RenderScene, VideoProps } from "../../types";
-import { sceneCues } from "../lib/cues";
+import { WHOOSH_LEAD_FRAMES, sceneCues, whooshDuck } from "../lib/cues";
 import { resolveSrc } from "./MediaLayer";
 
 // Весь звук ролика — отдельным слоем ВНЕ TransitionSeries, на абсолютных
@@ -10,7 +10,6 @@ import { resolveSrc } from "./MediaLayer";
 const DUCK_RAMP_SEC = 0.25;
 const FADE_IN_SEC = 0.5;
 const FADE_OUT_SEC = 1.5;
-const WHOOSH_LEAD_FRAMES = 4; // свист начинается чуть раньше склейки — пик звука приходится на переход
 
 export function voiceIntervals(scenes: RenderScene[], fps: number): [number, number][] {
   return scenes
@@ -92,15 +91,12 @@ export const AudioLayer: React.FC<{ props: VideoProps }> = ({ props }) => {
             // Варианты свиста по кругу и чуть разная громкость — склейки не звучат одинаково.
             const variants = props.sfx?.whooshes?.length ? props.sfx.whooshes : props.whooshSrc ? [props.whooshSrc] : [];
             if (variants.length === 0) return null;
+            const from = Math.max(0, s.startFrame - WHOOSH_LEAD_FRAMES);
+            const voiceAt = s.startFrame + s.audioStartFrame - from; // голос новой сцены — от начала свиста
+            const volume = props.sfxVolume * WHOOSH_GAIN[i % WHOOSH_GAIN.length]!;
             return (
-              <Sequence
-                key={`whoosh-${s.id}`}
-                name={`Свист ${s.id}`}
-                from={Math.max(0, s.startFrame - WHOOSH_LEAD_FRAMES)}
-                durationInFrames={Math.round(fps * 2)}
-                layout="none"
-              >
-                <Html5Audio src={resolveSrc(variants[i % variants.length]!)} volume={props.sfxVolume * WHOOSH_GAIN[i % WHOOSH_GAIN.length]!} />
+              <Sequence key={`whoosh-${s.id}`} name={`Свист ${s.id}`} from={from} durationInFrames={Math.round(fps * 2)} layout="none">
+                <Html5Audio src={resolveSrc(variants[i % variants.length]!)} volume={(f) => volume * whooshDuck(f, voiceAt)} />
               </Sequence>
             );
           })

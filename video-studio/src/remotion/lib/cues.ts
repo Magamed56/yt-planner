@@ -125,3 +125,15 @@ export function sceneCues(scene: CueScene, fps: number): SceneCues {
   const inside = (f: number) => f >= 0 && f < scene.durationInFrames - 4;
   return { pops: cues.pops.filter(inside), impacts: cues.impacts.filter(inside), rises: cues.rises.filter(inside) };
 }
+
+// Свист перехода (0,44–0,62 с) длиннее паузы между фразами (≈ 0,2 с, types.ts):
+// без приглушения его затухание ложится на первое слово новой сцены почти
+// в полную силу. С началом её голоса свист уходит на −10 дБ за 2 кадра —
+// пик остаётся в паузе. frame и voiceAt — от начала свиста.
+export const WHOOSH_LEAD_FRAMES = 4; // свист начинается чуть раньше склейки — пик звука приходится на переход
+export const WHOOSH_UNDER_VOICE = 0.3;
+const WHOOSH_DUCK_FRAMES = 2;
+export function whooshDuck(frame: number, voiceAt: number): number {
+  if (frame <= voiceAt) return 1;
+  return WHOOSH_UNDER_VOICE + (1 - WHOOSH_UNDER_VOICE) * Math.max(0, 1 - (frame - voiceAt) / WHOOSH_DUCK_FRAMES);
+}

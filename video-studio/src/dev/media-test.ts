@@ -12,7 +12,8 @@ import { analyzePcm, evaluateQc, findBlacks, parseLoudnorm, parseProbe, type QcP
 import { encoderOptions, encoderSettings } from "../pipeline/render";
 import { KEEP_LEAD_MS, KEEP_TAIL_MS, postprocessVoice } from "../pipeline/voice/provider";
 import { captionPages } from "../remotion/lib/caption-pages";
-import { isNumeralWord, spokenNumberRun, statCountWindow, STAT_FALLBACK } from "../remotion/lib/cues";
+import { WHOOSH_VARIANTS, synthWhoosh } from "../pipeline/audio/whoosh";
+import { WHOOSH_LEAD_FRAMES, WHOOSH_UNDER_VOICE, isNumeralWord, spokenNumberRun, statCountWindow, STAT_FALLBACK, whooshDuck } from "../remotion/lib/cues";
 import { formatLike, isThousandsTail, numberInfo } from "../remotion/lib/numbers";
 import {
   CHAPTER_CARD_FRAMES,
@@ -232,6 +233,36 @@ await test("Темп: голоса не наложатся при любом п�
   }
   const ch = layoutScenes([{ audioDurationMs: 1000 }, { audioDurationMs: 1000, chapter: "Глава" }]);
   assert.deepEqual(voiceGaps(ch), [VOICE_GAP_FRAMES + CHAPTER_CARD_FRAMES]);
+});
+
+await test("Свист перехода: пик в паузе, под первым словом новой сцены — тише на ≥ 10 дБ", () => {
+  assert.equal(whooshDuck(0, 7), 1);
+  assert.equal(whooshDuck(7, 7), 1, "до голоса — в полную силу");
+  assert.equal(whooshDuck(9, 7), WHOOSH_UNDER_VOICE);
+  assert.equal(whooshDuck(100, 7), WHOOSH_UNDER_VOICE);
+  // Раскладка как в композиции (AudioLayer): свист — за WHOOSH_LEAD_FRAMES до склейки.
+  const laid = layoutScenes([{ audioDurationMs: 2000 }, { audioDurationMs: 2000 }]);
+  const next = laid.scenes[1]!;
+  const voiceAt = next.startFrame + next.audioStartFrame - (next.startFrame - WHOOSH_LEAD_FRAMES);
+  const speechMs = (voiceAt / FPS) * 1000 + KEEP_LEAD_MS; // речь — после тишины в начале файла
+  for (const [k, v] of WHOOSH_VARIANTS.entries()) {
+    const { sampleRate: sr, channels } = synthWhoosh(24000, v);
+    const win = Math.round(sr * 0.01);
+    const rmsDb = (fromMs: number, toMs: number, duck: boolean) => {
+      let s = 0;
+      let n = 0;
+      for (let i = Math.max(0, Math.round((fromMs / 1000) * sr)); i < Math.min(channels[0]!.length, Math.round((toMs / 1000) * sr)); i++) {
+        const g = duck ? whooshDuck((i / sr) * FPS, voiceAt) : 1;
+        s += (channels[0]![i]! * g) ** 2;
+        n++;
+      }
+      return n ? 10 * Math.log10(s / n + 1e-12) : -120;
+    };
+    let peak = -120;
+    for (let ms = 0; ms + 10 <= (channels[0]!.length / sr) * 1000; ms += 10) peak = Math.max(peak, rmsDb(ms, ms + (win / sr) * 1000, false));
+    const under = rmsDb(speechMs, speechMs + 200, true);
+    assert.ok(under <= peak - 10, `вариант ${k + 1}: под первым словом ${(under - peak).toFixed(1)} дБ от пика`);
+  }
 });
 
 await test("Голос: по краям речи остаётся 60 мс до и 120 мс после", () => {
