@@ -111,6 +111,13 @@ export default function AppShell({
     </svg>
   );
 
+  const bellIcon = (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+  );
+
   return (
     <div className="app">
       <aside className="sidebar">
@@ -136,6 +143,9 @@ export default function AppShell({
             <button className="btn small" onClick={refresh} disabled={pending}>
               {refreshIcon} {pending ? "Обновляю…" : "Обновить"}
             </button>
+            <Link href="/settings" className="btn small ghost" aria-label="Уведомления на телефон">
+              {bellIcon}
+            </Link>
             <form action={logoutAction}>
               <button className="btn small ghost" type="submit">
                 Выйти
@@ -150,6 +160,10 @@ export default function AppShell({
           <span className="tag">СУТЬ</span>ЗА МИНУТУ
         </Link>
         <div className="actions">
+          {/* У панели со значка на iPhone нет адресной строки — настройки уведомлений только по ссылке. */}
+          <Link href="/settings" className="btn icon" aria-label="Уведомления" title="Уведомления на телефон">
+            {bellIcon}
+          </Link>
           <button className="btn icon" onClick={refresh} disabled={pending} aria-label="Обновить" title={`обновлено ${updated}`}>
             {pending ? "…" : refreshIcon}
           </button>

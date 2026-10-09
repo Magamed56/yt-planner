@@ -1,0 +1,103 @@
+/* Карточка уведомлений: цвета и шрифты — переменные панели из globals.css, кнопки — её .btn. */
+.card {
+  display: grid;
+  gap: 10px;
+}
+.card p {
+  margin: 0;
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.head .title {
+  margin: 0;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--card-2);
+  color: var(--dim);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status[data-tone="ok"] {
+  color: var(--ok);
+}
+.status[data-tone="warn"] {
+  color: var(--warn);
+}
+.box {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border-left: 3px solid var(--line);
+  background: var(--card-2);
+  font-size: 14px;
+}
+.box[data-tone="warn"] {
+  border-left-color: var(--warn);
+}
+.box[data-tone="accent"] {
+  border-left-color: var(--accent);
+}
+.box p,
+.box ol {
+  margin: 6px 0 0;
+}
+.box ol {
+  padding-left: 20px;
+}
+.box li + li {
+  margin-top: 4px;
+}
+.box code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--bg);
+  font: 600 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+.buttons {
+  margin-top: 0;
+}
+.okText {
+  color: var(--ok);
+}
+.devices h3 {
+  margin: 4px 0 6px;
+  font-weight: 700;
+}
+.devices ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.devices li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--card-2);
+}
+.me {
+  color: var(--accent);
+}
