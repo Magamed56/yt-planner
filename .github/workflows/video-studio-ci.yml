@@ -1,0 +1,153 @@
+# video-studio: проверки кода — ничего не публикует, ключи и сеть (кроме npm) не нужны.
+#
+# На каждый PR и на каждый пуш в ветку claude/… с изменениями в video-studio: типы (tsc),
+# все офлайн-тесты src/dev/*-test.ts и panel/scripts/*-test.ts, типы и сборка веб-панели.
+# Так поломка видна до слияния, а не после выхода ролика или деплоя панели на Vercel.
+# Повторить у себя — команды из video-studio/CLAUDE.md, раздел «Команды».
+# Пуш в claude/… с открытым PR проверяется дважды: пуш — саму ветку, PR — её слияние с базой.
+
+name: "video-studio: проверки"
+
+on:
+  pull_request:
+    paths:
+      - "video-studio/**"
+      - ".github/workflows/video-studio-ci.yml"
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "video-studio/**"
+      - ".github/workflows/video-studio-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Новый пуш в ту же ветку (или PR) отменяет старую проверку: нужен итог только последнего коммита.
+# Группа своя — не общая «video-studio», иначе проверки ждали бы рендер.
+concurrency:
+  group: video-studio-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Типы, тесты, сборка панели
+    # Явная версия: ubuntu-latest переезжает на 26.04 с 2026-10-19.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: video-studio
+        shell: bash
+    env:
+      NO_COLOR: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Код репозитория
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            video-studio/package-lock.json
+            video-studio/panel/package-lock.json
+
+      # Браузер Remotion при установке не качается (только при рендере), поэтому без --ignore-scripts.
+      # Панель ставим тоже: её тесты берут next/headers из panel/node_modules.
+      - name: Зависимости (npm ci)
+        id: deps
+        run: |
+          npm ci --no-audit --no-fund
+          (cd panel && npm ci --no-audit --no-fund)
+
+      # !cancelled(): проверка идёт, даже если упала предыдущая, — за один прогон видно всё сразу.
+      - name: Типы video-studio (tsc)
+        id: tsc
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        run: npx tsc --noEmit -p .
+
+      - name: Офлайн-тесты
+        id: tests
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        run: |
+          failed=()
+          n=0
+          for f in src/dev/*-test.ts panel/scripts/*-test.ts; do
+            case "$f" in
+              # Озвучка через Edge (сеть) или Piper (скачанная модель) — не офлайн-тест.
+              src/dev/voice-test.ts) continue ;;
+            esac
+            n=$((n + 1))
+            echo "::group::$f"
+            # Без GITHUB_OUTPUT/STEP_SUMMARY: код конвейера пишет туда сам, тест не должен портить сводку.
+            # timeout — зависший тест не съест все 20 минут.
+            if env -u GITHUB_OUTPUT -u GITHUB_STEP_SUMMARY timeout 300 npx tsx "$f"; then
+              ok=1
+            else
+              ok=0
+              failed+=("$f")
+            fi
+            echo "::endgroup::"
+            if [ "$ok" = 0 ]; then
+              echo "::error file=video-studio/$f::Тест не прошёл. Повторить у себя: cd video-studio && npx tsx $f"
+            fi
+          done
+          echo "total=$n" >> "$GITHUB_OUTPUT"
+          echo "failed=${failed[*]}" >> "$GITHUB_OUTPUT"
+          [ "${#failed[@]}" -eq 0 ]
+
+      - name: Типы панели (tsc)
+        id: panel_tsc
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        working-directory: video-studio/panel
+        run: npx tsc --noEmit -p .
+
+      # Переменные Vercel не нужны: ключи читаются только при запросе, сборка без них проходит.
+      - name: Сборка панели (next build)
+        id: build
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        working-directory: video-studio/panel
+        run: npm run build
+
+      - name: Сводка
+        if: ${{ always() }}
+        env:
+          DEPS: ${{ steps.deps.outcome }}
+          TSC: ${{ steps.tsc.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+          TESTS_TOTAL: ${{ steps.tests.outputs.total }}
+          TESTS_FAILED: ${{ steps.tests.outputs.failed }}
+          PANEL_TSC: ${{ steps.panel_tsc.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          mark() {
+            case "$1" in
+              success) echo "✅" ;;
+              failure) echo "❌" ;;
+              skipped) echo "пропущено" ;;
+              cancelled) echo "отменено" ;;
+              *) echo "—" ;;
+            esac
+          }
+          failed_list=""
+          for f in $TESTS_FAILED; do failed_list="${failed_list:+$failed_list, }\`$f\`"; done
+          {
+            echo "### Проверки video-studio"
+            echo ""
+            echo "| Проверка | Итог |"
+            echo "|---|---|"
+            echo "| Зависимости (npm ci) | $(mark "$DEPS") |"
+            echo "| Типы video-studio (tsc) | $(mark "$TSC") |"
+            echo "| Офлайн-тесты${TESTS_TOTAL:+ ($TESTS_TOTAL)} | $(mark "$TESTS")${failed_list:+ не прошли: $failed_list} |"
+            echo "| Типы панели (tsc) | $(mark "$PANEL_TSC") |"
+            echo "| Сборка панели (next build) | $(mark "$BUILD") |"
+            if [ "$DEPS$TSC$TESTS$PANEL_TSC$BUILD" != "successsuccesssuccesssuccesssuccess" ]; then
+              echo ""
+              echo "Что сломалось — в логе шага с ❌. Повторить у себя: команды из \`video-studio/CLAUDE.md\` (раздел «Команды»), затем запушить исправление — проверка перезапустится сама."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
