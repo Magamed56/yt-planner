@@ -2570,3 +2570,13 @@ a.btn[aria-disabled] {
   margin-top: 2px;
   font: 600 12px/1.35 var(--body);
 }
+.run-codes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+a.code-chip {
+  text-decoration: none;
+}

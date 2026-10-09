@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
 import { setBadge } from "@/lib/badge";
 import type { CoverageLevel, PanelState, Reminder, Row } from "@/lib/state";
@@ -62,11 +62,23 @@ const mb = (bytes: number) => `${Math.round(bytes / 1_048_576)} МБ`;
 // Сколько весят файлы ролика целиком: видео и обе обложки.
 const rowBytes = (r: Row) => (r.release ? r.release.mp4.size + (r.release.cover?.size ?? 0) + (r.release.thumb?.size ?? 0) : 0);
 
-export default function QueueView({ state, initialMode }: { state: PanelState; initialMode: QueueMode }) {
+// Адрес главной: ?view=calendar и ?v=08a — открытая карточка (ссылка из уведомления или «Статистики»).
+function queueUrl(mode: QueueMode, code: string | null): string {
+  const p = new URLSearchParams();
+  if (mode === "calendar") p.set("view", "calendar");
+  if (code) p.set("v", code);
+  const q = p.toString();
+  return q ? `?${q}` : "/";
+}
+// Карточку открыли мы (pushState) — «Назад» её закроет. Пришли по ссылке — заменяем адрес.
+const ourSheet = () => typeof window !== "undefined" && typeof (window.history.state as { sheet?: unknown } | null)?.sheet === "string";
+
+export default function QueueView({ state, initialMode, initialSelected = null }: { state: PanelState; initialMode: QueueMode; initialSelected?: string | null }) {
   const router = useRouter();
   const [mode, setMode] = useState<QueueMode>(initialMode);
   const [filter, setFilter] = useState<Filter>("ahead");
-  const [selected, setSelected] = useState<string | null>(null);
+  const known = (code: string | null) => (code && state.rows.some((r) => r.code === code) ? code : null);
+  const [selected, setSelected] = useState<string | null>(() => known(initialSelected));
   const [picked, setPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ text: string; ok: boolean; undo?: Undo } | null>(null);
@@ -92,16 +104,59 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     }
   }
 
-  // Вид — в адресе (?view=calendar), без запроса к серверу: данные уже на странице.
+  // Вид — в адресе (?view=calendar), без запроса к серверу: данные уже на странице. Открытая
+  // карточка остаётся в адресе.
   function switchMode(next: QueueMode) {
     setMode(next);
     setPicked(null);
     if (next === "calendar") stopChoosing();
-    window.history.replaceState(null, "", next === "calendar" ? "?view=calendar" : "/");
+    window.history.replaceState(window.history.state, "", queueUrl(next, selected));
   }
 
-  function startChoosing(codes: string[] = []) {
+  // Карточка ролика — в адресе (?v=08a): одно «Назад» (и свайп назад на iPhone) закрывает её.
+  function openSheet(code: string) {
+    if (code === selected) return;
+    setSelected(code);
+    if (ourSheet()) window.history.replaceState({ ...window.history.state, sheet: code }, "", queueUrl(mode, code));
+    else window.history.pushState({ sheet: code }, "", queueUrl(mode, code));
+  }
+  function closeSheet() {
+    if (!selected) return;
     setSelected(null);
+    if (ourSheet()) window.history.back();
+    else window.history.replaceState(window.history.state, "", queueUrl(mode, null));
+  }
+  const close = useRef(closeSheet);
+  useEffect(() => {
+    close.current = closeSheet;
+  });
+
+  // Назад/вперёд по истории — карточка из адреса; Escape — закрыть.
+  useEffect(() => {
+    const onPop = () => {
+      const v = new URLSearchParams(window.location.search).get("v");
+      setSelected(v && state.rows.some((r) => r.code === v) ? v : null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close.current();
+    };
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [state.rows]);
+
+  // По ссылке пришёл код, которого нет в плане, — говорим и убираем его из адреса.
+  useEffect(() => {
+    if (!initialSelected || known(initialSelected)) return;
+    setToast({ text: `Ролика ${initialSelected} нет в плане.`, ok: false });
+    window.history.replaceState(window.history.state, "", queueUrl(initialMode, null));
+  }, []);
+
+  function startChoosing(codes: string[] = []) {
+    closeSheet();
     setChosen(new Set(codes));
   }
 
@@ -211,7 +266,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     if (picked && picked !== row.code) return void place(picked, cell);
     if (picked === row.code) return setPicked(null);
     if (movable(row)) return setPicked(row.code);
-    setSelected(row.code);
+    openSheet(row.code);
   }
 
   const rows = state.rows.filter((r) => filter === "all" || (filter === "ahead" ? r.stage !== "published" : r.stage === filter));
@@ -289,7 +344,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
             disabled={busy || chosen !== null}
             onDownload={saveWaiting}
             onFind={() => void findNew()}
-            onOpen={(code) => setSelected(code)}
+            onOpen={openSheet}
           />
 
           <div className="page-head">
@@ -378,7 +433,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
                 state={state}
                 rows={rows}
                 selected={selected}
-                onOpen={setSelected}
+                onOpen={openSheet}
                 chosen={chosen}
                 onToggle={toggleChosen}
                 // В режиме выбора — всё: «Все с видео» отмечает и то, что ниже.
@@ -392,8 +447,8 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
         </main>
         {current && (
           <>
-            <div className="backdrop" onClick={() => setSelected(null)} />
-            <VideoSheet key={current.code} row={current} state={state} onClose={() => setSelected(null)} />
+            <div className="backdrop" onClick={closeSheet} />
+            <VideoSheet key={current.code} row={current} state={state} onClose={closeSheet} />
           </>
         )}
         {chosen && saving && (
@@ -428,7 +483,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
           <span>
             Куда перенести {pickedRow.code} ({pickedRow.dateLabel} {pickedRow.timeLabel})? Нажмите на слот.
           </span>
-          <button className="btn small" onClick={() => setSelected(pickedRow.code)}>
+          <button className="btn small" onClick={() => openSheet(pickedRow.code)}>
             Подробнее
           </button>
           <button className="btn small" onClick={() => setPicked(null)}>

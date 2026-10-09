@@ -6,9 +6,11 @@ import { loadState } from "@/lib/load";
 import type { PanelState } from "@/lib/state";
 import { channelOverview } from "@/lib/youtube";
 
-export default async function QueuePage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+export default async function QueuePage({ searchParams }: { searchParams: Promise<{ view?: string; v?: string }> }) {
   await connection(); // всегда свежие данные GitHub и YouTube
-  const { view } = await searchParams;
+  const { view, v } = await searchParams;
+  // ?v=08a — сразу открыть карточку ролика (ссылка из уведомления или «Статистики»).
+  const code = typeof v === "string" && /^\d{2}[a-z]$/i.test(v) ? v.toLowerCase() : null;
   let state: PanelState;
   // Тот же проход по YouTube, что и раньше: part=statistics у channels.list квоту не добавляет,
   // а подписчики нужны для истории.
@@ -22,5 +24,5 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   }
   // История для трендов — после ответа: страница не ждёт GitHub. Не чаще раза в 55 минут.
   if (!state.youtubeError) after(() => saveSnapshotQuietly(listing, now, state.timezone));
-  return <QueueView state={state} initialMode={view === "calendar" ? "calendar" : "feed"} />;
+  return <QueueView state={state} initialMode={view === "calendar" ? "calendar" : "feed"} initialSelected={code} />;
 }

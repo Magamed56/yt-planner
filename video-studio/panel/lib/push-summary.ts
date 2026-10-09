@@ -19,7 +19,8 @@ export function dailySummary(state: PanelState, now = new Date(state.generatedAt
   return {
     title: todos.some((t) => t.level === "error" || t.id === "runway") ? "Нужно внимание" : "Дела на сегодня",
     body: body.charAt(0).toUpperCase() + body.slice(1),
-    url: todos.some((t) => t.id === "run") ? "/runs" : "/",
+    // Нажатие ведёт к делу: упавший запуск — «Запуски», одно видео — сразу его карточка.
+    url: todos.some((t) => t.id === "run") ? "/runs" : todos[0]!.codes.length === 1 ? `/?v=${todos[0]!.codes[0]}` : "/",
     tag: "daily",
     badge: badgeCount(todos),
   };

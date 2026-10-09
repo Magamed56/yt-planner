@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -300,6 +301,15 @@ export default function RunsView({ state }: { state: PanelState }) {
                   <span>{runIcon(r)}</span>
                   <span>
                     {r.title} <span className="when">· {r.createdLabel}</span>
+                    {r.codes.length > 0 && (
+                      <span className="run-codes">
+                        {r.codes.slice(0, 6).map((c) => (
+                          <Link key={c} className="code-chip" href={`/?v=${c}`} title={`Карточка ${c}`}>
+                            {c}
+                          </Link>
+                        ))}
+                      </span>
+                    )}
                   </span>
                   <a href={r.url} target="_blank" rel="noreferrer">
                     лог ↗

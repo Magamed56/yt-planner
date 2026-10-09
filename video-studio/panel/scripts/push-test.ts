@@ -365,11 +365,13 @@ async function main() {
     assert.deepEqual(summary({ releases: [], videos: [video("01a", { publishAt: "2026-10-09T09:00:00Z" })] }), {
       title: "Нужно внимание",
       body: "Пустой слот чт, 08.10 19:00 — встанет 01b",
-      url: "/",
+      url: "/?v=01b", // одно видео в главном деле — сразу его карточка
       tag: "daily",
       badge: 1,
     });
     assert.equal(summary({ releases: [], videos: [] })?.body, "Расписание пусто");
+    assert.equal(summary({ releases: [], videos: [] })?.url, "/", "без ролика — главная");
+    assert.equal(summary({ releases: [release(1, "08a")], videos: full })?.url, "/?v=08a");
     // Без пропусков на 60 дней — так и пишем.
     const grid = buildState({ ...base, releases: [], videos: [] }).slotGrid.map((c) => c.iso);
     assert.equal(summary({ videos: grid.map((iso, i) => video(`other${i}`, { publishAt: iso })) })?.body, "Загрузите в Studio: 08a, 08b · расписание без пропусков на 60 дней");
