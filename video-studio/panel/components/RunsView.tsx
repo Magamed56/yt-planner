@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   checkKeysAction,
   draftAction,
@@ -12,9 +12,11 @@ import {
   type ActionResult,
   type FillPreview,
 } from "@/app/actions";
+import { setBadge } from "@/lib/badge";
 import { pickCleanup } from "@/lib/ops";
 import type { AutopilotSettings, PanelState, RunInfo } from "@/lib/state";
 import { STAGE_LABEL, codesLabel } from "@/lib/stages";
+import { badgeCount, buildTodo } from "@/lib/todo";
 import AppShell from "./AppShell";
 import RunProgressBar from "./RunProgressBar";
 
@@ -37,6 +39,9 @@ export default function RunsView({ state }: { state: PanelState }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
+  // Число на иконке приложения — как на главной: сколько дел ждёт внимания.
+  const attention = badgeCount(buildTodo(state, new Date(state.generatedAt)));
+  useEffect(() => setBadge(attention), [attention, state.generatedAt]);
 
   const upcoming = state.rows.filter((r) => r.stage === "topic" || r.stage === "script").slice(0, 12);
   const [picked, setPicked] = useState<string[]>(() => upcoming.filter((r) => !r.running).slice(0, 2).map((r) => r.code));

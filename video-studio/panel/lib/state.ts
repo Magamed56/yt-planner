@@ -80,10 +80,11 @@ export interface RunInfo {
 }
 
 export interface Reminder {
-  kind: "runway" | "youtube" | "upload" | "fill" | "problem" | "drift" | "run" | "secrets" | "instagram";
+  kind: "runway" | "youtube" | "upload" | "fill" | "problem" | "drift" | "run" | "secrets";
   level: "error" | "warn" | "info";
   text: string;
   href?: string;
+  codes?: string[]; // все коды роликов (в тексте после восьмого — «и ещё N»)
 }
 
 export interface SlotCell {
@@ -222,6 +223,14 @@ const RUNNING_LABEL: Partial<Record<RunKind, string>> = {
   fill: "заполняются тексты на YouTube",
 };
 const MP4_WITH_CODE = /^(\d{2}[a-z])-.+\.mp4$/i;
+const FAILED_RUN_FRESH_MS = 2 * 86_400_000;
+
+// Последний завершённый запуск конвейера, если он упал не больше двух суток назад: о нём
+// напоминают панель, карточка «Сейчас» и утреннее уведомление. Проверки и прочее — не в счёт.
+export function failedRun(runs: RunInfo[], nowMs: number): RunInfo | null {
+  const last = runs.find((r) => !r.active && r.kind !== "other" && r.kind !== "check");
+  return last?.conclusion === "failure" && nowMs - Date.parse(last.createdAt) < FAILED_RUN_FRESH_MS ? last : null;
+}
 const DAY_MS = 86_400_000;
 const ms = (t: string | number | Date) => (t instanceof Date ? t.getTime() : typeof t === "number" ? t : Date.parse(t));
 const minute = (t: string | number | Date) => Math.floor(ms(t) / 60_000);
@@ -463,27 +472,39 @@ export function buildState(input: StateInput): PanelState {
     reminders.push({
       kind: "upload",
       level: soon ? "warn" : "info",
+      codes: toUpload.map((r) => r.code),
       text: `Ждут загрузки в Studio: ${codesLabel(toUpload.map((r) => r.code))}. Загрузите руками (имя файла начинается с кода), затем «Найти новые загрузки».`,
     });
   }
   const toFill = rows.filter((r) => r.stage === "studio" && !pending.has(r.code));
   if (toFill.length) {
-    reminders.push({ kind: "fill", level: "warn", text: `В Studio без времени выхода: ${codesLabel(toFill.map((r) => r.code))} → «Найти новые загрузки».` });
+    reminders.push({
+      kind: "fill",
+      level: "warn",
+      text: `В Studio без времени выхода: ${codesLabel(toFill.map((r) => r.code))} → «Найти новые загрузки».`,
+      codes: toFill.map((r) => r.code),
+    });
   }
   const problems = rows.filter((r) => dups.has(r.code) || broken.has(r.code));
   if (problems.length) {
-    reminders.push({ kind: "problem", level: "error", text: `Проблемы с загрузкой в Studio: ${codesLabel(problems.map((r) => r.code))} — подробности в карточке ролика.` });
+    reminders.push({
+      kind: "problem",
+      level: "error",
+      text: `Проблемы с загрузкой в Studio: ${codesLabel(problems.map((r) => r.code))} — подробности в карточке ролика.`,
+      codes: problems.map((r) => r.code),
+    });
   }
   const drift = rows.filter((r) => r.textsDiffer);
   if (drift.length) {
     reminders.push({
       kind: "drift",
       level: "info",
+      codes: drift.map((r) => r.code),
       text: `Тексты на YouTube отличаются от файла: ${codesLabel(drift.map((r) => r.code))}. Заполнение их не тронет, пока вы сами не отметите их в проверке.`,
     });
   }
-  const lastDone = runs.find((r) => !r.active && r.kind !== "other" && r.kind !== "check");
-  if (lastDone?.conclusion === "failure" && nowMs - ms(lastDone.createdAt) < 2 * DAY_MS) {
+  const lastDone = failedRun(runs, nowMs);
+  if (lastDone) {
     reminders.push({ kind: "run", level: "error", text: `Запуск «${lastDone.title}» (${lastDone.createdLabel}) не удался — откройте лог.`, href: lastDone.url });
   }
   if (missingSecrets?.length) {
@@ -497,11 +518,6 @@ export function buildState(input: StateInput): PanelState {
       href: `https://github.com/${input.repo}/settings/secrets/actions`,
     });
   }
-  reminders.push({
-    kind: "instagram",
-    level: "info",
-    text: "Instagram ждёт токен EAA (проверка Meta). Пока Reels можно выложить с телефона: в карточке ролика — видео, обложка и подпись.",
-  });
 
   const perDay = Math.max(1, channel.schedule.publishTimesLocal.length);
   const occupant = new Map<number, string>();

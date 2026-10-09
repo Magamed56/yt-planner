@@ -2313,3 +2313,123 @@ h2 {
     transform: none;
   }
 }
+
+/* ---- «Сейчас»: дела на главной, у каждого одна кнопка ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.now {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.now.done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.now-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.section-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.now-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.now-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+}
+.now-item + .now-item {
+  border-top: 1px solid var(--line-soft);
+}
+.now-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--card-2);
+  color: var(--muted);
+  font: 900 12px var(--display);
+}
+.now-item.error .now-mark {
+  background: var(--error);
+  color: var(--accent-ink);
+}
+.now-item.warn .now-mark {
+  background: var(--warn);
+  color: var(--accent-ink);
+}
+.now.done .now-mark {
+  background: var(--ok);
+  color: var(--accent-ink);
+}
+.now-body {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.now-body b {
+  font-size: 14px;
+  line-height: 1.3;
+}
+.now-codes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.code-chip {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font: 800 12px var(--display);
+  cursor: pointer;
+}
+.code-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.now-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 2px;
+  font-size: 13px;
+}
+a.btn[aria-disabled] {
+  pointer-events: none;
+  opacity: 0.5;
+}
+.now-more summary {
+  padding: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}

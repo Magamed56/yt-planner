@@ -1,13 +1,16 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
+import { setBadge } from "@/lib/badge";
 import type { PanelState, Reminder, Row } from "@/lib/state";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/stages";
+import { badgeCount, buildTodo } from "@/lib/todo";
 import AppShell, { RunwayRing } from "./AppShell";
 import BoardView, { movable, queued, type BoardCell } from "./BoardView";
 import DownloadSheet from "./DownloadSheet";
 import FeedView from "./FeedView";
+import NowCard from "./NowCard";
 import VideoSheet from "./VideoSheet";
 
 type Filter = "ahead" | "all" | Stage;
@@ -30,7 +33,10 @@ const CHECK_ICON = (
   </svg>
 );
 
-function Notice({ m, action }: { m: Reminder; action?: { label: string; onClick: () => void } }) {
+// Эти напоминания — дела с кнопкой в карточке «Сейчас»; в заметках остаются остальные.
+const IN_NOW = new Set<Reminder["kind"]>(["youtube", "runway", "upload", "fill", "problem", "run"]);
+
+function Notice({ m }: { m: Reminder }) {
   return (
     <div className={`notice ${m.level}`}>
       {NOTICE_ICON}
@@ -40,11 +46,6 @@ function Notice({ m, action }: { m: Reminder; action?: { label: string; onClick:
           <a href={m.href} target={m.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
             открыть →
           </a>
-        )}
-        {action && (
-          <button className="link-btn" onClick={action.onClick}>
-            {action.label}
-          </button>
         )}
       </span>
     </div>
@@ -94,10 +95,10 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     if (!next.size) setSaving(false);
   }
 
-  // Напоминание «Ждут загрузки в Studio» — сразу к скачиванию всех таких роликов.
-  function saveWaiting() {
+  // «Сохранить и загрузить в Studio» — сразу к скачиванию этих роликов.
+  function saveWaiting(codes: string[]) {
     if (mode !== "feed") switchMode("feed");
-    startChoosing(waiting.map((r) => r.code));
+    startChoosing(codes);
     setSaving(true);
   }
 
@@ -192,12 +193,14 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
   const rows = state.rows.filter((r) => filter === "all" || (filter === "ahead" ? r.stage !== "published" : r.stage === filter));
   const current = selected ? (state.rows.find((r) => r.code === selected) ?? null) : null;
   const pickedRow = picked ? (state.rows.find((r) => r.code === picked) ?? null) : null;
-  const urgent = state.reminders.filter((m) => m.kind !== "runway" && m.level !== "info");
-  const notes = state.reminders.filter((m) => m.kind !== "runway" && m.level === "info");
-  const runway = state.reminders.find((m) => m.kind === "runway");
+  const urgent = state.reminders.filter((m) => !IN_NOW.has(m.kind) && m.level !== "info");
+  const notes = state.reminders.filter((m) => !IN_NOW.has(m.kind) && m.level === "info");
+  // Время — момента сборки данных: на сервере и в браузере тексты «через 20 ч» совпадут.
+  const todos = useMemo(() => buildTodo(state, new Date(state.generatedAt)), [state]);
+  const attention = badgeCount(todos);
+  useEffect(() => setBadge(attention), [attention, state.generatedAt]);
 
   // Скачивание пачкой: ролики с файлами в релизе (собранные на компьютере — без файлов).
-  const waiting = state.rows.filter((r) => r.stage === "video" && r.release);
   const chosenRows = chosen ? state.rows.filter((r) => chosen.has(r.code) && r.release) : [];
   const chosenBytes = chosenRows.reduce((s, r) => s + rowBytes(r), 0);
   const visibleWithFiles = rows.filter((r) => r.release);
@@ -213,8 +216,6 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     }
     setChosen(next);
   }
-
-  const noticeAction = (m: Reminder) => (m.kind === "upload" && waiting.length ? { label: waiting.length > 1 ? `⬇ Скачать все ${waiting.length}` : "⬇ Скачать", onClick: saveWaiting } : undefined);
 
   return (
     <AppShell
@@ -236,6 +237,15 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
               </span>
             </div>
           </section>
+
+          <NowCard
+            todos={todos}
+            doneUntil={state.scheduleEndLabel}
+            disabled={busy || chosen !== null}
+            onDownload={saveWaiting}
+            onFind={() => void findNew()}
+            onOpen={(code) => setSelected(code)}
+          />
 
           <div className="page-head">
             <h1>{mode === "calendar" ? "Календарь" : "Лента"}</h1>
@@ -270,22 +280,23 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
             </div>
           </div>
 
+          {(urgent.length > 0 || notes.length > 0) && (
           <div className="notices">
-            {runway && runway.level !== "info" && <Notice m={runway} />}
             {urgent.map((m, i) => (
-              <Notice key={i} m={m} action={noticeAction(m)} />
+              <Notice key={i} m={m} />
             ))}
             {notes.length > 0 && (
               <details className="notes">
                 <summary>Ещё заметки: {notes.length}</summary>
                 <div className="notices">
                   {notes.map((m, i) => (
-                    <Notice key={i} m={m} action={noticeAction(m)} />
+                    <Notice key={i} m={m} />
                   ))}
                 </div>
               </details>
             )}
           </div>
+          )}
 
           {mode === "calendar" ? (
             <>

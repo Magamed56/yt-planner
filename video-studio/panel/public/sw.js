@@ -20,9 +20,19 @@ self.addEventListener("push", (event) => {
     data: { url: text(data.url) || "/" },
   };
   if (text(data.tag)) options.tag = data.tag;
+  // Число на иконке приложения (утренняя сводка): сколько дел ждёт. Нет поля — не трогаем.
+  const badge = async () => {
+    if (typeof data.badge !== "number") return;
+    try {
+      if (data.badge > 0) await self.navigator.setAppBadge?.(data.badge);
+      else await self.navigator.clearAppBadge?.();
+    } catch {
+      // браузер без значков на иконке — не страшно
+    }
+  };
   // Показываем всегда, даже если сообщение не разобрали: iPhone отзывает подписку,
   // если push пришёл, а уведомления не было.
-  event.waitUntil(self.registration.showNotification(text(data.title) || "Панель канала", options));
+  event.waitUntil(Promise.all([self.registration.showNotification(text(data.title) || "Панель канала", options), badge()]));
 });
 
 self.addEventListener("notificationclick", (event) => {

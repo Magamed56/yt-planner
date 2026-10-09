@@ -340,16 +340,18 @@ async function main() {
   const summary = (over: Partial<StateInput> = {}) => dailySummary(buildState({ ...base, ...over }));
 
   await test("сводка: загрузить в Studio + запас расписания — одной строкой", () => {
-    assert.deepEqual(summary(), { title: "Дела на сегодня", body: "Загрузите в Studio: 08a, 08b · расписание до 14.10", url: "/", tag: "daily" });
+    assert.deepEqual(summary(), { title: "Дела на сегодня", body: "Загрузите в Studio: 08a, 08b · расписание до 14.10", url: "/", tag: "daily", badge: 0 });
   });
 
   await test("сводка: упавший запуск и ролик в Studio без времени — «Нужно внимание», ссылка на «Запуски»", () => {
     const msg = summary({ runs: [failedRun], videos: [scheduled14, video("09a")] });
     assert.deepEqual(msg, {
       title: "Нужно внимание",
-      body: "Не удался запуск «youtube-fill: 01a (проверка)» · загрузите в Studio: 08a, 08b · в Studio без времени выхода: 09a · расписание до 14.10",
+      // Порядок — как в карточке «Сейчас»: срочное, важное, остальное.
+      body: "Не удался запуск «youtube-fill: 01a (проверка)» · в Studio без времени выхода: 09a · загрузите в Studio: 08a, 08b · расписание до 14.10",
       url: "/runs",
       tag: "daily",
+      badge: 2,
     });
   });
 
@@ -363,6 +365,7 @@ async function main() {
       body: "Расписание до 09.10 — осталось меньше суток",
       url: "/",
       tag: "daily",
+      badge: 1,
     });
     assert.equal(summary({ releases: [], videos: [video("01a", { publishAt: "2026-10-09T16:00:00Z" })] })?.body, "Расписание до 09.10 — остался 1 день");
     assert.equal(summary({ releases: [], videos: [] })?.body, "Расписание пусто");
@@ -374,6 +377,7 @@ async function main() {
       body: "YouTube недоступен — расписание не проверено · загрузите в Studio: 08a, 08b",
       url: "/",
       tag: "daily",
+      badge: 1,
     });
     const dup = summary({ releases: [], videos: [scheduled14, video("07a"), video("07a", { videoId: "v07a-2" })] });
     assert.match(dup?.body ?? "", /^Проблемы с загрузкой в Studio: 07a · /);

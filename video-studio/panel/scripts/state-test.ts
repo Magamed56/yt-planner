@@ -146,7 +146,7 @@ test("ориентир: следующие свободные слоты по п
   assert.deepEqual(state.rows.slice(0, 3).map((r) => r.code), ["01a", "01b", "02a"]);
 });
 
-test("напоминания: запас расписания, загрузить в Studio, заполнить, тексты отличаются, упавший запуск, ключи, Instagram", () => {
+test("напоминания: запас расписания, загрузить в Studio, заполнить, тексты отличаются, упавший запуск, ключи; коды списком", () => {
   const text = state.reminders.map((r) => r.text).join("\n");
   assert.match(text, /заполнено до пн, 12\.10 19:00 — осталось 4 дня/);
   assert.match(text, /Ждут загрузки в Studio: 06a, 06b, 07a, 07b, 08b/);
@@ -157,7 +157,12 @@ test("напоминания: запас расписания, загрузит�
   assert.match(text, /нет: GEMINI_API_KEY — без него .*Edge/);
   assert.doesNotMatch(text, /YT_CLIENT_ID/); // тексты на YouTube ставит сама панель — YT_* в GitHub ей не нужны
   assert.match(text, /затем «Найти новые загрузки»/);
-  assert.match(text, /Instagram ждёт токен EAA/);
+  // Постоянная заметка про Instagram убрана — она осталась строкой в карточке ролика.
+  assert.doesNotMatch(text, /Instagram/);
+  const codes = (kind: string) => state.reminders.find((r) => r.kind === kind)?.codes;
+  assert.deepEqual(codes("upload"), ["06a", "06b", "07a", "07b", "08b"]);
+  assert.deepEqual(codes("fill"), ["09a"]);
+  assert.deepEqual(codes("drift"), ["01b"]);
   assert.equal(row("01b").textsDiffer, true);
 });
 
