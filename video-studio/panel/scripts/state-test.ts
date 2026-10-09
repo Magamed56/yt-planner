@@ -33,7 +33,7 @@ const slotsUtc = ["2026-10-08T16:00:00Z", "2026-10-09T09:00:00Z", "2026-10-09T16
 const onYoutube = (item: FillItem, over: Partial<ChannelVideo>): ChannelVideo => ({
   videoId: `v${item.id}xx`,
   title: item.title,
-  description: item.description.split("\n").filter((l) => !l.startsWith("Озвучка:")).join("\n"),
+  description: item.description,
   fileName: `${item.file}.mp4`,
   durationSec: item.durationSec,
   uploadStatus: "processed",
@@ -50,7 +50,8 @@ const onYoutube = (item: FillItem, over: Partial<ChannelVideo>): ChannelVideo =>
 });
 const videos: ChannelVideo[] = [
   onYoutube(week1[0]!, { privacyStatus: "public", publishedAt: "2026-10-08T09:00:00Z" }),
-  ...week1.slice(1, 10).map((it, i) => onYoutube(it, { publishAt: slotsUtc[i]! })),
+  // У 01b описание поправили в Studio — панель должна это заметить и не трогать.
+  ...week1.slice(1, 10).map((it, i) => onYoutube(it, { publishAt: slotsUtc[i]!, ...(it.id === "01b" ? { description: `${it.description}\nправка в Studio` } : {}) })),
   { ...onYoutube({ ...week1[0]!, id: "09a", file: "09a-chernovik", title: "09a-chernovik", description: "" }, {}), videoId: "v09axxx", publishedAt: null },
 ];
 const releases: GhRelease[] = [
@@ -139,7 +140,8 @@ test("напоминания: запас расписания, загрузит�
   assert.match(text, /заполнено до пн, 12\.10 19:00 — осталось 4 дня/);
   assert.match(text, /Ждут загрузки в Studio: 06a, 06b, 07a, 07b, 08b/);
   assert.match(text, /В Studio без времени выхода: 09a/);
-  assert.match(text, /Тексты на YouTube отличаются от файла: 01a, 01b, 02a/);
+  assert.match(text, /Тексты на YouTube отличаются от файла: 01b\./);
+  assert.equal(row("02a").textsDiffer, false);
   assert.match(text, /youtube-fill: 01a \(проверка\).*не удался/);
   assert.match(text, /нет: GEMINI_API_KEY — без него .*Edge/);
   assert.doesNotMatch(text, /YT_CLIENT_ID/); // тексты на YouTube ставит сама панель — YT_* в GitHub ей не нужны

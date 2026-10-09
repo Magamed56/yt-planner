@@ -14,9 +14,17 @@ import {
 } from "@/app/actions";
 import type { PanelState, RunInfo } from "@/lib/state";
 import { STAGE_LABEL, codesLabel } from "@/lib/stages";
-import TopBar from "./TopBar";
+import AppShell from "./AppShell";
 
-const runIcon = (r: RunInfo) => (r.active ? "⏳" : r.conclusion === "success" ? "✅" : r.conclusion === "failure" ? "❌" : r.conclusion === "cancelled" ? "⏹" : "•");
+// Цвет точки — итог запуска: идёт, успех, ошибка, отменён.
+const runColor = (r: RunInfo) =>
+  r.active ? "var(--accent)" : r.conclusion === "success" ? "var(--ok)" : r.conclusion === "failure" ? "var(--error)" : "var(--dim)";
+const runIcon = (r: RunInfo) => (
+  <span
+    title={r.active ? "идёт" : (r.conclusion ?? "")}
+    style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: runColor(r) }}
+  />
+);
 
 export default function RunsView({ state }: { state: PanelState }) {
   const router = useRouter();
@@ -72,8 +80,13 @@ export default function RunsView({ state }: { state: PanelState }) {
   const missingKeys = state.missingSecrets;
 
   return (
-    <>
-      <TopBar channel={state.channelName} updated={state.updatedLabel} activeRuns={state.runs.filter((r) => r.active).length} />
+    <AppShell
+      active="runs"
+      updated={state.updatedLabel}
+      activeRuns={state.runs.filter((r) => r.active).length}
+      runwayDays={state.runwayDays}
+      runwayLabel={state.scheduleEndLabel}
+    >
       <main className="page">
         <section className="card" id="produce">
           <h2>Сценарии и видео</h2>
@@ -257,6 +270,6 @@ export default function RunsView({ state }: { state: PanelState }) {
           </button>
         </div>
       )}
-    </>
+    </AppShell>
   );
 }

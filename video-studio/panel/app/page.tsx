@@ -13,5 +13,5 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   } catch (e) {
     return <ErrorScreen message={e instanceof Error ? e.message : String(e)} />;
   }
-  return <QueueView state={state} initialMode={view === "calendar" ? "calendar" : "list"} />;
+  return <QueueView state={state} initialMode={view === "calendar" ? "calendar" : "feed"} />;
 }

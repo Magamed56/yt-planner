@@ -136,6 +136,7 @@ export interface PanelState {
   counts: Record<Stage, number>;
   scheduleEnd: string | null; // последнее запланированное время выхода на канале
   scheduleEndLabel: string | null;
+  runwayDays: number | null; // сколько полных дней расписания впереди (для кольца-секундомера)
   reminders: Reminder[];
   runs: RunInfo[];
   slotGrid: SlotCell[]; // слоты на 14 дней вперёд — для переноса
@@ -458,6 +459,7 @@ export function buildState(input: StateInput): PanelState {
     counts,
     scheduleEnd,
     scheduleEndLabel: scheduleEnd ? labelOf(scheduleEnd) : null,
+    runwayDays: scheduleEnd ? Math.max(0, Math.floor((ms(scheduleEnd) - nowMs) / DAY_MS)) : null,
     reminders,
     runs,
     slotGrid,

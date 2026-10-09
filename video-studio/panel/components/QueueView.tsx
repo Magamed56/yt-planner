@@ -1,25 +1,40 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { fillNewUploadsAction, findNewUploadsAction } from "@/app/actions";
-import type { PanelState, Row } from "@/lib/state";
+import { fillNewUploadsAction, findNewUploadsAction, moveVideoAction, undoMoveAction } from "@/app/actions";
+import type { PanelState, Reminder, Row } from "@/lib/state";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/stages";
-import CalendarView from "./CalendarView";
-import Dots from "./Dots";
-import Thumb from "./Thumb";
-import TopBar from "./TopBar";
+import AppShell, { RunwayRing } from "./AppShell";
+import BoardView, { movable, type BoardCell } from "./BoardView";
+import FeedView from "./FeedView";
 import VideoSheet from "./VideoSheet";
 
 type Filter = "ahead" | "all" | Stage;
-export type QueueMode = "list" | "calendar";
+export type QueueMode = "feed" | "calendar";
+type Undo = { videoId: string; publishAt: string }[];
 
-// Подсказка под строкой: что сейчас происходит или что сделать.
-function rowNote(r: Row): { text: string; warn: boolean } | null {
-  if (r.running) return { text: `⚙ ${r.running}`, warn: false };
-  if (r.flags.length) return { text: `⚠ ${r.flags[0]}`, warn: true };
-  if (r.stage === "video") return { text: r.localVideo ? "файл на компьютере → загрузить в Studio" : "видео готово → скачать и загрузить в Studio", warn: false };
-  if (r.stage === "studio") return { text: "в Studio без времени → «Найти новые загрузки»", warn: true };
-  return null;
+const NOTICE_ICON = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 9v4" />
+    <path d="M12 17h.01" />
+    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+  </svg>
+);
+
+function Notice({ m }: { m: Reminder }) {
+  return (
+    <div className={`notice ${m.level}`}>
+      {NOTICE_ICON}
+      <span>
+        {m.text}{" "}
+        {m.href && (
+          <a href={m.href} target={m.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
+            открыть →
+          </a>
+        )}
+      </span>
+    </div>
+  );
 }
 
 export default function QueueView({ state, initialMode }: { state: PanelState; initialMode: QueueMode }) {
@@ -27,12 +42,14 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
   const [mode, setMode] = useState<QueueMode>(initialMode);
   const [filter, setFilter] = useState<Filter>("ahead");
   const [selected, setSelected] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
+  const [toast, setToast] = useState<{ text: string; ok: boolean; undo?: Undo } | null>(null);
 
   // Вид — в адресе (?view=calendar), без запроса к серверу: данные уже на странице.
   function switchMode(next: QueueMode) {
     setMode(next);
+    setPicked(null);
     window.history.replaceState(null, "", next === "calendar" ? "?view=calendar" : "/");
   }
 
@@ -64,72 +81,121 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     }
   }
 
-  const rows = state.rows.filter((r) => filter === "all" || (filter === "ahead" ? r.stage !== "published" : r.stage === filter));
-  const groups: { key: string; label: string; approx: boolean; rows: Row[] }[] = [];
-  for (const r of rows) {
-    const key = r.dateKey ?? "none";
-    let g = groups.at(-1);
-    if (!g || g.key !== key) {
-      const day = key === state.todayKey ? "Сегодня, " : key === state.tomorrowKey ? "Завтра, " : "";
-      g = { key, label: key === "none" ? "Без даты" : `${day}${r.dateLabel}`, approx: true, rows: [] };
-      groups.push(g);
+  // Перенос: на YouTube меняется только время выхода; занятый слот — обмен местами.
+  async function place(code: string, cell: BoardCell) {
+    const row = state.rows.find((r) => r.code === code);
+    setPicked(null);
+    if (!row || !movable(row) || !row.youtube) return;
+    if (!cell.iso) return setToast({ text: "Сюда нельзя: слот уже прошёл или дальше двух недель — перенесите в Studio.", ok: false });
+    setBusy(true);
+    try {
+      const r = await moveVideoAction(row.youtube.videoId, cell.iso);
+      setToast({ text: r.message, ok: r.ok, undo: "undo" in r ? (r.undo as Undo | undefined) : undefined });
+      if (r.ok) router.refresh();
+    } catch (e) {
+      setToast({ text: e instanceof Error ? e.message : String(e), ok: false });
+    } finally {
+      setBusy(false);
     }
-    g.rows.push(r);
-    if (r.whenExact) g.approx = false;
   }
+
+  async function undo(u: Undo) {
+    setBusy(true);
+    try {
+      const r = await undoMoveAction(u);
+      setToast({ text: r.message, ok: r.ok });
+      if (r.ok) router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Нажали на ролик на доске: идёт перенос — ставим сюда; запланированный — выбираем для переноса;
+  // остальные — открываем карточку.
+  function onTile(row: Row, cell: BoardCell) {
+    if (picked && picked !== row.code) return void place(picked, cell);
+    if (picked === row.code) return setPicked(null);
+    if (movable(row)) return setPicked(row.code);
+    setSelected(row.code);
+  }
+
+  const rows = state.rows.filter((r) => filter === "all" || (filter === "ahead" ? r.stage !== "published" : r.stage === filter));
   const current = selected ? (state.rows.find((r) => r.code === selected) ?? null) : null;
-  const ahead = state.rows.length - state.counts.published;
-  // Сверху — запас расписания одной строкой и то, что требует действий; остальное свёрнуто,
-  // чтобы на телефоне очередь начиналась на первом экране.
-  const runway = state.reminders.find((m) => m.kind === "runway");
+  const pickedRow = picked ? (state.rows.find((r) => r.code === picked) ?? null) : null;
   const urgent = state.reminders.filter((m) => m.kind !== "runway" && m.level !== "info");
   const notes = state.reminders.filter((m) => m.kind !== "runway" && m.level === "info");
-  const reminder = (m: (typeof state.reminders)[number], i: number) => (
-    <div key={i} className={`reminder ${m.level}`}>
-      {m.text}{" "}
-      {m.href && (
-        <a href={m.href} target={m.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
-          открыть →
-        </a>
-      )}
-    </div>
-  );
+  const runway = state.reminders.find((m) => m.kind === "runway");
 
   return (
-    <>
-      <TopBar channel={state.channelName} updated={state.updatedLabel} activeRuns={state.runs.filter((r) => r.active).length} />
-      <div className={`layout${current ? " with-sheet" : ""}`}>
+    <AppShell
+      active={mode}
+      onSection={(s) => (s === "runs" ? router.push("/runs") : switchMode(s))}
+      updated={state.updatedLabel}
+      activeRuns={state.runs.filter((r) => r.active).length}
+      runwayDays={state.runwayDays}
+      runwayLabel={state.scheduleEndLabel}
+    >
+      <div className={`workspace${current ? " with-sheet" : ""}`}>
         <main>
-          <div className="reminders">
-            {runway && <p className={`runway ${runway.level}`}>{runway.text}</p>}
-            {urgent.map(reminder)}
-            {notes.length > 0 && (
-              <details className="notes">
-                <summary>Ещё заметки: {notes.length}</summary>
-                <div className="reminders">{notes.map(reminder)}</div>
-              </details>
-            )}
-          </div>
-          <div className="toolbar">
-            <button className="btn primary" disabled={busy} onClick={findNew} title="Найти ролики, загруженные в Studio, и поставить им название, описание, теги и время выхода">
-              {busy ? "Ищу…" : "⤓ Найти новые загрузки"}
-            </button>
-            <div className="view-switch" role="group" aria-label="Вид">
-              <button className={mode === "list" ? "active" : ""} onClick={() => switchMode("list")}>
-                Список
-              </button>
-              <button className={mode === "calendar" ? "active" : ""} onClick={() => switchMode("calendar")}>
-                Календарь
+          <section className="hero">
+            <RunwayRing days={state.runwayDays} size={76} />
+            <div>
+              <b>{state.scheduleEndLabel ? `Расписание до ${state.scheduleEndLabel}` : "Расписание пустое"}</b>
+              <span className="small muted">
+                {state.counts.scheduled} ждут выхода · {state.counts.video} загрузить в Studio
+              </span>
+            </div>
+          </section>
+
+          <div className="page-head">
+            <h1>{mode === "calendar" ? "Календарь" : "Лента"}</h1>
+            <div className="actions">
+              <div className="switch desk-only" role="group" aria-label="Вид">
+                <button className={mode === "feed" ? "active" : ""} onClick={() => switchMode("feed")}>
+                  Лента
+                </button>
+                <button className={mode === "calendar" ? "active" : ""} onClick={() => switchMode("calendar")}>
+                  Календарь
+                </button>
+              </div>
+              <button className="btn primary find-btn" disabled={busy} onClick={findNew} title="Найти ролики, загруженные в Studio, и поставить им название, описание, теги и время выхода">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3v12" />
+                  <path d="m7 10 5 5 5-5" />
+                  <path d="M5 21h14" />
+                </svg>
+                {busy ? "Работаю…" : "Найти новые загрузки"}
               </button>
             </div>
           </div>
+
+          <div className="notices">
+            {runway && runway.level !== "info" && <Notice m={runway} />}
+            {urgent.map((m, i) => (
+              <Notice key={i} m={m} />
+            ))}
+            {notes.length > 0 && (
+              <details className="notes">
+                <summary>Ещё заметки: {notes.length}</summary>
+                <div className="notices">
+                  {notes.map((m, i) => (
+                    <Notice key={i} m={m} />
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+
           {mode === "calendar" ? (
-            <CalendarView state={state} selected={selected} onOpen={setSelected} />
+            <>
+              <p className="board-hint">Перетащите обложку на другой слот или нажмите на ролик, потом на слот. Занятый слот — ролики поменяются местами.</p>
+              <BoardView state={state} picked={picked} busy={busy} onTile={onTile} onPlace={(code, cell) => void place(code, cell)} />
+            </>
           ) : (
             <>
               <div className="chips">
                 <button className={`chip${filter === "ahead" ? " active" : ""}`} onClick={() => setFilter("ahead")}>
-                  Впереди {ahead}
+                  Впереди {state.rows.length - state.counts.published}
                 </button>
                 {STAGES.map((s) => (
                   <button key={s} className={`chip${filter === s ? " active" : ""}`} onClick={() => setFilter(s)}>
@@ -140,32 +206,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
                   Все {state.rows.length}
                 </button>
               </div>
-              {groups.length === 0 && <p className="muted">Здесь пусто.</p>}
-              {groups.map((g) => (
-                <section className="day" key={g.key}>
-                  <h2>
-                    {g.label}
-                    {g.approx && <span className="tag">ориентир</span>}
-                  </h2>
-                  {g.rows.map((r) => {
-                    const note = rowNote(r);
-                    return (
-                      <button key={r.code} className={`row stage-${r.stage}${r.code === selected ? " active" : ""}`} onClick={() => setSelected(r.code)}>
-                        <Thumb src={r.cover} code={r.code} />
-                        <span className="row-body">
-                          <span className="code">{r.code}</span>
-                          <span className="time">{r.timeLabel}</span>
-                          <span className="title">{r.title}</span>
-                          <span className="badge">{STAGE_LABEL[r.stage]}</span>
-                          <span className={`note${note?.warn ? " warn" : ""}`}>
-                            <Dots stage={r.stage} /> {note?.text}
-                          </span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </section>
-              ))}
+              <FeedView state={state} rows={rows} selected={selected} onOpen={setSelected} />
             </>
           )}
         </main>
@@ -176,14 +217,33 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
           </>
         )}
       </div>
-      {toast && (
+
+      {pickedRow && (
+        <div className="pickbar" role="status">
+          <span>
+            Куда перенести {pickedRow.code} ({pickedRow.dateLabel} {pickedRow.timeLabel})? Нажмите на слот.
+          </span>
+          <button className="btn small" onClick={() => setSelected(pickedRow.code)}>
+            Подробнее
+          </button>
+          <button className="btn small" onClick={() => setPicked(null)}>
+            Отмена
+          </button>
+        </div>
+      )}
+      {toast && !pickedRow && (
         <div className={`toast${toast.ok ? "" : " err"}`} role="status">
           <span>{toast.text}</span>
+          {toast.undo && (
+            <button className="btn small" disabled={busy} onClick={() => void undo(toast.undo!)}>
+              Отменить
+            </button>
+          )}
           <button className="btn small ghost" onClick={() => setToast(null)} aria-label="Скрыть">
             ✕
           </button>
         </div>
       )}
-    </>
+    </AppShell>
   );
 }
