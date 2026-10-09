@@ -1,9 +1,11 @@
 // Данные экрана «Статистика»: очередь (тот же loadState — для меню и сопоставления роликов с
-// темами плана) + цифры канала из того же прохода по YouTube + запуски Actions с начала месяца
-// + content/usage.jsonl. Считает всё lib/stats.ts; здесь — только запросы.
+// темами плана) + цифры канала из того же прохода по YouTube + удержание из YouTube Analytics
+// (один запрос) + запуски Actions с начала месяца + content/usage.jsonl. Считает всё lib/stats.ts;
+// здесь — только запросы.
 import { parsePlan } from "../../../src/pipeline/plan";
 import { parseTitleIdeas, TITLE_IDEAS_FILE } from "../../../src/pipeline/title-ideas";
 import type { ChannelListing } from "../../../src/pipeline/youtube-fill";
+import { analyticsRange } from "@/lib/analytics";
 import { getVariable, GithubError, readFile, readJson, repoName } from "@/lib/github";
 import { releaseTiming, weakStarts, type ReleaseTiming, type WeakStartReport } from "@/lib/insights";
 import { loadState, STUDIO_DIR } from "@/lib/load";
@@ -11,7 +13,7 @@ import { PLAYLISTS_VAR, parsePlaylistsSetting } from "@/lib/playlists";
 import type { PanelState } from "@/lib/state";
 import { buildStats, type RunTiming, type StatsData } from "@/lib/stats";
 import { titleIdeaViews, type TitleIdeaView } from "@/lib/titles";
-import { channelOverview } from "@/lib/youtube";
+import { channelOverview, channelRetention, type RetentionResult } from "@/lib/youtube";
 
 // Подсказки: слабый старт и новые названия, лучшее время выхода, плейлисты рубрик.
 export interface StatsExtras {
@@ -74,7 +76,13 @@ export async function loadStats(now = new Date()): Promise<{ state: PanelState; 
     (o): ChannelListing & { error: string | null } => ({ ...o, error: null }),
     (e: unknown) => ({ videos: [], channel: null, error: errorText(e) }),
   );
-  const [state, planJson, runs, usage, yt, ideasRaw, playlistsRaw] = await Promise.all([
+  // Удержание — один запрос к Analytics сразу после списка роликов (нужна дата первой загрузки).
+  // Не бросает и ждёт не дольше 10 с: без него страница всё равно полезна. Нет вышедших — не спрашиваем.
+  const retention = youtube.then((o): Promise<RetentionResult> | null => {
+    const range = o.error ? null : analyticsRange(o.videos, now);
+    return range && o.videos.some((v) => v.privacyStatus === "public") ? channelRetention(range) : null;
+  });
+  const [state, planJson, runs, usage, yt, ideasRaw, playlistsRaw, analytics] = await Promise.all([
     loadState(now, overview.then((o) => o.videos)),
     readJson(`${STUDIO_DIR}/content/plan.json`),
     monthRuns(now).then(
@@ -94,6 +102,7 @@ export async function loadStats(now = new Date()): Promise<{ state: PanelState; 
       (raw) => ({ raw, error: null as string | null }),
       (e: unknown) => ({ raw: null, error: errorText(e) }),
     ),
+    retention,
   ]);
   const plan = parsePlan(planJson);
   const pillarOf = new Map(plan.items.map((it) => [it.id, it.pillar]));
@@ -111,6 +120,8 @@ export async function loadStats(now = new Date()): Promise<{ state: PanelState; 
     runsError: runs.error,
     usageText: usage.text,
     usageError: usage.error,
+    retention: analytics?.rows ?? null,
+    retentionProblem: analytics?.problem ?? null,
   });
   const setting = parsePlaylistsSetting(playlistsRaw.raw);
   const extras: StatsExtras = {

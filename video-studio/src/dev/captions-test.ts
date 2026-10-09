@@ -183,6 +183,9 @@ await test("права токена: tokeninfo; нет связи — null (ре
   assert.equal(await tokenScopes({ auth, fetch: offline }), null);
   assert.ok(YT_SCOPES.includes(CAPTIONS_SCOPE));
   assert.ok(YT_SCOPES.includes("https://www.googleapis.com/auth/youtube.upload"));
+  // Удержание в «Статистике» панели — YouTube Analytics API: право выдаётся при youtube-auth.
+  assert.ok(YT_SCOPES.includes("https://www.googleapis.com/auth/yt-analytics.readonly"));
+  assert.equal(new Set(YT_SCOPES).size, YT_SCOPES.length);
 });
 
 await test("дорожки: своя того же языка — пропуск, автосубтитры YouTube не в счёт; список на подменённом fetch", async () => {

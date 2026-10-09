@@ -5,16 +5,19 @@ import { plural } from "@/lib/stages";
 import type { StatsExtras } from "@/app/stats/load";
 import type { Goal, StatsData, VideoStat } from "@/lib/stats";
 import AppShell from "./AppShell";
+import RetentionCard from "./RetentionCard";
+import r from "./retention.module.css";
 import { PlaylistsCard, TimingCard, WeakStartCard } from "./StatsTools";
 import Thumb from "./Thumb";
 import ViewsChart, { type ChartBar } from "./ViewsChart";
 
 type Shell = { updated: string; generatedAt?: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
-type SortKey = "views" | "perDay" | "likes" | "comments" | "date";
+type SortKey = "views" | "perDay" | "retention" | "likes" | "comments" | "date";
 
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "views", label: "Просмотры" },
   { key: "perDay", label: "В сутки" },
+  { key: "retention", label: "Досмотр" },
   { key: "likes", label: "Лайки" },
   { key: "comments", label: "Комментарии" },
   { key: "date", label: "Новые" },
@@ -23,7 +26,17 @@ const LIMIT = 12;
 const NO_USAGE = "нет данных — появятся после следующей сборки";
 
 const sortValue = (v: VideoStat, k: SortKey) =>
-  k === "views" ? v.views : k === "perDay" ? v.perDay : k === "likes" ? (v.likes ?? -1) : k === "comments" ? (v.comments ?? -1) : Date.parse(v.publishedAt);
+  k === "views"
+    ? v.views
+    : k === "perDay"
+      ? v.perDay
+      : k === "retention"
+        ? (v.retention?.percent ?? -1)
+        : k === "likes"
+          ? (v.likes ?? -1)
+          : k === "comments"
+            ? (v.comments ?? -1)
+            : Date.parse(v.publishedAt);
 
 // Доля без Intl: одинаково на сервере и в браузере. Маленькие — с десятыми, чтобы 0,1 % не стал нулём.
 const pct = (p: number) => `${p > 0 && p < 10 ? (Math.floor(p * 10) / 10).toString().replace(".", ",") : Math.floor(p)} %`;
@@ -72,7 +85,7 @@ function chartBars(videos: VideoStat[]): ChartBar[] {
       title: v.title,
       value: v.views,
       valueLabel: v.viewsLabel,
-      sub: `${v.perDayLabel} в сутки · 👍 ${v.likesLabel} · 💬 ${v.commentsLabel}`,
+      sub: `${v.perDayLabel} в сутки${v.retention ? ` · досмотр ${v.retention.percentLabel}` : ""} · 👍 ${v.likesLabel} · 💬 ${v.commentsLabel}`,
     }));
 }
 
@@ -95,7 +108,9 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
   const sorted = [...stats.videos].sort((a, b) => sortValue(b, sort) - sortValue(a, sort) || b.views - a.views);
   const shown = showAll ? sorted : sorted.slice(0, LIMIT);
   const topViews = Math.max(1, ...stats.videos.map((v) => v.views));
-  const { monetization: money, hashtags: tags, usage, actions, channel } = stats;
+  const { monetization: money, hashtags: tags, usage, actions, channel, retention } = stats;
+  // Сортировка «Досмотр» — только когда YouTube Analytics ответил.
+  const sorts = retention ? SORTS : SORTS.filter((s) => s.key !== "retention");
 
   return (
     <AppShell active="stats" updated={shell.updated} generatedAt={shell.generatedAt} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
@@ -125,16 +140,24 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
 
         <div className="stats-grid">
           <section className="card wide overview" id="overview" aria-label="Канал">
-            <div className="kpis">
+            <div className={`kpis${retention ? ` ${r.kpis8}` : ""}`}>
               <Kpi label="Подписчики" value={channel?.subscribersLabel ?? "—"} />
               <Kpi label="Просмотры канала" value={channel?.viewsLabel ?? "—"} />
               <Kpi label="Вышло" value={channel?.publishedLabel ?? "—"} />
               <Kpi label="В среднем на ролик" value={channel?.avgViewsLabel ?? "—"} hint="просмотров" />
               <Kpi label="Вовлечённость" value={channel?.engagementLabel ?? "—"} hint="лайки и комментарии от просмотров" />
               <Kpi label="Лайки" value={channel?.likesLabel ?? "—"} hint="у вышедших роликов" />
+              {retention && (
+                <>
+                  <Kpi label="Досмотр" value={retention.percentLabel} hint="средний % ролика, с весом по просмотрам" />
+                  <Kpi label="Средний просмотр" value={retention.durationLabel} hint="мин:сек на один просмотр" />
+                </>
+              )}
             </div>
             <ViewsChart bars={chartBars(stats.videos)} caption="Просмотры роликов по дате выхода — нажмите на столбик" />
           </section>
+
+          {stats.retentionProblem && <RetentionCard problem={stats.retentionProblem} />}
 
           <section className="card wide" id="videos">
             <h2>Ролики</h2>
@@ -143,7 +166,7 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
             ) : (
               <>
                 <div className="chips" role="group" aria-label="Сортировка">
-                  {SORTS.map((s) => (
+                  {sorts.map((s) => (
                     <button key={s.key} className={`chip${sort === s.key ? " active" : ""}`} onClick={() => setSort(s.key)}>
                       {s.label}
                     </button>
@@ -163,12 +186,13 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
                           </span>
                           {v.mark === "best" && <span className="vmark best">▲ лучший</span>}
                           {v.mark === "worst" && <span className="vmark worst">▼ слабее всех</span>}
+                          {v.retention?.weak && <span className={`vmark ${r.weak}`}>▼ слабый досмотр</span>}
                           <span className="vstat-share" aria-hidden="true">
                             <i style={{ width: `${(v.views / topViews) * 100}%` }} />
                           </span>
                         </span>
                       </a>
-                      <span className="vstat-nums">
+                      <span className={`vstat-nums${retention ? ` ${r.nums6}` : ""}`}>
                         <span>
                           <b>{v.viewsLabel}</b>
                           <small>просмотры</small>
@@ -177,6 +201,18 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
                           <b>{v.perDayLabel}</b>
                           <small>в сутки</small>
                         </span>
+                        {retention && (
+                          <>
+                            <span>
+                              <b className={v.retention?.weak ? r.low : undefined}>{v.retention?.percentLabel ?? "—"}</b>
+                              <small>досмотр</small>
+                            </span>
+                            <span>
+                              <b>{v.retention?.durationLabel ?? "—"}</b>
+                              <small>ср. просмотр</small>
+                            </span>
+                          </>
+                        )}
                         <span>
                           <b>{v.likesLabel}</b>
                           <small>лайки</small>
@@ -200,6 +236,14 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
                   В сутки — просмотры, делённые на сутки с выхода. Лучший и слабее всех — по ним, среди роликов старше суток
                   {stats.fresh ? ` (${stats.fresh} ${plural(stats.fresh, "ролик вышел", "ролика вышли", "роликов вышли")} меньше суток назад — попадут в сравнения завтра)` : ""}.
                 </p>
+                {retention && (
+                  <p className="muted small">
+                    Досмотр — какую часть ролика в среднем смотрят (у Shorts бывает больше 100&nbsp;% из-за повторов), средний просмотр — сколько времени. Из
+                    YouTube Analytics, с задержкой 1–3 дня — у свежих роликов «—». ▼ Слабый досмотр — меньше 50&nbsp;% у Shorts (30&nbsp;% у длинных) при 20 и
+                    больше просмотрах
+                    {retention.weak ? `: таких ${retention.weak}` : ""}.
+                  </p>
+                )}
               </>
             )}
           </section>
@@ -219,7 +263,9 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
               </div>
             ))}
             <p className="muted small">
-              ≈ — сумма просмотров Shorts, вышедших за 90 дней (Data API не отдаёт просмотры за период). YouTube для порога считает только засчитанные просмотры —
+              {money.engaged
+                ? "≈ — сумма засчитанных просмотров (YouTube Analytics) Shorts, вышедших за 90 дней; у самых свежих — обычные просмотры. "
+                : "≈ — сумма просмотров Shorts, вышедших за 90 дней (Data API не отдаёт просмотры за период). YouTube для порога считает только засчитанные просмотры — "}
               точная цифра в Studio → «Монетизация».
             </p>
           </section>

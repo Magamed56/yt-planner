@@ -4,11 +4,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { channelFromJson, isoNoMs, upcomingSlots } from "../../src/pipeline/channel";
-import { parsePlan, PLAN_CODE } from "../../src/pipeline/plan";
+import { parsePlan, PLAN_CODE, scriptCode } from "../../src/pipeline/plan";
 import { applyUpdate, fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
 import { dispatchOnce } from "@/lib/dispatch";
+import { buildFirstComment, commentBlocker, commentProblem, commentUrl, ctaQuestion, type OwnComment } from "@/lib/first-comment";
 import { assetText, dispatchWorkflow, getVariable, GithubError, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { canRetry } from "@/lib/ops";
@@ -19,7 +20,7 @@ import { SESSION_COOKIE } from "@/lib/session";
 import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, parseQueueOrder, QUEUE_ORDER_VAR, queueSort, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
 import { parseUsage, usageSummary } from "@/lib/stats";
 import { plural } from "@/lib/stages";
-import { channelVideos, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
+import { channelVideos, commentCheck, postComment, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
 
 export interface ActionResult {
   ok: boolean;
@@ -458,6 +459,69 @@ export async function captionAction(assetId: number): Promise<(ActionResult & { 
   return guarded(async () => {
     if (!Number.isInteger(assetId) || assetId <= 0) return fail("Неверный файл.");
     return { ok: true, message: "", text: await assetText(assetId) };
+  });
+}
+
+// ---- первый комментарий канала под вышедшим роликом ----
+
+export interface FirstCommentPreview extends ActionResult {
+  text: string; // черновик: вопрос из призыва сценария + 1–2 источника из плана
+  existing: OwnComment | null; // комментарий канала уже есть — второй не нужен
+}
+
+export interface CommentPosted extends ActionResult {
+  url: string | null;
+}
+
+const VIDEO_ID = /^[\w-]{6,20}$/;
+// Только что отправленные (videoId → время): двойное нажатие не даст второй комментарий, даже
+// если YouTube ещё не показывает первый в списке.
+const justPosted = new Map<string, number>();
+const POST_GUARD_MS = 10 * 60_000;
+
+// Черновик: ≈ 3 единицы квоты (канал, ролик, страница комментариев) + план и сценарий из GitHub.
+export async function firstCommentPreviewAction(code: string, videoId: string, scriptPath: string | null): Promise<FirstCommentPreview | ActionResult> {
+  return guarded(async () => {
+    const c = String(code ?? "").trim().toLowerCase();
+    if (!PLAN_CODE.test(c) || !VIDEO_ID.test(String(videoId ?? ""))) return fail("Неверный запрос — обновите страницу.");
+    const [planJson, check] = await Promise.all([readJson(`${STUDIO_DIR}/content/plan.json`), commentCheck(videoId)]);
+    if (check.existing) return { ok: true, message: "", text: "", existing: check.existing };
+    const blocked = commentBlocker(check);
+    if (blocked) return fail(blocked);
+    const item = parsePlan(planJson).items.find((i) => i.id === c);
+    if (!item) return fail(`Ролика ${c} нет в плане — обновите страницу.`);
+    // Сценарий — из карточки (путь сверяем с кодом) или из плана; нет — вопрос по названию.
+    const path = [scriptPath, item.script].find((p): p is string => typeof p === "string" && /^scripts\/[\w.-]+\.json$/.test(p) && scriptCode(p) === c);
+    const script = path ? await readJson(`${STUDIO_DIR}/${path}`).catch(() => null) : null;
+    return { ok: true, message: "", text: buildFirstComment({ question: ctaQuestion(script), title: item.title, facts: item.keyFacts }), existing: null };
+  });
+}
+
+// Отправка: проверка заново (≈ 3 единицы) и commentThreads.insert (50 единиц).
+export async function postFirstCommentAction(videoId: string, text: string): Promise<CommentPosted | ActionResult> {
+  return guarded(async () => {
+    if (!VIDEO_ID.test(String(videoId ?? ""))) return fail("Неверный запрос — обновите страницу.");
+    const body = String(text ?? "");
+    const problem = commentProblem(body);
+    if (problem) return fail(problem);
+    const at = justPosted.get(videoId);
+    if (at && Date.now() - at < POST_GUARD_MS) return fail("Комментарий под этим роликом уже отправлен — обновите карточку через минуту.");
+    const check = await commentCheck(videoId);
+    const blocked = commentBlocker(check);
+    if (blocked) return check.existing ? { ok: false, message: blocked, url: check.existing.url } : fail(blocked);
+    justPosted.set(videoId, Date.now());
+    let id: string | null;
+    try {
+      id = await postComment(videoId, check.channelId!, body);
+    } catch (e) {
+      justPosted.delete(videoId); // не дошёл — можно повторить
+      throw e;
+    }
+    return {
+      ok: true,
+      message: "Комментарий опубликован. Закрепите его в приложении YouTube: ⋮ у комментария → «Закрепить» (API этого не умеет).",
+      url: id ? commentUrl(videoId, id) : null,
+    };
   });
 }
 

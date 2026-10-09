@@ -72,11 +72,16 @@ offered to other users or creators.
   `publishAt` on the owner’s own videos; `containsSyntheticMedia` stays true.
 - `videos.insert` (after the audit) — upload the owner’s rendered videos as private with
   `publishAt`.
+- `commentThreads.list` / `commentThreads.insert` — one optional first comment by the channel
+  under its own published video (a question and the sources), posted only after the owner reviews
+  it in the panel; the list call makes sure the channel has not commented there yet.
+- YouTube Analytics API `reports.query` (ids=channel==MINE, dimensions=video) — average view
+  percentage and duration of the owner’s own videos, shown in the panel; not stored.
 - Planned: `thumbnails.set` (long videos), `playlists.insert` / `playlistItems.insert` (topic
   playlists), `captions.insert` (translated subtitles).
 
 **Authentication.** OAuth 2.0 with the channel owner’s own Google account (scopes `youtube`,
-`youtube.upload`). Only the owner authorizes the app; access can be revoked at
+`youtube.upload`, `youtube.force-ssl`, `yt-analytics.readonly`). Only the owner authorizes the app; access can be revoked at
 https://security.google.com/settings/security/permissions.
 
 **Data storage.** No database. API data is requested on demand and not stored; statistics are shown
