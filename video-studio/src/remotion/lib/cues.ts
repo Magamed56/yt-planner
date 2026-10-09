@@ -7,7 +7,10 @@ import { listItemFrames, msToFrames, normalizeWord, voiceFrames } from "./timing
 // поэтому «пузырёк» звучит ровно тогда, когда пункт появляется на экране.
 // Все кадры — ОТНОСИТЕЛЬНО НАЧАЛА СЦЕНЫ.
 
-type CueScene = Pick<RenderScene, "kind" | "onScreen" | "narration" | "items" | "stat" | "audioStartFrame" | "audioDurationMs" | "words" | "durationInFrames">;
+type CueScene = Pick<
+  RenderScene,
+  "kind" | "onScreen" | "narration" | "items" | "stat" | "map" | "compare" | "audioStartFrame" | "audioDurationMs" | "words" | "durationInFrames"
+>;
 
 // Пункты списка: когда диктор произносит пункт (после заголовка).
 export function listRevealFrames(scene: CueScene, fps: number): number[] {
@@ -37,7 +40,7 @@ export function spokenNumberRun(words: WordTiming[], suffix?: string): { from: n
   for (let i = 0; i < words.length; i++) {
     if (!isNumeralWord(words[i]!.text)) continue;
     let j = i;
-    while (j + 1 < words.length && (isNumeralWord(words[j + 1]!.text) || (normalizeWord(words[j + 1]!.text) === "и" && j + 2 < words.length && isNumeralWord(words[j + 2]!.text)))) j++;
+    while (j + 1 < words.length && isNumeralWord(words[j + 1]!.text)) j++;
     const percent = (suffix ?? "").includes("%") && words.slice(i, j + 1).some((w) => normalizeWord(w.text).startsWith("процент"));
     const score = j - i + 1 + (percent ? 2 : 0);
     if (!best || score > best.score) best = { from: i, to: j, score };
@@ -64,6 +67,36 @@ export function statCountWindow(scene: CueScene, fps: number): { start: number; 
   return { start, end };
 }
 
+// ---- Карта и сравнение ----
+
+// Карта: камера летит от вида на весь мир к месту, метка «приземляется» в конце.
+export const MAP_FLY = { start: 6, length: 42 };
+export function mapLandFrame(scene: Pick<CueScene, "map">): number {
+  return (scene.map?.zoom ?? "region") === "world" ? 14 : MAP_FLY.start + MAP_FLY.length - 2;
+}
+
+// Столбики сравнения: когда диктор называет пункт (как пункты списка).
+export function compareRevealFrames(scene: CueScene, fps: number): number[] {
+  const labels = (scene.compare?.items ?? []).slice(0, 4).map((it) => it.label.split(/\s+/));
+  if (labels.length === 0) return [];
+  // Ищем в речи только «свои» слова пункта: общее «Через» в «Через час» и
+  // «Через сутки» нашлось бы где угодно и сдвинуло бы все столбики.
+  const count = new Map<string, number>();
+  for (const ws of labels) for (const w of new Set(ws.map(normalizeWord))) count.set(w, (count.get(w) ?? 0) + 1);
+  const items = labels.map((ws) => ws.filter((w) => count.get(normalizeWord(w)) === 1).join(" "));
+  const titleDone = 6 + parseMarkup(scene.onScreen).length * 3 + 4;
+  return listItemFrames(items, scene, fps, titleDone);
+}
+
+// Какую сцену рисует композиция: карта/сравнение заменяют обычную раскладку
+// (кроме хука и призыва) — так же решают Video.tsx и звуки.
+export function specialLayout(scene: Pick<RenderScene, "kind" | "map" | "compare">): "map" | "compare" | null {
+  if (scene.kind === "hook" || scene.kind === "cta") return null;
+  if (scene.map && Number.isFinite(scene.map.lat) && Number.isFinite(scene.map.lon)) return "map";
+  if (scene.compare && scene.compare.items.length >= 2) return "compare";
+  return null;
+}
+
 // ---- Звуки сцены ----
 
 export interface SceneCues {
@@ -74,8 +107,11 @@ export interface SceneCues {
 
 export function sceneCues(scene: CueScene, fps: number): SceneCues {
   const cues: SceneCues = { pops: [], impacts: [], rises: [] };
-  if (scene.kind === "list" && scene.items && scene.items.length > 0) cues.pops.push(...listRevealFrames(scene, fps));
-  if (scene.kind === "stat" && scene.stat) {
+  const special = specialLayout(scene);
+  if (special === "map") cues.pops.push(mapLandFrame(scene));
+  else if (special === "compare") cues.pops.push(...compareRevealFrames(scene, fps));
+  else if (scene.kind === "list" && scene.items && scene.items.length > 0) cues.pops.push(...listRevealFrames(scene, fps));
+  else if (scene.kind === "stat" && scene.stat) {
     const w = statCountWindow(scene, fps);
     cues.impacts.push(w.end);
     cues.rises.push(w.end);

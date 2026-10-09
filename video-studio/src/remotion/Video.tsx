@@ -8,8 +8,11 @@ import { Captions } from "./components/Captions";
 import { ProgressBar } from "./components/ProgressBar";
 import { FontGate } from "./fonts";
 import { LayoutContext, computeLayout } from "./lib/layout";
+import { specialLayout } from "./lib/cues";
 import { pickTransition } from "./lib/transitions";
 import { sceneComponent } from "./scenes";
+import { CompareScene } from "./scenes/CompareScene";
+import { MapScene } from "./scenes/MapScene";
 import { StatementScene } from "./scenes/StatementScene";
 import { getTheme } from "./theme";
 
@@ -20,6 +23,10 @@ export type VideoCompositionProps = VideoProps & Record<string, unknown>;
 const TRANSITION_EASING = Easing.bezier(0.65, 0, 0.35, 1);
 
 function pickScene(scene: RenderScene) {
+  // Карта и сравнение (необязательные поля сцены) заменяют обычную раскладку.
+  const special = specialLayout(scene);
+  if (special === "map") return MapScene;
+  if (special === "compare") return CompareScene;
   // Сцена без данных для своего типа — честно рисуем как утверждение.
   if (scene.kind === "list" && !(scene.items && scene.items.length > 0)) return StatementScene;
   if (scene.kind === "stat" && !scene.stat) return StatementScene;

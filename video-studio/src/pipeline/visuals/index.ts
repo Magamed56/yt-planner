@@ -178,6 +178,9 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
   try {
     const providers = parseVisualsList(env.VISUALS, deps.log);
     if (providers.length === 0) return NONE;
+    // Карта и столбики (scene.map / scene.compare) рисуются композицией сами —
+    // фото под ними не нужно, квоты стоков не тратим (как specialLayout в remotion/lib/cues.ts).
+    if (scene.kind !== "hook" && scene.kind !== "cta" && (scene.map || (scene.compare?.items?.length ?? 0) >= 2)) return NONE;
 
     const ready: { provider: VisualProvider; key: string }[] = [];
     for (const p of providers) {

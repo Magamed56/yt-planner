@@ -38,6 +38,23 @@ export const SceneStatSchema = z.object({
   label: z.string().trim().min(1).max(LIMITS.statLabel).describe("подпись под числом, до 6 слов"),
 });
 
+// ---- Карта и сравнение (необязательные поля сцены, см. SceneMap/SceneCompare в types.ts) ----
+export const SceneMapSchema = z.object({
+  lat: z.number().min(-90).max(90).describe("широта места"),
+  lon: z.number().min(-180).max(180).describe("долгота места"),
+  label: z.string().trim().min(1).max(40).describe("подпись метки по-русски, 1–3 слова"),
+  zoom: z.enum(["world", "region", "city"]).optional().describe("world — страна/континент, region — область, city — город"),
+});
+
+export const SceneCompareSchema = z.object({
+  items: z
+    .array(z.object({ label: z.string().trim().min(1).max(40).describe("что сравниваем, 1–3 слова"), value: z.number().describe("число без единиц") }))
+    .min(2)
+    .max(4),
+  suffix: z.string().max(LIMITS.statAffix).optional().describe("единицы после числа: ' лет', '%'"),
+});
+// ---- конец: карта и сравнение ----
+
 export const ScriptSceneSchema = z.object({
   id: z.string().regex(/^s\d+$/).describe("s1, s2, … по порядку"),
   kind: z.enum(SCENE_KINDS as [SceneKind, ...SceneKind[]]),
@@ -48,6 +65,8 @@ export const ScriptSceneSchema = z.object({
   icon: z.string().trim().min(1).max(LIMITS.icon).optional().describe("иконка lucide в kebab-case"),
   visualQuery: z.string().trim().min(1).max(LIMITS.visualQuery).optional().describe("ENGLISH stock search query, 2-4 concrete nouns"),
   imagePrompt: z.string().trim().min(1).max(LIMITS.imagePrompt).optional().describe("ENGLISH cinematic image prompt"),
+  map: SceneMapSchema.optional().describe("место на карте (необязательно)"),
+  compare: SceneCompareSchema.optional().describe("сравнение 2–4 чисел столбиками (необязательно)"),
 });
 
 export const VideoScriptSchema = z.object({

@@ -30,6 +30,20 @@ export interface SceneStat {
   label: string; // подпись под цифрой
 }
 
+// Карта: точка на стилизованной карте мира с пульсирующей меткой (сцена про место).
+export interface SceneMap {
+  lat: number; // широта, −90…90
+  lon: number; // долгота, −180…180
+  label: string; // подпись метки по-русски: «Гиза», «Санкт-Петербург»
+  zoom?: "world" | "region" | "city"; // насколько приблизить (по умолчанию region)
+}
+
+// Сравнение 2–4 величин одного типа: анимированные столбики.
+export interface SceneCompare {
+  items: { label: string; value: number }[];
+  suffix?: string; // единицы после числа: " лет", "%"
+}
+
 // Сцена сценария — то, что пишет LLM (или человек руками в JSON).
 export interface ScriptScene {
   id: string; // "s1", "s2", …
@@ -41,6 +55,8 @@ export interface ScriptScene {
   icon?: string; // имя иконки lucide в kebab-case: "brain", "rocket", "clock"
   visualQuery?: string; // АНГЛИЙСКИЙ запрос для стоков (Pexels/Pixabay): "person studying at night"
   imagePrompt?: string; // АНГЛИЙСКИЙ промпт для AI-картинки
+  map?: SceneMap; // необязательно: сцена показывает место на карте
+  compare?: SceneCompare; // необязательно: сцена показывает сравнение столбиками
 }
 
 export interface VideoScript {
