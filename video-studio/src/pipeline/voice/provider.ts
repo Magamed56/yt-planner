@@ -47,8 +47,12 @@ export interface RawProvider {
 export const VOICE_TARGET_RMS_DB = -18;
 export const VOICE_CEILING_DB = -1.5; // по сэмплам; с запасом на межсэмпловые пики (true peak ≤ −1 dBFS)
 
-const KEEP_LEAD_MS = 60;
-const KEEP_TAIL_MS = 180;
+// Тишина, которую оставляем по краям речи. Хвост — затухание последнего звука
+// (порог речи и так на 30 дБ ниже громкой); всё сверх него — пауза на каждой
+// склейке (её добавляет layoutScenes). Кэш не сбрасываем: старые файлы с
+// хвостом 180 мс лишь чуть длиннее, а переозвучка тратит квоту.
+export const KEEP_LEAD_MS = 60;
+export const KEEP_TAIL_MS = 120;
 
 interface CacheEntry {
   key: string;

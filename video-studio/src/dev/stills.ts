@@ -142,8 +142,9 @@ async function main() {
         if (!v.withVisual || !sample) return { type: "none" };
         // features: горизонтальное «реальное» фото на media — карточкой поверх размытой копии.
         if (v.features) return id === "s5" ? { type: "image", src: "visuals/sample.jpg", fit: "contain" } : { type: "none" };
-        // Визуал на media-сцене (крупно) и на statement (приглушённым фоном).
-        return id === "s5" || id === "s3" ? { type: "image", src: "visuals/sample.jpg" } : { type: "none" };
+        // Визуал на media-сцене (крупно), на хуке, цифре и утверждении (dim="medium":
+        // живой первый кадр и контраст крупного текста) и на списке (приглушённым фоном).
+        return ["s1", "s2", "s3", "s4", "s5"].includes(id) ? { type: "image", src: "visuals/sample.jpg" } : { type: "none" };
       };
       const base = v.extra ? v.extra(script) : script;
       const source = v.stress ? stressScript(base) : v.features ? featuresScript(base, v.format) : base;

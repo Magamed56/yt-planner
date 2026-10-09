@@ -76,7 +76,7 @@ export const Video: React.FC<VideoCompositionProps> = (props) => {
               );
             })}
           </TransitionSeries>
-          {props.showCaptions ? <Captions captions={props.captions} theme={theme} /> : null}
+          {props.showCaptions ? <Captions captions={props.captions} scenes={scenes} theme={theme} /> : null}
           {props.showProgressBar ? <ProgressBar theme={theme} /> : null}
           {props.brandIntro ? (
             <Sequence durationInFrames={STING_FRAMES} name="Бренд-заставка" layout="none">

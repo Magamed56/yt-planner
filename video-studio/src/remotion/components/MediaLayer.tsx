@@ -7,16 +7,24 @@ import { withAlpha, type Theme } from "../theme";
 // Пути из props — относительно publicDir; http(s)/data: — как есть.
 export const resolveSrc = (src: string): string => (/^(https?:|data:|blob:)/.test(src) ? src : staticFile(src.replace(/^\/+/, "")));
 
+// Насколько приглушить визуал под текстом:
+// strong — визуал лишь фон под карточками и мелким текстом (список, цитата, призыв…);
+// medium — визуал виден ярко, крупный текст поверх всей контентной зоны (хук,
+//          утверждение, цифра): ровная подложка под текстом, контраст добирает
+//          тень-ореол у содержимого сцены (SceneFrame);
+// soft   — визуал главный, подпись в нижней трети (media).
+export type MediaDim = "strong" | "medium" | "soft";
+
 // Визуал сцены на весь кадр: картинка — медленный Ken Burns, видео — по
 // кругу в <Loop> (OffthreadVideo декодирует в Rust-композиторе Remotion,
 // это надёжнее браузерного декодера). Сверху всегда затемнение, чтобы
-// текст читался; dim="strong" для сцен, где визуал лишь фон.
+// текст читался.
 export const MediaLayer: React.FC<{
   visual: SceneVisual;
   theme: Theme;
   durationInFrames: number;
   seed: number;
-  dim: "strong" | "soft";
+  dim: MediaDim;
 }> = ({ visual, theme, durationInFrames, seed, dim }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -39,13 +47,14 @@ export const MediaLayer: React.FC<{
     setFailed(true);
   };
 
-  const strong = dim === "strong";
   // Реальное фото другой ориентации (горизонтальное в Shorts) на сцене, где
   // визуал — главный, показываем целиком «карточкой» поверх своей размытой
   // копии: обрезка по центру потеряла бы сам объект (пирамиду, шлем, акулу).
-  if (visual.type === "image" && visual.fit === "contain" && !strong) {
+  // При medium карточка встала бы под крупный текст — там фото на весь кадр.
+  if (visual.type === "image" && visual.fit === "contain" && dim === "soft") {
     return <ContainedImage src={resolveSrc(visual.src)} theme={theme} p={p} dir={dir} onError={onError} />;
   }
+  const shade = DIM_SHADE[dim];
   return (
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: theme.bgFrom }}>
       {visual.type === "image" ? (
@@ -58,20 +67,35 @@ export const MediaLayer: React.FC<{
         </Loop>
       )}
       {/* Тонировка в цвет темы связывает сток с палитрой ролика */}
-      <AbsoluteFill style={{ background: withAlpha(theme.bgFrom, strong ? 0.5 : 0.18) }} />
+      <AbsoluteFill style={{ background: withAlpha(theme.bgFrom, shade.tint) }} />
+      <AbsoluteFill style={{ background: shade.gradient }} />
       <AbsoluteFill
-        style={{
-          background: strong
-            ? `linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.45) 65%, rgba(0,0,0,0.85) 100%)`
-            : // soft: визуал виден ярко, но нижняя треть (подпись + субтитры) — на тёмной подложке
-              `linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.08) 24%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.66) 58%, rgba(0,0,0,0.78) 80%, rgba(0,0,0,0.9) 100%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{ background: `radial-gradient(ellipse 90% 75% at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%)` }}
+        style={{ background: `radial-gradient(ellipse 90% 75% at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,${shade.vignette}) 100%)` }}
       />
     </AbsoluteFill>
   );
+};
+
+const DIM_SHADE: Record<MediaDim, { tint: number; gradient: string; vignette: number }> = {
+  strong: {
+    tint: 0.5,
+    gradient: `linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.45) 65%, rgba(0,0,0,0.85) 100%)`,
+    vignette: 0.5,
+  },
+  // Под контентной зоной (12–66 % высоты в Shorts) — ровно ≈ ×0,5 яркости:
+  // белый текст с ореолом читается даже на белом небе, а кадр остаётся живым.
+  // Ниже темнее — субтитры и интерфейс YouTube.
+  medium: {
+    tint: 0.2,
+    gradient: `linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.3) 12%, rgba(0,0,0,0.35) 24%, rgba(0,0,0,0.36) 60%, rgba(0,0,0,0.6) 72%, rgba(0,0,0,0.86) 100%)`,
+    vignette: 0.38,
+  },
+  // Визуал виден ярко, но нижняя треть (подпись + субтитры) — на тёмной подложке.
+  soft: {
+    tint: 0.18,
+    gradient: `linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.08) 24%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.66) 58%, rgba(0,0,0,0.78) 80%, rgba(0,0,0,0.9) 100%)`,
+    vignette: 0.5,
+  },
 };
 
 // Фото целиком: размытая копия на весь кадр + карточка с мягким наездом.

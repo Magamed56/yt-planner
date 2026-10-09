@@ -4,7 +4,7 @@ import { noise2D } from "@remotion/noise";
 import type { RenderScene, VideoProps } from "../../types";
 import { useLayout, type Box } from "../lib/layout";
 import type { Theme } from "../theme";
-import { MediaLayer } from "../components/MediaLayer";
+import { MediaLayer, type MediaDim } from "../components/MediaLayer";
 
 export interface SceneProps {
   scene: RenderScene;
@@ -78,20 +78,25 @@ export const ContentBox: React.FC<{
 };
 
 // Обёртка сцены: визуал (если есть) как приглушённый фон + наезд камеры.
-export const SceneFrame: React.FC<{ p: SceneProps; children: React.ReactNode; push?: number; dim?: "strong" | "soft" }> = ({
+export const SceneFrame: React.FC<{ p: SceneProps; children: React.ReactNode; push?: number; dim?: MediaDim }> = ({
   p,
   children,
   push,
   dim = "strong",
-}) => (
-  <AbsoluteFill>
-    {p.scene.visual.type !== "none" ? (
-      <MediaLayer visual={p.scene.visual} theme={p.theme} durationInFrames={p.scene.durationInFrames} seed={p.index} dim={dim} />
-    ) : null}
-    <CameraPush seed={p.scene.id} durationInFrames={p.scene.durationInFrames} amount={push}>
-      {children}
-    </CameraPush>
-  </AbsoluteFill>
-);
+}) => {
+  const { unit } = useLayout();
+  const hasVisual = p.scene.visual.type !== "none";
+  // medium: фон светлее, и контраст текста, цифр и иконок добирает мягкий
+  // тёмный ореол (один фильтр на всю сцену, а не тень у каждого слова).
+  const halo = hasVisual && dim === "medium" ? `drop-shadow(0 ${Math.round(4 * unit)}px ${Math.round(26 * unit)}px rgba(0,0,0,0.6))` : undefined;
+  return (
+    <AbsoluteFill>
+      {hasVisual ? <MediaLayer visual={p.scene.visual} theme={p.theme} durationInFrames={p.scene.durationInFrames} seed={p.index} dim={dim} /> : null}
+      <CameraPush seed={p.scene.id} durationInFrames={p.scene.durationInFrames} amount={push}>
+        {halo ? <AbsoluteFill style={{ filter: halo }}>{children}</AbsoluteFill> : children}
+      </CameraPush>
+    </AbsoluteFill>
+  );
+};
 
 export const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;

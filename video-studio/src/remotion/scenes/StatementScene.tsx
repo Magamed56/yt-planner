@@ -50,7 +50,7 @@ export const StatementScene: React.FC<SceneProps> = (p) => {
   );
 
   return (
-    <SceneFrame p={p}>
+    <SceneFrame p={p} dim="medium">
       {shorts ? (
         <ContentBox align="flex-start" gap={gap}>
           <IconBadge name={p.scene.icon} size={badge} theme={p.theme} delay={0} gradientId={`ig-${p.scene.id}`} />

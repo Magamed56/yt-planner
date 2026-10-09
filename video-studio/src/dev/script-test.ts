@@ -23,7 +23,7 @@ import { LIMITS } from "../pipeline/script/schema";
 import { SHORTS_RULES, WORDS_PER_SECOND, coerceScene, countWords, ctaProblems, titleRepeatsHook, trimCta } from "../pipeline/script/validate";
 import { TITLE_MAX, buildYoutubeMeta, chapterTime, youtubeChapters } from "../pipeline/meta";
 import { buildFixtureProps } from "../remotion/fixtures/buildFixture";
-import { CHAPTER_CARD_FRAMES, FPS, QUIZ_REVEAL_FRAMES, SCENE_LEAD_FRAMES, SCENE_TAIL_FRAMES, layoutScenes, quizTiming, type ScriptScene, type VideoScript } from "../types";
+import { CHAPTER_CARD_FRAMES, FINAL_TAIL_FRAMES, FPS, QUIZ_REVEAL_FRAMES, SCENE_LEAD_FRAMES, SCENE_TAIL_FRAMES, layoutScenes, quizTiming, type ScriptScene, type VideoScript } from "../types";
 
 // Пауза перед повтором при 503 — в тестах без ожидания.
 process.env.LLM_BUSY_WAIT_MS = "1";
@@ -575,7 +575,7 @@ await test("Тайминг: пауза викторины и вердикт по
   assert.equal(c.audioStartFrame, SCENE_LEAD_FRAMES + CHAPTER_CARD_FRAMES, "голос главы — после карточки");
   assert.equal(c.durationInFrames, SCENE_LEAD_FRAMES + CHAPTER_CARD_FRAMES + 30 + SCENE_TAIL_FRAMES);
   assert.equal(quizTiming(q2).pauseFrames, 3 * FPS, "пауза по умолчанию — 3 с");
-  assert.equal(plain.durationInFrames, SCENE_LEAD_FRAMES + 30 + SCENE_TAIL_FRAMES + FPS);
+  assert.equal(plain.durationInFrames, SCENE_LEAD_FRAMES + 30 + FINAL_TAIL_FRAMES, "у финала — короткий хвост, без лишней секунды");
   // Композиция сверяет сумму длительностей с durationInFrames — с паузами она сходится.
   const props = buildFixtureProps(quizScript());
   const sum = props.scenes.reduce((s, sc) => s + sc.durationInFrames, 0) - (props.scenes.length - 1) * props.transitionFrames;
