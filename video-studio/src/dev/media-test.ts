@@ -1,6 +1,7 @@
 // Проверка без сети и без рендера: QC (разбор ffprobe/loudnorm, тишина, чёрные
 // кадры, оценка), числа в экранном тексте, кадры звуков сцены, звуки монтажа,
-// голос по рубрике и бренд-заставка из channel.json, настройки кодирования.
+// голос по рубрике и бренд-заставка из channel.json, настройки кодирования,
+// темп склеек (тишина между сценами, хвост финала) и страницы субтитров по сценам.
 // Запуск: npx tsx src/dev/media-test.ts
 
 import assert from "node:assert/strict";
@@ -9,9 +10,21 @@ import { levelStats } from "../pipeline/audio/dsp";
 import { applyPillarVoice, brandIntroEnabled, channelFromJson } from "../pipeline/channel";
 import { analyzePcm, evaluateQc, findBlacks, parseLoudnorm, parseProbe, type QcProbe } from "../pipeline/qc";
 import { encoderOptions, encoderSettings } from "../pipeline/render";
+import { KEEP_LEAD_MS, KEEP_TAIL_MS, postprocessVoice } from "../pipeline/voice/provider";
+import { captionPages } from "../remotion/lib/caption-pages";
 import { isNumeralWord, spokenNumberRun, statCountWindow, STAT_FALLBACK } from "../remotion/lib/cues";
 import { formatLike, isThousandsTail, numberInfo } from "../remotion/lib/numbers";
-import type { WordTiming } from "../types";
+import {
+  CHAPTER_CARD_FRAMES,
+  DEFAULT_TRANSITION_FRAMES,
+  FINAL_TAIL_FRAMES,
+  FPS,
+  SCENE_LEAD_FRAMES,
+  VOICE_GAP_FRAMES,
+  buildTimelineCaptions,
+  layoutScenes,
+  type WordTiming,
+} from "../types";
 
 let passed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -182,6 +195,76 @@ await test("Кодирование: high по умолчанию, max — гар
   const custom = encoderSettings({ VIDEO_BITRATE: "12M", X264_PRESET: "slower" });
   assert.deepEqual([custom.crf, custom.videoBitrate, custom.encodingMaxRate, custom.x264Preset], [null, "12000K", "18000K", "slower"]);
   assert.equal(encoderSettings({ VIDEO_CRF: "14" }).crf, 14);
+});
+
+// ---- Темп склеек: тишина между сценами, хвост финала, субтитры ----
+
+// Кадры от конца голоса сцены i до начала голоса сцены i+1.
+const voiceGaps = (laid: ReturnType<typeof layoutScenes<{ audioDurationMs: number }>>) =>
+  laid.scenes.slice(1).map((s, i) => {
+    const prev = laid.scenes[i]!;
+    const prevEnd = prev.startFrame + prev.audioStartFrame + Math.ceil((prev.audioDurationMs / 1000) * FPS);
+    return s.startFrame + s.audioStartFrame - prevEnd;
+  });
+
+await test("Темп: между репликами сцен ≈ 0,2 с, у финала нет лишней секунды", () => {
+  const scenes = [{ audioDurationMs: 2990 }, { audioDurationMs: 7175 }, { audioDurationMs: 4632 }, { audioDurationMs: 2780 }];
+  const laid = layoutScenes(scenes);
+  assert.deepEqual(voiceGaps(laid), [VOICE_GAP_FRAMES, VOICE_GAP_FRAMES, VOICE_GAP_FRAMES]);
+  assert.equal(laid.scenes[0]!.audioStartFrame, SCENE_LEAD_FRAMES, "хук звучит почти с первого кадра");
+  const last = laid.scenes.at(-1)!;
+  assert.equal(last.durationInFrames - last.audioStartFrame - Math.ceil((2780 / 1000) * FPS), FINAL_TAIL_FRAMES);
+  assert.ok(FINAL_TAIL_FRAMES >= 10 && FINAL_TAIL_FRAMES <= 15, "финал: 10–15 кадров после голоса");
+  // Тишина на склейке целиком: хвост файла + промежуток + начало следующего файла.
+  const deadAirMs = KEEP_TAIL_MS + (VOICE_GAP_FRAMES / FPS) * 1000 + KEEP_LEAD_MS;
+  assert.ok(deadAirMs >= 150 && deadAirMs <= 250, `тишина на склейке ${deadAirMs} мс`);
+  // Было: пауза до голоса 8 + хвост 14 − переход 12 кадров, хвост 180 мс, финал +30 кадров.
+  const oldFrames = scenes.reduce((s, sc) => s + 8 + Math.ceil((sc.audioDurationMs / 1000) * FPS) + 14, 0) + FPS - (scenes.length - 1) * DEFAULT_TRANSITION_FRAMES;
+  assert.ok(oldFrames - laid.durationInFrames >= 50, `короче на ${oldFrames - laid.durationInFrames} кадров`);
+});
+
+await test("Темп: голоса не наложатся при любом переходе; карточка главы — пауза", () => {
+  for (const t of [0, 4, 12, 20, 30]) {
+    const laid = layoutScenes([{ audioDurationMs: 1000 }, { audioDurationMs: 1500 }, { audioDurationMs: 800 }], t);
+    for (const g of voiceGaps(laid)) assert.ok(g >= VOICE_GAP_FRAMES && g <= VOICE_GAP_FRAMES + SCENE_LEAD_FRAMES, `переход ${t}: промежуток ${g}`);
+    const sum = laid.scenes.reduce((s, sc) => s + sc.durationInFrames, 0) - (laid.scenes.length - 1) * t;
+    assert.equal(sum, laid.durationInFrames, `переход ${t}: сумма сцен сходится (Video.tsx)`);
+  }
+  const ch = layoutScenes([{ audioDurationMs: 1000 }, { audioDurationMs: 1000, chapter: "Глава" }]);
+  assert.deepEqual(voiceGaps(ch), [VOICE_GAP_FRAMES + CHAPTER_CARD_FRAMES]);
+});
+
+await test("Голос: по краям речи остаётся 60 мс до и 120 мс после", () => {
+  const sr = 24000;
+  const at = (ms: number) => Math.round((ms / 1000) * sr);
+  const pcm = new Float32Array(at(2300));
+  // «Речь» — 1 с тона 1 кГц с огибающей слогов между 0,5 и 1,5 с.
+  for (let i = at(500); i < at(1500); i++) pcm[i] = 0.3 * Math.sin((2 * Math.PI * 1000 * i) / sr) * (0.6 + 0.4 * Math.sin((2 * Math.PI * 4 * i) / sr));
+  const { audio, shiftMs } = postprocessVoice({ sampleRate: sr, channels: [pcm] });
+  const outMs = (audio.channels[0]!.length / sr) * 1000;
+  assert.ok(Math.abs(shiftMs - (500 - KEEP_LEAD_MS)) <= 15, `срез в начале ${shiftMs} мс`);
+  assert.ok(Math.abs(outMs - (1000 + KEEP_LEAD_MS + KEEP_TAIL_MS)) <= 25, `длина ${outMs} мс`);
+});
+
+await test("Субтитры: страница не переходит через склейку", () => {
+  const w = (text: string, startMs: number, endMs: number): WordTiming => ({ text, startMs, endMs });
+  // Конец первой сцены и начало второй ближе BREAK_ON_SILENCE_MS — раньше были бы одной страницей.
+  const laid = layoutScenes([
+    { audioDurationMs: 1300, words: [w("Мозг", 0, 300), w("экономит.", 700, 1180)] },
+    { audioDurationMs: 900, words: [w("Это", 60, 250), w("нормально.", 270, 800)] },
+  ]);
+  const captions = buildTimelineCaptions(laid.scenes);
+  const merged = captionPages(captions);
+  assert.ok(merged.some((p) => p.tokens.some((t) => t.text.includes("экономит")) && p.tokens.some((t) => t.text.includes("Это"))), "без сцен страница склеилась бы");
+  const pages = captionPages(captions, laid.scenes);
+  const boundaryMs = ((laid.scenes[1]!.startFrame + laid.scenes[1]!.audioStartFrame) / FPS) * 1000;
+  for (const p of pages) {
+    const first = p.tokens[0]!.fromMs;
+    const lastTo = p.tokens.at(-1)!.toMs;
+    assert.ok(lastTo <= boundaryMs || first >= boundaryMs, `страница «${p.text}» на склейке`);
+  }
+  assert.deepEqual(pages.map((p) => p.text.trim()), ["Мозг", "экономит.", "Это нормально."]);
+  assert.equal(captionPages([], laid.scenes).length, 0);
 });
 
 console.log(`\nВсе проверки пройдены: ${passed}.`);

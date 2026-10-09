@@ -27,7 +27,7 @@ export const HookScene: React.FC<SceneProps> = (p) => {
   const artScale = interpolate(frame, [0, p.scene.durationInFrames], [0.96, 1.04]);
 
   return (
-    <SceneFrame p={p} push={0.07}>
+    <SceneFrame p={p} push={0.07} dim="medium">
       <div
         style={{
           position: "absolute",

@@ -254,7 +254,7 @@ export const StatScene: React.FC<SceneProps> = (p) => {
   );
 
   return (
-    <SceneFrame p={p} push={0.035}>
+    <SceneFrame p={p} push={0.035} dim="medium">
       {shorts ? (
         <ContentBox gap={Math.round(40 * unit)}>
           {kicker("center", content.w)}

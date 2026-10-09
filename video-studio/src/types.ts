@@ -175,8 +175,22 @@ export interface VideoProps {
 }
 
 export const DEFAULT_TRANSITION_FRAMES = 12; // 0.4 c при 30 fps
-export const SCENE_LEAD_FRAMES = 8; // пауза до голоса в начале сцены
-export const SCENE_TAIL_FRAMES = 14; // пауза после голоса (часть съедает переход)
+// Темп склеек. Было ≈ 0,57 с тишины между репликами соседних сцен (пауза до
+// голоса 8 + хвост 14 − переход 12 кадров + края файлов голоса) и лишняя
+// секунда в конце — на каждой склейке ролик будто подвисал. Теперь голос новой
+// сцены звучит ещё во время перехода, а переход стартует сразу по концу фразы.
+export const SCENE_LEAD_FRAMES = 3; // пауза до голоса в начале сцены (внутри перехода)
+// Кадров между концом файла голоса и началом следующего; с тишиной по краям
+// самих файлов (voice/provider.ts) между фразами ≈ 0,2 с.
+export const VOICE_GAP_FRAMES = 2;
+export const SCENE_TAIL_FRAMES = sceneTailFrames(DEFAULT_TRANSITION_FRAMES); // 11 кадров при переходе 12
+export const FINAL_TAIL_FRAMES = 15; // финал: переход его не съедает — ≈ 0,5 с на точку вместо лишней секунды
+
+// Хвост сцены после голоса: его съедает переход, остаток — VOICE_GAP_FRAMES.
+// Через переход, а не константой: при длинном переходе голоса не наложатся.
+export function sceneTailFrames(transitionFrames: number): number {
+  return Math.max(0, Math.round(transitionFrames) + VOICE_GAP_FRAMES - SCENE_LEAD_FRAMES);
+}
 
 // Раскладка сцен на таймлинии. Используется конвейером при сборке props и
 // композицией в calculateMetadata — единственное место, где считается тайминг.
@@ -186,14 +200,14 @@ export function layoutScenes<T extends { audioDurationMs: number; kind?: string;
   transitionFrames: number = DEFAULT_TRANSITION_FRAMES,
 ): { scenes: (T & { startFrame: number; durationInFrames: number; audioStartFrame: number })[]; durationInFrames: number } {
   let cursor = 0;
+  const tail = sceneTailFrames(transitionFrames);
   const out = scenes.map((scene, i) => {
     const audioFrames = Math.ceil((scene.audioDurationMs / 1000) * FPS);
     const isLast = i === scenes.length - 1;
     const lead = SCENE_LEAD_FRAMES + chapterCardFrames(scene, i);
     const pause = quizPauseFrames(scene);
     const quizTail = pause ? pause + QUIZ_REVEAL_FRAMES : 0;
-    // Последней сцене нужен хвост подлиннее — переход после неё не съедает кадры.
-    const durationInFrames = lead + audioFrames + quizTail + SCENE_TAIL_FRAMES + (isLast ? FPS : 0);
+    const durationInFrames = lead + audioFrames + quizTail + (isLast ? FINAL_TAIL_FRAMES : tail);
     const placed = { ...scene, startFrame: cursor, durationInFrames, audioStartFrame: lead };
     cursor += durationInFrames - (isLast ? 0 : transitionFrames);
     return placed;

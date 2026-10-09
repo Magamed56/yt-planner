@@ -7,8 +7,9 @@ import { BrandMark } from "./BrandMark";
 
 // Бренд-заставка ≤ 0,5 с ПОВЕРХ начала хука, а не перед ним: в Shorts хук
 // должен звучать с первой секунды. Знак канала с названием «вспыхивает» в
-// верхнем углу (над контентом, где хук текст не ставит), по кадру проходит
-// световой блик в цвет акцента, к 15-му кадру всё исчезает. В звуке — «искра»
+// верхнем углу (над контентом, где хук текст не ставит), по плашке проходит
+// световой блик в цвет акцента, к 15-му кадру всё исчезает. Блик — только на
+// плашке: на весь кадр он засвечивал первый кадр хука. В звуке — «искра»
 // (sfx.sting). Выключается channel.json → brandIntro: false или BRAND_INTRO=off.
 export const STING_FRAMES = 15;
 
@@ -29,14 +30,6 @@ export const BrandSting: React.FC<{ theme: Theme }> = ({ theme }) => {
 
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
-      {/* Световой блик по диагонали — «экран» поверх, текст хука остаётся читаемым */}
-      <AbsoluteFill
-        style={{
-          mixBlendMode: "screen",
-          opacity: 0.55 * (1 - out),
-          background: `linear-gradient(115deg, rgba(0,0,0,0) ${(sweep - 0.18) * 100}%, ${withAlpha(theme.accent, 0.42)} ${sweep * 100}%, rgba(0,0,0,0) ${(sweep + 0.18) * 100}%)`,
-        }}
-      />
       <div
         style={{
           position: "absolute",
@@ -58,6 +51,18 @@ export const BrandSting: React.FC<{ theme: Theme }> = ({ theme }) => {
       >
         <BrandMark size={mark} theme={theme} id="sting" glow={0.6} style={{ transform: `rotate(${interpolate(frame, [0, STING_FRAMES], [-40, 0])}deg)` }} />
         <Wordmark fontSize={font} theme={theme} />
+        {/* Световой блик по диагонали — «экран» поверх знака и названия, в границах плашки */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: 999,
+            overflow: "hidden",
+            mixBlendMode: "screen",
+            opacity: 0.85,
+            background: `linear-gradient(115deg, rgba(0,0,0,0) ${(sweep - 0.22) * 100}%, ${withAlpha(theme.accent, 0.55)} ${sweep * 100}%, rgba(0,0,0,0) ${(sweep + 0.22) * 100}%)`,
+          }}
+        />
       </div>
     </AbsoluteFill>
   );
