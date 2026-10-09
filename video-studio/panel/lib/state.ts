@@ -4,7 +4,8 @@
 import { channelFromJson, isoNoMs, localDate, upcomingSlots } from "../../src/pipeline/channel";
 import { parsePlan, scriptCode } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
-import type { GhRelease, GhRun } from "./github";
+import type { GhRelease, GhRun, GhStep } from "./github";
+import { expectedMs, runProgress, type RunProgress } from "./progress";
 import { releaseVideosOf, type ReleaseVideo } from "./ops";
 import { STAGES, codesLabel, plural, shiftDateKey, type Stage } from "./stages";
 import { rowStats, type RowStats } from "./stats";
@@ -75,6 +76,7 @@ export interface RunInfo {
   createdLabel: string;
   url: string;
   attempt: number; // номер попытки (после «Re-run» — 2 и дальше)
+  progress?: RunProgress | null; // у идущего: этапы и ожидаемая длительность
 }
 
 export interface Reminder {
@@ -189,6 +191,7 @@ export interface StateInput {
   repo: string;
   branch: string;
   queueOrder?: string[]; // PANEL_QUEUE_ORDER
+  runSteps?: Record<number, GhStep[]>; // шаги идущих запусков (по id)
 }
 
 // «["09a","07a"]» → коды; битое — пустой список (порядок плана).
@@ -345,6 +348,19 @@ export function buildState(input: StateInput): PanelState {
   );
 
   const runs = input.runs.map((r) => runInfo(r, f)).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+  // Сколько обычно идут удачные запуски того же вида — для «осталось ≈ N мин».
+  const started = new Map(input.runs.map((r) => [r.id, r.run_started_at ?? r.created_at]));
+  const history = input.runs
+    .filter((r) => r.status === "completed" && r.conclusion === "success")
+    .map((r) => {
+      const info = runs.find((x) => x.id === r.id)!;
+      return { kind: info.kind, codes: info.codes.length, ms: ms(r.updated_at) - ms(started.get(r.id)!) };
+    });
+  for (const r of runs) {
+    if (!r.active) continue;
+    const steps = input.runSteps?.[r.id];
+    r.progress = runProgress(steps ?? [], started.get(r.id)!, expectedMs(r.kind, r.codes.length, history));
+  }
   const running = new Map<string, string>();
   for (const r of runs) if (r.active) for (const c of r.codes) if (!running.has(c)) running.set(c, RUNNING_LABEL[r.kind] ?? "идёт запуск");
 

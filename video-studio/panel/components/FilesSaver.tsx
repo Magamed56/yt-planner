@@ -287,7 +287,34 @@ export default function FilesSaver({ items }: { items: SaveItem[] }) {
         <p className="small muted">Откроется меню телефона: «Сохранить видео» — в «Фото», «Сохранить в Файлы» — в «Файлы». Ничего не пережимается.</p>
       )}
 
-      {share.phase === "loading" && <progress max={100} value={pct} aria-label={`Скачано ${pct}%`} />}
+      {share.phase === "loading" && (
+        <div className="save-progress">
+          <div className="run-progress-track" role="progressbar" aria-label={`Скачано ${pct}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+            <span style={{ width: `${pct}%` }} />
+          </div>
+          <span className="small muted">
+            {mb(share.done)} из {mb(share.total)} · осталось {mb(Math.max(0, share.total - share.done))}
+            {parts > 1 ? ` · потом ещё ${parts - share.part - 1} ${plural(parts - share.part - 1, "часть", "части", "частей")}` : ""}
+          </span>
+        </div>
+      )}
+      {saving && saving.total > 1 && (
+        <div className="save-progress">
+          <div
+            className="run-progress-track"
+            role="progressbar"
+            aria-label={`Файл ${saving.done + 1} из ${saving.total}`}
+            aria-valuemin={0}
+            aria-valuemax={saving.total}
+            aria-valuenow={saving.done + 1}
+          >
+            <span style={{ width: `${((saving.done + 1) / saving.total) * 100}%` }} />
+          </div>
+          <span className="small muted">
+            Отдаю браузеру файл {saving.done + 1} из {saving.total} — сами загрузки видны в его списке загрузок
+          </span>
+        </div>
+      )}
       {share.phase === "ready" && (
         <p className="small muted">
           Готово {filesLabel(share.files.length)}.{" "}

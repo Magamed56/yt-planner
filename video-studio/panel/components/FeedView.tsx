@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { PanelState, Row } from "@/lib/state";
 import { STAGE_LABEL } from "@/lib/stages";
 import CoverMedia, { frameOf } from "./CoverMedia";
+import RunProgressBar from "./RunProgressBar";
 
 // Подпись на обложке: этап и, если нужно, что сделать.
 function chipText(r: Row): string {
@@ -73,6 +74,7 @@ export default function FeedView({
     if (r.whenExact) d.approx = false;
   }
   if (!days.length) return <p className="muted">Здесь пусто.</p>;
+  const runOf = (code: string) => state.runs.find((x) => x.active && x.codes.includes(code)) ?? null;
 
   return (
     <div className="feed">
@@ -100,6 +102,7 @@ export default function FeedView({
                     <Cover row={r} mark={mark} />
                     <span className="code">{r.code}</span>
                     <span className="title">{r.title}</span>
+                    {r.running && runOf(r.code)?.progress && <RunProgressBar progress={runOf(r.code)!.progress!} compact />}
                     {r.flags[0] && <span className="hint">{r.flags[0]}</span>}
                   </button>
                 );

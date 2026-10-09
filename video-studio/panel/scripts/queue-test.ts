@@ -1,10 +1,12 @@
 // Офлайн-проверка очереди выхода (перетаскивание ориентиров в календаре): разбор переменной
-// PANEL_QUEUE_ORDER, сортировка и ориентиры дат в buildState. Запуск из папки video-studio:
+// PANEL_QUEUE_ORDER, сортировка и ориентиры дат в buildState; прогресс идущих запусков.
+// Запуск из папки video-studio:
 // npx tsx panel/scripts/queue-test.ts
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { expectedMs, minutesLabel, progressAt, runProgress, stageOf } from "../lib/progress";
 import { buildState, parseAutopilot, parseQueueOrder, queueSort, type StateInput } from "../lib/state";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -75,6 +77,45 @@ test("buildState: ориентиры дат идут по очереди вых�
   assert.equal(when(after, "07a"), b);
   assert.equal(when(after, "08a"), when(before, "08a"), "остальные на месте");
   assert.equal(after.rows.find((r) => r.code === "09a")!.whenExact, false);
+});
+
+test("прогресс запуска: этапы по шагам workflow, ожидание — медиана прошлых на ролик", () => {
+  assert.equal(stageOf("Код репозитория"), "Подготовка");
+  assert.equal(stageOf("Черновик сценария"), "Сценарий");
+  assert.equal(stageOf("Пакет роликов"), "Озвучка и видео");
+  assert.equal(stageOf("Релиз GitHub"), "Публикация");
+  assert.equal(stageOf("Закоммитить сценарии и тексты для YouTube"), "Сохранение");
+  assert.equal(stageOf("Черновик в артефакте (на случай, если пуш не прошёл)"), "Сохранение");
+  const step = (name: string, status: string, conclusion: string | null = null) => ({ name, status, conclusion });
+  const steps = [
+    step("Set up job", "completed", "success"),
+    step("Код репозитория", "completed", "success"),
+    step("Зависимости (npm ci)", "completed", "success"),
+    step("Черновик сценария", "completed", "skipped"),
+    step("Пакет роликов", "in_progress"),
+    step("Закоммитить сценарии и тексты для YouTube", "queued"),
+    step("Уведомить телефон", "queued"),
+  ];
+  const p = runProgress(steps, "2026-10-09T20:00:00Z", 20 * 60_000);
+  assert.deepEqual(
+    p.stages.map((x) => [x.label, x.state]),
+    [
+      ["Подготовка", "done"],
+      ["Озвучка и видео", "active"],
+      ["Сохранение", "todo"],
+    ],
+  );
+  assert.equal(p.stage, "Озвучка и видео");
+  assert.deepEqual([p.stepsDone, p.stepsTotal], [2, 5]);
+  const half = progressAt(p, Date.parse("2026-10-09T20:10:00Z"));
+  assert.deepEqual(half, { percent: 50, elapsedMs: 600_000, leftMs: 600_000 });
+  assert.equal(progressAt(p, Date.parse("2026-10-09T21:00:00Z")).percent, 97, "дольше обычного — не 100 %, пока идёт");
+  assert.equal(minutesLabel(600_000), "10 мин");
+  assert.equal(minutesLabel(20_000), "меньше минуты");
+  assert.equal(minutesLabel(65 * 60_000), "1 ч 05 мин");
+  // 2 ролика по 8 мин в истории, сейчас 3 ролика → 24 мин + подготовка.
+  assert.equal(expectedMs("batch", 3, [{ kind: "batch", codes: 2, ms: 16 * 60_000 }, { kind: "draft", codes: 1, ms: 60 * 60_000 }]), 24 * 60_000 + 90_000);
+  assert.equal(expectedMs("batch", 1, []), 9 * 60_000 + 90_000, "без истории — ориентир");
 });
 
 console.log(`\nВсе проверки очереди пройдены: ${passed}.`);
