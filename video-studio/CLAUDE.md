@@ -92,9 +92,11 @@ npm run upload -- out/<slug> --to youtube,instagram --schedule      # публи
 ```
 
 CI — `.github/workflows/video-studio-ci.yml` (в корне репозитория): на каждый PR и пуш в `claude/**`
-с изменениями в video-studio — оба `tsc`, все `src/dev/*-test.ts` и `panel/scripts/*-test.ts`
-(кроме `voice-test.ts`) и `next build` панели без переменных Vercel. Новый `*-test.ts` подхватывается
-сам, поэтому обязан обходиться без сети и ключей; сетевой проверке — другое имя или исключение в workflow.
+с изменениями в video-studio — `tsc`, все `src/dev/*-test.ts` и `panel/scripts/*-test.ts`
+(кроме `voice-test.ts`), затем `tsc` и `next build` панели как на Vercel — без переменных и без
+`node_modules` video-studio (npm-импорт в общем коде упадёт здесь, а не при деплое; локальная сборка
+его не ловит). Новый `*-test.ts` подхватывается сам, поэтому обязан обходиться без сети и ключей;
+сетевой проверке — другое имя или исключение в workflow.
 
 В песочнице без доступа к remotion.media браузер задаётся явно:
 `REMOTION_BROWSER_EXECUTABLE=<путь к headless_shell> REMOTION_CHROME_MODE=headless-shell`.
