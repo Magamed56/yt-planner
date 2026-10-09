@@ -247,13 +247,18 @@ export const SHORTS_RULES = {
   lengthTolerance: 0.15,
   lengthHard: { min: 0.75, max: 1.3 }, // за этими границами — ремонт всегда
   ctaWordsMax: 8,
+  // После ремонта вопрос чуть длиннее 8 слов — замечание: из-за лишнего слова не
+  // бросаем ответ сильной модели ради более слабой.
+  ctaWordsSoft: 12,
   titleChars: 50,
   media: { min: 2, max: 3 },
 } as const;
 
 // Подписку показывает финальная сцена (кнопка с курсором), голосом её не просим.
-// «Подпись»/«подписи» (надпись) — не призыв, их не трогаем.
-const SUBSCRIBE = /подпи(?:ш|с(?:ыв|к|а))|subscri/i;
+// Призыв — возвратные формы («подпишись», «подписывайтесь», «подписаться»),
+// «подписка», «подписчик». «Подписал договор», «подпиши», «подпись» — не призыв:
+// иначе вопрос по истории («А ты бы подписал такой указ?») ушёл бы в ремонт.
+const SUBSCRIBE = /подпи[шс]\p{L}*?(?:ся|сь)(?!\p{L})|подписк|подписч|subscri/iu;
 
 const ctaScene = (scenes: unknown[]): Loose | null => {
   const last = scenes[scenes.length - 1];
@@ -276,12 +281,12 @@ export function ctaProblems(scenes: unknown[]): string[] {
 
 // Ремонт не помог: убираем фразы с «подпишись», а если всё ещё длинно — оставляем
 // только вопрос. null — исправить нечем (например, весь финал — «Подпишись!»).
-export function trimCta(narration: string): string | null {
+export function trimCta(narration: string, maxWords: number = SHORTS_RULES.ctaWordsMax): string | null {
   const sentences = (narration.match(/[^.!?…]+[.!?…]*/g) ?? []).map((s) => s.trim()).filter((s) => countWords(s) > 0);
   let kept = sentences.filter((s) => !SUBSCRIBE.test(s));
-  if (countWords(kept.join(" ")) > SHORTS_RULES.ctaWordsMax) kept = kept.filter((s) => /\?\s*$/.test(s));
+  if (countWords(kept.join(" ")) > maxWords) kept = kept.filter((s) => /\?\s*$/.test(s));
   const out = kept.join(" ").trim();
-  return out && countWords(out) <= SHORTS_RULES.ctaWordsMax ? out : null;
+  return out && countWords(out) <= maxWords ? out : null;
 }
 
 // Заголовок пересказывает хук: в ленте Shorts зритель видит и то и другое разом.

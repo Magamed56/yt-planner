@@ -15,7 +15,7 @@ import { claudeCostUsd, webSearchCostUsd } from "../pipeline/script/pricing";
 import { nextPlanPositions, parsePlan, pickPillars, planNotes, refreshPlanStats, scriptCode, sequelTitle, type ContentPlan } from "../pipeline/plan";
 import { assignChapters } from "../pipeline/script/chapters";
 import { coveredFromScript, coveredPromptBlock, ctaRepeat, findRepeats, indexCovered, loadCovered, ngrams, recentCtas, stems, type CoveredEntry } from "../pipeline/script/covered";
-import { SHORTS_DEFAULT_SECONDS, buildSystemPrompt, shortsTargets } from "../pipeline/script/prompt";
+import { QUIZ_ROUNDS_PLANNED, QUIZ_SILENCE_SEC, SHORTS_DEFAULT_SECONDS, buildShortsPrompt, buildSystemPrompt, shortsTargets } from "../pipeline/script/prompt";
 import { fetchSuggestions, parseSuggestResponse, searchPhrases, suggestionsFor } from "../pipeline/script/suggest";
 import { appendUsage, countPostRequests, llmUsageRecord, ttsUsageRecord, usageNow, type LlmCallInfo } from "../pipeline/script/usage-log";
 import { checkTopics, checkUrl, extractUrl, generatePlanItems, similarTitle } from "../pipeline/script/plan-gen";
@@ -900,6 +900,62 @@ await test("Сцены media (2–3 в Shorts) и заголовок (до 50 с
   assert.ok(long.title.length > 50 && long.title.length <= 70);
   assert.ok(lintScript(long).some((w) => w.startsWith(`title ${long.title.length} символов — для Shorts лучше до 50`)));
   assert.ok(!lintScript({ ...long, format: "landscape" }).some((w) => w.includes("лучше до 50")), "у длинного ролика — до 70");
+});
+
+await test("Финал: «подписал»/«подпиши» — не призыв; вопрос чуть длиннее 8 слов после ремонта — замечание, не другая модель", async () => {
+  // Глагол «подписать» (договор, указ) — частая тема истории, призывом не считается.
+  for (const q of ["А ты бы подписал такой указ?", "Кто подписывал Декларацию первым?", "Подпиши открытку маме сегодня?", "Чья подпись на купюре?"]) {
+    assert.deepEqual(ctaProblems(withCta(q).scenes), [], q);
+  }
+  for (const q of ["Подпишись!", "Подпишитесь на канал", "Ну что, подпишешься?", "Не забудь подписаться", "Подписывайтесь", "Стань подписчиком", "Жми на подписку"]) {
+    assert.equal(ctaProblems(withCta(q).scenes).filter((p) => p.includes("не проси подписаться")).length, 1, q);
+  }
+  assert.ok(lintScript({ ...demo, scenes: [...demo.scenes.slice(0, -1), { ...demo.scenes.at(-1)!, onScreen: "*Подпишись*" }] }).some((w) => w.startsWith("onScreen финала")));
+
+  // Вопрос в 9 слов дважды: ремонт, затем принят с замечанием — без перехода к следующей модели.
+  const longQuestion = "А ты замечал, что вчерашнее забывается быстрее, чем позавчерашнее?";
+  assert.equal(countWords(longQuestion), 9);
+  const { fn, calls } = mockFetch([chat(JSON.stringify(withCta(longQuestion))), chat(JSON.stringify(withCta(longQuestion)))]);
+  const res = await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.equal(calls.length, 2);
+  assert.match(msgs(calls[1])[3].content, /финал \(kind "cta"\) — 9 слов, нужно не больше 8/);
+  assert.equal(res.script.scenes.at(-1)!.narration, longQuestion);
+  assert.ok(res.warnings.some((w) => w.startsWith(`финал «${longQuestion}» — 9 слов, лучше до 8`)), res.warnings.join("\n"));
+  assert.ok(!res.warnings.some((w) => w.startsWith("финал сокращён")), "текст не менялся — «сокращён» не пишем");
+
+  // Длинный финал без вопроса так не принимаем — следующая модель.
+  const noQuestion = "Расскажи друзьям про кривую забывания и проверь себя через неделю";
+  const nq = mockFetch([chat(JSON.stringify(withCta(noQuestion))), chat(JSON.stringify(withCta(noQuestion))), chat(JSON.stringify(demo))]);
+  const ok = await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: nq.fn, log });
+  assert.equal(nq.calls.length, 3);
+  assert.equal(ok.script.scenes.at(-1)!.narration, demo.scenes.at(-1)!.narration);
+});
+
+await test("Викторина в 40–45 с: ровно 2 раунда; третий раунд — ремонт с подсказкой убрать раунд", async () => {
+  // Три раунда — это ≈ 95 слов и 13,5 с тишины: в 42 с не влезают ни при каком допуске.
+  const three = quizScript();
+  const extra = structuredClone(three.scenes.slice(1, 3));
+  extra[0].narration = "Говорят, у осьминога три сердца и голубая кровь. Правда или миф?";
+  extra[0].onScreen = "У осьминога *3 сердца*";
+  extra[0].quiz = { answer: "truth", explanation: "Два сердца гонят кровь через жабры" };
+  extra[1].narration = "Правда! Два сердца качают кровь через жабры, третье — по всему телу, а медь делает кровь голубой.";
+  extra[1].onScreen = "Три *сердца*";
+  three.scenes.splice(5, 0, ...extra);
+  three.scenes.forEach((s, i) => (s.id = `s${i + 1}`));
+  const { fn, calls } = mockFetch([chat(JSON.stringify(three)), chat(JSON.stringify(quizScript()))]);
+  const { script } = await generateScript({ topic: "Мифы о памяти", format: "shorts", quiz: true }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.match(userMsg(calls[0]), /hook → ровно 2 раунда → cta/);
+  assert.match(userMsg(calls[0]), /Два факта о сне/);
+  assert.match(userMsg(calls[0]), /«Сколько из них ты угадал\?»/);
+  assert.ok(!/Пиши в комментариях/.test(userMsg(calls[0])), "пример финала не спорит с системным промптом");
+  assert.match(msgs(calls[1])[3].content, /или оставь 2 раунда викторины/);
+  assert.equal(script.scenes.filter((s) => s.kind === "quiz").length, 2);
+
+  // В минуту три раунда помещаются — их можно предложить.
+  const minute = buildShortsPrompt({ topic: "Мифы о памяти", format: "shorts", quiz: true }, shortsTargets(60 - QUIZ_ROUNDS_PLANNED * QUIZ_SILENCE_SEC));
+  assert.match(minute, /около 60 секунд/);
+  assert.match(minute, /hook → 2–3 раунда → cta/);
+  assert.match(buildSystemPrompt(), /В Shorts \(кроме викторины\) — 2–3 сцены "media"/);
 });
 
 // Строка → байты windows-1251 (кириллица): так отвечает Google без oe=utf-8.

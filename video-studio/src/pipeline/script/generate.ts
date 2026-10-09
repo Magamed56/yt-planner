@@ -96,16 +96,22 @@ function firstPass(): () => boolean {
 }
 
 // Финал: строго — в ремонт; после ремонта убираем «подпишись» и лишние фразы
-// сами (сцена в кандидате правится на месте, до проверки схемой).
+// сами (сцена в кандидате правится на месте, до проверки схемой). Вопрос чуть
+// длиннее 8 слов после ремонта — принимаем с замечанием.
 function checkCta(scenes: unknown[], strict: boolean): { problems: string[]; notes: string[] } {
   const problems = ctaProblems(scenes);
   const last = scenes[scenes.length - 1];
   if (!problems.length || strict || !isObj(last)) return { problems, notes: [] };
   const before = typeof last.narration === "string" ? last.narration : "";
-  const fixed = trimCta(before);
+  const soft = trimCta(before, SHORTS_RULES.ctaWordsSoft);
+  const fixed = trimCta(before) ?? (soft && /\?/.test(soft) ? soft : null);
   if (!fixed) return { problems, notes: [] };
   last.narration = fixed;
-  return { problems: [], notes: [`финал сокращён автоматически: «${before}» → «${fixed}» — проверь, что это вопрос по теме ролика`] };
+  const notes: string[] = [];
+  if (fixed !== before) notes.push(`финал сокращён автоматически: «${before}» → «${fixed}» — проверь, что это вопрос по теме ролика`);
+  const n = countWords(fixed);
+  if (n > SHORTS_RULES.ctaWordsMax) notes.push(`финал «${fixed}» — ${n} слов, лучше до ${SHORTS_RULES.ctaWordsMax}: сократи до одного короткого вопроса по теме`);
+  return { problems: [], notes };
 }
 
 // Финал повторяет прошлые ролики — замечание человеку (и подсказка в ремонт).
@@ -151,7 +157,9 @@ function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGu
     // (запасная Flash-Lite любит сжимать), один ремонтный ход это исправляет.
     const offTarget = Math.abs(ratio - 1) > tol;
     if (scenes.length && (ratio < hard.min || ratio > hard.max || (strict && offTarget))) {
-      problems.push(`общий объём narration ${words} слов — для ~${Math.round(voiceSeconds)} с нужно ${t.wordsMin}–${t.wordsMax} слов`);
+      // Лишний раунд викторины — ещё и 4,5 с тишины: проще убрать раунд, чем ужимать текст.
+      const extraRound = quizCount(scenes) > QUIZ_ROUNDS_PLANNED && ratio > 1 ? ` — или оставь ${QUIZ_ROUNDS_PLANNED} раунда викторины` : "";
+      problems.push(`общий объём narration ${words} слов — для ~${Math.round(voiceSeconds)} с нужно ${t.wordsMin}–${t.wordsMax} слов${extraRound}`);
     }
     if (scenes.length && (scenes.length < 4 || scenes.length > t.scenesMax + 5)) {
       problems.push(`сцен ${scenes.length} — нужно ${t.scenesMin}–${t.scenesMax}`);
