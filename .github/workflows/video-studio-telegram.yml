@@ -1,16 +1,19 @@
 # video-studio: ролики в канал Telegram из очереди — по одному за запуск.
 #
 # Боты Telegram не умеют отложенную публикацию, поэтому расписание делает этот workflow:
-#   1. Очередь — релизы GitHub с роликом (*.mp4) без отметки telegram-published.json, от старых
-#      к новым. Ролики на других языках (en-08a-….mp4) не берутся. Релизы делает
-#      «video-studio: ролик» с upload = release (и batch), а также src/cli/release-upload.ts.
-#   2. Каждый запуск отправляет самый старый ролик из очереди (Bot API, sendVideo) и добавляет
-#      в релиз отметку telegram-published.json. Файл больше 50 МБ (лимит ботов) CLI сам пережимает.
+#   1. Очередь — ролики по плану: релизы GitHub с файлом «08a-….mp4», по коду темы (01a, 01b, 02a…).
+#      На код — один релиз, самый свежий (пересборка заменяет старую версию); код, у которого в
+#      любом релизе есть отметка telegram-published.json, больше не отправляется. Ролики на других
+#      языках (en-08a-….mp4) и без кода (video.mp4: демо, ролик по теме) не берутся — их можно
+#      отправить вручную, указав tag. Релизы делает «video-studio: ролик» с upload = release
+#      (и batch), а также src/cli/release-upload.ts.
+#   2. Каждый запуск отправляет первый ролик очереди (Bot API, sendVideo) и добавляет в его релиз
+#      отметку telegram-published.json. Файл больше 50 МБ (лимит ботов) CLI сам пережимает.
 # Отметка ставится и когда связь оборвалась посреди отправки (неизвестно, вышел ли пост): лучше
 # пропустить ролик, чем запостить дважды. Отправить заново — удалить отметку из релиза.
 # Нужны секреты TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID (video-studio/docs/telegram-setup.md).
-# Необязательная переменная TELEGRAM_QUEUE_SINCE (например 2026-10-12): релизы, созданные раньше,
-# в очередь не попадают — чтобы при включении не разослать в канал весь архив.
+# Необязательная переменная TELEGRAM_QUEUE_SINCE — код темы (14a: только 14a и дальше по плану) или
+# дата (2026-10-12: релизы, опубликованные раньше, не берутся) — чтобы не разослать в канал весь архив.
 
 name: "video-studio: Telegram по расписанию"
 
@@ -18,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Необязательно: тег релиза для отправки (пусто — следующий в очереди)"
+        description: "Необязательно: тег релиза для отправки (пусто — следующий в очереди по коду темы)"
         type: string
         required: false
       dry_run:
@@ -64,12 +67,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # published_at, а не created_at: у релиза created_at — дата коммита, у всего пакета она одна.
           gh api "repos/$GH_REPO/releases?per_page=100" --paginate \
-            --jq '.[] | {tag: .tag_name, created: .created_at, draft: .draft, assets: [.assets[].name]}' > "$RUNNER_TEMP/releases.jsonl"
-          # Ролик русского канала — *.mp4, кроме «en-08a-….mp4» (другие языки идут в свои каналы руками).
+            --jq '.[] | {tag: .tag_name, published: (.published_at // .created_at), draft: .draft, assets: [.assets[].name]}' > "$RUNNER_TEMP/releases.jsonl"
+          # Ролик русского канала — «08a-….mp4» (по коду темы его узнают панель и youtube-fill);
+          # «en-08a-….mp4» — другой язык. Код — из имени файла или из тега «video-08a-…» (если панель
+          # уже убрала mp4 из релиза). Очередь — по коду (порядок плана), по одному релизу на код —
+          # самому свежему (пересборка заменяет старую версию), код с отметкой в любом своём релизе
+          # больше не отправляется. Без кода (video.mp4: демо, ролик по теме) — только по тегу вручную.
           lib='def videos: [.assets[] | select(test("\\.mp4$"; "i") and (test("^[a-z]{2}-[0-9]{2}[a-z]-") | not))];
+               def code: ([.assets[] | capture("^(?<c>[0-9]{2}[a-z])-.+\\.mp4$"; "i").c] + [.tag | capture("^video-(?<c>[0-9]{2}[a-z])-"; "i").c]) | (.[0] // null) | if . then ascii_downcase else . end;
                def published: any(.assets[]; . == "telegram-published.json");
-               def queued: (.draft | not) and (videos | length > 0) and (published | not) and ($since == "" or .created >= $since);'
+               def after: if $since == "" then true elif ($since | test("^[0-9]{2}[a-z]$"; "i")) then code >= ($since | ascii_downcase) else .published >= $since end;
+               def queue: map(select(.draft | not)) | [.[] | select(published) | code | select(. != null)] as $sent
+                 | [.[] | select(code != null and (videos | length > 0) and (published | not) and after) | select(code as $c | $sent | any(.[]; . == $c) | not)]
+                 | group_by(code) | map(max_by(.published)) | sort_by(code);'
           if [ -n "$TAG_INPUT" ]; then
             state=$(jq -rs --arg t "$TAG_INPUT" --arg since "" "$lib"' map(select(.tag == $t)) | .[0] // empty | if published then "PUBLISHED" elif (videos | length) == 0 then "NOVIDEO" else "OK" end' "$RUNNER_TEMP/releases.jsonl")
             case "$state" in
@@ -77,18 +89,20 @@ jobs:
               PUBLISHED) echo "::error::Релиз «$TAG_INPUT» уже отправлен в Telegram (в нём есть telegram-published.json). Удалите этот файл из релиза, если нужно ещё раз."; exit 1 ;;
               NOVIDEO) echo "::error::В релизе «$TAG_INPUT» нет ролика русского канала (*.mp4)."; exit 1 ;;
             esac
+            twin=$(jq -rs --arg t "$TAG_INPUT" --arg since "" "$lib"' (map(select(.tag == $t)) | .[0] | code) as $c | if $c == null then "" else [.[] | select(.tag != $t and published and code == $c) | .tag] | join(", ") end' "$RUNNER_TEMP/releases.jsonl")
+            if [ -n "$twin" ]; then echo "::warning::Ролик с тем же кодом уже отправлен в Telegram из релиза $twin — тег указан вручную, отправляю ещё раз."; fi
             tag="$TAG_INPUT"
           else
-            tag=$(jq -rs --arg since "$QUEUE_SINCE" "$lib"' map(select(queued)) | sort_by(.created) | .[0].tag // empty' "$RUNNER_TEMP/releases.jsonl")
+            tag=$(jq -rs --arg since "$QUEUE_SINCE" "$lib"' queue | .[0].tag // empty' "$RUNNER_TEMP/releases.jsonl")
           fi
           file=""
           if [ -n "$tag" ]; then
-            file=$(jq -rs --arg t "$tag" --arg since "" "$lib"' map(select(.tag == $t)) | .[0] | videos | .[0]' "$RUNNER_TEMP/releases.jsonl")
+            file=$(jq -rs --arg t "$tag" --arg since "" "$lib"' map(select(.tag == $t)) | .[0] | ([videos[] | select(test("^[0-9]{2}[a-z]-"; "i"))] + videos) | .[0]' "$RUNNER_TEMP/releases.jsonl")
           fi
-          left=$(jq -rs --arg since "$QUEUE_SINCE" "$lib"' map(select(queued)) | length' "$RUNNER_TEMP/releases.jsonl")
+          left=$(jq -rs --arg since "$QUEUE_SINCE" "$lib"' queue | length' "$RUNNER_TEMP/releases.jsonl")
           if [ -z "$tag" ]; then
             echo "::notice::Очередь Telegram пуста — отправлять нечего."
-            echo "📭 Очередь Telegram пуста. Наполнить: «video-studio: ролик» с upload = release.${QUEUE_SINCE:+ Релизы раньше $QUEUE_SINCE не берутся (переменная TELEGRAM_QUEUE_SINCE).}" >> "$GITHUB_STEP_SUMMARY"
+            echo "📭 Очередь Telegram пуста. Наполнить: «video-studio: ролик» с upload = release (ролики по плану — файлы 08a-….mp4).${QUEUE_SINCE:+ Ролики раньше $QUEUE_SINCE не берутся (переменная TELEGRAM_QUEUE_SINCE).}" >> "$GITHUB_STEP_SUMMARY"
           fi
           {
             echo "tag=$tag"

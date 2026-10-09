@@ -76,8 +76,9 @@
   (batch: ролик i → слот i через `--schedule-slot i --schedule-start <старт>`, релиз на ролик);
   `video-studio-instagram.yml` — публикует самый старый релиз с `instagram.json` без
   `instagram-published.json` (расписание закомментировано); `video-studio-telegram.yml` — то же
-  для канала Telegram: самый старый релиз с `*.mp4` (кроме `en-08a-…`) без `telegram-published.json`
-  (переменная `TELEGRAM_QUEUE_SINCE`, расписание закомментировано); `video-studio-youtube-fill.yml` —
+  для канала Telegram: релизы с `08a-….mp4` по порядку кодов, один (самый свежий) релиз на код, код
+  с `telegram-published.json` в любом релизе пропускается (порядок — по коду, а не по `created_at`:
+  у релиза это дата коммита; переменная `TELEGRAM_QUEUE_SINCE` — код или дата; расписание закомментировано); `video-studio-youtube-fill.yml` —
   `youtube-fill` кнопкой из GitHub; `video-studio-titles.yml` — `npm run title-ideas -- <коды>`
   (новые названия для слабого старта → `content/title-ideas.json`, общий модуль
   `src/pipeline/title-ideas.ts`, LLM — `script/title-gen.ts`; применяет панель).
