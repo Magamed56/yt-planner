@@ -4,7 +4,7 @@
 // человек.
 
 import type { Credit } from "./contracts";
-import type { Format, VideoScript } from "../types";
+import { FPS, type Format, type VideoScript } from "../types";
 import { normalizeHashtag, topicHashtags, uniqueHashtags, type ChannelConfig } from "./channel";
 
 export interface YoutubeMeta {
@@ -26,6 +26,52 @@ export interface MetaInput {
   // Канал из channel.json: хэштеги бренда, призыв, ссылки и дисклеймер в
   // описании, имя канала — в тегах. Не задан — описание как раньше.
   channel?: ChannelConfig | null;
+  // Главы длинного ролика (youtubeChapters из таймлайна props) — таймкоды в описании.
+  chapters?: Chapter[] | null;
+}
+
+// ---- Главы YouTube ----
+
+export interface Chapter {
+  startSec: number;
+  title: string;
+}
+
+export const CHAPTER_MIN_SEC = 10;
+
+// Правила YouTube: первая глава — 0:00, глав не меньше 3, каждая не короче
+// 10 с, по возрастанию. Короткие главы сливаем с предыдущей; не набралось
+// трёх — глав нет вовсе (YouTube всё равно бы их не показал).
+export function youtubeChapters(scenes: { chapter?: string; startFrame: number }[], totalSec: number, fps: number = FPS): Chapter[] {
+  const raw: Chapter[] = [];
+  for (const s of scenes) {
+    const title = s.chapter?.replace(/[*<>]/g, "").replace(/\s+/g, " ").trim();
+    if (!title) continue;
+    const startSec = raw.length === 0 ? 0 : Math.floor(s.startFrame / fps);
+    if (raw.length && startSec <= raw[raw.length - 1]!.startSec) continue;
+    raw.push({ startSec, title });
+  }
+  const out: Chapter[] = [];
+  for (const c of raw) {
+    if (out.length && c.startSec - out[out.length - 1]!.startSec < CHAPTER_MIN_SEC) continue;
+    out.push(c);
+  }
+  while (out.length > 1 && totalSec - out[out.length - 1]!.startSec < CHAPTER_MIN_SEC) out.pop();
+  return out.length >= 3 ? out : [];
+}
+
+export function chapterTime(sec: number, withHours = false): string {
+  const s = Math.max(0, Math.floor(sec));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, "0");
+  return withHours || h > 0 ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
+}
+
+export function chaptersBlock(chapters: Chapter[]): string {
+  if (chapters.length < 3) return "";
+  const hours = chapters.some((c) => c.startSec >= 3600);
+  return ["Таймкоды:", ...chapters.map((c) => `${chapterTime(c.startSec, hours)} ${c.title}`)].join("\n");
 }
 
 // YouTube API отвергает «<» и «>» в заголовке и описании (invalidTitle /
@@ -33,7 +79,7 @@ export interface MetaInput {
 // описание — 5000 БАЙТ UTF-8 (не символов!): кириллица занимает 2 байта на
 // букву, так что русское описание упирается в лимит уже на ~2500 символах.
 const stripAngles = (s: string) => s.replace(/[<>]/g, "");
-const TITLE_MAX = 100;
+export const TITLE_MAX = 100; // тот же предел — LIMITS.title в script/schema.ts
 export const DESCRIPTION_MAX_BYTES = 5000;
 const TAGS_TOTAL_MAX = 500;
 const utf8Bytes = (s: string) => Buffer.byteLength(s, "utf8");
@@ -200,10 +246,12 @@ export function buildYoutubeMeta(input: MetaInput): YoutubeMeta {
   const credits = creditParts(input);
   const footer = ch ? stripAngles(channelFooter(ch).join("\n")) : "";
   const disclaimer = ch?.disclaimer ? stripAngles(ch.disclaimer) : "";
-  // Порядок: текст → призыв и ссылки → хэштеги → источники → дисклеймер.
-  // Подвал канала не урезается никогда — сокращаются только стоки и текст.
+  // Таймкоды глав — только у горизонтального ролика (в Shorts глав нет).
+  const chapters = format === "landscape" && input.chapters?.length ? chaptersBlock(input.chapters) : "";
+  // Порядок: текст → таймкоды → призыв и ссылки → хэштеги → источники → дисклеймер.
+  // Подвал канала и таймкоды не урезаются никогда — сокращаются только стоки и текст.
   const compose = (text: string, stockShown: number) =>
-    [text, footer, tagLine, creditLines(credits, stockShown).join("\n"), disclaimer].filter(Boolean).join("\n\n");
+    [text, chapters, footer, tagLine, creditLines(credits, stockShown).join("\n"), disclaimer].filter(Boolean).join("\n\n");
   // Не влезает в 5000 байт — сначала сворачиваем строки стоков с конца
   // (у длинного ролика их десятки), и только в крайнем случае режем текст
   // сценариста — по границе символа, чтобы не разрезать букву пополам.

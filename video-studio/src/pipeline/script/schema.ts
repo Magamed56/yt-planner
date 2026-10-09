@@ -29,6 +29,9 @@ export const LIMITS = {
   imagePrompt: 500,
   hookWordsHard: 20, // в промпте ≤ 12; жёстко режем только явный перебор
   hookWordsSoft: 12,
+  quizExplanation: 120, // пояснение под вердиктом (в промпте — до 12 слов)
+  quizQuestion: 80,
+  chapter: 60, // название главы: карточка в ролике и строка таймкода в описании
 } as const;
 
 export const SceneStatSchema = z.object({
@@ -48,6 +51,16 @@ export const ScriptSceneSchema = z.object({
   icon: z.string().trim().min(1).max(LIMITS.icon).optional().describe("иконка lucide в kebab-case"),
   visualQuery: z.string().trim().min(1).max(LIMITS.visualQuery).optional().describe("ENGLISH stock search query, 2-4 concrete nouns"),
   imagePrompt: z.string().trim().min(1).max(LIMITS.imagePrompt).optional().describe("ENGLISH cinematic image prompt"),
+  quiz: z
+    .object({
+      answer: z.enum(["truth", "myth"]).describe("truth — утверждение верно, myth — это миф"),
+      explanation: z.string().trim().min(1).max(LIMITS.quizExplanation).describe("пояснение на экране после вердикта, до 12 слов"),
+      question: z.string().trim().min(1).max(LIMITS.quizQuestion).optional().describe("вопрос зрителю для комментариев, до 8 слов"),
+      pauseSec: z.number().optional().describe("пауза на раздумье, 3–5 с"),
+    })
+    .optional()
+    .describe("только для quiz"),
+  chapter: z.string().trim().min(1).max(LIMITS.chapter).optional().describe("название главы — у первой сцены каждой главы длинного ролика"),
 });
 
 export const VideoScriptSchema = z.object({

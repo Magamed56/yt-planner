@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { openBrowser, renderStill, selectComposition } from "@remotion/renderer";
 import { buildFixtureProps } from "../remotion/fixtures/buildFixture";
-import type { Format, SceneVisual, ThemeName, VideoProps, VideoScript } from "../types";
+import { chapterCardFrames, quizTiming, type Format, type SceneVisual, type ThemeName, type VideoProps, type VideoScript } from "../types";
 import { OUT_DEV, bundleComposition, getBrowserOpts, parseArgs, preparePublicDir, readDemoScript } from "./devRender";
 
 const SAMPLE_IMAGE_URL = "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/starry_night.jpg"; // public domain (Ван Гог)
@@ -38,6 +38,27 @@ interface Variant {
   withVisual: boolean;
   showCaptions: boolean;
   stress?: boolean; // длинные тексты на пределе — проверка, что ничего не вылезает
+  extra?: (base: VideoScript) => VideoScript; // викторина / главы «Разбора»
+}
+
+// ---- Викторина и главы: кадры отсчёта, вердикта и карточки главы ----
+
+function quizScript(base: VideoScript): VideoScript {
+  return {
+    ...base,
+    scenes: [
+      { id: "s1", kind: "hook", narration: "Проверь себя: правда или миф? Два факта о памяти.", onScreen: "Правда или *миф*?", icon: "brain" },
+      { id: "s2", kind: "quiz", narration: "Говорят, золотая рыбка помнит всего три секунды. Правда или миф?", onScreen: "Рыбка помнит всего *3 секунды*", icon: "fish", quiz: { answer: "myth", explanation: "В опытах рыбки помнили сигнал месяцами" } },
+      { id: "s3", kind: "statement", narration: "Миф! Золотые рыбки помнят трюки месяцами.", onScreen: "Помнят *месяцами*", icon: "calendar-check" },
+      { id: "s4", kind: "quiz", narration: "Сон помогает закрепить выученное за день. Правда или миф?", onScreen: "Сон *закрепляет* память", icon: "moon", quiz: { answer: "truth", explanation: "Во сне мозг переносит знания в долгую память", question: "А ты высыпаешься?" } },
+      { id: "s5", kind: "cta", narration: "Сколько угадал? Пиши в комментариях и подпишись.", onScreen: "Сколько *угадал*?", icon: "message-circle" },
+    ],
+  };
+}
+
+function chaptersScript(base: VideoScript): VideoScript {
+  const titles: Record<string, string> = { s1: "Вступление", s3: "Почему мы забываем", s5: "Как запомнить надолго" };
+  return { ...base, format: "landscape", scenes: base.scenes.map((s) => (titles[s.id] ? { ...s, chapter: titles[s.id] } : s)) };
 }
 
 // Стресс-сценарий: onScreen ~60 символов, длинные пункты, огромное число,
@@ -71,6 +92,9 @@ const VARIANTS: Variant[] = [
   { name: "shorts-mono", format: "shorts", theme: "mono", withVisual: false, showCaptions: false },
   { name: "shorts-stress", format: "shorts", theme: "midnight", withVisual: false, showCaptions: true, stress: true },
   { name: "landscape-stress", format: "landscape", theme: "emerald", withVisual: false, showCaptions: true, stress: true },
+  { name: "shorts-quiz", format: "shorts", theme: "midnight", withVisual: false, showCaptions: true, extra: quizScript },
+  { name: "landscape-quiz", format: "landscape", theme: "emerald", withVisual: false, showCaptions: true, extra: quizScript },
+  { name: "landscape-chapters", format: "landscape", theme: "sunset", withVisual: false, showCaptions: true, extra: chaptersScript },
 ];
 
 async function main() {
@@ -101,7 +125,8 @@ async function main() {
         // Визуал на media-сцене (крупно) и на statement (приглушённым фоном).
         return id === "s5" || id === "s3" ? { type: "image", src: "visuals/sample.jpg" } : { type: "none" };
       };
-      const props: VideoProps = buildFixtureProps(v.stress ? stressScript(script) : script, { format: v.format, theme: v.theme, visual, showCaptions: v.showCaptions });
+      const base = v.extra ? v.extra(script) : script;
+      const props: VideoProps = buildFixtureProps(v.stress ? stressScript(base) : base, { format: v.format, theme: v.theme, visual, showCaptions: v.showCaptions });
       const inputProps = props as unknown as Record<string, unknown>;
       const dir = path.join(outRoot, v.name);
       // Не чистим папку: при --scenes/--frames остальные кадры остаются для сравнения.
@@ -117,7 +142,19 @@ async function main() {
           late: s.durationInFrames - (i === props.scenes.length - 1 ? 2 : props.transitionFrames + 1),
           trans: s.durationInFrames - Math.round(props.transitionFrames / 2),
         };
-        for (const m of moments) {
+        // Викторина: середина отсчёта и вердикт; глава — её карточка.
+        const special: string[] = [];
+        if (s.kind === "quiz" && s.quiz) {
+          const q = quizTiming(s);
+          at.pause = q.countdownStart + Math.round(q.pauseFrames * 0.4);
+          at.reveal = q.revealAt + 24;
+          special.push("pause", "reveal");
+        }
+        if (chapterCardFrames(s, i)) {
+          at.card = 30;
+          special.push("card");
+        }
+        for (const m of [...moments, ...special]) {
           if (at[m] === undefined) continue;
           if (m === "trans" && i === props.scenes.length - 1) continue;
           const frame = Math.min(props.durationInFrames - 1, s.startFrame + Math.max(0, at[m]));

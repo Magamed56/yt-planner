@@ -5,6 +5,7 @@ import { CtaScene } from "./CtaScene";
 import { HookScene } from "./HookScene";
 import { ListScene } from "./ListScene";
 import { MediaScene } from "./MediaScene";
+import { QuizScene } from "./QuizScene";
 import { QuoteScene } from "./QuoteScene";
 import { StatScene } from "./StatScene";
 import { StatementScene } from "./StatementScene";
@@ -17,6 +18,7 @@ export const SCENE_COMPONENTS: Record<SceneKind, React.FC<SceneProps>> = {
   quote: QuoteScene,
   media: MediaScene,
   cta: CtaScene,
+  quiz: QuizScene, // «Правда или миф?»
 };
 
 // Неизвестный тип сцены (ошибка LLM) рисуем как обычное утверждение.
