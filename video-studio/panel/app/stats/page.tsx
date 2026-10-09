@@ -13,11 +13,12 @@ export default async function StatsPage() {
   } catch (e) {
     return <ErrorScreen message={e instanceof Error ? e.message : String(e)} />;
   }
-  const { state, stats } = data;
+  const { state, stats, extras } = data;
   // В браузер — только цифры и то, что нужно меню (вся очередь здесь не нужна).
   return (
     <StatsView
       stats={stats}
+      extras={extras}
       shell={{
         updated: state.updatedLabel,
         activeRuns: state.runs.filter((r) => r.active).length,

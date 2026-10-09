@@ -207,14 +207,16 @@ function compare(buckets: Bucket[], minGroup: number, what: { many: string; agai
   const n = Math.min(best.values.length, rival.values.length);
   const pairs = `в ${Math.round(p * 100)} % пар ролик ${best.on} обогнал ролик ${rival.on}`;
   const numbers = `медиана ${formatRate(mb)} в сутки ${best.on} против ${formatRate(mr)} ${rival.on}`;
-  if (p < 0.6 || mb < mr * 1.15) {
+  // Лучший и худший из семи дней разойдутся и случайно — для них порог строже.
+  const lift = what.against === "last" ? 0.1 : 0;
+  if (p < 0.6 + lift || mb < mr * 1.15) {
     return advice(`Разницы почти нет: ${numbers}. Менять ничего не нужно.`, n >= 10 ? "medium" : "low");
   }
-  const confidence: Confidence = n >= 10 && p >= 0.7 ? "high" : n >= 6 && p >= 0.65 ? "medium" : "low";
+  const confidence: Confidence = n >= 10 && p >= 0.7 + lift ? "high" : n >= 6 && p >= 0.65 + lift ? "medium" : "low";
   const lead = what.against === "next" ? `Лучше заходят ролики ${best.on}` : `Лучше всего заходят ролики, вышедшие ${best.on}, слабее — ${rival.on}`;
   const tail =
     confidence === "low"
-      ? " Но роликов пока мало — проверьте ещё через неделю-две."
+      ? " Но перевес пока шаткий — проверьте ещё через неделю-две."
       : what.against === "next"
         ? ` Можно попробовать сдвинуть слабый слот ближе к ${best.label} (channel.json → schedule.publishTimesLocal) и сравнить через пару недель.`
         : " Сильные темы можно ставить на сильные дни.";

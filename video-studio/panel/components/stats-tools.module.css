@@ -1,0 +1,148 @@
+/* Подсказки «Статистики» (слабый старт, время выхода, плейлисты) — свой модуль, чтобы не задевать globals.css. */
+.list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--card-2);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title b {
+  overflow-wrap: anywhere;
+}
+
+.low {
+  color: var(--warn);
+  font-weight: 800;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ideas {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ideas li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 10px;
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.ideas span {
+  overflow-wrap: anywhere;
+}
+
+.sub + .block {
+  margin-top: 6px;
+}
+
+.block + .block {
+  margin-top: 14px;
+}
+
+.block h3 {
+  font: 800 14px var(--display);
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.badge.high {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.badge.medium {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sub {
+  margin-top: 14px;
+  font: 800 11px var(--body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.preview {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--card-2);
+  font-size: 14px;
+}
+
+.preview p {
+  margin: 0;
+}
+
+.preview ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}

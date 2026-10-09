@@ -2,8 +2,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { plural } from "@/lib/stages";
+import type { StatsExtras } from "@/app/stats/load";
 import type { Goal, StatsData, VideoStat } from "@/lib/stats";
 import AppShell from "./AppShell";
+import { PlaylistsCard, TimingCard, WeakStartCard } from "./StatsTools";
 import Thumb from "./Thumb";
 
 type Shell = { updated: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
@@ -48,7 +50,7 @@ function Meter({ label, value, of, percent, tone = "normal" }: { label: string; 
 const goalMeter = (g: Goal) => <Meter key={g.label} label={g.label} value={g.haveLabel} of={g.needLabel} percent={g.percent} tone={g.done ? "done" : "normal"} />;
 const usageTone = (percent: number) => (percent >= 100 ? "over" : percent >= 80 ? "warn" : "normal");
 
-export default function StatsView({ stats, shell }: { stats: StatsData; shell: Shell }) {
+export default function StatsView({ stats, shell, extras }: { stats: StatsData; shell: Shell; extras: StatsExtras }) {
   const [sort, setSort] = useState<SortKey>("views");
   const [showAll, setShowAll] = useState(false);
   const sorted = [...stats.videos].sort((a, b) => sortValue(b, sort) - sortValue(a, sort) || b.views - a.views);
@@ -216,6 +218,8 @@ export default function StatsView({ stats, shell }: { stats: StatsData; shell: S
             )}
           </section>
 
+          <WeakStartCard extras={extras} />
+
           <section className="card" id="pillars">
             <h2>Рубрики</h2>
             <p className="muted small">Средние просмотры в сутки на ролик — какие темы заходят лучше.</p>
@@ -272,6 +276,9 @@ export default function StatsView({ stats, shell }: { stats: StatsData; shell: S
             )}
             {tags.everywhere.length > 0 && <p className="muted small">Во всех роликах, не сравниваем: {tags.everywhere.join(" ")}.</p>}
           </section>
+
+          <TimingCard extras={extras} />
+          <PlaylistsCard extras={extras} />
         </div>
       </main>
     </AppShell>
