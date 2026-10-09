@@ -1,0 +1,102 @@
+{
+  "title": "Почему цены заканчиваются на 99: эффект левой цифры",
+  "description": "Почему 99 рублей кажутся заметно дешевле 100 и как эффект левой цифры влияет на твои покупки. Разбираем исследования Томаса и Морвиц, Андерсона и Симестера. В конце — три простых приёма, чтобы не попадаться на эту уловку.\n#shorts #психология #маркетинг #деньги #покупки",
+  "tags": [
+    "цены на 99",
+    "эффект левой цифры",
+    "психология цен",
+    "маркетинг",
+    "деньги",
+    "покупки",
+    "поведенческая экономика",
+    "финансовая грамотность",
+    "уловки магазинов",
+    "ценообразование",
+    "left-digit effect",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Девяносто девять рублей кажутся дешевле ста. Мозг попался.",
+      "onScreen": "99 ₽ кажется *дешевле* 100",
+      "icon": "brain",
+      "visualQuery": "price tag supermarket shelf",
+      "imagePrompt": "cinematic close-up of a paper price tag on a supermarket shelf, soft green ambient light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Разница всего один рубль. Но мозг читает цену слева и цепляется за первую цифру. В конце скажу, как не попадаться.",
+      "onScreen": "Мозг смотрит на *первую* цифру",
+      "icon": "eye",
+      "visualQuery": "woman reading price tag",
+      "imagePrompt": "cinematic macro shot of a human eye reflecting a glowing price display, emerald and warm tones, dramatic side light"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Это называется эффект левой цифры. В две тысячи пятом году Манодж Томас и Вики Морвиц показали: два девяносто девять кажется заметно дешевле трёх.",
+      "onScreen": "Эффект *левой цифры*, 2005",
+      "stat": {
+        "value": 2.99,
+        "label": "кажется заметно дешевле 3,00"
+      },
+      "icon": "trending-down",
+      "visualQuery": "coins receipt table",
+      "imagePrompt": "cinematic still life of coins and a crumpled receipt on a wooden table, soft green rim light, shallow depth of field"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Видишь двойку и уже решил, что это около двух. Девятки в хвосте почти не считаются.",
+      "onScreen": "Девятки в хвосте *не считаются*",
+      "icon": "lightbulb",
+      "visualQuery": "shopper looking at products",
+      "imagePrompt": "cinematic over-the-shoulder shot of a shopper scanning store shelves, blurred price tags, warm and emerald palette"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Но работает ли это на кассе, а не только в лаборатории? Это проверили на реальных покупателях.",
+      "onScreen": "Лаборатория или *касса*?",
+      "icon": "shopping-cart",
+      "visualQuery": "checkout counter cashier",
+      "imagePrompt": "cinematic wide shot of a store checkout counter at evening, soft neon green glow, moody atmosphere"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Эрик Андерсон и Дункан Симестер в две тысячи третьем году описали полевые эксперименты. Цены с окончанием на девять повышали спрос.",
+      "onScreen": "Окончание на 9 *повышает* продажи",
+      "icon": "trending-up",
+      "visualQuery": "shopping bags store",
+      "imagePrompt": "cinematic shot of hands carrying shopping bags out of a bright store, emerald and golden light, shallow depth of field"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "Как не попадаться? Округляй цену вверх. Сравнивай целые числа. И читай ценник до конца.",
+      "onScreen": "Как *не попадаться*",
+      "items": [
+        "Округляй цену вверх",
+        "Сравнивай целые числа",
+        "Читай ценник до конца"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "wallet hand cash",
+      "imagePrompt": "cinematic top-down view of an open wallet and a smartphone calculator on a table, soft green morning light"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты ловил себя на этом? Напиши в комментариях и подпишись.",
+      "onScreen": "Ловил себя? *Подпишись*",
+      "icon": "bell-ring"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "title": "Почему утром ты выше, чем вечером, почти на сантиметр",
+  "description": "Почему рост меняется в течение дня: межпозвоночные диски под нагрузкой теряют жидкость и сжимаются, а ночью восстанавливаются. Узнаешь, в какое время мерить рост, чтобы замеры были честными.\n#shorts #рост #позвоночник #тело #наука",
+  "tags": [
+    "рост",
+    "позвоночник",
+    "межпозвоночные диски",
+    "рост утром и вечером",
+    "как измерить рост",
+    "тело человека",
+    "наука",
+    "факты",
+    "астронавты",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Утром ты выше, чем вечером. Это легко проверить.",
+      "onScreen": "Утром ты *выше*, чем вечером",
+      "icon": "sun",
+      "visualQuery": "height measuring wall morning",
+      "imagePrompt": "cinematic shot of a person standing against a wall height chart in soft blue morning light, shallow depth of field, dark teal palette"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "За день человек становится ниже в среднем примерно на сантиметр. У кого-то больше, у кого-то меньше.",
+      "onScreen": "Минус *сантиметр* за день",
+      "stat": {
+        "value": 1,
+        "prefix": "≈",
+        "suffix": " см",
+        "label": "теряешь в росте за день"
+      },
+      "icon": "trending-down",
+      "visualQuery": "tape measure close up",
+      "imagePrompt": "macro close-up of a measuring tape glowing under cold blue light, dark background, cinematic rim light"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Это не обман рулетки. Это сжимаются межпозвоночные диски, мягкие прокладки между позвонками.",
+      "onScreen": "Сжимаются *диски* позвоночника",
+      "icon": "microscope",
+      "visualQuery": "spine model anatomy",
+      "imagePrompt": "glowing translucent human spine model floating in darkness, soft cyan light between vertebrae, cinematic macro"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Днём ты стоишь, ходишь, носишь сумки. Под этой нагрузкой диски теряют жидкость и становятся тоньше.",
+      "onScreen": "Нагрузка выжимает *жидкость*",
+      "icon": "droplet",
+      "visualQuery": "people walking street bags",
+      "imagePrompt": "crowd of commuters walking with heavy bags on a city street at dusk, motion blur, cool blue and amber tones, cinematic"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Ночью ты лежишь, нагрузки нет. Диски снова набирают жидкость, и к утру рост возвращается.",
+      "onScreen": "Ночью диски *восстанавливаются*",
+      "icon": "moon",
+      "visualQuery": "person sleeping bed night",
+      "imagePrompt": "person sleeping peacefully in a dark bedroom lit by soft moonlight from a window, calm teal palette, cinematic wide shot"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Учёные Рейли, Тиррелл и Труп измерили это ещё в восьмидесятых. Разница доходит примерно до одного процента роста.",
+      "onScreen": "До *1%* роста за сутки",
+      "stat": {
+        "value": 1,
+        "prefix": "до ",
+        "suffix": "%",
+        "label": "роста теряется к вечеру"
+      },
+      "icon": "flask-conical",
+      "visualQuery": "scientist laboratory notebook",
+      "imagePrompt": "1980s research lab with a scientist writing measurements in a notebook, warm desk lamp against blue shadows, cinematic"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "Отсюда простой вывод. Меряй рост утром. Сравнивай замеры в одно время суток.",
+      "onScreen": "Как мерить рост *честно*",
+      "items": [
+        "Меряй рост утром",
+        "Сравнивай в одно время"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "child height marks door",
+      "imagePrompt": "pencil height marks on a wooden door frame in early morning light, soft blue shadows, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Помнишь ролик про рост астронавтов? Там работает тот же механизм, только без гравитации.",
+      "onScreen": "Тот же механизм в *космосе*",
+      "icon": "rocket",
+      "visualQuery": "astronaut space station",
+      "imagePrompt": "astronaut floating inside a space station module, Earth glowing through the window, cool blue cinematic lighting"
+    },
+    {
+      "id": "s9",
+      "kind": "cta",
+      "narration": "А ты замечал, что вечером ниже? Напиши в комментариях и подпишись.",
+      "onScreen": "Замечал? *Подпишись*",
+      "icon": "bell-ring"
+    }
+  ]
+}

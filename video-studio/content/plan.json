@@ -419,7 +419,8 @@
           "source": "Anderson E. T., Simester D. I. Effects of $9 price endings on retail sales: evidence from field experiments. Quantitative Marketing and Economics 1, 93–110 (2003)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-08a-pochemu-tseny-zakanchivayutsya-na-99-effekt-levoy-tsifry.json"
     },
     {
       "id": "08b",
@@ -435,7 +436,8 @@
           "source": "Reilly T., Tyrrell A. R., Troup J. D. G. Circadian variation in human stature. Chronobiology International 1(2), 121–126 (1984); Tyrrell A. R., Reilly T., Troup J. D. G. Circadian variation in stature and the effects of spinal loading. Spine 10(2), 161–164 (1985)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-08b-pochemu-utrom-ty-vyshe-chem-vecherom-pochti-na-santimetr.json"
     },
     {
       "id": "09a",
