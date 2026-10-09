@@ -97,7 +97,12 @@ jobs:
         run: |
           dir="$RUNNER_TEMP/reel"
           mkdir -p "$dir"
-          gh release download "$TAG" --dir "$dir" --pattern video.mp4 --pattern instagram.txt --pattern instagram.json
+          gh release download "$TAG" --dir "$dir" --pattern '*.mp4' --pattern instagram.txt --pattern instagram.json
+          # Ролик по плану лежит в релизе как 08a-….mp4 (с кодом — для ручной загрузки в Studio);
+          # npm run upload ждёт video.mp4.
+          for f in "$dir"/*.mp4; do
+            if [ "$f" != "$dir/video.mp4" ] && [ ! -e "$dir/video.mp4" ]; then mv "$f" "$dir/video.mp4"; fi
+          done
           echo "dir=$dir" >> "$GITHUB_OUTPUT"
           {
             echo "## 📸 Instagram: \`$TAG\`"

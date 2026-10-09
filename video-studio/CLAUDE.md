@@ -20,9 +20,10 @@
 - Не используй `@remotion/google-fonts`: без доступа к хосту шрифтов рендер висит до таймаута.
   Шрифты лежат в `assets/fonts` и подключаются через webpack.
 - **Канал — `channel.json`** («Суть за минуту»): имя, голос, тема, хэштеги, призывы, ссылки,
-  дисклеймер, слоты 12:00/19:00 Europe/Moscow. Читает только `src/pipeline/channel.ts`
-  (`loadChannel`, `applyChannelDefaults`); переменные окружения сильнее файла. Название канала
-  не хардкодь — бери из `channel.json`.
+  дисклеймер, слоты 12:00/19:00 Europe/Moscow. С диска читает только `src/pipeline/channel-file.ts`
+  (`loadChannel`), разбирает `channel.ts` (`channelFromJson`, `applyChannelDefaults`, слоты — без
+  файловой системы: его импортирует веб-панель); переменные окружения сильнее файла. Название
+  канала не хардкодь — бери из `channel.json`.
 - **Публикация — только официальные API.** YouTube: Data API v3, `status.publishAt` только с
   `privacyStatus: private`, `containsSyntheticMedia` всегда. Instagram: «Instagram API with Facebook
   Login for Business» (`graph.facebook.com` + resumable на `rupload.facebook.com`) — только он
@@ -41,6 +42,17 @@
   расписания через Intl — DST-безопасно), `instagram.ts` (Reels: контейнер → rupload → статус →
   media_publish; подпись `instagram.txt`), `cover.ts` (обложка Reels `cover.jpg` — renderStill
   композиции Video в конце хука, тот же кадр → `thumb_offset`).
+- `src/pipeline/plan.ts` — `content/plan.json` (60 тем: хук, угол, факты с источниками): `parsePlan`,
+  `planNotes` (пожелания LLM), `scriptCode` (код из `scripts/sut-08a-….json`); `npm run script --
+  --plan 08a,08b` пишет сценарии по плану. `google-api.ts` — access token и разбор ошибок API без
+  googleapis. `src/cli/videos-list.ts` — после рендера в релиз дописывает тексты ролика в
+  `content/videos.json` (youtube-fill читает его вместе с `week1-videos.json`).
+- **Общий код с панелью** (`youtube-fill.ts`, `channel.ts`, `plan.ts`, `google-api.ts`, `types.ts`):
+  только встроенные модули Node и относительные импорты — без npm-пакетов и без чтения файлов
+  (иначе Next.js потащит в функцию Vercel всю папку).
+- `panel/` — веб-панель на Vercel (Next.js 16, вход по паролю): очередь, перенос `publishAt`, запуск
+  workflow, автопилот (Vercel Cron). Свои зависимости в `panel/package.json`; устройство и установка —
+  `panel/README.md`.
 - `src/remotion/` — композиции `Video` и `Thumbnail` (`Root.tsx`); ассеты — `staticFile()`
   относительно publicDir запуска (`out/<slug>/public`).
 - `src/cli/` — `make.ts` (всё одной командой), `script.ts` (черновик), `upload.ts` (`--to youtube,instagram`,
@@ -69,6 +81,7 @@ npm run make -- --script scripts/x.json --no-render      # всё, кроме р
 npm run script -- --topic "тема"            # черновик сценария → scripts/<slug>.json
 npx tsx src/dev/stills.ts                   # кадры композиции → out/dev/stills
 npx tsx src/dev/script-test.ts && npx tsx src/dev/visuals-test.ts && npx tsx src/dev/publish-test.ts   # тесты без сети
+npx tsx panel/scripts/state-test.ts         # очередь панели без сети; сборка панели: cd panel && npm run build
 npm run upload -- out/<slug> --to youtube,instagram --schedule      # публикация готового ролика
 ```
 

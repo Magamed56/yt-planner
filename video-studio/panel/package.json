@@ -1,0 +1,22 @@
+{
+  "name": "video-studio-panel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Веб-панель «Суть за минуту»: очередь роликов, перенос выхода, запуск workflow, автопилот",
+  "scripts": {
+    "dev": "next dev -p 3100",
+    "build": "next build",
+    "start": "next start -p 3100"
+  },
+  "dependencies": {
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}

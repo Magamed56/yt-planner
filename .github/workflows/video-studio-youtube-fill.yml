@@ -10,14 +10,16 @@
 # как их получить — video-studio/docs/youtube-setup.md.
 
 name: "video-studio: YouTube — тексты и расписание"
+# Коды роликов в названии запуска — по ним веб-панель видит, что сейчас заполняется.
+run-name: "${{ format('youtube-fill: {0}{1}', inputs.only || 'все', inputs.dry_run && ' (проверка)' || '') }}"
 
 on:
   workflow_dispatch:
     inputs:
       items:
-        description: "Список роликов (файл в репозитории)"
+        description: "Списки роликов через запятую (файлы в репозитории; videos.json пополняет рендер в релиз)"
         type: string
-        default: video-studio/content/week1-videos.json
+        default: video-studio/content/week1-videos.json,video-studio/content/videos.json
       schedule:
         description: "Время выхода: slots — 2 ролика в день по слотам channel.json; none — только тексты"
         type: choice

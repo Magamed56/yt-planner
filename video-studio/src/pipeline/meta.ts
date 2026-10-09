@@ -64,7 +64,6 @@ interface CreditParts {
   stock: { line: string; provider: string }[]; // по строке на клип/фото (Pexels, Pixabay)
   ai: string[];
   music: string | null;
-  voice: string;
 }
 
 function creditParts(input: Pick<MetaInput, "visualCredits" | "musicCredit" | "voiceProvider" | "voiceName">): CreditParts {
@@ -82,7 +81,7 @@ function creditParts(input: Pick<MetaInput, "visualCredits" | "musicCredit" | "v
     seen.add(line);
     stock.push({ line, provider: c.provider });
   }
-  return { stock, ai: [...ai], music: input.musicCredit, voice: voiceCreditLine(input.voiceProvider, input.voiceName) };
+  return { stock, ai: [...ai], music: input.musicCredit };
 }
 
 function ruPlural(n: number, one: string, few: string, many: string): string {
@@ -95,7 +94,9 @@ function ruPlural(n: number, one: string, few: string, many: string): string {
 
 // stockShown — сколько строк стоковых источников показать; остальные
 // сворачиваются в «… и ещё N». Pexels и Pixabay атрибуцию не требуют, а вот
-// строки ИИ, музыки (CC BY) и голоса не сокращаются никогда.
+// строки ИИ и музыки (CC BY) не сокращаются никогда. Строки «Озвучка: …» в
+// описании нет: синтетический голос YouTube отмечает флажок containsSyntheticMedia,
+// а владелец канала убрал эту строку из описаний (08.10.2026).
 function creditLines(p: CreditParts, stockShown = p.stock.length): string[] {
   const lines: string[] = [];
   if (p.stock.length) {
@@ -109,7 +110,6 @@ function creditLines(p: CreditParts, stockShown = p.stock.length): string[] {
   }
   if (p.ai.length) lines.push(`Часть изображений сгенерирована ИИ (${p.ai.join(", ")}).`);
   if (p.music) lines.push(`Музыка: ${p.music}`);
-  lines.push(p.voice);
   return lines;
 }
 

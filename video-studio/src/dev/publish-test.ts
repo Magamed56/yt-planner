@@ -9,12 +9,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { applyChannelDefaults, loadChannel, nthSlot, parseScheduleStart, upcomingSlots, zonedTimeToUtc, type ChannelConfig } from "../pipeline/channel";
+import { applyChannelDefaults, channelFromJson, nthSlot, parseScheduleStart, upcomingSlots, zonedTimeToUtc, type ChannelConfig } from "../pipeline/channel";
+import { loadChannel } from "../pipeline/channel-file";
 import { coverFrame } from "../pipeline/cover";
 import { buildInstagramCaption, instagramConfig, instagramHashtags, publishReel, publishRunDir, writeInstagramAssets, type InstagramConfig } from "../pipeline/instagram";
 import { DESCRIPTION_MAX_BYTES, buildYoutubeMeta } from "../pipeline/meta";
 import { uploadToYoutube } from "../pipeline/youtube";
-import { applyUpdate, listChannelVideos, matchVideos, parseIsoDuration, planUpdates, updateBody, type ChannelVideo, type FillItem } from "../pipeline/youtube-fill";
+import { applyUpdate, fillItemsOf, listChannelVideos, matchVideos, parseIsoDuration, planUpdates, updateBody, upsertFillItem, type ChannelVideo, type FillItem } from "../pipeline/youtube-fill";
 import { parseUploadTargets, resolvePublishAt, scheduleArgsFrom, takenSlots } from "../cli/publish-options";
 import type { VideoScript } from "../types";
 
@@ -571,6 +572,45 @@ await test("youtube-fill: Data API — канал → «Загрузки» + п�
   // 403 без нужного права — понятная подсказка.
   const denied = (async () => new Response(JSON.stringify({ error: { message: "Request had insufficient authentication scopes.", errors: [{ reason: "insufficientPermissions" }] } }), { status: 403 })) as typeof fetch;
   await assert.rejects(listChannelVideos({ auth, fetch: denied }), /не хватает прав.*youtube-auth/s);
+});
+
+await test("youtube-fill для панели: список без поиска (100 единиц квоты), publishedAt; список текстов — замена по коду, порядок по коду", async () => {
+  const auth = { getAccessToken: async () => ({ token: "tok" }) };
+  const urls: string[] = [];
+  const f = (async (url: string | URL) => {
+    const u = String(url);
+    urls.push(u);
+    const json = (o: unknown) => new Response(JSON.stringify(o), { status: 200 });
+    if (u.includes("/channels?")) return json({ items: [{ contentDetails: { relatedPlaylists: { uploads: "UUx" } } }] });
+    if (u.includes("/playlistItems?")) return json({ items: [{ contentDetails: { videoId: "v1" } }] });
+    if (u.includes("/videos?")) {
+      const thumbnails = { default: { url: "https://i.ytimg.com/vi/v1/default.jpg" }, medium: { url: "https://i.ytimg.com/vi/v1/mqdefault.jpg" } };
+      return json({ items: [{ id: "v1", snippet: { title: "A", publishedAt: "2026-10-08T09:00:00Z", thumbnails }, status: { privacyStatus: "public" }, contentDetails: { duration: "PT50S" } }] });
+    }
+    throw new Error(`неожиданный запрос ${u}`);
+  }) as typeof fetch;
+  const videos = await listChannelVideos({ auth, fetch: f }, 200, { search: false });
+  assert.ok(!urls.some((u) => u.includes("/search?")));
+  assert.equal(videos[0]!.publishedAt, "2026-10-08T09:00:00Z");
+  assert.equal(videos[0]!.thumbnailUrl, "https://i.ytimg.com/vi/v1/mqdefault.jpg"); // обложка для панели — средний размер
+
+  const [a, b] = week1 as [FillItem, FillItem];
+  const list = upsertFillItem(upsertFillItem([], { ...b, id: "08b" }), { ...a, id: "08a" });
+  assert.deepEqual(list.map((i) => i.id), ["08a", "08b"]);
+  const again = upsertFillItem(list, { ...a, id: "08b", title: "Пересобран" });
+  assert.deepEqual(again.map((i) => [i.id, i.title]), [["08a", a.title], ["08b", "Пересобран"]]);
+  assert.equal(fillItemsOf({ about: "x", videos: list }).length, 2);
+  assert.deepEqual(fillItemsOf(null), []);
+
+  // Вычеркнули строку в Studio и оставили лишнюю пустую — это не правка, ролик не переписываем.
+  const gap = vid({ videoId: "G", fileName: `${a.file}.mp4`, privacyStatus: "public", title: a.title, description: `${a.description.replace("\n\n", "\n\n\n")}  `, tags: a.tags, categoryId: a.categoryId });
+  assert.equal(planUpdates(matchVideos([a], [gap]), { schedule: channel.schedule, mode: "none" })[0]!.textsChanged, false);
+});
+
+await test("channel.json, прочитанный панелью из GitHub, = channel.json с диска", () => {
+  const file = path.join(root, "channel.json");
+  assert.deepEqual(channelFromJson(JSON.parse(fs.readFileSync(file, "utf8")), env, file), loadChannel({ file, env }));
+  assert.deepEqual(channelFromJson(null).schedule, { perDay: 2, publishTimesLocal: ["12:00", "19:00"], timezone: "Europe/Moscow" });
 });
 
 console.log(`\nВсе проверки публикации пройдены: ${passed}.`);
