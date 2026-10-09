@@ -2,6 +2,8 @@
 import { useState } from "react";
 import type { PanelState, Row } from "@/lib/state";
 import { STAGE_LABEL } from "@/lib/stages";
+import CoverMedia, { frameOf } from "./CoverMedia";
+import RunProgressBar from "./RunProgressBar";
 
 // Подпись на обложке: этап и, если нужно, что сделать.
 function chipText(r: Row): string {
@@ -11,31 +13,54 @@ function chipText(r: Row): string {
   return STAGE_LABEL[r.stage];
 }
 
-function Cover({ row }: { row: Row }) {
-  const [broken, setBroken] = useState(false);
+// Отметка выбора на обложке: «on» — выбран, «off» — можно выбрать, «none» — файлов нет.
+type Mark = "on" | "off" | "none" | null;
+
+function Cover({ row, mark }: { row: Row; mark: Mark }) {
+  const [empty, setEmpty] = useState(false);
   const views = row.stage === "published" && row.stats ? <span className="views-badge" title="просмотры">👁 {row.stats.viewsLabel}</span> : null;
-  if (!row.cover || broken) {
-    return (
-      <span className="cover empty">
-        {row.code}
-        <small>{row.localVideo ? "файл на компьютере" : STAGE_LABEL[row.stage]}</small>
-        <span className="time">{row.timeLabel}</span>
-        {views}
-      </span>
-    );
-  }
+  const check = mark && (
+    <span className={`check ${mark}`} aria-hidden="true">
+      {mark === "on" ? "✓" : mark === "none" ? "нет файлов" : ""}
+    </span>
+  );
+  const blank = (
+    <>
+      {row.code}
+      <small>{row.localVideo ? "файл на компьютере" : STAGE_LABEL[row.stage]}</small>
+    </>
+  );
+  // Ни обложка, ни кадр не открылись — плитка пустая: с кодом и этапом.
+  const hasMedia = Boolean(row.cover || frameOf(row)) && !empty;
   return (
-    <span className="cover">
-      <img src={row.cover} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setBroken(true)} />
+    <span className={`cover${hasMedia ? "" : " empty"}`}>
+      {hasMedia ? <CoverMedia src={row.cover} video={frameOf(row)} onFail={() => setEmpty(true)} /> : blank}
       <span className="time">{row.timeLabel}</span>
       {views}
-      <span className="chip-stage">{chipText(row)}</span>
+      {hasMedia && <span className="chip-stage">{chipText(row)}</span>}
+      {check}
     </span>
   );
 }
 
-// Лента: день — две обложки (12:00 и 19:00), как ролики встанут на канале.
-export default function FeedView({ state, rows, selected, onOpen }: { state: PanelState; rows: Row[]; selected: string | null; onOpen: (code: string) => void }) {
+
+// Лента: день — две обложки (12:00 и 19:00), как ролики встанут на канале. В режиме выбора
+// нажатие отмечает ролик для скачивания (только с файлами в релизе), карточка не открывается.
+export default function FeedView({
+  state,
+  rows,
+  selected,
+  onOpen,
+  chosen = null,
+  onToggle,
+}: {
+  state: PanelState;
+  rows: Row[];
+  selected: string | null;
+  onOpen: (code: string) => void;
+  chosen?: Set<string> | null; // null — режим выбора выключен
+  onToggle?: (code: string) => void;
+}) {
   const days: { key: string; label: string; approx: boolean; today: boolean; future: boolean; rows: Row[] }[] = [];
   for (const r of rows) {
     const key = r.dateKey ?? "none";
@@ -49,6 +74,7 @@ export default function FeedView({ state, rows, selected, onOpen }: { state: Pan
     if (r.whenExact) d.approx = false;
   }
   if (!days.length) return <p className="muted">Здесь пусто.</p>;
+  const runOf = (code: string) => state.runs.find((x) => x.active && x.codes.includes(code)) ?? null;
 
   return (
     <div className="feed">
@@ -63,14 +89,24 @@ export default function FeedView({ state, rows, selected, onOpen }: { state: Pan
               {d.approx && <span className="approx">ориентир</span>}
             </h2>
             <div className="feed-cards">
-              {d.rows.map((r) => (
-                <button key={r.code} className={`vcard stage-${r.stage}${r.code === selected ? " active" : ""}`} onClick={() => onOpen(r.code)}>
-                  <Cover row={r} />
-                  <span className="code">{r.code}</span>
-                  <span className="title">{r.title}</span>
-                  {r.flags[0] && <span className="hint">{r.flags[0]}</span>}
-                </button>
-              ))}
+              {d.rows.map((r) => {
+                const mark: Mark = chosen ? (!r.release ? "none" : chosen.has(r.code) ? "on" : "off") : null;
+                return (
+                  <button
+                    key={r.code}
+                    className={`vcard stage-${r.stage}${r.code === selected && !chosen ? " active" : ""}${mark === "on" ? " chosen" : ""}${mark === "none" ? " nofiles" : ""}`}
+                    aria-pressed={chosen ? mark === "on" : undefined}
+                    disabled={mark === "none"}
+                    onClick={() => (chosen ? onToggle?.(r.code) : onOpen(r.code))}
+                  >
+                    <Cover row={r} mark={mark} />
+                    <span className="code">{r.code}</span>
+                    <span className="title">{r.title}</span>
+                    {r.running && runOf(r.code)?.progress && <RunProgressBar progress={runOf(r.code)!.progress!} compact />}
+                    {r.flags[0] && <span className="hint">{r.flags[0]}</span>}
+                  </button>
+                );
+              })}
               {free.map((t) => (
                 <div key={t} className="vcard free">
                   <span className="cover empty">

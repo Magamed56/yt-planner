@@ -8,14 +8,14 @@ import { parsePlan, PLAN_CODE } from "../../src/pipeline/plan";
 import { applyUpdate, fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
-import { assetText, dispatchWorkflow, GithubError, readFileWithSha, readJson, setVariable, writeFile } from "@/lib/github";
+import { assetText, dispatchWorkflow, getVariable, GithubError, readFileWithSha, readJson, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { lockedCodes, movableIds, reorderPlan } from "@/lib/plan-order";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
 import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
 import { SESSION_COOKIE } from "@/lib/session";
-import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
+import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, parseQueueOrder, QUEUE_ORDER_VAR, queueSort, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
 import { channelVideos, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
 
 export interface ActionResult {
@@ -126,16 +126,21 @@ function textChanges(v: ChannelVideo, i: FillItem): string[] {
 // (100 единиц квоты: только что загруженное видео плейлист показывает с задержкой), время —
 // следующие свободные слоты после уже занятых.
 async function computeFill() {
-  const [channel, week1, later, planJson, videos] = await Promise.all([
+  const [channel, week1, later, planJson, videos, orderRaw] = await Promise.all([
     loadChannel(),
     readJson(`${STUDIO_DIR}/content/week1-videos.json`),
     readJson(`${STUDIO_DIR}/content/videos.json`),
     readJson(`${STUDIO_DIR}/content/plan.json`),
     channelVideos({ search: true }),
+    getVariable(QUEUE_ORDER_VAR).catch(() => null),
   ]);
   const items: FillItem[] = [];
   for (const it of [...fillItemsOf(week1), ...fillItemsOf(later)]) if (!items.some((x) => x.id === it.id)) items.push(it);
-  const report = matchVideos(items, videos);
+  const found = matchVideos(items, videos);
+  // Свободные слоты раздаются в порядке совпадений — ставим их в очередь выхода из календаря.
+  const order = parseQueueOrder(orderRaw);
+  const byCode = queueSort(found.matches.map((m) => ({ code: m.item.id, m })), order);
+  const report = { ...found, matches: byCode.map((x) => x.m) };
   const now = new Date();
   const taken = videos.filter((v) => v.privacyStatus === "private" && v.publishAt && Date.parse(v.publishAt) > now.getTime()).map((v) => v.publishAt!);
   const updates = planUpdates(report, { schedule: channel.schedule, mode: "slots", now, taken });
@@ -294,6 +299,42 @@ export async function undoMoveAction(moves: { videoId: string; publishAt: string
       await setPublishAt(m.videoId, s, m.publishAt);
     }
     return ok("Вернули прежнее время.");
+  });
+}
+
+// ---- очередь выхода роликов, которых ещё нет в расписании YouTube ----
+
+export interface QueueResult extends ActionResult {
+  undoOrder?: string[];
+}
+
+// Перетащили ролик-ориентир на место другого: меняем их местами в очереди. Сохраняется весь
+// порядок ожидающих роликов — новые темы плана встанут после них.
+export async function swapQueueAction(a: string, b: string): Promise<QueueResult | ActionResult> {
+  return guarded(async () => {
+    const { state, row: first } = await rowFor(a);
+    const second = state.rows.find((r) => r.code === String(b ?? "").trim().toLowerCase());
+    const waiting = state.rows.filter((r) => !r.whenExact && r.when);
+    const codes = waiting.map((r) => r.code);
+    if (!second || first.code === second.code || !codes.includes(first.code) || !codes.includes(second.code)) {
+      return fail("Меняться местами могут только ролики без времени на YouTube — обновите страницу.");
+    }
+    const next = codes.map((c) => (c === first.code ? second.code : c === second.code ? first.code : c));
+    await setVariable(QUEUE_ORDER_VAR, JSON.stringify(next));
+    return {
+      ok: true,
+      message: `Поменяли местами: ${first.code} — ${second.dateLabel} ${second.timeLabel}, ${second.code} — ${first.dateLabel} ${first.timeLabel} (ориентир; слот на YouTube ролик получит при «Найти новые загрузки»).`,
+      undoOrder: codes,
+    };
+  });
+}
+
+export async function restoreQueueAction(order: string[]): Promise<ActionResult> {
+  return guarded(async () => {
+    const list = Array.isArray(order) ? order.filter((c) => typeof c === "string" && PLAN_CODE.test(c)).slice(0, 300) : [];
+    if (!list.length) return fail("Нечего возвращать — обновите страницу.");
+    await setVariable(QUEUE_ORDER_VAR, JSON.stringify(list));
+    return ok("Вернули прежний порядок.");
   });
 }
 

@@ -16,6 +16,7 @@ import { pickCleanup } from "@/lib/ops";
 import type { AutopilotSettings, PanelState, RunInfo } from "@/lib/state";
 import { STAGE_LABEL, codesLabel } from "@/lib/stages";
 import AppShell from "./AppShell";
+import RunProgressBar from "./RunProgressBar";
 
 const KEEP_OPTIONS = [0, 3, 7, 14, 30, 60, 90, 180];
 const sameSettings = (a: AutopilotSettings, b: AutopilotSettings) =>
@@ -297,6 +298,7 @@ export default function RunsView({ state }: { state: PanelState }) {
                   <a href={r.url} target="_blank" rel="noreferrer">
                     лог ↗
                   </a>
+                  {r.active && r.progress && <RunProgressBar progress={r.progress} />}
                 </div>
               ))}
             </div>

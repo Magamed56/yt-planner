@@ -163,7 +163,7 @@ test("напоминания: запас расписания, загрузит�
 
 test("обложки: с YouTube, иначе cover.jpg из релиза, иначе нет (плитка с кодом)", () => {
   assert.equal(row("01b").cover, "https://i9.ytimg.com/vi/01b/mqdefault.jpg");
-  assert.equal(row("08b").cover, "/api/asset/12");
+  assert.equal(row("08b").cover, "/api/asset/12/file");
   assert.equal(row("08b").release?.thumb, null);
   assert.equal(row("06a").cover, null);
 });

@@ -4,7 +4,8 @@
 import { channelFromJson, isoNoMs, localDate, upcomingSlots } from "../../src/pipeline/channel";
 import { parsePlan, scriptCode } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
-import type { GhRelease, GhRun } from "./github";
+import type { GhRelease, GhRun, GhStep } from "./github";
+import { expectedMs, runProgress, type RunProgress } from "./progress";
 import { releaseVideosOf, type ReleaseVideo } from "./ops";
 import { STAGES, codesLabel, plural, shiftDateKey, type Stage } from "./stages";
 import { rowStats, type RowStats } from "./stats";
@@ -75,6 +76,7 @@ export interface RunInfo {
   createdLabel: string;
   url: string;
   attempt: number; // номер попытки (после «Re-run» — 2 и дальше)
+  progress?: RunProgress | null; // у идущего: этапы и ожидаемая длительность
 }
 
 export interface Reminder {
@@ -110,6 +112,9 @@ export interface AutopilotLast {
 }
 
 export const AUTOPILOT_VAR = "PANEL_AUTOPILOT";
+// Порядок выхода роликов, которых ещё нет в расписании YouTube (перетаскивание в календаре):
+// коды по очереди. Нет переменной — по порядку плана.
+export const QUEUE_ORDER_VAR = "PANEL_QUEUE_ORDER";
 export const AUTOPILOT_LAST_VAR = "PANEL_AUTOPILOT_LAST";
 export const DEFAULT_AUTOPILOT: AutopilotSettings = { enabled: false, days: 3, retryFailed: true, keepReleaseDays: 0, scriptReserve: 0 };
 export const KEEP_RELEASE_MAX = 365;
@@ -185,6 +190,28 @@ export interface StateInput {
   autopilotLast: AutopilotLast | null;
   repo: string;
   branch: string;
+  queueOrder?: string[]; // PANEL_QUEUE_ORDER
+  runSteps?: Record<number, GhStep[]>; // шаги идущих запусков (по id)
+}
+
+// «["09a","07a"]» → коды; битое — пустой список (порядок плана).
+export function parseQueueOrder(raw: string | null): string[] {
+  try {
+    const j: unknown = JSON.parse(raw ?? "");
+    return Array.isArray(j) ? [...new Set(j.filter((c): c is string => typeof c === "string" && /^\d{2}[a-z]$/.test(c)))] : [];
+  } catch {
+    return [];
+  }
+}
+
+// Ролики без точного времени (ещё не в расписании YouTube) в порядке выхода: сначала по
+// PANEL_QUEUE_ORDER, остальные — по порядку плана после них.
+export function queueSort<T extends { code: string }>(rows: T[], order: string[]): T[] {
+  const rank = new Map(order.map((c, i) => [c, i]));
+  return rows
+    .map((r, i) => ({ r, i, k: rank.get(r.code) ?? order.length + i }))
+    .sort((a, b) => a.k - b.k)
+    .map((x) => x.r);
 }
 
 const ACTIVE_RUN = new Set(["queued", "in_progress", "waiting", "requested", "pending"]);
@@ -321,6 +348,19 @@ export function buildState(input: StateInput): PanelState {
   );
 
   const runs = input.runs.map((r) => runInfo(r, f)).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+  // Сколько обычно идут удачные запуски того же вида — для «осталось ≈ N мин».
+  const started = new Map(input.runs.map((r) => [r.id, r.run_started_at ?? r.created_at]));
+  const history = input.runs
+    .filter((r) => r.status === "completed" && r.conclusion === "success")
+    .map((r) => {
+      const info = runs.find((x) => x.id === r.id)!;
+      return { kind: info.kind, codes: info.codes.length, ms: ms(r.updated_at) - ms(started.get(r.id)!) };
+    });
+  for (const r of runs) {
+    if (!r.active) continue;
+    const steps = input.runSteps?.[r.id];
+    r.progress = runProgress(steps ?? [], started.get(r.id)!, expectedMs(r.kind, r.codes.length, history));
+  }
   const running = new Map<string, string>();
   for (const r of runs) if (r.active) for (const c of r.codes) if (!running.has(c)) running.set(c, RUNNING_LABEL[r.kind] ?? "идёт запуск");
 
@@ -363,8 +403,10 @@ export function buildState(input: StateInput): PanelState {
       localVideo: !release && hasTexts,
       release,
       youtube: v ? { videoId: v.videoId, privacyStatus: v.privacyStatus, publishAt: v.publishAt, title: v.title, fileName: v.fileName } : null,
-      // Ссылки YouTube на обложки (и у приватных) открываются без входа; файлы релиза — через /api/asset.
-      cover: v?.thumbnailUrl ?? (release?.cover ? `/api/asset/${release.cover.id}` : release?.thumb ? `/api/asset/${release.thumb.id}` : null),
+      // Ссылки YouTube на обложки (и у приватных) открываются без входа. Файлы релиза — через
+      // /api/asset/<id>/file: там тип image/jpeg; временная ссылка GitHub отдаёт картинку как
+      // «файл для скачивания», и телефон такую в <img> не показывает.
+      cover: v?.thumbnailUrl ?? (release?.cover ? `/api/asset/${release.cover.id}/file` : release?.thumb ? `/api/asset/${release.thumb.id}/file` : null),
       hasTexts,
       textsDiffer: differ.has(it.id),
       when: exact,
@@ -381,7 +423,10 @@ export function buildState(input: StateInput): PanelState {
   // Ориентир для остальных: следующие свободные слоты по порядку плана — так же их раздаст
   // youtube-fill, когда ролики загрузят в Studio.
   const taken = videos.filter((v) => v.privacyStatus === "private" && v.publishAt && ms(v.publishAt) > nowMs).map((v) => v.publishAt!);
-  const waiting = rows.filter((r) => r.stage !== "scheduled" && r.stage !== "published");
+  const waiting = queueSort(
+    rows.filter((r) => r.stage !== "scheduled" && r.stage !== "published"),
+    input.queueOrder ?? [],
+  );
   const slots = upcomingSlots(channel.schedule, waiting.length, { from: now, taken });
   waiting.forEach((r, i) => {
     r.when = slots[i] ? isoNoMs(slots[i]) : null;

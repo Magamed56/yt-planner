@@ -7,6 +7,7 @@ import type { Goal, StatsData, VideoStat } from "@/lib/stats";
 import AppShell from "./AppShell";
 import { PlaylistsCard, TimingCard, WeakStartCard } from "./StatsTools";
 import Thumb from "./Thumb";
+import ViewsChart, { type ChartBar } from "./ViewsChart";
 
 type Shell = { updated: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
 type SortKey = "views" | "perDay" | "likes" | "comments" | "date";
@@ -47,6 +48,44 @@ function Meter({ label, value, of, percent, tone = "normal" }: { label: string; 
   );
 }
 
+// Разделы страницы — быстрые переходы сверху (на телефоне страница длинная).
+const SECTIONS = [
+  { id: "overview", label: "Обзор" },
+  { id: "videos", label: "Ролики" },
+  { id: "weak", label: "Слабый старт" },
+  { id: "money", label: "Монетизация" },
+  { id: "pillars", label: "Рубрики" },
+  { id: "tags", label: "Хэштеги" },
+  { id: "timing", label: "Время выхода" },
+  { id: "playlists", label: "Плейлисты" },
+  { id: "costs", label: "Расходы" },
+];
+
+// Последние 20 вышедших — по дате выхода, для графика.
+function chartBars(videos: VideoStat[]): ChartBar[] {
+  return [...videos]
+    .sort((a, b) => Date.parse(a.publishedAt) - Date.parse(b.publishedAt))
+    .slice(-20)
+    .map((v) => ({
+      key: v.videoId,
+      label: `${v.code ?? "—"} · ${v.dateLabel}`,
+      title: v.title,
+      value: v.views,
+      valueLabel: v.viewsLabel,
+      sub: `${v.perDayLabel} в сутки · 👍 ${v.likesLabel} · 💬 ${v.commentsLabel}`,
+    }));
+}
+
+function Kpi({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="kpi" title={hint}>
+      <span>{label}</span>
+      <b>{value}</b>
+      {hint && <small>{hint}</small>}
+    </div>
+  );
+}
+
 const goalMeter = (g: Goal) => <Meter key={g.label} label={g.label} value={g.haveLabel} of={g.needLabel} percent={g.percent} tone={g.done ? "done" : "normal"} />;
 const usageTone = (percent: number) => (percent >= 100 ? "over" : percent >= 80 ? "warn" : "normal");
 
@@ -55,103 +94,43 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
   const [showAll, setShowAll] = useState(false);
   const sorted = [...stats.videos].sort((a, b) => sortValue(b, sort) - sortValue(a, sort) || b.views - a.views);
   const shown = showAll ? sorted : sorted.slice(0, LIMIT);
-  const { monetization: money, hashtags: tags, usage, actions } = stats;
+  const topViews = Math.max(1, ...stats.videos.map((v) => v.views));
+  const { monetization: money, hashtags: tags, usage, actions, channel } = stats;
 
   return (
     <AppShell active="stats" updated={shell.updated} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
       <main className="page stats-page">
-        <div className="page-head">
-          <h1>Статистика</h1>
+        <div className="page-head titled">
+          <div>
+            <h1>Статистика</h1>
+            <span className="small muted">YouTube · обновлено {shell.updated}</span>
+          </div>
           <div className="actions">
             <Link href="/competitors" className="btn small">
               Похожие каналы →
             </Link>
           </div>
         </div>
+        <nav className="section-nav" aria-label="Разделы статистики">
+          {SECTIONS.map((s) => (
+            <a key={s.id} href={`#${s.id}`} className="chip">
+              {s.label}
+            </a>
+          ))}
+        </nav>
         {stats.youtubeError && <p className="notice error">YouTube недоступен: {stats.youtubeError}. Цифры роликов и канала появятся, когда он ответит.</p>}
 
         <div className="stats-grid">
-          <section className="card stat-kpis wide" aria-label="Канал">
-            <div className="kpi">
-              <span>Подписчики</span>
-              <b>{stats.channel?.subscribersLabel ?? "—"}</b>
+          <section className="card wide overview" id="overview" aria-label="Канал">
+            <div className="kpis">
+              <Kpi label="Подписчики" value={channel?.subscribersLabel ?? "—"} />
+              <Kpi label="Просмотры канала" value={channel?.viewsLabel ?? "—"} />
+              <Kpi label="Вышло" value={channel?.publishedLabel ?? "—"} />
+              <Kpi label="В среднем на ролик" value={channel?.avgViewsLabel ?? "—"} hint="просмотров" />
+              <Kpi label="Вовлечённость" value={channel?.engagementLabel ?? "—"} hint="лайки и комментарии от просмотров" />
+              <Kpi label="Лайки" value={channel?.likesLabel ?? "—"} hint="у вышедших роликов" />
             </div>
-            <div className="kpi">
-              <span>Просмотры канала</span>
-              <b>{stats.channel?.viewsLabel ?? "—"}</b>
-            </div>
-            <div className="kpi">
-              <span>Вышло</span>
-              <b>{stats.channel ? stats.channel.publishedLabel : "—"}</b>
-            </div>
-          </section>
-
-          <section className="card" id="money">
-            <h2>Монетизация</h2>
-            {money.tiers.map((t) => (
-              <div className="tier" key={t.id}>
-                <div className="tier-head">
-                  <b>{t.title}</b>
-                  <span className="muted small">{t.perks}</span>
-                  {t.done && <span className="done-badge">✓ условия выполнены</span>}
-                </div>
-                {t.goals.map(goalMeter)}
-              </div>
-            ))}
-            <p className="muted small">
-              ≈ — сумма просмотров Shorts, вышедших за 90 дней (Data API не отдаёт просмотры за период). YouTube для порога считает только засчитанные просмотры —
-              точная цифра в Studio → «Монетизация».
-            </p>
-          </section>
-
-          <section className="card" id="costs">
-            <h2>Расходы</h2>
-            <div className="cost">
-              <h3>GitHub Actions</h3>
-              {actions ? (
-                <>
-                  <Meter label={`Минуты за ${actions.monthLabel}`} value={`≈ ${actions.minutesLabel}`} of={`${actions.limitLabel} мин`} percent={actions.percent} tone={usageTone(actions.percent)} />
-                  <p className="muted small">
-                    {actions.runs} {plural(actions.runs, "запуск", "запуска", "запусков")} этого репозитория; бесплатно — 2 000 минут в месяц на приватные репозитории
-                    аккаунта.
-                  </p>
-                </>
-              ) : (
-                <p className="error-text small">{stats.actionsError ?? "нет данных"}</p>
-              )}
-            </div>
-            <div className="cost">
-              <h3>Claude — сценарии</h3>
-              {usage ? (
-                <p>
-                  <b className="cost-sum">{usage.claude.monthUsdLabel}</b> за месяц · сегодня {usage.claude.todayUsdLabel}
-                  <span className="muted small">
-                    {" "}
-                    · {usage.claude.monthRequests} {plural(usage.claude.monthRequests, "запрос", "запроса", "запросов")}
-                    {usage.claude.unpriced ? `, без цены: ${usage.claude.unpriced}` : ""}
-                  </span>
-                </p>
-              ) : (
-                <p className="muted small">{NO_USAGE}</p>
-              )}
-            </div>
-            <div className="cost">
-              <h3>Gemini — озвучка</h3>
-              {usage ? (
-                <>
-                  <Meter label="Озвучки сегодня" value={String(usage.gemini.today)} of={`≈ ${usage.gemini.limit} бесплатных`} percent={usage.gemini.percent} tone={usageTone(usage.gemini.percent)} />
-                  <p className="muted small">Сутки Google — с полуночи по Калифорнии: лимит обнулится в {usage.gemini.resetLabel}. Сверх лимита ролик озвучит Edge.</p>
-                </>
-              ) : (
-                <p className="muted small">{NO_USAGE}</p>
-              )}
-            </div>
-            {usage && usage.bad > 0 && (
-              <p className="muted small">
-                В content/usage.jsonl пропущено битых строк: {usage.bad}.
-              </p>
-            )}
-            {stats.usageError && <p className="error-text small">content/usage.jsonl: {stats.usageError}</p>}
+            <ViewsChart bars={chartBars(stats.videos)} caption="Просмотры роликов по дате выхода — нажмите на столбик" />
           </section>
 
           <section className="card wide" id="videos">
@@ -168,9 +147,10 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
                   ))}
                 </div>
                 <ol className="vstats">
-                  {shown.map((v) => (
+                  {shown.map((v, i) => (
                     <li key={v.videoId} className={`vstat${v.mark ? ` ${v.mark}` : ""}`}>
                       <a className="vstat-main" href={`https://youtube.com/shorts/${v.videoId}`} target="_blank" rel="noreferrer">
+                        <span className="vstat-rank">{i + 1}</span>
                         <Thumb src={v.thumbnailUrl} code={v.code ?? "—"} />
                         <span className="vstat-title">
                           <b>{v.title}</b>
@@ -180,6 +160,9 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
                           </span>
                           {v.mark === "best" && <span className="vmark best">▲ лучший</span>}
                           {v.mark === "worst" && <span className="vmark worst">▼ слабее всех</span>}
+                          <span className="vstat-share" aria-hidden="true">
+                            <i style={{ width: `${(v.views / topViews) * 100}%` }} />
+                          </span>
                         </span>
                       </a>
                       <span className="vstat-nums">
@@ -219,6 +202,24 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
           </section>
 
           <WeakStartCard extras={extras} />
+
+          <section className="card" id="money">
+            <h2>Монетизация</h2>
+            {money.tiers.map((t) => (
+              <div className="tier" key={t.id}>
+                <div className="tier-head">
+                  <b>{t.title}</b>
+                  <span className="muted small">{t.perks}</span>
+                  {t.done && <span className="done-badge">✓ условия выполнены</span>}
+                </div>
+                {t.goals.map(goalMeter)}
+              </div>
+            ))}
+            <p className="muted small">
+              ≈ — сумма просмотров Shorts, вышедших за 90 дней (Data API не отдаёт просмотры за период). YouTube для порога считает только засчитанные просмотры —
+              точная цифра в Studio → «Монетизация».
+            </p>
+          </section>
 
           <section className="card" id="pillars">
             <h2>Рубрики</h2>
@@ -276,9 +277,59 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
             )}
             {tags.everywhere.length > 0 && <p className="muted small">Во всех роликах, не сравниваем: {tags.everywhere.join(" ")}.</p>}
           </section>
-
           <TimingCard extras={extras} />
           <PlaylistsCard extras={extras} />
+
+          <section className="card" id="costs">
+            <h2>Расходы</h2>
+            <div className="cost">
+              <h3>GitHub Actions</h3>
+              {actions ? (
+                <>
+                  <Meter label={`Минуты за ${actions.monthLabel}`} value={`≈ ${actions.minutesLabel}`} of={`${actions.limitLabel} мин`} percent={actions.percent} tone={usageTone(actions.percent)} />
+                  <p className="muted small">
+                    {actions.runs} {plural(actions.runs, "запуск", "запуска", "запусков")} этого репозитория; бесплатно — 2 000 минут в месяц на приватные репозитории
+                    аккаунта.
+                  </p>
+                </>
+              ) : (
+                <p className="error-text small">{stats.actionsError ?? "нет данных"}</p>
+              )}
+            </div>
+            <div className="cost">
+              <h3>Claude — сценарии</h3>
+              {usage ? (
+                <p>
+                  <b className="cost-sum">{usage.claude.monthUsdLabel}</b> за месяц · сегодня {usage.claude.todayUsdLabel}
+                  <span className="muted small">
+                    {" "}
+                    · {usage.claude.monthRequests} {plural(usage.claude.monthRequests, "запрос", "запроса", "запросов")}
+                    {usage.claude.unpriced ? `, без цены: ${usage.claude.unpriced}` : ""}
+                  </span>
+                </p>
+              ) : (
+                <p className="muted small">{NO_USAGE}</p>
+              )}
+            </div>
+            <div className="cost">
+              <h3>Gemini — озвучка</h3>
+              {usage ? (
+                <>
+                  <Meter label="Озвучки сегодня" value={String(usage.gemini.today)} of={`≈ ${usage.gemini.limit} бесплатных`} percent={usage.gemini.percent} tone={usageTone(usage.gemini.percent)} />
+                  <p className="muted small">Сутки Google — с полуночи по Калифорнии: лимит обнулится в {usage.gemini.resetLabel}. Сверх лимита ролик озвучит Edge.</p>
+                </>
+              ) : (
+                <p className="muted small">{NO_USAGE}</p>
+              )}
+            </div>
+            {usage && usage.bad > 0 && (
+              <p className="muted small">
+                В content/usage.jsonl пропущено битых строк: {usage.bad}.
+              </p>
+            )}
+            {stats.usageError && <p className="error-text small">content/usage.jsonl: {stats.usageError}</p>}
+          </section>
+
         </div>
       </main>
     </AppShell>

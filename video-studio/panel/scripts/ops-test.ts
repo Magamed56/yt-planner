@@ -389,6 +389,9 @@ async function main() {
     assert.match(whole["Content-Disposition"]!, /^attachment; filename="08a-x\.mp4"/);
     assert.equal(whole["Content-Range"], undefined);
     assert.equal(assetHeaders("x.mp4", "video/mp4", size, { status: 416 }, false)["Content-Range"], `bytes */${size}`);
+    // Обложки браузер кэширует (у файла релиза номер меняется вместе с содержимым), видео — нет.
+    assert.equal(assetHeaders("cover.jpg", "image/jpeg", 100, { status: 200 }, false)["Cache-Control"], "private, max-age=604800, immutable");
+    assert.equal(whole["Cache-Control"], "private, no-store");
     assert.equal(contentDisposition("ролик «1».mp4", true), `attachment; filename="_____ _1_.mp4"; filename*=UTF-8''%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%20%C2%AB1%C2%BB.mp4`);
     assert.equal(parseContentRange("bytes */20"), null);
   });

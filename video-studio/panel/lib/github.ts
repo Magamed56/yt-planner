@@ -143,6 +143,24 @@ export interface GhRun {
   updated_at: string;
   html_url: string;
   run_attempt?: number; // 1 — первая попытка; после «Re-run» GitHub отдаёт последнюю
+  run_started_at?: string | null; // начало последней попытки
+}
+
+export interface GhStep {
+  name: string;
+  status: string; // queued | in_progress | completed
+  conclusion: string | null; // success | failure | skipped | …
+  number: number;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+// Шаги идущего запуска — для полоски «сколько осталось». У workflow канала одно задание.
+export async function runSteps(runId: number): Promise<GhStep[]> {
+  const res = await gh(`/repos/${repoName()}/actions/runs/${runId}/jobs?per_page=5`);
+  if (!res.ok) throw await failure(res, `шаги запуска ${runId}`);
+  const jobs = ((await res.json()) as { jobs?: { steps?: GhStep[] }[] }).jobs ?? [];
+  return jobs.flatMap((j) => j.steps ?? []);
 }
 
 export async function listRuns(): Promise<GhRun[]> {
