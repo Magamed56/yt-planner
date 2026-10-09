@@ -46,6 +46,14 @@ export interface TokenCounts {
   output: number;
 }
 
+// Серверный веб-поиск Claude: $10 за 1000 поисков сверх токенов (документация
+// Anthropic, 2026-10); поиск с ошибкой не оплачивается.
+export const WEB_SEARCH_USD_PER_REQUEST = 0.01;
+
+export function webSearchCostUsd(requests: number): number {
+  return Math.round(Math.max(0, requests) * WEB_SEARCH_USD_PER_REQUEST * 1e6) / 1e6;
+}
+
 // Запись в кэш (TTL 5 минут) стоит 1.25× входа, чтение — по своей цене.
 export function claudeCostUsd(model: string, t: TokenCounts): number {
   const p = claudePrice(model);

@@ -46,6 +46,9 @@ export interface CompletionRequest {
   maxTokens: number;
   compat: number; // 0 — все возможности; больше — запрос проще (после 400)
   signal?: AbortSignal;
+  // Серверный веб-поиск для источников фактов (план тем). Понимает только
+  // Claude; остальные цели поле игнорируют — их ссылки проверяются по сети.
+  webSearch?: { maxUses: number };
 }
 
 export interface CompletionResult {
@@ -56,6 +59,8 @@ export interface CompletionResult {
   costUsd: number;
   servedBy: string; // модель, которая фактически ответила
   native?: unknown;
+  sources?: string[]; // URL из результатов веб-поиска и цитат (Claude)
+  webSearchRequests?: number;
 }
 
 export interface LlmTarget {

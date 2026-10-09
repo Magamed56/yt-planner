@@ -11,17 +11,22 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { FPS, THEME_NAMES, type Format, type ThemeName, type VideoScript } from "../types";
+import { FPS, THEME_NAMES, layoutScenes, type Format, type ThemeName, type VideoScript } from "../types";
 import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult } from "../pipeline/contracts";
 import { makeWhoosh, prepareMusic } from "../pipeline/audio/index";
 import { applyChannelDefaults, type ChannelConfig } from "../pipeline/channel";
 import { loadChannel } from "../pipeline/channel-file";
 import { coverFrame, frameToMs, renderCover } from "../pipeline/cover";
 import { buildInstagramCaption, instagramEnvHelp, missingInstagramEnv, publishRunDir, writeInstagramAssets, type InstagramMeta, type RunDirPublishResult } from "../pipeline/instagram";
-import { buildYoutubeMeta, descriptionTxt } from "../pipeline/meta";
-import { buildVideoProps, estimateDurationMs } from "../pipeline/props";
+import { buildYoutubeMeta, descriptionTxt, youtubeChapters } from "../pipeline/meta";
+import { buildVideoProps } from "../pipeline/props";
 import { checkBrowserEnv, preparePublicDir, renderVideo, type RenderResult } from "../pipeline/render";
 import { generateScript, lintScript, ScriptGenerationError } from "../pipeline/script/index";
+// Журнал расхода (content/usage.jsonl) и «уже было на канале» — см. src/pipeline/script/.
+import { coveredCode, loadCovered } from "../pipeline/script/covered";
+import { searchPhrases } from "../pipeline/script/suggest";
+import { appendUsage, countPostRequests, llmUsageRecord, ttsUsageRecord, type LlmCallInfo, type UsageRecord } from "../pipeline/script/usage-log";
+import { GEMINI_DEFAULT_MODEL } from "../pipeline/voice/providers/gemini";
 import { slugify } from "../pipeline/slug";
 import { captionsToSrt } from "../pipeline/srt";
 import { findVisual } from "../pipeline/visuals/index";
@@ -218,6 +223,15 @@ function voiceLabel(provider: string): string | null {
   return null;
 }
 
+// Модель TTS для журнала расхода — там, где она настраивается.
+function ttsModel(provider: string): string | null {
+  const env = (name: string) => process.env[name]?.trim() || null;
+  if (provider === "gemini") return env("GEMINI_TTS_MODEL") ?? GEMINI_DEFAULT_MODEL;
+  if (provider === "elevenlabs") return env("ELEVENLABS_MODEL");
+  if (provider === "openai") return env("OPENAI_TTS_MODEL");
+  return null;
+}
+
 function fallbackProviderNames(primary: string): string[] {
   const raw = process.env.TTS_FALLBACK?.trim().toLowerCase();
   if (raw === "none" || raw === "off" || raw === "0") return [];
@@ -273,12 +287,19 @@ async function main() {
       const format = args.format ?? "shorts";
       console.log(`  тема: «${args.topic}», формат: ${format}`);
       let r: Awaited<ReturnType<typeof generateScript>>;
+      const llmCalls: LlmCallInfo[] = []; // → content/usage.jsonl
       try {
-        r = await generateScript({ topic: args.topic, format, language: "ru", notes: args.notes, targetSeconds: args.seconds });
+        r = await generateScript(
+          { topic: args.topic, format, language: "ru", notes: args.notes, targetSeconds: args.seconds, covered: loadCovered(ROOT), searchPhrases: searchPhrases(args.topic) },
+          { onLlmCall: (c) => llmCalls.push(c) },
+        );
       } catch (e) {
         if (e instanceof ScriptGenerationError) reportFailedLlmUsage(e.usage, args.out);
         throw e;
+      } finally {
+        appendUsage(ROOT, llmCalls.map((c) => llmUsageRecord(c, null)));
       }
+      for (const w of r.warnings) console.log(`  замечание: ${w}`);
       usage.push(...r.usage);
       s = r.script;
       const cost = r.usage.reduce((a, u) => a + u.costUsd, 0);
@@ -311,13 +332,26 @@ async function main() {
 
   // 2. Озвучка
   let voices: VoiceResult[] = [];
+  const ttsUsage: UsageRecord[] = []; // → content/usage.jsonl (запросы и символы по провайдерам)
+  const usageCode = args.script ? coveredCode(path.basename(args.script)) : null;
   voices = await steps.run("Озвучка", async () => {
     console.log(`  провайдер: ${voice.name}`);
     const fallbacks = fallbackProviderNames(voice.name);
-    for (;;) {
-      try {
-        return await synthesizeAll(voice, script, publicDir);
-      } catch (e) {
+    try {
+      for (;;) {
+        const t0 = Date.now() - 1000; // запас на грубое время изменения файла
+        const run = await countPostRequests(() => synthesizeAll(voice, script, publicDir));
+        if (run.value) {
+          // Озвучено сейчас (а не взято из кэша прошлого запуска) — по времени файла.
+          const fresh = run.value.map((v, i) => ({ v, i })).filter(({ v }) => fs.existsSync(v.file) && fs.statSync(v.file).mtimeMs >= t0);
+          const chars = fresh.reduce((a, { i }) => a + script.scenes[i]!.narration.length, 0);
+          const calls = run.posts > 0 ? run.posts : fresh.length;
+          if (calls > 0) ttsUsage.push(ttsUsageRecord({ provider: voice.name, model: ttsModel(voice.name), calls, chars, costUsd: voice.name === "elevenlabs" ? null : 0 }, usageCode));
+          return run.value;
+        }
+        const e = run.error;
+        // Неудачные запросы тоже тратят квоту (Gemini — ~10 в сутки): пишем и их.
+        if (run.posts > 0) ttsUsage.push(ttsUsageRecord({ provider: voice.name, model: ttsModel(voice.name), calls: run.posts, chars: null, costUsd: voice.name === "elevenlabs" ? null : 0 }, usageCode));
         const fb = fallbacks.shift();
         if (!fb) {
           const alt = voice.name === "piper" ? "--voice edge" : "--voice piper (офлайн)";
@@ -327,6 +361,8 @@ async function main() {
         console.warn(`  ⚠ ${voice.name} не работает: ${errText(e).split("\n")[0]}\n  Озвучиваю весь ролик запасным провайдером ${fb} (TTS_FALLBACK=none — отключить).`);
         voice = getVoiceProvider(fb);
       }
+    } finally {
+      appendUsage(ROOT, ttsUsage);
     }
   });
   const voiceDurationMs = voices.reduce((a, v) => a + v.durationMs, 0);
@@ -373,7 +409,8 @@ async function main() {
   const { music, whooshSrc } = await steps.run("Музыка и звук перехода", async () => {
     fs.rmSync(path.join(publicDir, "music"), { recursive: true, force: true });
     fs.rmSync(path.join(publicDir, "sfx"), { recursive: true, force: true });
-    const durationMs = estimateDurationMs(voices.map((v) => v.durationMs));
+    // Длина — по той же раскладке, что у props: с паузами викторины и карточками глав.
+    const durationMs = Math.round((layoutScenes(script.scenes.map((s, i) => ({ ...s, audioDurationMs: Math.max(0, Math.round(voices[i]!.durationMs)) }))).durationInFrames / FPS) * 1000);
     const music = await prepareMusic(publicDir, { durationMs, mood: args.mood || process.env.MUSIC_MOOD?.trim() || undefined, seed: slug });
     if (!music) console.log("  без музыки (MUSIC=none)");
     const whooshSrc = await makeWhoosh(publicDir);
@@ -400,6 +437,7 @@ async function main() {
       voiceProvider: voice.name,
       voiceName: voiceLabel(voice.name),
       channel,
+      chapters: youtubeChapters(props.scenes, props.durationInFrames / FPS), // таймкоды глав «Разбора»
     });
     const description = path.join(runDir, "description.txt");
     fs.writeFileSync(description, descriptionTxt(meta));

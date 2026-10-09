@@ -9,6 +9,7 @@ import type { z } from "zod";
 import type { LlmUsage } from "../../contracts";
 import { extractJson } from "../json";
 import { buildRepairPrompt } from "../prompt";
+import type { LlmCallInfo } from "../usage-log";
 import { LlmError, type ChatTurn, type LlmTarget, type Logger, type Spent } from "./types";
 
 export type Verdict<T> = { ok: true; value: T; warnings: string[] } | { ok: false; problems: string[]; warnings: string[] };
@@ -54,6 +55,8 @@ export interface StructuredRequest<T> {
   log: Logger;
   maxTokens?: number; // желаемый стартовый лимит (иначе — по умолчанию цели)
   signal?: AbortSignal;
+  webSearch?: { maxUses: number }; // серверный поиск (только Claude)
+  onCall?: (call: LlmCallInfo) => void; // каждый запрос — в журнал расхода (usage.jsonl)
 }
 
 const MAX_LENGTH_RETRIES = 2;
@@ -65,10 +68,20 @@ function logPaid(r: StructuredRequest<unknown>, target: LlmTarget, s: Spent): vo
   if (s.costUsd > 0) r.log.info(`[сценарий] ${target.label}: ${s.inputTokens} вх. + ${s.outputTokens} вых. токенов ≈ $${s.costUsd.toFixed(4)}`);
 }
 
-export async function generateStructured<T>(r: StructuredRequest<T>): Promise<{ value: T; target: LlmTarget }> {
+// Журнал не должен ронять генерацию.
+function report(r: StructuredRequest<unknown>, call: LlmCallInfo): void {
+  try {
+    r.onCall?.(call);
+  } catch {
+    // ничего: учёт — вспомогательный
+  }
+}
+
+export async function generateStructured<T>(r: StructuredRequest<T>): Promise<{ value: T; target: LlmTarget; sources: string[] }> {
   if (r.chain.length === 0) throw new Error("Цепочка LLM пуста — не задан ни один провайдер.");
   const failures: string[] = [];
   const skipProviders = new Set<string>();
+  const sources = new Set<string>();
 
   for (const target of r.chain) {
     if (skipProviders.has(target.provider)) continue;
@@ -93,13 +106,25 @@ export async function generateStructured<T>(r: StructuredRequest<T>): Promise<{ 
           maxTokens,
           compat,
           signal: r.signal,
+          ...(r.webSearch ? { webSearch: r.webSearch } : {}),
         });
         r.usage.add(target, { inputTokens: res.inputTokens, outputTokens: res.outputTokens, costUsd: res.costUsd });
         logPaid(r, target, res);
+        report(r, { provider: target.provider, model: res.servedBy || target.model, inputTokens: res.inputTokens, outputTokens: res.outputTokens, costUsd: res.costUsd, ok: true });
+        for (const u of res.sources ?? []) sources.add(u);
+        if (res.webSearchRequests) r.log.info(`[сценарий] ${target.label}: веб-поиск — ${res.webSearchRequests} запр., источников в выдаче: ${res.sources?.length ?? 0}`);
       } catch (e) {
         const err = e instanceof LlmError ? e : new LlmError(`${target.label}: ${(e as Error)?.message ?? String(e)}`, "unavailable", null, e);
         r.usage.add(target, err.spent ?? null);
         if (err.spent) logPaid(r, target, err.spent);
+        report(r, {
+          provider: target.provider,
+          model: target.model,
+          inputTokens: err.spent?.inputTokens ?? null,
+          outputTokens: err.spent?.outputTokens ?? null,
+          costUsd: err.spent?.costUsd ?? null,
+          ok: false,
+        });
         if (err.kind === "aborted") throw new Error(`Генерация (${r.what}) отменена.`, { cause: err });
         if (err.kind === "bad_request" && compat < target.maxCompat) {
           compat += 1;
@@ -143,7 +168,7 @@ export async function generateStructured<T>(r: StructuredRequest<T>): Promise<{ 
       if (verdict.ok) {
         if (res.servedBy && !res.servedBy.includes(target.model)) r.log.info(`[сценарий] ${r.what}: ответила модель ${res.servedBy}.`);
         for (const w of verdict.warnings) r.log.info(`[сценарий] замечание: ${w}`);
-        return { value: verdict.value, target };
+        return { value: verdict.value, target, sources: [...sources] };
       }
 
       if (repaired) {
