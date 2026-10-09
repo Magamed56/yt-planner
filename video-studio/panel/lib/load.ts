@@ -1,6 +1,7 @@
 // Данные для очереди — всё параллельно: GitHub (план, канал, сценарии, тексты, релизы, запуски,
 // секреты, настройки автопилота) и YouTube. YouTube недоступен — очередь всё равно видна.
 import { branchName, getVariable, GithubError, listDir, listReleases, listRuns, listSecretNames, readJson, repoName } from "./github";
+import type { ChannelVideo } from "../../src/pipeline/youtube-fill";
 import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, buildState, parseAutopilot, parseAutopilotLast, type PanelState } from "./state";
 import { channelVideos } from "./youtube";
 
@@ -8,8 +9,10 @@ export const STUDIO_DIR = "video-studio";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).replace(/^YouTube:\s*/, "");
 
-export async function loadState(now = new Date()): Promise<PanelState> {
-  const youtube = channelVideos().then(
+// videos — уже начатый запрос к YouTube: «Статистика» берёт ролики вместе с цифрами канала
+// и отдаёт их сюда, чтобы не проходить по каналу второй раз (квота).
+export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]> = channelVideos()): Promise<PanelState> {
+  const youtube = videos.then(
     (videos) => ({ videos, error: null as string | null }),
     (e: unknown) => ({ videos: null, error: errorText(e) }),
   );

@@ -105,6 +105,13 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           <div className="muted small">
             {row.pillar} · {whenText}
           </div>
+          {row.stage === "published" && row.stats && (
+            <div className="views-line" title="просмотры · лайки · комментарии">
+              👁 {row.stats.viewsLabel}
+              {row.stats.likesLabel !== null && ` · 👍 ${row.stats.likesLabel}`}
+              {row.stats.commentsLabel !== null && ` · 💬 ${row.stats.commentsLabel}`}
+            </div>
+          )}
           <Dots stage={row.stage} />
         </div>
         <button className="btn ghost" onClick={onClose} aria-label="Закрыть">

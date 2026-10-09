@@ -6,6 +6,7 @@ import { parsePlan, scriptCode } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
 import type { GhRelease, GhRun } from "./github";
 import { STAGES, codesLabel, plural, shiftDateKey, type Stage } from "./stages";
+import { rowStats, type RowStats } from "./stats";
 
 export { STAGES, STAGE_LABEL, codesLabel, plural, type Stage } from "./stages";
 
@@ -55,6 +56,7 @@ export interface Row {
   timeLabel: string;
   flags: string[];
   running: string | null; // что сейчас делает Actions с этим роликом
+  stats?: RowStats | null; // просмотры, лайки, комментарии с YouTube (statistics того же videos.list)
 }
 
 export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "other";
@@ -351,6 +353,7 @@ export function buildState(input: StateInput): PanelState {
       timeLabel: "",
       flags,
       running: running.get(it.id) ?? null,
+      stats: v ? rowStats(v) : null,
     };
   });
 

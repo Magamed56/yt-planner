@@ -6,6 +6,9 @@ import { logoutAction } from "@/app/actions";
 import { plural } from "@/lib/stages";
 
 export type Section = "feed" | "calendar" | "runs";
+// «Статистика» — отдельная страница: на главной не переключается без перезагрузки, как лента.
+type Nav = Section | "stats";
+const NAV: Nav[] = ["feed", "calendar", "runs", "stats"];
 
 // Кольцо-секундомер из знака канала: заполнено на столько дней расписания из недели.
 export function RunwayRing({ days, size = 52 }: { days: number | null; size?: number }) {
@@ -36,7 +39,7 @@ export function RunwayRing({ days, size = 52 }: { days: number | null; size?: nu
   );
 }
 
-const ICONS: Record<Section, React.ReactNode> = {
+const ICONS: Record<Nav, React.ReactNode> = {
   feed: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
   calendar: (
     <>
@@ -45,11 +48,12 @@ const ICONS: Record<Section, React.ReactNode> = {
     </>
   ),
   runs: <path d="m6 4 14 8-14 8z" />,
+  stats: <path d="M3 21h18M7 17v-5M12 17V5M17 17V9" />,
 };
-const LABEL: Record<Section, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски" };
-const HREF: Record<Section, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs" };
+const LABEL: Record<Nav, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски", stats: "Статистика" };
+const HREF: Record<Nav, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs", stats: "/stats" };
 
-function Icon({ section }: { section: Section }) {
+function Icon({ section }: { section: Nav }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {ICONS[section]}
@@ -66,7 +70,7 @@ export default function AppShell({
   runwayLabel,
   children,
 }: {
-  active: Section;
+  active: Nav;
   onSection?: (s: Section) => void; // на главной лента и календарь переключаются без перезагрузки
   updated: string;
   activeRuns: number;
@@ -88,13 +92,13 @@ export default function AppShell({
     return () => clearInterval(timer);
   }, [activeRuns, router]);
 
-  const link = (s: Section, className?: string, withIcon = true) => (
+  const link = (s: Nav, className?: string, withIcon = true) => (
     <Link
       key={s}
       href={HREF[s]}
       className={`${className ?? ""}${active === s ? " active" : ""}`}
       onClick={(e) => {
-        if (onSection && s !== "runs") {
+        if (onSection && (s === "feed" || s === "calendar")) {
           e.preventDefault();
           onSection(s);
         }
@@ -118,7 +122,7 @@ export default function AppShell({
           <span className="tag">СУТЬ</span>ЗА МИНУТУ
         </Link>
         <nav className="side-nav" aria-label="Разделы">
-          {(["feed", "calendar", "runs"] as Section[]).map((s) => link(s))}
+          {NAV.map((s) => link(s))}
         </nav>
         <div className="side-foot">
           <div className="runway-card">
@@ -159,7 +163,7 @@ export default function AppShell({
       <div className="content">{children}</div>
 
       <nav className="tabbar" aria-label="Разделы">
-        {(["feed", "calendar", "runs"] as Section[]).map((s) => link(s))}
+        {NAV.map((s) => link(s))}
       </nav>
     </div>
   );
