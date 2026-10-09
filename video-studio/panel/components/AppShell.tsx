@@ -7,8 +7,9 @@ import { plural } from "@/lib/stages";
 
 export type Section = "feed" | "calendar" | "runs";
 // Пункты меню: лента и календарь на главной переключаются без перезагрузки, остальные — ссылки.
-type NavItem = Section | "plan" | "stats";
-const NAV: NavItem[] = ["feed", "calendar", "plan", "runs", "stats"];
+type NavItem = Section | "stats";
+// «План» убран: порядок выхода меняется прямо в календаре (одна очередь, без дублей).
+const NAV: NavItem[] = ["feed", "calendar", "runs", "stats"];
 
 // Кольцо-секундомер из знака канала: заполнено на столько дней расписания из недели.
 export function RunwayRing({ days, size = 52 }: { days: number | null; size?: number }) {
@@ -47,12 +48,11 @@ const ICONS: Record<NavItem, React.ReactNode> = {
       <path d="M16 2v4M8 2v4M3 10h18" />
     </>
   ),
-  plan: <path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />,
   runs: <path d="m6 4 14 8-14 8z" />,
   stats: <path d="M3 21h18M7 17v-5M12 17V5M17 17V9" />,
 };
-const LABEL: Record<NavItem, string> = { feed: "Лента", calendar: "Календарь", plan: "План", runs: "Запуски", stats: "Статистика" };
-const HREF: Record<NavItem, string> = { feed: "/", calendar: "/?view=calendar", plan: "/plan", runs: "/runs", stats: "/stats" };
+const LABEL: Record<NavItem, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски", stats: "Статистика" };
+const HREF: Record<NavItem, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs", stats: "/stats" };
 
 function Icon({ section }: { section: NavItem }) {
   return (
@@ -69,6 +69,7 @@ export default function AppShell({
   activeRuns,
   runwayDays,
   runwayLabel,
+  loading = false,
   children,
 }: {
   active: NavItem;
@@ -77,6 +78,7 @@ export default function AppShell({
   activeRuns: number;
   runwayDays: number | null;
   runwayLabel: string | null;
+  loading?: boolean; // экран ещё грузится (loading.tsx): без цифр, которых пока нет
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -137,11 +139,11 @@ export default function AppShell({
             <RunwayRing days={runwayDays} />
             <div className="small muted">
               <b style={{ color: "var(--text)", display: "block" }}>запас расписания</b>
-              {runwayLabel ? `до ${runwayLabel}` : "нет запланированных"}
+              {loading ? "загружаю…" : runwayLabel ? `до ${runwayLabel}` : "нет запланированных"}
             </div>
           </div>
           <div className="small muted">
-            обновлено {updated}
+            {loading ? "загружаю данные…" : `обновлено ${updated}`}
             {activeRuns ? ` · в работе: ${activeRuns}` : ""}
           </div>
           <div className="btn-row" style={{ marginTop: 0 }}>

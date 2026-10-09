@@ -1,16 +1,14 @@
 // Офлайн-проверка операций панели: настройки автопилота, запас сценариев, повтор упавших
-// сборок, уборка видео из релизов, порядок тем плана, правка сценария, пересборка.
+// сборок, уборка видео из релизов, правка сценария, пересборка.
 // Сеть и ключи не нужны. Запуск из папки video-studio: npx tsx panel/scripts/ops-test.ts
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parsePlan, type ContentPlan } from "../../src/pipeline/plan";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import { ASSET_CHUNK, assetHeaders, assetType, contentDisposition, parseContentRange, planRange } from "../lib/asset-range";
 import type { GhRelease } from "../lib/github";
 import { decideReserve, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
-import { moveItem, movableIds, reorderPlan, sortByPillars } from "../lib/plan-order";
 import { rebuildInputs, DEFAULT_REBUILD } from "../lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, countWords, parseTags, SCRIPT_LIMITS, scriptEditOf, scriptFileText, type ScriptEdit } from "../lib/script-edit";
 import { buildState, DEFAULT_AUTOPILOT, parseAutopilot, type Row, type RunInfo } from "../lib/state";
@@ -232,57 +230,6 @@ async function main() {
       state.releaseVideos.map((f) => [f.code, f.assetId, f.publishedAt]),
       [["01a", 10, "2026-10-01T09:00:00Z"]],
     );
-  });
-
-  await test("порядок тем: позиции (id, day, slot) на месте, содержимое переезжает; двигать можно только planned без сценария", () => {
-    const plan = parsePlan(json("content/plan.json"));
-    const locked = new Set(["10a"]); // например, у 10a уже идёт запуск
-    const movable = movableIds(plan, locked);
-    assert.ok(!movable.includes("01a") && !movable.includes("08a"), "темы со сценарием не двигаются");
-    assert.ok(!movable.includes("10a"));
-    assert.ok(movable.includes("09a") && movable.includes("10b"));
-    // Последнюю подвижную тему — на первое место.
-    const order = moveItem(movable, movable.length - 1, 0);
-    const next = reorderPlan(plan, movable, order);
-    const at = (p: ContentPlan, id: string) => p.items.find((x) => x.id === id)!;
-    const first = movable[0]!;
-    const last = movable.at(-1)!;
-    assert.equal(at(next, first).title, at(plan, last).title);
-    assert.deepEqual(at(next, first).keyFacts, at(plan, last).keyFacts);
-    assert.equal(at(next, first).pillar, at(plan, last).pillar);
-    assert.deepEqual([at(next, first).id, at(next, first).day, at(next, first).slot], [at(plan, first).id, at(plan, first).day, at(plan, first).slot]);
-    assert.equal(at(next, movable[1]!).title, at(plan, first).title);
-    // Неподвижные — те же объекты, порядок позиций и ключей прежний, план читается.
-    assert.equal(at(next, "01a"), at(plan, "01a"));
-    assert.equal(at(next, "10a"), at(plan, "10a"));
-    assert.deepEqual(
-      next.items.map((x) => x.id),
-      plan.items.map((x) => x.id),
-    );
-    assert.deepEqual(Object.keys(at(next, first)), Object.keys(at(plan, last)));
-    assert.deepEqual(Object.keys(next), Object.keys(plan as object));
-    parsePlan(JSON.parse(JSON.stringify(next)));
-    assert.equal(new Set(next.items.map((x) => x.title)).size, plan.items.length, "ни одна тема не потерялась и не задвоилась");
-    // Тот же порядок — тот же план.
-    assert.deepEqual(reorderPlan(plan, movable, movable), plan);
-    // Чужие и пропущенные коды — отказ.
-    assert.throws(() => reorderPlan(plan, movable, movable.slice(1)), /обновите страницу/);
-    assert.throws(() => reorderPlan(plan, movable, [...movable.slice(1), "01a"]), /обновите страницу/);
-    assert.throws(() => reorderPlan(plan, [...movable, "99z"], [...movable, "99z"]), /обновите страницу/);
-  });
-
-  await test("перенос в списке и сортировка по рейтингу рубрик (заготовка)", () => {
-    assert.deepEqual(moveItem(["a", "b", "c", "d"], 3, 1), ["a", "d", "b", "c"]);
-    assert.deepEqual(moveItem(["a", "b", "c"], 0, 2), ["b", "c", "a"]);
-    assert.deepEqual(moveItem(["a", "b"], 0, 5), ["a", "b"]);
-    const items = [
-      { id: "09a", pillar: "money" },
-      { id: "09b", pillar: "space" },
-      { id: "10b", pillar: "money" },
-      { id: "11a", pillar: "mind" },
-      { id: "11b", pillar: "x" },
-    ];
-    assert.deepEqual(sortByPillars(items, ["mind", "money"]), ["11a", "09a", "10b", "09b", "11b"]);
   });
 
   await test("правка сценария: без изменений файл тот же; пределы как в schema.ts; итог проходит validateScript", async () => {
