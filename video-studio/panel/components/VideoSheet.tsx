@@ -276,7 +276,9 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       )}
 
       {/* До загрузки — первым делом: что не так с роликом. Уже на YouTube — ниже, у плеера. */}
-      {row.release && row.stage === "video" && <ReleaseChecks release={row.release} voice={row.voice ?? null} missingSecrets={state.missingSecrets} title="Перед загрузкой проверьте" />}
+      {row.release && row.stage === "video" && (
+        <ReleaseChecks release={row.release} voice={row.voice ?? null} realPhotos={row.realPhotos ?? false} missingSecrets={state.missingSecrets} title="Перед загрузкой проверьте" />
+      )}
 
       <section>
         <h4>Что дальше</h4>
@@ -401,7 +403,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       )}
       {/* Вышедший ролик уже не заменить — проверку не грузим. */}
       {row.release && (row.stage === "studio" || row.stage === "scheduled") && (
-        <ReleaseChecks release={row.release} voice={row.voice ?? null} missingSecrets={state.missingSecrets} title="Проверка ролика" />
+        <ReleaseChecks release={row.release} voice={row.voice ?? null} realPhotos={row.realPhotos ?? false} missingSecrets={state.missingSecrets} title="Проверка ролика" />
       )}
 
       {!lock && (row.stage === "script" || row.stage === "video") && (

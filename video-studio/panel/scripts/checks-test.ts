@@ -9,11 +9,14 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { channelFromJson } from "../../src/pipeline/channel";
 import { buildYoutubeMeta, descriptionTxt, voiceCreditLine } from "../../src/pipeline/meta";
 import type { Credit } from "../../src/pipeline/contracts";
+import { DEFAULT_REAL_PILLARS } from "../../src/pipeline/visuals/index";
 import type { VideoScript } from "../../src/types";
 import {
   expectedVoice,
   parseCredits,
   parseQc,
+  REAL_PHOTO_PILLARS,
+  realPhotosFirst,
   releaseChecks,
   voiceDiffers,
   type CheckContext,
@@ -208,6 +211,25 @@ test("кадры только из Wikimedia (как 10a–12b) — предуп
   assert.match(texts(releaseChecks(f, ctx({ stockKeysMissing: null }))), /нужны PEXELS_API_KEY или PIXABAY_API_KEY/);
 });
 
+test("кадры: рубрика «настоящих фото» (history, nature, space) — только Wikimedia не тревога", () => {
+  // Список совпадает с конвейером: иначе панель ругала бы ролики, собранные как задумано.
+  assert.deepEqual(REAL_PHOTO_PILLARS, DEFAULT_REAL_PILLARS.split(","));
+  assert.equal(realPhotosFirst("history"), true);
+  assert.equal(realPhotosFirst(" Space "), true);
+  assert.equal(realPhotosFirst("money"), false);
+  assert.equal(realPhotosFirst(null), false);
+  const wikiOnly = facts(qcOk(qcJson()), creditsOk(descriptionOf([wiki(1), wiki(2)])));
+  const line = releaseChecks(wikiOnly, ctx({ realPhotos: true, stockKeysMissing: false })).find((l) => l.text.startsWith("Кадры"))!;
+  assert.equal(line.level, "info");
+  assert.match(line.text, /^Кадры — фото \(Wikimedia Commons 2\): в этой рубрике сначала ищутся настоящие фото/);
+  assert.doesNotMatch(line.text, /пересборка/i, "пересборка с ключами ничего не изменит — не советуем");
+  // Фото Wikimedia и Pexels без видео — тоже норма для рубрики; видео есть — обычная строка «всё в порядке».
+  assert.equal(releaseChecks(facts(qcOk(qcJson()), creditsOk(descriptionOf([wiki(1), pexelsPhoto]))), ctx({ realPhotos: true })).find((l) => l.text.startsWith("Кадры"))!.level, "info");
+  assert.equal(releaseChecks(facts(qcOk(qcJson()), creditsOk(descriptionOf([wiki(1), pexelsVideo]))), ctx({ realPhotos: true })).find((l) => l.text.startsWith("Кадры"))!.level, "ok");
+  // Совсем без кадров — предупреждение и в такой рубрике.
+  assert.ok(releaseChecks(facts(qcOk(qcJson()), creditsOk(descriptionOf([]))), ctx({ realPhotos: true })).some((l) => l.level === "warn" && /нет ни видео, ни фото/.test(l.text)));
+});
+
 test("кадры: только фото Pexels — «стокового видео нет»", () => {
   const line = releaseChecks(facts(qcOk(qcJson()), creditsOk(descriptionOf([pexelsPhoto, wiki(1)]))), ctx()).find((l) => l.text.startsWith("Стокового"))!;
   assert.equal(line.level, "warn");
@@ -245,7 +267,7 @@ test("кадры: описание канала на другом языке (Vi
 test("старый релиз без qc.json и description.txt — три спокойные подсказки, без ошибок", () => {
   const lines = releaseChecks(facts({ state: "missing" }, { state: "missing" }), ctx());
   assert.deepEqual(lines.map((l) => l.level), ["info", "info", "info"]);
-  assert.match(texts(lines), /Автопроверки \(qc\.json\) в релизе нет/);
+  assert.match(texts(lines), /Автопроверки \(qc\.json\) в релизе нет — ролик собран до неё или залит с компьютера/);
   assert.match(texts(lines), /description\.txt в релизе нет/);
 });
 

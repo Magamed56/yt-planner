@@ -4,7 +4,7 @@
 import { channelFromJson, isoNoMs, localDate, upcomingSlots } from "../../src/pipeline/channel";
 import { parsePlan, scriptCode } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
-import { expectedVoice, STOCK_SECRETS, STOCK_SECRETS_LABEL, type VoiceRef } from "./checks";
+import { expectedVoice, realPhotosFirst, STOCK_SECRETS, STOCK_SECRETS_LABEL, type VoiceRef } from "./checks";
 import type { GhRelease, GhRun, GhStep } from "./github";
 import { expectedMs, runProgress, type RunProgress } from "./progress";
 import { releaseVideosOf, type ReleaseVideo } from "./ops";
@@ -63,6 +63,7 @@ export interface Row {
   running: string | null; // что сейчас делает Actions с этим роликом
   stats?: RowStats | null; // просмотры, лайки, комментарии с YouTube (statistics того же videos.list)
   voice?: VoiceRef | null; // каким голосом должен быть озвучен (рубрика или канал) — для проверки релиза
+  realPhotos?: boolean; // рубрика «настоящих фото» (history, nature, space): только Wikimedia — норма
 }
 
 export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "other";
@@ -429,7 +430,9 @@ export function buildState(input: StateInput): PanelState {
       flags,
       running: running.get(it.id) ?? null,
       stats: v ? rowStats(v) : null,
-      voice: expectedVoice(channel, it.pillar),
+      // Нужны только карточке с релизом — остальным строкам не раздуваем данные страницы.
+      voice: release ? expectedVoice(channel, it.pillar) : null,
+      realPhotos: release ? realPhotosFirst(it.pillar) : false,
     };
   });
 

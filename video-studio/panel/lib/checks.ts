@@ -7,6 +7,13 @@ import type { ChannelConfig } from "../../src/pipeline/channel";
 export const STOCK_SECRETS = ["PEXELS_API_KEY", "PIXABAY_API_KEY"];
 export const STOCK_SECRETS_LABEL = STOCK_SECRETS.join(", ");
 
+// Рубрики, где конвейер сначала ищет настоящие фото (Wikimedia, Openverse), а сток — только если
+// их нет: DEFAULT_REAL_PILLARS в src/pipeline/visuals (импортировать нельзя — там fs). В Actions
+// VISUALS_REAL_PILLARS не передаётся, так что действует именно этот список; совпадение
+// проверяет scripts/checks-test.ts. У таких роликов «только Wikimedia» — норма, а не сбой ключей.
+export const REAL_PHOTO_PILLARS = ["history", "nature", "space"];
+export const realPhotosFirst = (pillar: string | null | undefined) => Boolean(pillar && REAL_PHOTO_PILLARS.includes(pillar.trim().toLowerCase()));
+
 export interface VoiceRef {
   provider: string | null; // gemini | edge | piper | …
   name: string | null; // Charon, ru-RU-DmitryNeural…
@@ -49,7 +56,7 @@ export interface CreditFacts {
 // после смены разбора старый ответ не должен подставиться.
 export const FACTS_VERSION = 1;
 
-export type FileFacts<T> ={ state: "ok"; data: T } | { state: "missing" } | { state: "error"; message: string };
+export type FileFacts<T> = { state: "ok"; data: T } | { state: "missing" } | { state: "error"; message: string };
 
 export interface ReleaseFacts {
   qc: FileFacts<QcFacts>;
@@ -220,10 +227,11 @@ const LEVEL_ORDER: Record<CheckLevel, number> = { error: 0, warn: 1, info: 2, ok
 export interface CheckContext {
   voice: VoiceRef | null; // каким голосом должно быть (expectedVoice)
   stockKeysMissing: boolean | null; // в секретах GitHub нет ключей стоков; null — неизвестно
+  realPhotos?: boolean; // рубрика из REAL_PHOTO_PILLARS: настоящие фото важнее стока
 }
 
 function qcLines(f: FileFacts<QcFacts>): CheckLine[] {
-  if (f.state === "missing") return [{ level: "info", text: "Автопроверки (qc.json) в релизе нет — ролик собран до неё: посмотрите видео целиком." }];
+  if (f.state === "missing") return [{ level: "info", text: "Автопроверки (qc.json) в релизе нет — ролик собран до неё или залит с компьютера: посмотрите видео целиком." }];
   if (f.state === "error") return [{ level: "info", text: `Автопроверку не прочитать (${f.message}) — посмотрите видео целиком.` }];
   const q = f.data;
   // Запасной голос qc.json пишет и отдельным замечанием — его показывает строка о голосе.
@@ -245,7 +253,7 @@ function voiceLine(used: VoiceUsed | null, want: VoiceRef | null): CheckLine {
     const instead = used.requested ? ` вместо ${voiceLabel({ provider: used.requested, name: null })}` : "";
     return {
       level: "warn",
-      text: `Озвучено запасным голосом ${voiceLabel(used)}${instead}${used.reason ? ` (${used.reason})` : ""}. Пересоберите с голосом канала; если кончилась квота Gemini — завтра.`,
+      text: `Озвучено запасным голосом ${voiceLabel(used)}${instead}${used.reason ? ` (${used.reason})` : ""}. Пересоберите с голосом канала; если кончилась квота — на следующий день.`,
     };
   }
   if (want && voiceDiffers(used, want)) {
@@ -260,7 +268,7 @@ function stockHint(missing: boolean | null): string {
   return ` Для видео нужны ${STOCK_SECRETS.join(" или ")} в секретах GitHub (ключи бесплатные).`;
 }
 
-function visualLines(f: FileFacts<CreditFacts>, stockKeysMissing: boolean | null): CheckLine[] {
+function visualLines(f: FileFacts<CreditFacts>, ctx: CheckContext): CheckLine[] {
   if (f.state === "missing") return [{ level: "info", text: "description.txt в релизе нет — откуда кадры, не видно." }];
   if (f.state === "error") return [{ level: "info", text: `Описание не прочитать (${f.message}) — откуда кадры, не видно.` }];
   const c = f.data;
@@ -269,11 +277,16 @@ function visualLines(f: FileFacts<CreditFacts>, stockKeysMissing: boolean | null
   const list = [...c.providers.map((p) => `${p.name} ${p.count}`), ...c.hiddenProviders.filter((p) => !c.providers.some((x) => x.name === p))].join(", ");
   if (!c.block) {
     if (c.ai) return [{ level: "info", text: `Кадры — только картинки ИИ (${c.ai}).` }];
-    return [{ level: "warn", text: `В ролике нет ни видео, ни фото — только графика (в описании нет блока «Видео и фото»).${stockHint(stockKeysMissing)}` }];
+    return [{ level: "warn", text: `В ролике нет ни видео, ни фото — только графика (в описании нет блока «Видео и фото»).${stockHint(ctx.stockKeysMissing)}` }];
+  }
+  // Рубрика «настоящих фото»: конвейер так и задуман, пересборка с ключами ничего не изменит —
+  // остаётся проверить глазами, что фото по теме.
+  if (ctx.realPhotos && !c.stockVideo && !c.stockOther && !hiddenStock) {
+    return [{ level: "info", text: `Кадры — фото (${list}): в этой рубрике сначала ищутся настоящие фото, а не сток. Проверьте, что они по теме.` }];
   }
   if (!stock) {
     const archive = c.providers.map((p) => p.name).join(", ") || c.hiddenProviders.join(", ") || "архивов";
-    return [{ level: "warn", text: `Кадры только из ${archive} (${c.archive + c.hidden} фото), стокового видео нет — такие фото часто мимо темы.${stockHint(stockKeysMissing)}` }];
+    return [{ level: "warn", text: `Кадры только из ${archive} (${c.archive + c.hidden} фото), стокового видео нет — такие фото часто мимо темы.${stockHint(ctx.stockKeysMissing)}` }];
   }
   if (!c.stockVideo && !c.stockOther && !hiddenStock) {
     return [{ level: "warn", text: `Стокового видео нет — только фото (${list}). Пересборка подбирает видео первым.` }];
@@ -285,7 +298,7 @@ function visualLines(f: FileFacts<CreditFacts>, stockKeysMissing: boolean | null
 
 export function releaseChecks(f: ReleaseFacts, ctx: CheckContext): CheckLine[] {
   const used = (f.qc.state === "ok" ? f.qc.data.voice : null) ?? (f.credits.state === "ok" ? f.credits.data.voice : null);
-  const lines = [...qcLines(f.qc), voiceLine(used, ctx.voice), ...visualLines(f.credits, ctx.stockKeysMissing)];
+  const lines = [...qcLines(f.qc), voiceLine(used, ctx.voice), ...visualLines(f.credits, ctx)];
   // Сначала то, что мешает загрузке, потом «проверьте сами», в конце — что в порядке.
   return lines.map((l, i) => ({ l, i })).sort((a, b) => LEVEL_ORDER[a.l.level] - LEVEL_ORDER[b.l.level] || a.i - b.i).map((x) => x.l);
 }

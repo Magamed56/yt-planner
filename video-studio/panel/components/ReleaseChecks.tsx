@@ -14,14 +14,23 @@ const NOTHING: ReleaseFacts = { qc: { state: "missing" }, credits: { state: "mis
 
 type Loaded = { key: string; facts: ReleaseFacts } | { key: string; error: string };
 
+// Свои ошибки уже по-русски; у браузера — «Failed to fetch», «Load failed», «Unexpected token <».
+function loadError(e: unknown): string {
+  if (e instanceof TypeError) return "нет связи с панелью — проверьте интернет";
+  if (e instanceof SyntaxError) return "панель прислала не то — обновите страницу";
+  return e instanceof Error ? e.message : String(e);
+}
+
 export default function ReleaseChecks({
   release,
   voice,
+  realPhotos,
   missingSecrets,
   title,
 }: {
   release: Pick<ReleaseInfo, "qc" | "description">;
   voice: VoiceRef | null;
+  realPhotos: boolean;
   missingSecrets: string[] | null;
   title: string;
 }) {
@@ -57,7 +66,7 @@ export default function ReleaseChecks({
       })
       .catch((e: unknown) => {
         if (closed) return;
-        setLoaded({ key, error: timedOut ? "GitHub не ответил за 25 с" : e instanceof Error ? e.message : String(e) });
+        setLoaded({ key, error: timedOut ? "GitHub не ответил за 25 с" : loadError(e) });
       })
       .finally(() => clearTimeout(timer));
     return () => {
@@ -70,7 +79,7 @@ export default function ReleaseChecks({
   const mine = loaded?.key === key ? loaded : null;
   const facts = empty ? NOTHING : (cache.get(key) ?? (mine && "facts" in mine ? mine.facts : null));
   const error = !facts && mine && "error" in mine ? mine.error : null;
-  const lines = facts ? releaseChecks(facts, { voice, stockKeysMissing: missingSecrets === null ? null : missingSecrets.includes(STOCK_SECRETS_LABEL) }) : [];
+  const lines = facts ? releaseChecks(facts, { voice, realPhotos, stockKeysMissing: missingSecrets === null ? null : missingSecrets.includes(STOCK_SECRETS_LABEL) }) : [];
 
   return (
     <section className={css.checks}>

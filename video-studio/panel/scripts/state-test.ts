@@ -134,6 +134,8 @@ test("этапы: вышел, запланирован, видео (неделя
   assert.equal(row("08b").release?.qc?.id, 14);
   assert.equal(row("08b").release?.description?.id, 15);
   assert.deepEqual(row("08b").voice, { provider: "gemini", name: "Charon" }, "голос канала из channel.json");
+  assert.equal(row("08b").realPhotos, false, "рубрика body — сток важнее архивных фото");
+  assert.equal(row("09b").voice, null, "без релиза проверять нечего — данные страницы не раздуваем");
   assert.equal(row("09a").stage, "studio");
   assert.equal(row("09b").stage, "topic");
   assert.deepEqual(state.counts, { topic: 43, script: 1, video: 5, studio: 1, scheduled: 9, published: 1 });
