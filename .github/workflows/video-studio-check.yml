@@ -1,7 +1,8 @@
 # video-studio: проверка ключей — ничего не публикует и не меняет.
 #
-# Показывает, какие секреты заданы (только имена), проверяет токен Instagram (срок, права,
-# IG_USER_ID — npm run instagram-token) и, если есть ключи YouTube, делает пробный запуск
+# Показывает, какие секреты заданы (только имена; и ключи стоков Pexels/Pixabay — без них кадры
+# только из Wikimedia), проверяет токен Instagram (срок, права, IG_USER_ID — npm run
+# instagram-token) и, если есть ключи YouTube, делает пробный запуск
 # youtube-fill (--dry-run): какие ролики на канале нашлись и что им будет поставлено.
 # Запуск: Actions → «video-studio: проверка ключей» → Run workflow. Сам запускается и при
 # изменении этого файла в ветке claude/… — так проверку можно сделать до слияния в master.
@@ -47,13 +48,21 @@ jobs:
           persist-credentials: false
 
       - name: Какие секреты заданы (только имена)
+        # Ключи стоков нужны только здесь (есть/нет), дальше по шагам их не передаём.
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
           {
             echo "### 🔑 Секреты video-studio"
             echo ""
-            for k in YT_CLIENT_ID YT_CLIENT_SECRET YT_REFRESH_TOKEN IG_USER_ID IG_ACCESS_TOKEN GEMINI_API_KEY ANTHROPIC_API_KEY; do
+            for k in YT_CLIENT_ID YT_CLIENT_SECRET YT_REFRESH_TOKEN IG_USER_ID IG_ACCESS_TOKEN GEMINI_API_KEY ANTHROPIC_API_KEY PEXELS_API_KEY PIXABAY_API_KEY; do
               if [ -n "${!k}" ]; then echo "- \`$k\` — есть"; else echo "- \`$k\` — нет"; fi
             done
+            if [ -z "$PEXELS_API_KEY" ] && [ -z "$PIXABAY_API_KEY" ]; then
+              echo ""
+              echo "> Нет ни PEXELS_API_KEY, ни PIXABAY_API_KEY: стокового видео не будет, кадры только из Wikimedia и часто мимо темы. Заведите бесплатные ключи (https://www.pexels.com/api/, https://pixabay.com/api/docs/) и добавьте их в Settings → Secrets and variables → Actions."
+            fi
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Node.js 22

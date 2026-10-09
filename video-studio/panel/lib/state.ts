@@ -4,6 +4,7 @@
 import { channelFromJson, isoNoMs, localDate, upcomingSlots } from "../../src/pipeline/channel";
 import { parsePlan, scriptCode } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
+import { expectedVoice, STOCK_SECRETS, STOCK_SECRETS_LABEL, type VoiceRef } from "./checks";
 import type { GhRelease, GhRun, GhStep } from "./github";
 import { expectedMs, runProgress, type RunProgress } from "./progress";
 import { releaseVideosOf, type ReleaseVideo } from "./ops";
@@ -26,6 +27,8 @@ export interface ReleaseInfo {
   cover: Asset | null; // cover.jpg — вертикальный кадр (обложка Reels)
   thumb: Asset | null; // thumbnail.png — обложка YouTube 1280×720
   caption: Asset | null;
+  qc: Asset | null; // qc.json — автопроверка после рендера (карточка: «Перед загрузкой проверьте»)
+  description: Asset | null; // description.txt — тексты для YouTube, в нём блок «Видео и фото»
 }
 
 export interface YoutubeInfo {
@@ -59,6 +62,7 @@ export interface Row {
   flags: string[];
   running: string | null; // что сейчас делает Actions с этим роликом
   stats?: RowStats | null; // просмотры, лайки, комментарии с YouTube (statistics того же videos.list)
+  voice?: VoiceRef | null; // каким голосом должен быть озвучен (рубрика или канал) — для проверки релиза
 }
 
 export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "other";
@@ -231,6 +235,12 @@ const minute = (t: string | number | Date) => Math.floor(ms(t) / 60_000);
 const SECRET_NEEDS: { names: string[]; label: string; why: string }[] = [
   { names: ["GEMINI_API_KEY", "GOOGLE_API_KEY"], label: "GEMINI_API_KEY", why: "без него Actions озвучит ролик голосом Edge, а не Charon" },
   { names: ["ANTHROPIC_API_KEY"], label: "ANTHROPIC_API_KEY", why: "сценарии пишет Claude" },
+  // Хватит любого из двух: оба пустые — визуал берёт только Wikimedia и Openverse (src/pipeline/visuals).
+  {
+    names: STOCK_SECRETS,
+    label: STOCK_SECRETS_LABEL,
+    why: "без них кадры только из Wikimedia и часто мимо темы, стокового видео нет (ключи бесплатные: pexels.com/api, pixabay.com/api/docs)",
+  },
 ];
 
 function formatters(tz: string) {
@@ -288,6 +298,8 @@ function releasesByCode(releases: GhRelease[]): Map<string, ReleaseInfo> {
       cover: r.assets.find((a) => a.name === "cover.jpg") ?? null,
       thumb: r.assets.find((a) => a.name === "thumbnail.png") ?? null,
       caption: r.assets.find((a) => a.name === "instagram.txt") ?? null,
+      qc: r.assets.find((a) => a.name === "qc.json") ?? null,
+      description: r.assets.find((a) => a.name === "description.txt") ?? null,
     });
   }
   return out;
@@ -417,6 +429,7 @@ export function buildState(input: StateInput): PanelState {
       flags,
       running: running.get(it.id) ?? null,
       stats: v ? rowStats(v) : null,
+      voice: expectedVoice(channel, it.pillar),
     };
   });
 
