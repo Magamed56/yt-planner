@@ -1,0 +1,112 @@
+{
+  "title": "В каждом твоём глазу есть дыра: найди слепое пятно сам",
+  "description": "Слепое пятно есть в каждом глазу. Там, где выходит зрительный нерв, нет фоторецепторов, а мозг незаметно дорисовывает пробел. Узнай, кто открыл слепое пятно, и найди его у себя за десять секунд с помощью простого теста на экране.\n#shorts #зрение #мозг #слепоепятно #наука",
+  "tags": [
+    "слепое пятно",
+    "в каждом твоём глазу",
+    "зрение",
+    "глаз",
+    "мозг",
+    "зрительный нерв",
+    "оптическая иллюзия",
+    "тест зрения",
+    "мариотт",
+    "восприятие",
+    "наука",
+    "blind spot",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "В каждом твоём глазу есть дыра. Ты её не видишь.",
+      "onScreen": "В твоём глазу есть *дыра*",
+      "icon": "eye",
+      "visualQuery": "human eye macro iris",
+      "imagePrompt": "cinematic extreme macro of a human eye in darkness, a faint dark void glowing at the edge of the iris, cold blue rim light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Там, где зрительный нерв выходит из глаза, нет ни палочек, ни колбочек.",
+      "onScreen": "Диск нерва: *ноль* фоторецепторов",
+      "icon": "microscope",
+      "visualQuery": "eye retina examination doctor",
+      "imagePrompt": "cinematic view of the inside of a human eye, glowing retina with a pale round optic disc where nerve fibers converge, deep blue and amber tones, volumetric light"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Это слепое пятно. Оно лежит примерно в пятнадцати градусах от точки, куда ты смотришь, ближе к виску.",
+      "onScreen": "Слепое пятно — *ближе к виску*",
+      "stat": {
+        "value": 15,
+        "prefix": "≈",
+        "suffix": "°",
+        "label": "от точки взгляда к виску"
+      },
+      "icon": "target",
+      "visualQuery": "face profile temple closeup",
+      "imagePrompt": "cinematic side profile of a face in darkness, a thin beam of blue light from the eye angled toward the temple, minimal, moody rim light"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Описал его француз Эдм Мариотт ещё в тысяча шестьсот шестидесятых годах. Проверь сам, прямо сейчас.",
+      "onScreen": "Эдм Мариотт, *1660-е*",
+      "icon": "book-open",
+      "visualQuery": "old book candle desk",
+      "imagePrompt": "17th century scholar desk with quill, parchment and a candle, an old drawing of an eye, warm candlelight against deep blue shadows, cinematic"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Закрой левый глаз. Правым смотри на крестик слева. Медленно приближай телефон к лицу. Точка справа исчезнет.",
+      "onScreen": "✚ ●",
+      "icon": "smartphone",
+      "visualQuery": "person covering one eye",
+      "imagePrompt": "cinematic close-up of a person covering one eye with a hand, staring at a glowing phone screen in a dark room, blue screen light on the face"
+    },
+    {
+      "id": "s6",
+      "kind": "quiz",
+      "narration": "Правда или миф: на месте исчезнувшей точки зияет чёрная дыра?",
+      "onScreen": "На месте точки — *чёрная дыра*?",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Мозг заливает пробел фоном и узором вокруг",
+        "question": "А ты увидел чёрное пятно?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Миф. Мозг дорисовывает пробел узором вокруг. Это показали Рамачандран и Грегори в девяносто первом году.",
+      "onScreen": "Мозг *дорисовывает* пробел",
+      "icon": "brain",
+      "visualQuery": "brain model blue light",
+      "imagePrompt": "glowing brain made of light particles painting a missing patch of a patterned background, dark space, teal and amber light, cinematic"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Выходит, часть того, что ты видишь прямо сейчас, не картинка, а догадка мозга.",
+      "onScreen": "Ты видишь *догадку* мозга",
+      "icon": "lightbulb",
+      "visualQuery": "city street through window",
+      "imagePrompt": "cinematic view through a window at night city, a small area of the scene subtly reconstructed with glowing pixels, blue and amber palette, shallow depth of field"
+    },
+    {
+      "id": "s9",
+      "kind": "cta",
+      "narration": "Точка у тебя исчезла? Напиши в комментариях, на каком расстоянии. И подпишись.",
+      "onScreen": "Исчезла? *Пиши* в комментариях",
+      "icon": "bell-ring"
+    }
+  ]
+}

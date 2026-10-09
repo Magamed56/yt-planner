@@ -499,7 +499,8 @@
           "source": "Jiang P. et al. Major taste loss in carnivorous mammals. PNAS 109(13), 4956–4961 (2012)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-10a-koshki-ne-chuvstvuyut-sladkoe-sovsem-chto-chuvstvuyut-koshki.json"
     },
     {
       "id": "10b",
@@ -523,7 +524,8 @@
           "source": "Ramachandran V. S., Gregory R. L. Perceptual filling in of artificially induced scotomas in human vision. Nature 350, 699–702 (1991)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-10b-v-kazhdom-tvoem-glazu-est-dyra-naydi-slepoe-pyatno-sam.json"
     },
     {
       "id": "11a",

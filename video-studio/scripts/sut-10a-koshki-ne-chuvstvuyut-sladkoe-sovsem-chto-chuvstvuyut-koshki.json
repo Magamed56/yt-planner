@@ -1,0 +1,99 @@
+{
+  "title": "Кошки не чувствуют сладкое. Совсем: что чувствуют кошки на вкус",
+  "description": "Почему кошка равнодушна к сахару: ген рецептора сладкого Tas1r2 у кошачьих сломан и стал псевдогеном. Узнаешь, что ту же поломку независимо получили многие хищники, и почему сладкое не годится кошке в награду.\n#shorts #кошки #генетика #наука",
+  "tags": [
+    "кошки",
+    "что чувствуют кошки",
+    "кошки поведение",
+    "вкус",
+    "сладкое",
+    "генетика",
+    "псевдоген",
+    "tas1r2",
+    "хищники",
+    "эволюция",
+    "наука",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Торт для кошки не сладкий. Она просто не чувствует сахар.",
+      "onScreen": "Для кошки торт *не сладкий*",
+      "icon": "cake",
+      "visualQuery": "cat sniffing cake",
+      "imagePrompt": "cinematic close-up of a curious tabby cat sniffing a slice of cream cake on a dark table, moody blue rim light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Дело в гене тас один эр два. Он кодирует часть рецептора сладкого.",
+      "onScreen": "Ген *Tas1r2* — рецептор сладкого",
+      "icon": "dna",
+      "visualQuery": "dna model laboratory",
+      "imagePrompt": "glowing DNA double helix floating in darkness, one segment highlighted in cool blue light, cinematic macro shot"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "У кошки этот ген сломан. Это псевдоген: инструкция есть, а рабочего рецептора нет.",
+      "onScreen": "Ген есть. Рецептора *нет*",
+      "icon": "circle-x",
+      "visualQuery": "cat tongue close up",
+      "imagePrompt": "extreme macro of a cat tongue with tiny papillae, cold blue light, dark background, cinematic"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Это показала команда Ли в две тысячи пятом году. Причём не только у домашней кошки, но и у её диких родственников.",
+      "onScreen": "Li et al., *2005*: все кошачьи",
+      "icon": "microscope",
+      "visualQuery": "tiger walking grass",
+      "imagePrompt": "a domestic cat and a tiger side by side in silhouette against a deep blue night sky, cinematic wide shot"
+    },
+    {
+      "id": "s5",
+      "kind": "quiz",
+      "narration": "Правда или миф: вкус сладкого потеряли только кошки?",
+      "onScreen": "Сладкое потеряли *только* кошки?",
+      "icon": "triangle-alert",
+      "visualQuery": "cat eyes dark",
+      "imagePrompt": "intense close-up of cat eyes glowing in darkness, blue rim light, suspenseful mood",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Рецептор сладкого потеряли многие хищные млекопитающие",
+        "question": "Угадал с первого раза?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Миф. В две тысячи двенадцатом году Цзян с коллегами нашли такую же поломку у многих хищников. И возникла она независимо, снова и снова.",
+      "onScreen": "Хищники теряли сладкое *независимо*",
+      "icon": "flame",
+      "visualQuery": "sea lion rocks",
+      "imagePrompt": "several predators, a sea lion, a hyena and a wild cat, in separate moody spotlights on dark background, cinematic"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Отсюда честный вывод. Сладкое для кошки не награда, а пустой вкус. Хвали её по-другому.",
+      "onScreen": "Сладкое — *не награда* для кошки",
+      "icon": "heart",
+      "visualQuery": "person petting cat",
+      "imagePrompt": "warm hand gently stroking a relaxed cat on a sofa, soft blue evening light, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А твоя кошка тянется к сладкому? Напиши в комментариях и подпишись.",
+      "onScreen": "Твоя кошка любит *сладкое*?",
+      "icon": "bell-ring"
+    }
+  ]
+}
