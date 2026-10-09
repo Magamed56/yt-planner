@@ -133,13 +133,13 @@ test("досмотр ролика: подписи, слабый — меньше
   assert.equal(durationText(-3), "0:00");
   const r = (avgPercent: number, views = 100): Retention => ({ views, engagedViews: null, avgDurationSec: 30, avgPercent });
   const weak = videoRetention(r(45), true)!;
-  assert.equal(weak.percentLabel, "45 %");
+  assert.equal(weak.percentLabel, "45\u00a0%");
   assert.equal(weak.durationLabel, "0:30");
   assert.equal(weak.weak, true);
   assert.equal(videoRetention(r(45, 10), true)!.weak, false); // по 10 просмотрам выводов не делаем
   assert.equal(videoRetention(r(35), false)!.weak, false); // длинный ролик: 35 % — нормально
   assert.equal(videoRetention(r(25), false)!.weak, true);
-  assert.equal(videoRetention(r(112.4), true)!.percentLabel, "112 %"); // повторы Shorts
+  assert.equal(videoRetention(r(112.4), true)!.percentLabel, "112\u00a0%"); // повторы Shorts
   assert.equal(videoRetention(undefined, true), null);
 });
 
@@ -148,7 +148,7 @@ test("среднее по каналу — с весом по просмотра
   const b = videoRetention({ views: 100, engagedViews: null, avgDurationSec: 20, avgPercent: 40 }, true);
   const o = retentionOverview([a, b, null, undefined])!;
   assert.equal(o.videos, 2);
-  assert.equal(o.percentLabel, "70 %");
+  assert.equal(o.percentLabel, "70\u00a0%");
   assert.equal(o.durationLabel, "0:35");
   assert.equal(o.weak, 1);
   assert.equal(o.engaged, true);
@@ -208,14 +208,14 @@ test("«Статистика»: удержание у роликов, средн
   ]);
   const s = buildStats(baseInput({ retention: rows }));
   const by = new Map(s.videos.map((v) => [v.videoId, v]));
-  assert.equal(by.get("v1")!.retention!.percentLabel, "74 %");
+  assert.equal(by.get("v1")!.retention!.percentLabel, "74\u00a0%");
   assert.equal(by.get("v2")!.retention!.weak, true);
   assert.equal(by.get("v3")!.retention!.weak, false);
   assert.equal(by.get("v4")!.retention, null);
   assert.equal(s.retention!.videos, 3);
   assert.equal(s.retention!.weak, 1);
   // (74·5200 + 40·950 + 63·420) / 6570 ≈ 68,1
-  assert.equal(s.retention!.percentLabel, "68 %");
+  assert.equal(s.retention!.percentLabel, "68\u00a0%");
   // Засчитанные у трёх + обычные у свежего v4: 3000 + 500 + 260 + 50.
   assert.equal(s.monetization.engaged, true);
   assert.equal(s.monetization.views90, 3810);

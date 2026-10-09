@@ -25,8 +25,8 @@ export default function RetentionCard({ problem }: { problem: AnalyticsProblem }
               галочки.
             </li>
             <li>
-              Новый <code>YT_REFRESH_TOKEN</code> из <code>.env</code> — в Vercel (Settings → Environment Variables, затем Redeploy) и в GitHub (Settings → Secrets and
-              variables → Actions).
+              Новый <code>YT_REFRESH_TOKEN</code> из <code>.env</code> — в Vercel (Settings → Environment Variables, затем Redeploy), в GitHub (Settings → Secrets and
+              variables → Actions) и в <code>.env</code> второго компьютера.
             </li>
           </ol>
         </>

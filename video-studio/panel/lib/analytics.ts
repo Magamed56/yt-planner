@@ -109,7 +109,8 @@ export interface VideoRetention {
   weak: boolean;
 }
 
-export const percentText = (p: number) => `${Math.round(p)} %`;
+// Неразрывный пробел: в строке графика «досмотр 74 %» иначе переносится как «74» / «%».
+export const percentText = (p: number) => `${Math.round(p)}\u00a0%`;
 
 // 37 → «0:37», 605 → «10:05».
 export function durationText(sec: number): string {
