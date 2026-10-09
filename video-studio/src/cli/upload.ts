@@ -9,7 +9,7 @@ import { parseArgs } from "node:util";
 import { loadChannel } from "../pipeline/channel-file";
 import { instagramEnvHelp, missingInstagramEnv, publishRunDir } from "../pipeline/instagram";
 import type { YoutubeMeta } from "../pipeline/meta";
-import { publishTelegramRunDir, telegramConfig } from "../pipeline/telegram";
+import { publishTelegramRunDir, telegramAlreadySent, telegramConfig } from "../pipeline/telegram";
 import { PRIVACY_VALUES, missingYoutubeEnv, uploadToYoutube, youtubeEnvHelp, type Privacy } from "../pipeline/youtube";
 import { UserError, argsError, fail, ghOutput, ghSummary, loadEnv, rel, resolveInputPath, writeYoutubeResult } from "./common";
 import { SCHEDULE_HELP, describePublishAt, parseUploadTargets, resolvePublishAt, scheduleArgsFrom, wantsSchedule } from "./publish-options";
@@ -73,7 +73,12 @@ async function main() {
   // Ключи проверяем заранее: не публиковать половину, если для второй половины их нет.
   if (targets.has("youtube") && missingYoutubeEnv().length) throw new UserError(`Не заданы ${missingYoutubeEnv().join(", ")}.\n${youtubeEnvHelp()}`);
   if (targets.has("instagram") && missingInstagramEnv().length) throw new UserError(`Не заданы ${missingInstagramEnv().join(", ")}.\n${instagramEnvHelp()}`);
-  if (targets.has("telegram")) telegramConfig(); // нет ключей или они не того вида — объяснит, что сделать
+  if (targets.has("telegram")) {
+    telegramConfig(); // нет ключей или они не того вида — объяснит, что сделать
+    // Уже отправлен — сказать до YouTube и Instagram, а не после них.
+    const sent = values.force === true ? null : telegramAlreadySent(runDir);
+    if (sent) throw new UserError(targets.size > 1 ? `${sent}\nИли уберите telegram из --to.` : sent);
+  }
 
   if (targets.has("youtube")) {
     const metaFile = path.join(runDir, "youtube.json");

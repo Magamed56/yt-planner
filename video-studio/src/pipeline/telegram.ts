@@ -22,8 +22,10 @@ import path from "node:path";
 
 export const TG_API_HOST = "api.telegram.org";
 export const TG_CAPTION_MAX = 1024;
-export const TG_VIDEO_MAX_BYTES = 50 * 1024 * 1024; // лимит загрузки файла ботом
-export const TG_TARGET_BYTES = 45 * 1024 * 1024; // цель пережатия: запас на погрешность битрейта
+// Лимит загрузки ботом — «50 MB»; точно (двоичные или десятичные, считается ли обложка) Bot API
+// не пишет, поэтому на ответ «слишком большой» sendVideo пережимает копию и повторяет.
+export const TG_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+export const TG_TARGET_BYTES = 45 * 1024 * 1024; // цель пережатия: запас на погрешность битрейта и обложку
 export const TG_COVER_MAX_BYTES = 10 * 1024 * 1024; // обложка — как фото
 export const TG_CAPTION_FILE = "telegram.txt";
 export const TG_RESULT_FILE = "telegram-result.json";
@@ -100,6 +102,9 @@ export function telegramConfig(env: NodeJS.ProcessEnv = process.env): TelegramCo
   return { token, chatId, host: TG_API_HOST };
 }
 
+// 413 приходит и от самого Bot API, и HTML-страницей от его фронтенда.
+const isTooBig = (status: number, description: string) => status === 413 || /too big|too large/i.test(description);
+
 // Понятные причины частых отказов Bot API (по тексту description — кодов у Telegram мало).
 export function explainTelegramError(status: number, description: string, retryAfter: number | null = null, migrateTo: string | null = null): string {
   const d = description.toLowerCase();
@@ -116,7 +121,7 @@ export function explainTelegramError(status: number, description: string, retryA
   if (/administrator rights|not enough rights|have no rights|chat_write_forbidden|chat_admin_required/.test(d)) {
     return "у бота нет права публиковать в канале — сделайте его администратором с правом «Публикация сообщений».";
   }
-  if (status === 413 || /too big|too large/.test(d)) return "файл слишком большой: бот Telegram отправляет не больше 50 МБ.";
+  if (isTooBig(status, d)) return "файл слишком большой: бот Telegram отправляет не больше 50 МБ.";
   if (/caption is too long/.test(d)) return `подпись длиннее ${TG_CAPTION_MAX} символов — сократите telegram.txt.`;
   if (status === 429) return `слишком много запросов — Telegram просит подождать${retryAfter ? ` ${retryAfter} с` : ""}. Повторите позже.`;
   return `HTTP ${status}: ${description || "без описания"}`;
@@ -349,9 +354,20 @@ export async function sendVideo(input: SendVideoInput): Promise<TelegramPostResu
   if (originalBytes < 1024) throw new TelegramError(`Файл ${input.videoPath} почти пустой (${originalBytes} байт) — пересоберите ролик.`);
   const caption = telegramCaption(input.caption ?? "");
   const info = input.info !== undefined ? input.info : await (input.probe ?? probeVideo)(input.videoPath);
-  const fitted = await fitVideo(input.videoPath, originalBytes, info, input.transcode === undefined ? transcodeWithRemotion : input.transcode, log);
+  const transcode = input.transcode === undefined ? transcodeWithRemotion : input.transcode;
+  const fitted = await fitVideo(input.videoPath, originalBytes, info, transcode, log);
   try {
     return await postVideo(ctx, cfg, input, { fitted, info, caption, originalBytes });
+  } catch (e) {
+    // Файл чуть меньше лимита, а Telegram ответил «слишком большой» (точный лимит у Bot API не
+    // документирован, а 413 значит, что пост не вышел): пережимаем копию и пробуем ещё раз.
+    if (!(e instanceof TelegramApiError && isTooBig(e.status, e.description) && !fitted.transcoded && transcode !== false && info?.durationSec)) throw e;
+    const smaller = await fitVideo(input.videoPath, originalBytes, info, transcode, log, true);
+    try {
+      return await postVideo(ctx, cfg, input, { fitted: smaller, info, caption, originalBytes });
+    } finally {
+      smaller.cleanup();
+    }
   } finally {
     fitted.cleanup();
   }
@@ -365,11 +381,11 @@ interface FittedVideo {
 }
 
 // Больше 50 МБ — пережимаем копию (до двух попыток: средний битрейт x264 может чуть «перелететь»).
-// Не вышло — ошибка до отправки, с подсказкой.
-async function fitVideo(videoPath: string, bytes: number, info: VideoInfo | null, transcode: Transcode | false, log: (m: string) => void): Promise<FittedVideo> {
-  if (bytes <= TG_VIDEO_MAX_BYTES) return { file: videoPath, bytes, transcoded: false, cleanup: () => {} };
+// Не вышло — ошибка до отправки, с подсказкой. force — пережать и файл меньше лимита (его не принял Telegram).
+async function fitVideo(videoPath: string, bytes: number, info: VideoInfo | null, transcode: Transcode | false, log: (m: string) => void, force = false): Promise<FittedVideo> {
+  if (bytes <= TG_VIDEO_MAX_BYTES && !force) return { file: videoPath, bytes, transcoded: false, cleanup: () => {} };
   const mb = (n: number) => (n / 1048576).toFixed(1);
-  const tooBig = `Видео ${mb(bytes)} МБ, а бот Telegram отправляет не больше 50 МБ`;
+  const tooBig = bytes <= TG_VIDEO_MAX_BYTES ? `Telegram не принял видео ${mb(bytes)} МБ как слишком большое` : `Видео ${mb(bytes)} МБ, а бот Telegram отправляет не больше 50 МБ`;
   const hint = "Соберите ролик с VIDEO_QUALITY=standard или опубликуйте его в канал вручную.";
   if (transcode === false) throw new TelegramError(`${tooBig}. ${hint}`);
   if (!info?.durationSec) throw new TelegramError(`${tooBig}, а длительность ролика узнать не удалось — пережать под лимит нельзя. ${hint}`);
@@ -518,6 +534,17 @@ function readRecord(file: string): (TelegramRunRecord & Partial<TelegramPostResu
 
 const writeRecord = (file: string, data: unknown) => fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n");
 
+// Почему этот ролик без --force не отправить (уже отправлен или прошлая отправка оборвалась);
+// null — можно. Отдельно от отправки: upload проверяет до YouTube, make — пропускает шаг
+// (повторная сборка того же сценария пишет в ту же папку, отметка остаётся).
+export function telegramAlreadySent(runDir: string): string | null {
+  const prev = readRecord(path.join(runDir, TG_RESULT_FILE));
+  if (!prev) return null;
+  const again = `npm run upload -- ${path.relative(process.cwd(), runDir) || "."} --to telegram --force`;
+  if (prev.status === "posted") return `Этот ролик уже отправлен в Telegram (${prev.url ?? `сообщение ${prev.messageId ?? "?"}`}). Ещё раз: ${again}`;
+  return `Прошлая отправка в Telegram (${prev.startedAt}) оборвалась — неизвестно, вышел ли пост. Проверьте канал: если поста нет — ${again}`;
+}
+
 // Отправить ролик из папки (video.mp4 + подпись [+ cover.jpg]). telegram-result.json —
 // отметка «уже отправляли»: с ней второй раз без --force не отправим.
 export async function publishTelegramRunDir(
@@ -528,11 +555,8 @@ export async function publishTelegramRunDir(
   const video = path.join(runDir, "video.mp4");
   if (!fs.existsSync(video)) throw new TelegramError(`В ${runDir} нет video.mp4 — сначала соберите ролик: npm run make -- …`);
   const resultFile = path.join(runDir, TG_RESULT_FILE);
-  const prev = readRecord(resultFile);
-  if (prev && !opts.force) {
-    if (prev.status === "posted") throw new TelegramError(`Этот ролик уже отправлен в Telegram (${prev.url ?? `сообщение ${prev.messageId ?? "?"}`}). Ещё раз — с --force.`);
-    throw new TelegramError(`Прошлая отправка в Telegram (${prev.startedAt}) оборвалась — неизвестно, вышел ли пост. Проверьте канал: если поста нет — повторите с --force.`);
-  }
+  const sent = opts.force ? null : telegramAlreadySent(runDir);
+  if (sent) throw new TelegramError(sent);
   const config = opts.config ?? telegramConfig();
   const caption = readTelegramCaption(runDir);
   if (!caption.file) log("[telegram] нет ни telegram.txt, ни instagram.txt — отправляю без подписи");

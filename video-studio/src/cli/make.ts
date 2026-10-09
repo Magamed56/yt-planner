@@ -18,7 +18,7 @@ import { applyChannelDefaults, applyPillarVoice, brandIntroEnabled, type Channel
 import { loadChannel } from "../pipeline/channel-file";
 import { coverFrame, frameToMs, renderCover } from "../pipeline/cover";
 import { buildInstagramCaption, instagramEnvHelp, missingInstagramEnv, publishRunDir, writeInstagramAssets, type InstagramMeta, type RunDirPublishResult } from "../pipeline/instagram";
-import { publishTelegramRunDir, telegramConfig, type TelegramRunDirResult } from "../pipeline/telegram";
+import { publishTelegramRunDir, telegramAlreadySent, telegramConfig, type TelegramRunDirResult } from "../pipeline/telegram";
 import { buildYoutubeMeta, descriptionTxt, youtubeChapters } from "../pipeline/meta";
 import { buildVideoProps } from "../pipeline/props";
 import { qcMode, qcSummary, runQc, writeQc, type QcReport } from "../pipeline/qc";
@@ -529,7 +529,11 @@ async function main() {
   // 10. Telegram
   let telegram: TelegramRunDirResult | null = null;
   if (args.upload.has("telegram")) {
+    // Пересборка того же сценария — та же папка с отметкой прошлой отправки: не дублируем пост
+    // и не валим сборку после долгого рендера (как дубль у Instagram).
+    const sent = render ? telegramAlreadySent(runDir) : null;
     if (!render) steps.skip("Отправка в Telegram", "нет видео: указан --no-render");
+    else if (sent) steps.skip("Отправка в Telegram", sent);
     else telegram = await steps.run("Отправка в Telegram", () => publishTelegramRunDir(runDir, { log: (m) => console.log(`  ${m}`) }));
   }
 

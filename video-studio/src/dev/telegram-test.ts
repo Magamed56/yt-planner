@@ -20,6 +20,7 @@ import {
   probeVideo,
   publishTelegramRunDir,
   sendVideo,
+  telegramAlreadySent,
   telegramCaption,
   telegramConfig,
   telegramVideoKbps,
@@ -228,6 +229,39 @@ await test("sendVideo: больше 50 МБ — копия пережимает�
   assert.equal(calls.length, before, "ни одного запроса к Telegram");
 });
 
+await test("sendVideo: меньше 50 МБ, а Telegram ответил «слишком большой» — пережимает копию и повторяет", async () => {
+  const near = path.join(tmp("vs-tg-near-"), "video.mp4");
+  fs.writeFileSync(near, "");
+  fs.truncateSync(near, 49 * 1024 * 1024); // у границы: точный лимит Bot API не документирован
+  const runs: number[] = [];
+  const shrink: Transcode = async (_input, output, kbps) => {
+    runs.push(kbps);
+    fs.writeFileSync(output, Buffer.alloc(200 * 1024, 1));
+  };
+  const markers: string[] = [];
+  const tooBig = mockBot((_c, n) => (n === 1 ? new Response("<html>413 Request Entity Too Large</html>", { status: 413 }) : posted(47)));
+  const logs: string[] = [];
+  const r = await sendVideo({ videoPath: near, info, config: cfg, fetch: tooBig.f, transcode: shrink, beforeSend: () => markers.push("sending"), log: (m) => logs.push(m) });
+  assert.equal(runs.length, 1, "пережато один раз — после отказа");
+  assert.equal(tooBig.calls.length, 2);
+  assert.equal((tooBig.calls[0]!.form!.get("video") as File).size, 49 * 1024 * 1024, "сначала — исходник");
+  assert.equal((tooBig.calls[1]!.form!.get("video") as File).size, 200 * 1024, "потом — копия");
+  assert.deepEqual([r.messageId, r.video.transcoded], [47, true]);
+  assert.match(logs.join("\n"), /не принял видео 49\.0 МБ как слишком большое.*пережимаю/s);
+  assert.ok(markers.length >= 1);
+
+  // Пережимать нечем — понятная ошибка, «пост не вышел» (повторять можно).
+  const again = mockBot(() => bad(413, "Request Entity Too Large"));
+  const e = await failure(sendVideo({ videoPath: near, info, config: cfg, fetch: again.f, transcode: false, log: () => {} }));
+  assert.match(e.message, /не больше 50 МБ/);
+  assert.equal(e.maybeSent, false);
+  assert.equal(again.calls.length, 1);
+  // Копия тоже не прошла — второй отказ уходит наверх, без бесконечных повторов.
+  const always = mockBot(() => bad(413, "Request Entity Too Large"));
+  await assert.rejects(sendVideo({ videoPath: near, info, config: cfg, fetch: always.f, transcode: shrink, log: () => {} }), /не больше 50 МБ/);
+  assert.equal(always.calls.length, 2);
+});
+
 await test("sendVideo: 429 — ждёт retry_after и повторяет; слишком долгое ожидание — ошибка с подсказкой", async () => {
   const waits: number[] = [];
   const { f, calls } = mockBot((_c, n) => (n === 1 ? bad(429, "Too Many Requests: retry after 7", { retry_after: 7 }) : posted(43)));
@@ -314,7 +348,8 @@ await test("папка ролика: telegram.txt главнее instagram.txt; 
   const saved = JSON.parse(fs.readFileSync(marker, "utf8")) as { status: string; messageId: number; url: string };
   assert.equal(saved.status, "posted");
   assert.equal(saved.messageId, 50);
-  await assert.rejects(publishTelegramRunDir(dir, { config: cfg, fetch: f, info, log: () => {} }), /уже отправлен.*t\.me\/sutzaminutu\/50.*--force/s);
+  await assert.rejects(publishTelegramRunDir(dir, { config: cfg, fetch: f, info, log: () => {} }), /уже отправлен.*t\.me\/sutzaminutu\/50.*npm run upload -- .+ --to telegram --force/s);
+  assert.match(telegramAlreadySent(dir) ?? "", /уже отправлен/, "upload и make узнают об отметке до отправки");
   assert.equal(calls.length, 1);
   const again = await publishTelegramRunDir(dir, { force: true, config: cfg, fetch: f, info, log: () => {} });
   assert.equal(again.messageId, 50);
@@ -348,6 +383,7 @@ await test("папка ролика: обрыв — отметка «uncertain»
   fs.rmSync(marker);
   await assert.rejects(publishTelegramRunDir(dir, { config: cfg, fetch: forbidden.f, info, log: () => {} }), /администратором/);
   assert.equal(fs.existsSync(marker), false, "точно не ушло — отметки нет, можно повторить без --force");
+  assert.equal(telegramAlreadySent(dir), null);
 
   // --force поверх прошлого поста: ошибка до отправки (не пережали) отметку о том посте не трогает.
   const okBot = mockBot(() => posted(60));
