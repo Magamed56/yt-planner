@@ -11,7 +11,7 @@ import { runAutopilot } from "@/lib/autopilot";
 import { assetText, dispatchWorkflow, readJson, setVariable } from "@/lib/github";
 import { STUDIO_DIR } from "@/lib/load";
 import { SESSION_COOKIE } from "@/lib/session";
-import { AUTOPILOT_VAR, codesLabel, type AutopilotSettings } from "@/lib/state";
+import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
 import { channelVideos, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
 
 export interface ActionResult {
@@ -295,15 +295,27 @@ export async function saveAutopilotAction(settings: AutopilotSettings): Promise<
   return guarded(async () => {
     const days = Math.round(Number(settings.days));
     if (!(days >= 1 && days <= 14)) return fail("Дней вперёд — от 1 до 14.");
-    await setVariable(AUTOPILOT_VAR, JSON.stringify({ enabled: settings.enabled === true, days }));
-    return ok(settings.enabled ? `Автопилот включён: ролики готовятся за ${days} дн. до выхода, проверка раз в день.` : "Автопилот выключен.");
+    // Поля новее «days» могут не прийти от старой открытой вкладки — тогда умолчания.
+    const keep = Number(settings.keepReleaseDays ?? 0);
+    if (!(Number.isInteger(keep) && keep >= 0 && keep <= KEEP_RELEASE_MAX)) return fail(`Хранить видео — от 0 до ${KEEP_RELEASE_MAX} дней.`);
+    const reserve = Number(settings.scriptReserve ?? 0);
+    if (!(Number.isInteger(reserve) && reserve >= 0 && reserve <= SCRIPT_RESERVE_MAX)) return fail(`Запас сценариев — от 0 до ${SCRIPT_RESERVE_MAX}.`);
+    const value: AutopilotSettings = { enabled: settings.enabled === true, days, retryFailed: settings.retryFailed !== false, keepReleaseDays: keep, scriptReserve: reserve };
+    await setVariable(AUTOPILOT_VAR, JSON.stringify(value));
+    const parts = [
+      value.enabled ? `автопилот включён: ролики готовятся за ${days} дн. до выхода${reserve ? `, запас сценариев — ${reserve}` : ""}` : "автопилот выключен",
+      value.retryFailed ? "упавшие сборки повторяются раз" : "упавшие сборки не повторяются",
+      keep ? `видео из релизов удаляются через ${keep} дн. после выхода` : "видео из релизов не удаляются",
+    ];
+    return ok(`Сохранено: ${parts.join("; ")}.`);
   });
 }
 
 export async function runAutopilotAction(): Promise<ActionResult> {
   return guarded(async () => {
-    const last = await runAutopilot("manual");
-    return ok(last.codes.length ? `Запущено: ${last.note}.` : `Ничего не запущено: ${last.note}.`);
+    const { did, notes, errors } = await runAutopilot("manual");
+    const rest = notes.length ? ` ${notes.join("; ")}.` : "";
+    return { ok: errors.length === 0, message: did.length ? `Сделано: ${did.join("; ")}.${rest}` : `Ничего не запущено.${rest}` };
   });
 }
 

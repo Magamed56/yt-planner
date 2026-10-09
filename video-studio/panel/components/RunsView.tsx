@@ -12,9 +12,15 @@ import {
   type ActionResult,
   type FillPreview,
 } from "@/app/actions";
-import type { PanelState, RunInfo } from "@/lib/state";
+import { pickCleanup } from "@/lib/ops";
+import type { AutopilotSettings, PanelState, RunInfo } from "@/lib/state";
 import { STAGE_LABEL, codesLabel } from "@/lib/stages";
 import AppShell from "./AppShell";
+
+const KEEP_OPTIONS = [0, 3, 7, 14, 30, 60, 90, 180];
+const sameSettings = (a: AutopilotSettings, b: AutopilotSettings) =>
+  a.enabled === b.enabled && a.days === b.days && a.retryFailed === b.retryFailed && a.keepReleaseDays === b.keepReleaseDays && a.scriptReserve === b.scriptReserve;
+const mbText = (bytes: number) => `${Math.max(1, Math.round(bytes / 1_048_576))} МБ`;
 
 // Цвет точки — итог запуска: идёт, успех, ошибка, отменён.
 const runColor = (r: RunInfo) =>
@@ -38,7 +44,10 @@ export default function RunsView({ state }: { state: PanelState }) {
   const [preview, setPreview] = useState<FillPreview | null>(null);
   const [fillPicked, setFillPicked] = useState<string[]>([]);
   const [auto, setAuto] = useState(state.autopilot);
-  const autoChanged = auto.enabled !== state.autopilot.enabled || auto.days !== state.autopilot.days;
+  const autoChanged = !sameSettings(auto, state.autopilot);
+  // Что удалит уборка при выбранном сроке — считается тут же, до «Сохранить» (время — серверное).
+  const cleanup = pickCleanup(state.releaseVideos, auto.keepReleaseDays, Date.parse(state.generatedAt));
+  const keepOptions = KEEP_OPTIONS.includes(auto.keepReleaseDays) ? KEEP_OPTIONS : [...KEEP_OPTIONS, auto.keepReleaseDays].sort((a, b) => a - b);
 
   const toggle = (list: string[], code: string) => (list.includes(code) ? list.filter((c) => c !== code) : [...list, code]);
 
@@ -205,12 +214,63 @@ export default function RunsView({ state }: { state: PanelState }) {
               </select>{" "}
               дн. до выхода
             </label>
+            <label>
+              Запас сценариев{" "}
+              <select value={auto.scriptReserve} onChange={(e) => setAuto({ ...auto, scriptReserve: Number(e.target.value) })}>
+                {Array.from({ length: 11 }, (_, n) => (
+                  <option key={n} value={n}>
+                    {n === 0 ? "нет" : n}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
+          <p className="muted small">
+            Запас сценариев: у ближайших N тем без видео сценарий пишется заранее (Claude, платно) — его можно проверить и поправить в карточке ролика до сборки.
+          </p>
+          <div className="field">
+            <label>
+              <input type="checkbox" checked={auto.retryFailed} onChange={(e) => setAuto({ ...auto, retryFailed: e.target.checked })} /> Повторять упавшие сборки
+            </label>
+            <label>
+              Хранить видео в релизах{" "}
+              <select value={auto.keepReleaseDays} onChange={(e) => setAuto({ ...auto, keepReleaseDays: Number(e.target.value) })}>
+                {keepOptions.map((d) => (
+                  <option key={d} value={d}>
+                    {d === 0 ? "всегда" : `${d} дн. после выхода`}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <p className="muted small">
+            Это работает и при выключенном автопилоте. Повтор: запуск, упавший за последние сутки, перезапускается один раз (весь — готовые в нём ролики соберутся
+            заново). Уборка: у вышедших на YouTube роликов из релиза удаляется только mp4 — обложки, субтитры и тексты остаются; релизы невышедших не трогаются.
+            Reels с телефона выкладывайте до удаления.
+          </p>
+          {auto.keepReleaseDays > 0 && (
+            <p className="small">
+              {cleanup.length
+                ? `Сейчас удалилось бы видео: ${codesLabel([...new Set(cleanup.map((f) => f.code))], 20)} — файлов ${cleanup.length}, ${mbText(cleanup.reduce((n, f) => n + f.size, 0))}.`
+                : `Сейчас удалять нечего: видео роликов, вышедших больше ${auto.keepReleaseDays} дн. назад, в релизах нет.`}
+              {state.youtubeError ? " YouTube недоступен — уборка ждёт, пока он ответит." : ""}
+            </p>
+          )}
           <div className="btn-row">
             <button className="btn primary" disabled={!autoChanged || busy !== null} onClick={() => run("auto", () => saveAutopilotAction(auto))}>
               Сохранить
             </button>
-            <button className="btn" disabled={busy !== null} onClick={() => run("auto", runAutopilotAction, "Проверить сейчас и запустить недостающее, как это сделал бы автопилот?")}>
+            <button
+              className="btn"
+              disabled={busy !== null}
+              onClick={() =>
+                run(
+                  "auto",
+                  runAutopilotAction,
+                  `Проверить сейчас и сделать то, что сделал бы автопилот (по сохранённым настройкам): недостающие видео${state.autopilot.scriptReserve ? ", запас сценариев" : ""}${state.autopilot.retryFailed ? ", повтор упавших сборок" : ""}${state.autopilot.keepReleaseDays ? ", уборку видео из релизов" : ""}?`,
+                )
+              }
+            >
               Запустить сейчас
             </button>
           </div>

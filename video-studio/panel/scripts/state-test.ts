@@ -180,7 +180,7 @@ test("автопилот: на 3 дня всё готово; на 8 — нуже
   assert.deepEqual(decideAutopilot(withKey, { enabled: true, days: 8 }, now), { codes: ["08a"], skip: null });
   assert.equal(withKey.missingSecrets?.length, 0);
   assert.match(decideAutopilot({ ...withKey, youtubeError: "квота" }, { enabled: true, days: 8 }, now).skip ?? "", /YouTube недоступен/);
-  assert.deepEqual(parseAutopilot('{"enabled":true,"days":40}'), { enabled: true, days: 3 });
+  assert.deepEqual(parseAutopilot('{"enabled":true,"days":40}'), { ...parseAutopilot(null), enabled: true, days: 3 });
 });
 
 console.log(`\nВсе проверки панели пройдены: ${passed}.`);

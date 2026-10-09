@@ -116,6 +116,7 @@ export interface GhRun {
   created_at: string;
   updated_at: string;
   html_url: string;
+  run_attempt?: number; // 1 — первая попытка; после «Re-run» GitHub отдаёт последнюю
 }
 
 export async function listRuns(): Promise<GhRun[]> {
@@ -132,6 +133,19 @@ export async function dispatchWorkflow(file: string, inputs: Record<string, stri
     body: JSON.stringify({ ref: branchName(), inputs }),
   });
   if (!res.ok) throw await failure(res, `запуск ${file}`);
+}
+
+// Повтор упавших заданий запуска (та же ветка и входные данные; номер попытки станет 2).
+export async function rerunFailedJobs(runId: number): Promise<void> {
+  const res = await gh(`/repos/${repoName()}/actions/runs/${runId}/rerun-failed-jobs`, { method: "POST" });
+  if (!res.ok) throw await failure(res, `повтор запуска ${runId}`);
+}
+
+// Удалить один файл релиза (сам релиз и остальные файлы остаются). 404 — уже удалён.
+export async function deleteReleaseAsset(assetId: number): Promise<void> {
+  const res = await gh(`/repos/${repoName()}/releases/assets/${assetId}`, { method: "DELETE" });
+  if (res.ok || res.status === 404) return;
+  throw await failure(res, `удаление файла релиза ${assetId}`);
 }
 
 export async function getVariable(name: string): Promise<string | null> {
