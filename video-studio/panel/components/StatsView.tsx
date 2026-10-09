@@ -9,7 +9,7 @@ import { PlaylistsCard, TimingCard, WeakStartCard } from "./StatsTools";
 import Thumb from "./Thumb";
 import ViewsChart, { type ChartBar } from "./ViewsChart";
 
-type Shell = { updated: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
+type Shell = { updated: string; generatedAt?: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
 type SortKey = "views" | "perDay" | "likes" | "comments" | "date";
 
 const SORTS: { key: SortKey; label: string }[] = [
@@ -98,7 +98,7 @@ export default function StatsView({ stats, shell, extras }: { stats: StatsData; 
   const { monetization: money, hashtags: tags, usage, actions, channel } = stats;
 
   return (
-    <AppShell active="stats" updated={shell.updated} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
+    <AppShell active="stats" updated={shell.updated} generatedAt={shell.generatedAt} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
       <main className="page stats-page">
         <div className="page-head titled">
           <div>

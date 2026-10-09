@@ -20,7 +20,7 @@ export default async function TikTokPage({ searchParams }: { searchParams: Promi
   try {
     state = await loadState();
   } catch (e) {
-    return <ErrorScreen message={errorText(e)} />;
+    return <ErrorScreen title="Не получилось загрузить TikTok" message={errorText(e)} />;
   }
   const data: TikTokPageData = {
     missing: tiktokEnvMissing(),
@@ -51,7 +51,7 @@ export default async function TikTokPage({ searchParams }: { searchParams: Promi
   return (
     <TikTokView
       data={data}
-      shell={{ updated: state.updatedLabel, activeRuns: state.runs.filter((r) => r.active).length, runwayDays: state.runwayDays, runwayLabel: state.scheduleEndLabel }}
+      shell={{ updated: state.updatedLabel, generatedAt: state.generatedAt, activeRuns: state.runs.filter((r) => r.active).length, runwayDays: state.runwayDays, runwayLabel: state.scheduleEndLabel }}
     />
   );
 }

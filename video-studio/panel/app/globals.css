@@ -2433,3 +2433,30 @@ a.btn[aria-disabled] {
   font-size: 13px;
   cursor: pointer;
 }
+
+/* ---- свежесть данных: «обновлено 3 мин назад», нажатие — обновить ---- */
+.top-brand {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.fresh {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dim);
+  font: 600 11px var(--body);
+  text-align: left;
+  cursor: pointer;
+}
+.side-foot .fresh {
+  color: inherit;
+  font-size: inherit;
+}
+.fresh.stale {
+  color: var(--warn);
+}
+.fresh:disabled {
+  cursor: default;
+}

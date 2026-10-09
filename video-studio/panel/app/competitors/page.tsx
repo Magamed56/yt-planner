@@ -12,12 +12,12 @@ export default async function CompetitorsPage() {
     const [state, { refs, reports }] = await Promise.all([loadState(), loadCompetitors()]);
     return (
       <CompetitorsView
-        shell={{ updated: state.updatedLabel, activeRuns: state.runs.filter((r) => r.active).length, runwayDays: state.runwayDays, runwayLabel: state.scheduleEndLabel }}
+        shell={{ updated: state.updatedLabel, generatedAt: state.generatedAt, activeRuns: state.runs.filter((r) => r.active).length, runwayDays: state.runwayDays, runwayLabel: state.scheduleEndLabel }}
         refs={refs}
         reports={reports}
       />
     );
   } catch (e) {
-    return <ErrorScreen message={e instanceof Error ? e.message : String(e)} />;
+    return <ErrorScreen title="Не получилось загрузить похожие каналы" message={e instanceof Error ? e.message : String(e)} />;
   }
 }

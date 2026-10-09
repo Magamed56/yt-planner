@@ -11,7 +11,7 @@ export default async function StatsPage() {
   try {
     data = await loadStats();
   } catch (e) {
-    return <ErrorScreen message={e instanceof Error ? e.message : String(e)} />;
+    return <ErrorScreen title="Не получилось загрузить статистику" message={e instanceof Error ? e.message : String(e)} />;
   }
   const { state, stats, extras } = data;
   // В браузер — только цифры и то, что нужно меню (вся очередь здесь не нужна).
@@ -21,6 +21,7 @@ export default async function StatsPage() {
       extras={extras}
       shell={{
         updated: state.updatedLabel,
+        generatedAt: state.generatedAt,
         activeRuns: state.runs.filter((r) => r.active).length,
         runwayDays: state.runwayDays,
         runwayLabel: state.scheduleEndLabel,

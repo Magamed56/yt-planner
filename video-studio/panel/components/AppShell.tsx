@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useTransition } from "react";
 import { logoutAction } from "@/app/actions";
 import { plural } from "@/lib/stages";
+import { useResumeRefresh } from "@/lib/use-resume-refresh";
+import Freshness from "./Freshness";
 
 export type Section = "feed" | "calendar" | "runs";
 // Пункты меню: лента и календарь на главной переключаются без перезагрузки, остальные — ссылки.
@@ -66,6 +68,7 @@ export default function AppShell({
   active,
   onSection,
   updated,
+  generatedAt = null,
   activeRuns,
   runwayDays,
   runwayLabel,
@@ -74,7 +77,8 @@ export default function AppShell({
 }: {
   active: NavItem;
   onSection?: (s: Section) => void; // на главной лента и календарь переключаются без перезагрузки
-  updated: string;
+  updated: string; // «14:05» — время данных (сервер)
+  generatedAt?: string | null; // то же в ISO: «обновлено 3 мин назад» и автообновление
   activeRuns: number;
   runwayDays: number | null;
   runwayLabel: string | null;
@@ -84,6 +88,8 @@ export default function AppShell({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const refresh = () => startTransition(() => router.refresh());
+  // Вернулись в приложение, а данным больше 5 минут — обновляем сами.
+  useResumeRefresh(loading ? null : generatedAt, refresh, pending);
 
   // Пока в Actions что-то идёт — обновляемся сами раз в 90 с, только открытая вкладка
   // (каждое обновление — запросы к GitHub и ~3 единицы квоты YouTube).
@@ -143,7 +149,7 @@ export default function AppShell({
             </div>
           </div>
           <div className="small muted">
-            {loading ? "загружаю данные…" : `обновлено ${updated}`}
+            <Freshness at={generatedAt} label={updated} pending={pending} loading={loading} onRefresh={refresh} />
             {activeRuns ? ` · в работе: ${activeRuns}` : ""}
           </div>
           <div className="btn-row" style={{ marginTop: 0 }}>
@@ -163,9 +169,12 @@ export default function AppShell({
       </aside>
 
       <header className="mobile-top">
-        <Link href="/" className="brand">
-          <span className="tag">СУТЬ</span>ЗА МИНУТУ
-        </Link>
+        <div className="top-brand">
+          <Link href="/" className="brand">
+            <span className="tag">СУТЬ</span>ЗА МИНУТУ
+          </Link>
+          <Freshness at={generatedAt} label={updated} pending={pending} loading={loading} onRefresh={refresh} />
+        </div>
         <div className="actions">
           {/* У панели со значка на iPhone нет адресной строки — настройки уведомлений только по ссылке. */}
           <Link href="/settings" className="btn icon" aria-label="Уведомления" title="Уведомления на телефон">

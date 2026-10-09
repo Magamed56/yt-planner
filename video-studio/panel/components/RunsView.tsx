@@ -98,6 +98,7 @@ export default function RunsView({ state }: { state: PanelState }) {
     <AppShell
       active="runs"
       updated={state.updatedLabel}
+      generatedAt={state.generatedAt}
       activeRuns={state.runs.filter((r) => r.active).length}
       runwayDays={state.runwayDays}
       runwayLabel={state.scheduleEndLabel}
