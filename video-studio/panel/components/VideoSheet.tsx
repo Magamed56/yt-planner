@@ -1,10 +1,21 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { captionAction, draftAction, moveVideoAction, scriptTextAction, undoMoveAction, videosAction, type ActionResult, type ScriptText } from "@/app/actions";
+import {
+  captionAction,
+  draftAction,
+  fillNewUploadsAction,
+  moveVideoAction,
+  scriptTextAction,
+  undoMoveAction,
+  videosAction,
+  type ActionResult,
+  type ScriptText,
+} from "@/app/actions";
 import type { PanelState, Row, SlotCell } from "@/lib/state";
 import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import Dots from "./Dots";
+import Thumb from "./Thumb";
 
 type Undo = { videoId: string; publishAt: string }[];
 
@@ -85,7 +96,8 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   return (
     <aside className={`sheet stage-${row.stage}`} aria-label={`Ролик ${row.code}`}>
       <div className="sheet-head">
-        <div>
+        <Thumb src={row.cover} code={row.code} className="big" />
+        <div className="sheet-title">
           <span className="badge">
             {row.code} · {STAGE_LABEL[row.stage]}
           </span>
@@ -146,7 +158,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
               <ol>
                 <li>Скачайте видео — имя файла уже с кодом: {row.release.mp4.name}.</li>
                 <li>YouTube Studio → «Создать» → «Добавить видео» (в приложении YouTube — «+»). Ничего не заполняйте.</li>
-                <li>Через пару минут: «Запуски» → «Проверить» → «Применить» — встанут тексты и время.</li>
+                <li>Через пару минут на главном экране — «Найти новые загрузки»: встанут название, описание, теги и время.</li>
               </ol>
               <div className="btn-row">
                 <a className="btn primary" href={`/api/asset/${row.release.mp4.id}`}>
@@ -159,17 +171,26 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
             </>
           ) : (
             <p>
-              Видео собрано на компьютере (неделя 1), в GitHub его нет. Загрузите файл <b>{row.code}-….mp4</b> в YouTube Studio, затем «Запуски» → «Проверить».
+              Видео собрано на компьютере (неделя 1), в GitHub его нет. Загрузите файл <b>{row.code}-….mp4</b> в YouTube Studio, затем на главном экране —
+              «Найти новые загрузки».
             </p>
           ))}
         {row.stage === "studio" && (
           <>
             <p>Ролик в Studio, но время выхода не стоит.</p>
-            <div className="btn-row">
-              <a className="btn primary" href="/runs#fill">
-                Проверить и заполнить →
-              </a>
-            </div>
+            {row.hasTexts ? (
+              <div className="btn-row">
+                <button
+                  className="btn primary"
+                  disabled={locked}
+                  onClick={() => run(() => fillNewUploadsAction([row.code]), `Поставить ${row.code} название, описание, теги и время выхода (ближайший свободный слот)?`)}
+                >
+                  Поставить тексты и время
+                </button>
+              </div>
+            ) : (
+              <p className="muted small">Текстов для него нет (ролик собран не через Actions) — заполните в Studio вручную.</p>
+            )}
           </>
         )}
         {row.stage === "scheduled" && (
@@ -222,15 +243,20 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
 
       {row.release && (
         <section>
-          <h4>Instagram — пока вручную</h4>
-          <p className="muted small">API ждёт токен EAA (проверка Meta). Reels с телефона: видео, обложка и подпись.</p>
+          <h4>Файлы ролика</h4>
+          <p className="muted small">Instagram ждёт токен EAA (проверка Meta) — пока Reels с телефона: видео, обложка и подпись.</p>
           <div className="btn-row">
             <a className="btn small" href={`/api/asset/${row.release.mp4.id}`}>
               ⬇ Видео
             </a>
             {cover && (
               <a className="btn small" href={`/api/asset/${cover.id}`}>
-                ⬇ Обложка
+                ⬇ Обложка Reels
+              </a>
+            )}
+            {row.release.thumb && (
+              <a className="btn small" href={`/api/asset/${row.release.thumb.id}`}>
+                ⬇ Обложка YouTube
               </a>
             )}
             {row.release.caption && (

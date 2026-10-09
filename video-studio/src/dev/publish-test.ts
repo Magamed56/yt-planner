@@ -583,12 +583,16 @@ await test("youtube-fill для панели: список без поиска (
     const json = (o: unknown) => new Response(JSON.stringify(o), { status: 200 });
     if (u.includes("/channels?")) return json({ items: [{ contentDetails: { relatedPlaylists: { uploads: "UUx" } } }] });
     if (u.includes("/playlistItems?")) return json({ items: [{ contentDetails: { videoId: "v1" } }] });
-    if (u.includes("/videos?")) return json({ items: [{ id: "v1", snippet: { title: "A", publishedAt: "2026-10-08T09:00:00Z" }, status: { privacyStatus: "public" }, contentDetails: { duration: "PT50S" } }] });
+    if (u.includes("/videos?")) {
+      const thumbnails = { default: { url: "https://i.ytimg.com/vi/v1/default.jpg" }, medium: { url: "https://i.ytimg.com/vi/v1/mqdefault.jpg" } };
+      return json({ items: [{ id: "v1", snippet: { title: "A", publishedAt: "2026-10-08T09:00:00Z", thumbnails }, status: { privacyStatus: "public" }, contentDetails: { duration: "PT50S" } }] });
+    }
     throw new Error(`неожиданный запрос ${u}`);
   }) as typeof fetch;
   const videos = await listChannelVideos({ auth, fetch: f }, 200, { search: false });
   assert.ok(!urls.some((u) => u.includes("/search?")));
   assert.equal(videos[0]!.publishedAt, "2026-10-08T09:00:00Z");
+  assert.equal(videos[0]!.thumbnailUrl, "https://i.ytimg.com/vi/v1/mqdefault.jpg"); // обложка для панели — средний размер
 
   const [a, b] = week1 as [FillItem, FillItem];
   const list = upsertFillItem(upsertFillItem([], { ...b, id: "08b" }), { ...a, id: "08a" });

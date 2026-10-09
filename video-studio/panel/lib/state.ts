@@ -20,7 +20,8 @@ export interface ReleaseInfo {
   url: string;
   createdAt: string;
   mp4: Asset;
-  cover: Asset | null;
+  cover: Asset | null; // cover.jpg — вертикальный кадр (обложка Reels)
+  thumb: Asset | null; // thumbnail.png — обложка YouTube 1280×720
   caption: Asset | null;
 }
 
@@ -44,6 +45,7 @@ export interface Row {
   localVideo: boolean; // видео есть только на компьютере (неделя 1, в GitHub файла нет)
   release: ReleaseInfo | null;
   youtube: YoutubeInfo | null;
+  cover: string | null; // картинка для очереди: обложка с YouTube, иначе cover.jpg / thumbnail.png из релиза
   hasTexts: boolean; // youtube-fill знает тексты (week1-videos.json / videos.json)
   textsDiffer: boolean; // на YouTube тексты не такие, как в файле
   when: string | null; // ISO: время выхода — точное (YouTube) или ориентир (следующие свободные слоты)
@@ -174,13 +176,11 @@ const DAY_MS = 86_400_000;
 const ms = (t: string | number | Date) => (t instanceof Date ? t.getTime() : typeof t === "number" ? t : Date.parse(t));
 const minute = (t: string | number | Date) => Math.floor(ms(t) / 60_000);
 
-// Ключи, без которых конвейер в Actions работает не так, как задумано.
+// Ключи, без которых конвейер в Actions работает не так, как задумано. Тексты и время на
+// YouTube панель ставит сама (своими ключами Vercel), поэтому YT_* в GitHub ей не нужны.
 const SECRET_NEEDS: { names: string[]; label: string; why: string }[] = [
   { names: ["GEMINI_API_KEY", "GOOGLE_API_KEY"], label: "GEMINI_API_KEY", why: "без него Actions озвучит ролик голосом Edge, а не Charon" },
   { names: ["ANTHROPIC_API_KEY"], label: "ANTHROPIC_API_KEY", why: "сценарии пишет Claude" },
-  { names: ["YT_CLIENT_ID"], label: "YT_CLIENT_ID", why: "заполнение YouTube из Actions" },
-  { names: ["YT_CLIENT_SECRET"], label: "YT_CLIENT_SECRET", why: "заполнение YouTube из Actions" },
-  { names: ["YT_REFRESH_TOKEN"], label: "YT_REFRESH_TOKEN", why: "заполнение YouTube из Actions" },
 ];
 
 function formatters(tz: string) {
@@ -235,6 +235,7 @@ function releasesByCode(releases: GhRelease[]): Map<string, ReleaseInfo> {
       createdAt: r.created_at,
       mp4,
       cover: r.assets.find((a) => a.name === "cover.jpg") ?? null,
+      thumb: r.assets.find((a) => a.name === "thumbnail.png") ?? null,
       caption: r.assets.find((a) => a.name === "instagram.txt") ?? null,
     });
   }
@@ -338,6 +339,8 @@ export function buildState(input: StateInput): PanelState {
       localVideo: !release && hasTexts,
       release,
       youtube: v ? { videoId: v.videoId, privacyStatus: v.privacyStatus, publishAt: v.publishAt, title: v.title, fileName: v.fileName } : null,
+      // Ссылки YouTube на обложки (и у приватных) открываются без входа; файлы релиза — через /api/asset.
+      cover: v?.thumbnailUrl ?? (release?.cover ? `/api/asset/${release.cover.id}` : release?.thumb ? `/api/asset/${release.thumb.id}` : null),
       hasTexts,
       textsDiffer: differ.has(it.id),
       when: exact,
@@ -390,12 +393,12 @@ export function buildState(input: StateInput): PanelState {
     reminders.push({
       kind: "upload",
       level: soon ? "warn" : "info",
-      text: `Ждут загрузки в Studio: ${codesLabel(toUpload.map((r) => r.code))}. Загрузите руками (имя файла начинается с кода), затем «Запуски» → «Проверить».`,
+      text: `Ждут загрузки в Studio: ${codesLabel(toUpload.map((r) => r.code))}. Загрузите руками (имя файла начинается с кода), затем «Найти новые загрузки».`,
     });
   }
   const toFill = rows.filter((r) => r.stage === "studio" && !pending.has(r.code));
   if (toFill.length) {
-    reminders.push({ kind: "fill", level: "warn", text: `В Studio без времени выхода: ${codesLabel(toFill.map((r) => r.code))} → «Запуски» → «Проверить».`, href: "/runs#fill" });
+    reminders.push({ kind: "fill", level: "warn", text: `В Studio без времени выхода: ${codesLabel(toFill.map((r) => r.code))} → «Найти новые загрузки».` });
   }
   const problems = rows.filter((r) => dups.has(r.code) || broken.has(r.code));
   if (problems.length) {

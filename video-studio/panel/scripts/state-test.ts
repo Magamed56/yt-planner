@@ -45,6 +45,7 @@ const onYoutube = (item: FillItem, over: Partial<ChannelVideo>): ChannelVideo =>
   tags: item.tags,
   categoryId: item.categoryId,
   publishedAt: "2026-10-07T10:00:00Z",
+  thumbnailUrl: `https://i9.ytimg.com/vi/${item.id}/mqdefault.jpg`,
   ...over,
 });
 const videos: ChannelVideo[] = [
@@ -140,9 +141,18 @@ test("напоминания: запас расписания, загрузит�
   assert.match(text, /В Studio без времени выхода: 09a/);
   assert.match(text, /Тексты на YouTube отличаются от файла: 01a, 01b, 02a/);
   assert.match(text, /youtube-fill: 01a \(проверка\).*не удался/);
-  assert.match(text, /нет: GEMINI_API_KEY — без него .*Edge.*; YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN — заполнение YouTube/);
+  assert.match(text, /нет: GEMINI_API_KEY — без него .*Edge/);
+  assert.doesNotMatch(text, /YT_CLIENT_ID/); // тексты на YouTube ставит сама панель — YT_* в GitHub ей не нужны
+  assert.match(text, /затем «Найти новые загрузки»/);
   assert.match(text, /Instagram ждёт токен EAA/);
   assert.equal(row("01b").textsDiffer, true);
+});
+
+test("обложки: с YouTube, иначе cover.jpg из релиза, иначе нет (плитка с кодом)", () => {
+  assert.equal(row("01b").cover, "https://i9.ytimg.com/vi/01b/mqdefault.jpg");
+  assert.equal(row("08b").cover, "/api/asset/12");
+  assert.equal(row("08b").release?.thumb, null);
+  assert.equal(row("06a").cover, null);
 });
 
 test("запуски: коды из названия запуска — «в работе» у роликов", () => {

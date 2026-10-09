@@ -52,6 +52,7 @@ export interface ChannelVideo {
   tags: string[];
   categoryId: string | null;
   publishedAt?: string | null; // snippet.publishedAt: у вышедшего — время выхода, у приватного — загрузки
+  thumbnailUrl?: string | null; // обложка (snippet.thumbnails) — для панели
 }
 
 export type MatchedBy = "файл" | "название" | "длительность";
@@ -280,7 +281,14 @@ async function api<T>(deps: ApiDeps, method: "GET" | "PUT", path: string, body?:
 
 interface ApiVideo {
   id: string;
-  snippet?: { title?: string; description?: string; tags?: string[]; categoryId?: string; publishedAt?: string };
+  snippet?: {
+    title?: string;
+    description?: string;
+    tags?: string[];
+    categoryId?: string;
+    publishedAt?: string;
+    thumbnails?: Record<string, { url?: string } | undefined>;
+  };
   status?: { uploadStatus?: string; privacyStatus?: string; publishAt?: string; embeddable?: boolean; license?: string; publicStatsViewable?: boolean };
   contentDetails?: { duration?: string };
   fileDetails?: { fileName?: string };
@@ -301,6 +309,7 @@ const toChannelVideo = (v: ApiVideo): ChannelVideo => ({
   tags: v.snippet?.tags ?? [],
   categoryId: v.snippet?.categoryId ?? null,
   publishedAt: v.snippet?.publishedAt ?? null,
+  thumbnailUrl: v.snippet?.thumbnails?.medium?.url ?? v.snippet?.thumbnails?.high?.url ?? v.snippet?.thumbnails?.default?.url ?? null,
 });
 
 // Последние загрузки канала (до maxVideos): плейлист «Загрузки» + поиск по своим

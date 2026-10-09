@@ -4,13 +4,14 @@ import QueueView from "@/components/QueueView";
 import { loadState } from "@/lib/load";
 import type { PanelState } from "@/lib/state";
 
-export default async function QueuePage() {
+export default async function QueuePage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   await connection(); // всегда свежие данные GitHub и YouTube
+  const { view } = await searchParams;
   let state: PanelState;
   try {
     state = await loadState();
   } catch (e) {
     return <ErrorScreen message={e instanceof Error ? e.message : String(e)} />;
   }
-  return <QueueView state={state} />;
+  return <QueueView state={state} initialMode={view === "calendar" ? "calendar" : "list"} />;
 }

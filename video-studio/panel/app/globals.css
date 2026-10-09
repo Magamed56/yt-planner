@@ -299,10 +299,9 @@ h3 {
   font-weight: 500;
 }
 .row {
-  display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  display: flex;
   align-items: center;
-  gap: 4px 10px;
+  gap: 10px;
   width: 100%;
   margin-bottom: 6px;
   padding: 10px 12px;
@@ -320,9 +319,177 @@ h3 {
   border-color: var(--accent);
   border-left-color: var(--stage, var(--accent));
 }
+.row-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+}
 .row .code {
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   font-weight: 700;
+}
+
+/* ---- обложки ---- */
+.thumb {
+  flex: none;
+  width: 42px;
+  height: 58px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+.thumb.empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 11px ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--stage, var(--muted));
+}
+.thumb.big {
+  width: 84px;
+  height: 116px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+.sheet-title {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- кнопка «Найти новые загрузки» и вид ---- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.view-switch {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.view-switch button {
+  min-height: 38px;
+  padding: 6px 14px;
+  border: 0;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.view-switch button.active {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+/* ---- календарь: неделя на компьютере, лента дней на телефоне ---- */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.cal-head {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cal-day {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 120px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.cal-day.today {
+  border-color: var(--accent);
+}
+.cal-day.past {
+  opacity: 0.7;
+}
+.cal-day h3 {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.cal-slot {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--stage, var(--line));
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cal-slot.active {
+  border-color: var(--accent);
+}
+.cal-slot.empty {
+  align-items: center;
+  min-height: 40px;
+  border-style: dashed;
+  border-left-width: 1px;
+  color: var(--ok);
+  font-size: 12px;
+  cursor: default;
+}
+.cal-slot.empty.gone {
+  color: var(--muted);
+}
+.cal-slot .thumb {
+  width: 34px;
+  height: 48px;
+}
+.cal-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12px;
+}
+.cal-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cal-slot .badge {
+  justify-self: start;
+  padding: 0 6px;
+  font-size: 10px;
+}
+@media (max-width: 759px) {
+  .calendar {
+    grid-template-columns: 1fr;
+  }
+  .cal-head,
+  .cal-day.past {
+    display: none;
+  }
+  .cal-day {
+    grid-template-columns: 1fr 1fr;
+    min-height: 0;
+  }
+  .cal-day h3 {
+    grid-column: 1 / -1;
+  }
 }
 .row .time {
   color: var(--muted);
