@@ -1,0 +1,122 @@
+{
+  "title": "Оксфорд старше империи ацтеков: проверяем даты",
+  "description": "Почему Оксфордский университет старше империи ацтеков и как интуиция обманывает нас в истории. Сравниваем даты: преподавание в Оксфорде с 1096 года, Теночтитлан около 1325 года, Тройственный союз в 1428 году.\n#shorts #история #ацтеки #оксфорд #факты",
+  "tags": [
+    "история",
+    "ацтеки",
+    "оксфорд",
+    "оксфордский университет",
+    "теночтитлан",
+    "тройственный союз",
+    "средневековье",
+    "исторические факты",
+    "интересные факты",
+    "хронология",
+    "shorts",
+    "history facts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Оксфордский университет старше империи ацтеков.",
+      "onScreen": "Оксфорд *старше* ацтеков",
+      "icon": "graduation-cap",
+      "visualQuery": "old university stone building",
+      "imagePrompt": "cinematic low-angle shot of ancient sandstone university towers at golden hour, warm amber light, long shadows, slight haze"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Звучит как ошибка. Ацтеки кажутся глубокой древностью, а Оксфорд — просто старым университетом. Но даты спорят с интуицией.",
+      "onScreen": "Интуиция *против* дат",
+      "icon": "triangle-alert",
+      "visualQuery": "stone pyramid temple ruins",
+      "imagePrompt": "cinematic wide shot of stepped stone temple ruins in warm sunset light, dust in the air, mysterious atmosphere"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Сам Оксфорд пишет: преподавание здесь шло в той или иной форме уже с тысяча девяносто шестого года.",
+      "onScreen": "Учили уже в *1096*",
+      "stat": {
+        "value": 1096,
+        "label": "преподавание в Оксфорде уже идёт"
+      },
+      "icon": "book-open",
+      "visualQuery": "old manuscript candle desk",
+      "imagePrompt": "cinematic close-up of a medieval manuscript on a wooden desk lit by a single candle, warm amber glow, shallow depth of field"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "А Теночтитлан, будущую столицу ацтеков, основали примерно в тысяча триста двадцать пятом году. Через двести двадцать девять лет.",
+      "onScreen": "Теночтитлан: ≈1325, *+229 лет*",
+      "icon": "compass",
+      "visualQuery": "lake city aerial mountains",
+      "imagePrompt": "cinematic aerial view of a reconstructed ancient city on a lake surrounded by mountains, warm sunset palette, soft mist"
+    },
+    {
+      "id": "s5",
+      "kind": "quiz",
+      "narration": "Проверь себя. Держава ацтеков появилась вместе с Теночтитланом. Правда или миф?",
+      "onScreen": "Империя — сразу с городом?",
+      "icon": "circle-x",
+      "visualQuery": "aztec stone carving",
+      "imagePrompt": "cinematic macro of an ancient carved stone relief, dramatic side light, warm orange tones, dark background",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Держава оформилась только с Тройственным союзом в 1428 году",
+        "question": "А ты бы угадал?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Ядро державы, Тройственный союз, возникло только в тысяча четыреста двадцать восьмом. К тому моменту в Оксфорде учили уже триста тридцать два года.",
+      "onScreen": "Оксфорд впереди на *332 года*",
+      "stat": {
+        "value": 332,
+        "suffix": " года",
+        "label": "учили в Оксфорде до союза"
+      },
+      "icon": "hourglass",
+      "visualQuery": "hourglass sand wooden table",
+      "imagePrompt": "cinematic close-up of an antique hourglass with falling sand, warm rim light, dark moody background"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Вот главный вывод. Далёкое не значит древнее. Империя ацтеков — ровесница позднего европейского средневековья. Сравнивай даты, а не ощущения.",
+      "onScreen": "Сравнивай *даты*, а не ощущения",
+      "compare": {
+        "items": [
+          {
+            "label": "Оксфорд",
+            "value": 1096
+          },
+          {
+            "label": "Теночтитлан",
+            "value": 1325
+          },
+          {
+            "label": "Тройственный союз",
+            "value": 1428
+          }
+        ],
+        "suffix": " г."
+      }
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А какой исторический факт ломал твоё чувство времени? Напиши в комментариях и подпишись.",
+      "onScreen": "Какой факт удивил *тебя*?",
+      "icon": "bell-ring"
+    }
+  ]
+}

@@ -591,7 +591,8 @@
           "source": "Kareklas K., Nettle D., Smulders T. V. Biology Letters 9, 20120999 (2013); Haseleu J. et al. PLoS ONE 9(1), e84949 (2014)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-12a-pochemu-morshchatsya-paltsy-v-vode-eto-ne-nabukhanie.json"
     },
     {
       "id": "12b",
@@ -611,7 +612,8 @@
           "source": "Encyclopaedia Britannica, «Tenochtitlán», «Aztec»"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-12b-oksford-starshe-imperii-atstekov-proveryaem-daty.json"
     },
     {
       "id": "13a",

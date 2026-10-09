@@ -1,0 +1,103 @@
+{
+  "title": "Почему морщатся пальцы в воде: это не набухание",
+  "description": "Почему пальцы морщатся в воде? Это не кожа впитывает воду, а нервная система сужает сосуды. Разбираем опыты 1936 и 2003 годов и спорную гипотезу о лучшем сцеплении мокрыми руками.\n#shorts #наука #телоčеловека #факты",
+  "tags": [
+    "почему морщатся пальцы в воде",
+    "пальцы в воде",
+    "морщины на пальцах",
+    "нервная система",
+    "сосуды",
+    "вазоконстрикция",
+    "тело человека",
+    "научные факты",
+    "биология",
+    "мифы",
+    "shorts",
+    "wrinkly fingers"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Морщинки на пальцах в ванне включает твоя нервная система.",
+      "onScreen": "Морщинки включают *нервы*",
+      "icon": "zap",
+      "visualQuery": "wrinkled fingertips water bath",
+      "imagePrompt": "cinematic macro close-up of wrinkled fingertips emerging from bath water, cool blue rim light, water droplets, dark background, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "quiz",
+      "narration": "Проверь себя. Пальцы морщатся, потому что кожа просто набухает от воды. Правда или миф?",
+      "onScreen": "Кожа просто *набухает*?",
+      "icon": "droplet",
+      "visualQuery": "hand soaking water bowl",
+      "imagePrompt": "cinematic shot of a hand submerged in clear water, light caustics on skin, deep blue tones, moody lighting",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Складки создаёт нервная система, а не впитанная вода",
+        "question": "Ты думал, что это набухание?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Ещё в тысяча девятьсот тридцать шестом году врачи Льюис и Пикеринг заметили странное. Если нервы пальца повреждены, кожа в воде не морщится.",
+      "onScreen": "Нервы повреждены — *морщин нет*",
+      "icon": "microscope",
+      "visualQuery": "old hospital doctor notebook",
+      "imagePrompt": "vintage 1930s clinic desk with medical notes and a glass of water, warm lamp light contrasting cool blue shadows, cinematic"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "В две тысячи третьем году Уайлдер-Смит и Чоу показали механизм. Сосуды под кожей сужаются, мякоть пальца чуть сдувается, и кожа собирается в складки.",
+      "onScreen": "Сосуды *сужаются* — кожа складывается",
+      "icon": "heart",
+      "visualQuery": "fingertip blood vessels macro",
+      "imagePrompt": "glowing network of tiny blood vessels inside a fingertip contracting, translucent skin, blue and red light, macro cinematic"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Но зачем это телу? Главная гипотеза — сцепление. Морщинки как протектор шины отводят воду.",
+      "onScreen": "Морщинки как *протектор* шины",
+      "icon": "target",
+      "visualQuery": "tire tread wet road",
+      "imagePrompt": "macro of wet tire tread beside wrinkled fingertip pattern, rain droplets, cool blue cinematic light"
+    },
+    {
+      "id": "s6",
+      "kind": "list",
+      "narration": "Одна работа две тысячи тринадцатого года это подтвердила. А исследование две тысячи четырнадцатого года разницы не нашло. Вопрос открыт.",
+      "onScreen": "Сцепление: *вопрос открыт*",
+      "items": [
+        "2013: подтвердили",
+        "2014: не подтвердили"
+      ],
+      "icon": "flask-conical",
+      "visualQuery": "wet hands holding stones",
+      "imagePrompt": "wet wrinkled hands gripping smooth wet pebbles in a laboratory tray, cool blue light, shallow depth of field"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Зато ясно другое. Морщинки на пальцах — видимый знак, что их нервы работают.",
+      "onScreen": "Морщинки — знак, что нервы *работают*",
+      "icon": "circle-check",
+      "visualQuery": "fingers bathtub bubbles",
+      "imagePrompt": "calm hand resting on the edge of a bathtub with wrinkled fingertips, soft blue glow, steam, cinematic"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А у тебя пальцы морщатся одинаково на обеих руках? Напиши в комментариях и подпишись.",
+      "onScreen": "Обе руки одинаково? *Пиши*",
+      "icon": "bell-ring"
+    }
+  ]
+}
