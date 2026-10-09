@@ -77,6 +77,8 @@ const releases: GhRelease[] = [
       { id: 11, name: "08b-x.mp4", size: 20_000_000 },
       { id: 12, name: "cover.jpg", size: 100_000 },
       { id: 13, name: "instagram.txt", size: 900 },
+      { id: 14, name: "qc.json", size: 1500 },
+      { id: 15, name: "description.txt", size: 2500 },
     ],
   },
 ];
@@ -129,6 +131,12 @@ test("этапы: вышел, запланирован, видео (неделя
   assert.equal(row("08b").stage, "video");
   assert.equal(row("08b").release?.mp4.id, 11);
   assert.equal(row("08b").release?.caption?.id, 13);
+  // Для «Перед загрузкой проверьте»: автопроверка и описание с блоком «Видео и фото».
+  assert.equal(row("08b").release?.qc?.id, 14);
+  assert.equal(row("08b").release?.description?.id, 15);
+  assert.deepEqual(row("08b").voice, { provider: "gemini", name: "Charon" }, "голос канала из channel.json");
+  assert.equal(row("08b").realPhotos, false, "рубрика body — сток важнее архивных фото");
+  assert.equal(row("09b").voice, null, "без релиза проверять нечего — данные страницы не раздуваем");
   assert.equal(row("09a").stage, "studio");
   assert.equal(row("09b").stage, "topic");
   assert.deepEqual(state.counts, { topic: 43, script: 1, video: 5, studio: 1, scheduled: 9, published: 1 });
@@ -156,6 +164,8 @@ test("напоминания: запас расписания, загрузит�
   assert.equal(row("02a").textsDiffer, false);
   assert.match(text, /Заполнение YouTube · 01a \(проверка\).*не удался/);
   assert.match(text, /нет: GEMINI_API_KEY — без него .*Edge/);
+  assert.match(text, /PEXELS_API_KEY, PIXABAY_API_KEY — без них кадры только из Wikimedia и часто мимо темы/);
+  assert.deepEqual(state.missingSecrets, ["GEMINI_API_KEY", "PEXELS_API_KEY, PIXABAY_API_KEY"]);
   assert.doesNotMatch(text, /YT_CLIENT_ID/); // тексты на YouTube ставит сама панель — YT_* в GitHub ей не нужны
   assert.match(text, /затем «Найти новые загрузки»/);
   // Постоянная заметка про Instagram убрана — она осталась строкой в карточке ролика.
@@ -217,7 +227,8 @@ test("слоты для переноса: 60 дней, занятые — с к�
 test("автопилот: на 3 дня всё готово; на 8 — нужен 08a, но без GEMINI_API_KEY не запускает; с ключом — запускает", () => {
   assert.match(decideAutopilot(state, { enabled: true, days: 3 }, now).skip ?? "", /уже готово/);
   assert.match(decideAutopilot(state, { enabled: true, days: 8 }, now).skip ?? "", /GEMINI_API_KEY/);
-  const withKey = buildState({ ...input, secretNames: ["ANTHROPIC_API_KEY", "GEMINI_API_KEY", "YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"] });
+  // Из ключей стоков хватит одного: с ним в роликах уже есть видео, а не только Wikimedia.
+  const withKey = buildState({ ...input, secretNames: ["ANTHROPIC_API_KEY", "GEMINI_API_KEY", "PIXABAY_API_KEY", "YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"] });
   assert.deepEqual(decideAutopilot(withKey, { enabled: true, days: 8 }, now), { codes: ["08a"], skip: null });
   assert.equal(withKey.missingSecrets?.length, 0);
   assert.match(decideAutopilot({ ...withKey, youtubeError: "квота" }, { enabled: true, days: 8 }, now).skip ?? "", /YouTube недоступен/);

@@ -26,6 +26,7 @@ import { frameOf } from "./CoverMedia";
 import Dots from "./Dots";
 import FilesSaver from "./FilesSaver";
 import { notePending, usePending } from "@/lib/pending";
+import ReleaseChecks from "./ReleaseChecks";
 import RunProgressBar from "./RunProgressBar";
 import Thumb from "./Thumb";
 
@@ -363,6 +364,11 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
         </p>
       )}
 
+      {/* До загрузки — первым делом: что не так с роликом. Уже на YouTube — ниже, у плеера. */}
+      {row.release && row.stage === "video" && (
+        <ReleaseChecks release={row.release} voice={row.voice ?? null} realPhotos={row.realPhotos ?? false} missingSecrets={state.missingSecrets} title="Перед загрузкой проверьте" />
+      )}
+
       <section>
         <h4>Что дальше</h4>
         {row.stage === "topic" && (
@@ -486,6 +492,10 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           <h4>Посмотреть</h4>
           <Preview mp4Id={row.release.mp4.id} poster={cover ? `/api/asset/${cover.id}/file` : row.cover} />
         </section>
+      )}
+      {/* Вышедший ролик уже не заменить — проверку не грузим. */}
+      {row.release && (row.stage === "studio" || row.stage === "scheduled") && (
+        <ReleaseChecks release={row.release} voice={row.voice ?? null} realPhotos={row.realPhotos ?? false} missingSecrets={state.missingSecrets} title="Проверка ролика" />
       )}
 
       {!lock && (row.stage === "script" || row.stage === "video") && (

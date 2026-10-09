@@ -1,0 +1,37 @@
+/* «Перед загрузкой проверьте»: строка на проверку, значок цветом уровня. Свой файл — чтобы не
+   трогать общий globals.css. «.checks .list» сильнее общего «.sheet ul» (отступ списка). */
+.checks .list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.list li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mark {
+  flex: none;
+  width: 1em;
+  text-align: center;
+}
+.error .mark {
+  color: var(--error);
+}
+.warn .mark {
+  color: var(--warn);
+}
+.info {
+  color: var(--muted);
+}
+.ok {
+  color: var(--muted);
+}
+.ok .mark {
+  color: var(--ok);
+}
