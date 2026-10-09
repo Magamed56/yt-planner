@@ -13,7 +13,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { FPS, THEME_NAMES, type Format, type ThemeName, type VideoScript } from "../types";
 import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult } from "../pipeline/contracts";
-import { makeWhoosh, prepareMusic } from "../pipeline/audio/index";
+import { makeSfx, prepareMusic } from "../pipeline/audio/index";
 import { applyChannelDefaults, type ChannelConfig } from "../pipeline/channel";
 import { loadChannel } from "../pipeline/channel-file";
 import { coverFrame, frameToMs, renderCover } from "../pipeline/cover";
@@ -375,19 +375,20 @@ async function main() {
   });
 
   // 4. Музыка и звук перехода
-  const { music, whooshSrc } = await steps.run("Музыка и звук перехода", async () => {
+  const { music, whooshSrc, sfx } = await steps.run("Музыка и звук перехода", async () => {
     fs.rmSync(path.join(publicDir, "music"), { recursive: true, force: true });
     fs.rmSync(path.join(publicDir, "sfx"), { recursive: true, force: true });
     const durationMs = estimateDurationMs(voices.map((v) => v.durationMs));
     const music = await prepareMusic(publicDir, { durationMs, mood: args.mood || process.env.MUSIC_MOOD?.trim() || undefined, seed: slug });
     if (!music) console.log("  без музыки (MUSIC=none)");
-    const whooshSrc = await makeWhoosh(publicDir);
-    return { music, whooshSrc };
+    // Свист переходов (3 варианта) + звуки монтажа: пункты, удар цифры (SFX=whoosh|off).
+    const { whooshSrc, sfx } = await makeSfx(publicDir);
+    return { music, whooshSrc, sfx };
   });
 
   // 5. Props композиции
   const props = await steps.run("Сборка таймлинии (props.json)", async () => {
-    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, format, theme: script.theme, channelName: channel.name });
+    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, sfx, format, theme: script.theme, channelName: channel.name });
     writeJson(path.join(runDir, "props.json"), p);
     console.log(`  длительность ${(p.durationInFrames / FPS).toFixed(1)} с (${p.durationInFrames} кадров), голос ${(voiceDurationMs / 1000).toFixed(1)} с, слов в субтитрах: ${p.captions.length}`);
     return p;

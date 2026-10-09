@@ -10,11 +10,25 @@ export interface WhooshOptions {
   durationMs?: number; // общая длина, по умолчанию 520 мс
   peakAt?: number; // где пик громкости, доля длины (0..1)
   seed?: number;
+  lowHz?: number; // нижняя и верхняя частота свипа (по умолчанию 260 → 3600 Гц)
+  highHz?: number;
+  panFrom?: number; // панорама −1 (лево) … 1 (право): откуда и куда «пролетает»
+  panTo?: number;
 }
+
+// Варианты для разных склеек: один и тот же звук на каждом переходе быстро
+// приедается. Разные длина, высота и направление пролёта — та же «семья».
+export const WHOOSH_VARIANTS: WhooshOptions[] = [
+  {},
+  { seed: 0x5eee, durationMs: 440, peakAt: 0.38, lowHz: 320, highHz: 4200, panFrom: 0.55, panTo: -0.55 },
+  { seed: 0x5eef, durationMs: 620, peakAt: 0.5, lowHz: 200, highHz: 2800, panFrom: -0.3, panTo: 0.35 },
+];
 
 export function synthWhoosh(sampleRate = 44100, opts: WhooshOptions = {}): PcmAudio {
   const durationMs = opts.durationMs ?? 520;
   const peakAt = opts.peakAt ?? 0.45;
+  const panFrom = opts.panFrom ?? -0.55;
+  const panTo = opts.panTo ?? 0.55;
   const n = Math.round((durationMs / 1000) * sampleRate);
   const rnd = makeRng(opts.seed ?? 0x5eed);
   const left = new Float32Array(n);
@@ -42,8 +56,8 @@ export function synthWhoosh(sampleRate = 44100, opts: WhooshOptions = {}): PcmAu
   const body = new Svf(sampleRate); // низкое «тело» воздуха
   const hpL = new OnePole(90, sampleRate);
   const hpR = new OnePole(90, sampleRate);
-  const fLow = 260;
-  const fHigh = 3600;
+  const fLow = opts.lowHz ?? 260;
+  const fHigh = opts.highHz ?? 3600;
 
   for (let i = 0; i < n; i++) {
     const t = i / n;
@@ -62,8 +76,8 @@ export function synthWhoosh(sampleRate = 44100, opts: WhooshOptions = {}): PcmAu
     bpR.process(x);
     body.process(x);
     const air = body.lp * 0.35;
-    // Равномощная панорама: слева → направо.
-    const pan = -0.55 + 1.1 * smoothstep(t);
+    // Равномощная панорама: по умолчанию слева → направо.
+    const pan = panFrom + (panTo - panFrom) * smoothstep(t);
     const angle = ((pan + 1) * Math.PI) / 4;
     left[i] = hpL.hp((bpL.bp + air) * env) * Math.cos(angle);
     right[i] = hpR.hp((bpR.bp + air) * env) * Math.sin(angle);

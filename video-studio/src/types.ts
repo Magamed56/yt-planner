@@ -91,6 +91,15 @@ export interface TimelineCaption {
   confidence: number | null;
 }
 
+// Звуки монтажа (синтезируются локально, src/pipeline/audio/sfx.ts), пути — от publicDir.
+export interface SfxSet {
+  whooshes: string[]; // варианты свиста переходов — по кругу
+  pop: string | null; // пункт списка, столбик сравнения, метка на карте
+  impact: string | null; // удар при раскрытии крупной цифры
+  rise: string | null; // нарастание к удару
+  sting: string | null; // искра бренд-заставки
+}
+
 export interface VideoProps {
   title: string;
   format: Format;
@@ -101,6 +110,8 @@ export interface VideoProps {
   durationInFrames: number; // итоговая длина ролика
   music: { src: string; volume: number; duckedVolume: number } | null;
   whooshSrc: string | null; // звук перехода (генерируется локально)
+  sfx?: SfxSet | null; // набор звуков монтажа; нет — только whooshSrc (старые props.json)
+  brandIntro?: boolean; // бренд-заставка ≤ 0,5 с поверх начала хука (channel.json → brandIntro, BRAND_INTRO)
   sfxVolume: number;
   showCaptions: boolean;
   showProgressBar: boolean;
