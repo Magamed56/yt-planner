@@ -41,7 +41,15 @@ export interface RowStats {
   viewsLabel: string; // «1,2 тыс.»
   likesLabel: string | null;
   commentsLabel: string | null;
+  // «К обычному» (lib/insights.ts typicalRatio): во сколько раз больше просмотров в сутки, чем
+  // у обычного Shorts канала. Только у вышедших.
+  ratio?: number | null;
+  ratioLabel?: string | null; // «▲ ×2,3», «≈ обычно», «▼ ×0,4», «рано»; null — без отметки
+  verdict?: Verdict;
+  basis?: string; // «медиана 410 в сутки по 18 роликам · ≈ оценка»
 }
+
+export type Verdict = "up" | "typical" | "down" | "fresh" | "thin";
 
 export function rowStats(v: Pick<ChannelVideo, "viewCount" | "likeCount" | "commentCount">): RowStats | null {
   if (v.viewCount === null || v.viewCount === undefined) return null;
@@ -95,6 +103,9 @@ export interface VideoStat {
 
 // Shorts — до 3 минут: для порога монетизации считаются только их просмотры.
 const SHORTS_MAX_SEC = 180;
+export const isShorts = (durationSec: number | null) => durationSec === null || durationSec <= SHORTS_MAX_SEC;
+// Просмотры в сутки — одно определение для «Статистики» и ленты: младше суток делим на сутки.
+export const viewsPerDay = (views: number, publishedMs: number, nowMs: number) => views / Math.max(1, Math.max(0, nowMs - publishedMs) / DAY_MS);
 
 // Вышедшие ролики канала с цифрами; по умолчанию — по просмотрам.
 export function videoStats(videos: ChannelVideo[], topics: Topic[], pillars: Pillar[], now: Date, tz: string): VideoStat[] {
@@ -110,7 +121,7 @@ export function videoStats(videos: ChannelVideo[], topics: Topic[], pillars: Pil
     const views = v.viewCount ?? 0;
     const age = Math.max(0, nowMs - at);
     const days = Math.max(1, age / DAY_MS);
-    const perDay = views / days;
+    const perDay = viewsPerDay(views, at, nowMs);
     list.push({
       videoId: v.videoId,
       code: topic?.code ?? null,
@@ -121,7 +132,7 @@ export function videoStats(videos: ChannelVideo[], topics: Topic[], pillars: Pil
       dateLabel: day.format(at),
       days,
       fresh: age < DAY_MS,
-      shorts: v.durationSec === null || v.durationSec <= SHORTS_MAX_SEC,
+      shorts: isShorts(v.durationSec),
       views,
       likes: v.likeCount ?? null,
       comments: v.commentCount ?? null,

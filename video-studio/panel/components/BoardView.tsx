@@ -4,6 +4,7 @@ import type { PanelState, Row } from "@/lib/state";
 import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import { usePressDrag } from "@/lib/use-press-drag";
 import CoverMedia, { frameOf } from "./CoverMedia";
+import { RATIO_CLASS } from "./FeedView";
 
 const WEEKDAYS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 const weekday = (key: string) => {
@@ -131,6 +132,11 @@ export default function BoardView({
                             <span className="code">{row.code}</span>
                             <span className="title">{row.title}</span>
                             {!movable(row) && <span className="mark">{row.whenExact ? STAGE_LABEL[row.stage] : `${STAGE_LABEL[row.stage]} · ориентир`}</span>}
+                            {row.stage === "published" && row.stats?.ratioLabel && (
+                              <span className={`ratio ${RATIO_CLASS[row.stats.verdict ?? "typical"]}`} title={row.stats.basis}>
+                                {row.stats.ratioLabel}
+                              </span>
+                            )}
                           </span>
                         </button>
                       </div>

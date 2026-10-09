@@ -13,12 +13,21 @@ function chipText(r: Row): string {
   return STAGE_LABEL[r.stage];
 }
 
+// «К обычному»: выше — зелёным, ниже — жёлтым; стрелка и текст есть всегда (не только цвет).
+export const RATIO_CLASS = { up: "good", typical: "neutral", down: "warn", fresh: "neutral", thin: "neutral" } as const;
+
 // Отметка выбора на обложке: «on» — выбран, «off» — можно выбрать, «none» — файлов нет.
 type Mark = "on" | "off" | "none" | null;
 
 function Cover({ row, mark }: { row: Row; mark: Mark }) {
   const [empty, setEmpty] = useState(false);
-  const views = row.stage === "published" && row.stats ? <span className="views-badge" title="просмотры">👁 {row.stats.viewsLabel}</span> : null;
+  const st = row.stage === "published" ? row.stats : null;
+  const views = st ? (
+    <span className="views-badge" title={st.basis ? `просмотры · ${st.basis}` : "просмотры"}>
+      👁 {st.viewsLabel}
+      {st.ratioLabel && <span className={`ratio ${RATIO_CLASS[st.verdict ?? "typical"]}`}>{st.ratioLabel}</span>}
+    </span>
+  ) : null;
   const check = mark && (
     <span className={`check ${mark}`} aria-hidden="true">
       {mark === "on" ? "✓" : mark === "none" ? "нет файлов" : ""}

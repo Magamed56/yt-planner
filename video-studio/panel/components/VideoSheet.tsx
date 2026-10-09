@@ -249,6 +249,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
               👁 {row.stats.viewsLabel}
               {row.stats.likesLabel !== null && ` · 👍 ${row.stats.likesLabel}`}
               {row.stats.commentsLabel !== null && ` · 💬 ${row.stats.commentsLabel}`}
+              {row.stats.verdict && <div className="small muted">{row.stats.ratio ? `${row.stats.ratio.toFixed(1).replace(".", ",")}× к обычному · ${row.stats.basis}` : row.stats.basis}</div>}
             </div>
           )}
           <Dots stage={row.stage} />

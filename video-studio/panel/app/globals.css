@@ -2539,3 +2539,34 @@ a.btn[aria-disabled] {
     font-size: 9.5px;
   }
 }
+
+/* ---- «к обычному»: ▲ ×2,3 / ≈ обычно / ▼ ×0,4 ---- */
+.ratio {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font: 800 11px var(--body);
+  white-space: nowrap;
+}
+.ratio.good {
+  background: color-mix(in srgb, var(--ok) 22%, transparent);
+  color: var(--ok);
+}
+.ratio.warn {
+  background: color-mix(in srgb, var(--warn) 22%, transparent);
+  color: var(--warn);
+}
+.ratio.neutral {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--muted);
+}
+.btile .ratio {
+  align-self: flex-start;
+  margin: 2px 0 0;
+  font-size: 10px;
+}
+.views-line .small {
+  margin-top: 2px;
+  font: 600 12px/1.35 var(--body);
+}

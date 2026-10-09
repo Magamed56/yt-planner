@@ -8,7 +8,8 @@ import type { GhRelease, GhRun, GhStep } from "./github";
 import { expectedMs, runProgress, type RunProgress } from "./progress";
 import { releaseVideosOf, type ReleaseVideo } from "./ops";
 import { STAGES, codesLabel, plural, shiftDateKey, type Stage } from "./stages";
-import { rowStats, type RowStats } from "./stats";
+import { typicalRatio } from "./insights";
+import { isShorts, rowStats, viewsPerDay, type RowStats } from "./stats";
 
 export { STAGES, STAGE_LABEL, codesLabel, plural, type Stage } from "./stages";
 
@@ -472,6 +473,18 @@ export function buildState(input: StateInput): PanelState {
       stats: v ? rowStats(v) : null,
     };
   });
+
+  // «К обычному» у вышедших — по тем же роликам с YouTube, без лишних запросов.
+  const typical = typicalRatio(
+    videos
+      .filter((v) => v.privacyStatus === "public" && v.publishedAt && Number.isFinite(ms(v.publishedAt)) && v.viewCount !== null && v.viewCount !== undefined)
+      .map((v) => ({ videoId: v.videoId, publishedAt: v.publishedAt!, perDay: viewsPerDay(v.viewCount!, ms(v.publishedAt!), nowMs), shorts: isShorts(v.durationSec) })),
+    now,
+  );
+  for (const r of rows) {
+    const x = r.stage === "published" && r.youtube && r.stats ? typical.get(r.youtube.videoId) : undefined;
+    if (x) Object.assign(r.stats!, { ratio: x.ratio, ratioLabel: x.label, verdict: x.verdict, basis: x.basis });
+  }
 
   // Ориентир для остальных: следующие свободные слоты по порядку плана — так же их раздаст
   // youtube-fill, когда ролики загрузят в Studio.

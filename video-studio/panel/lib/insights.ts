@@ -1,7 +1,7 @@
 // Подсказки экрана «Статистика»: слабый старт (ролик 1–3 суток набирает заметно меньше
 // обычного — повод сменить название) и лучшее время выхода (слоты канала и дни недели).
 // Только чистые функции без сети — их проверяет scripts/insights-test.ts.
-import { formatRate, type VideoStat } from "./stats";
+import { formatRate, type Verdict, type VideoStat } from "./stats";
 import { plural } from "./stages";
 
 const HOUR_MS = 3_600_000;
@@ -22,6 +22,61 @@ export function superiority(a: number[], b: number[]): number {
   let wins = 0;
   for (const x of a) for (const y of b) wins += x > y ? 1 : x === y ? 0.5 : 0;
   return wins / (a.length * b.length);
+}
+
+// ---- «к обычному»: во сколько раз ролик набирает больше обычного Shorts канала ----
+
+export const TYPICAL = {
+  minHours: 24, // младше суток — «рано»
+  windowDays: 30, // обычный уровень — по роликам последнего месяца
+  lastN: 20, // не больше 20 последних
+  minSample: 5, // меньше 5 роликов для сравнения — без отметки
+  up: 1.5, // от ×1,5 — «выше обычного»
+  down: 0.67, // ниже ×0,67 — «ниже обычного»
+};
+
+export interface Typical {
+  ratio: number | null;
+  verdict: Verdict;
+  label: string | null; // null — без отметки (мало данных)
+  basis: string;
+  n: number;
+}
+
+const times = (x: number) => `×${x.toFixed(1).replace(".", ",")}`;
+
+// Обычный уровень — медиана просмотров в сутки у последних 20 Shorts возрастом от суток до
+// 30 дней, без самого ролика. Медиана: один вирусный ролик её не сдвигает.
+export function typicalRatio(videos: { videoId: string; publishedAt: string; perDay: number; shorts: boolean }[], now: Date, rule = TYPICAL): Map<string, Typical> {
+  const t = now.getTime();
+  const hours = (v: { publishedAt: string }) => (t - Date.parse(v.publishedAt)) / HOUR_MS;
+  const pool = videos
+    .filter((v) => v.shorts && hours(v) >= rule.minHours && hours(v) <= rule.windowDays * 24)
+    .sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
+  const out = new Map<string, Typical>();
+  for (const v of videos) {
+    if (!v.shorts || !Number.isFinite(hours(v))) continue;
+    if (hours(v) < rule.minHours) {
+      out.set(v.videoId, { ratio: null, verdict: "fresh", label: "рано", basis: "вышел меньше суток назад — цифры ещё скачут", n: 0 });
+      continue;
+    }
+    const others = pool.filter((o) => o.videoId !== v.videoId).slice(0, rule.lastN);
+    const base = median(others.map((o) => o.perDay));
+    if (others.length < rule.minSample || base === null || !(base > 0)) {
+      out.set(v.videoId, { ratio: null, verdict: "thin", label: null, basis: `мало данных: ${others.length} из ${rule.minSample} роликов для сравнения`, n: others.length });
+      continue;
+    }
+    const ratio = v.perDay / base;
+    const verdict: Verdict = ratio >= rule.up ? "up" : ratio < rule.down ? "down" : "typical";
+    out.set(v.videoId, {
+      ratio,
+      verdict,
+      label: verdict === "up" ? `▲ ${times(ratio)}` : verdict === "down" ? `▼ ${times(ratio)}` : "≈ обычно",
+      basis: `медиана ${formatRate(base)} в сутки по ${others.length} ${plural(others.length, "ролику", "роликам", "роликам")} · ≈ оценка`,
+      n: others.length,
+    });
+  }
+  return out;
 }
 
 // ---- слабый старт ----

@@ -3,9 +3,9 @@
 // Запуск из папки video-studio: npx tsx panel/scripts/insights-test.ts
 import assert from "node:assert/strict";
 import { parseTitleIdeas } from "../../src/pipeline/title-ideas";
-import { median, releaseTiming, superiority, weakStarts } from "../lib/insights";
+import { median, releaseTiming, superiority, TYPICAL, typicalRatio, weakStarts } from "../lib/insights";
 import { parsePlaylistsSetting, planPlaylistSync, playlistTitle, playlistsSettingText, quotaLabel, type SyncInput } from "../lib/playlists";
-import type { VideoStat } from "../lib/stats";
+import { viewsPerDay, type VideoStat } from "../lib/stats";
 import { allowedTitle, titleIdeaViews, titleUpdateBody } from "../lib/titles";
 
 // Папка panel — CommonJS: верхнеуровневого await нет, проверки копим и запускаем в конце.
@@ -82,6 +82,45 @@ test("слабый старт: меньше половины медианы ос
   assert.equal(f.baseline, 300); // медиана 8 остальных: 100,150,200,300,300,400,500,600
   assert.equal(f.percent, 13);
   assert.equal(r.baseline, 300);
+});
+
+test("к обычному: ×N от медианы остальных Shorts, пороги ×1,5 и ×0,67, рано, мало данных", () => {
+  const pool = [stat(100, 100), stat(150, 200), stat(200, 300), stat(260, 400), stat(320, 500), stat(400, 600)];
+  // Один ролик к шести: база — медиана шести остальных, 350 в сутки.
+  const one = (x: VideoStat) => typicalRatio([...pool, x], now).get(x.videoId)!;
+  const hit = one(stat(50, 1000));
+  assert.deepEqual([hit.verdict, hit.label, hit.n], ["up", "▲ ×2,9", 6]);
+  assert.match(sp(hit.basis), /^медиана 350 в сутки по 6 роликам · ≈ оценка$/);
+  assert.equal(one(stat(50, 525)).verdict, "up", "ровно ×1,5 — уже «выше»");
+  assert.equal(one(stat(50, 235)).label, "≈ обычно", "×0,67 — ещё «обычно»");
+  assert.deepEqual([one(stat(50, 233)).verdict, one(stat(50, 100)).label], ["down", "▼ ×0,3"]);
+  assert.deepEqual([one(stat(5, 5000)).verdict, one(stat(5, 5000)).label, one(stat(5, 5000)).ratio], ["fresh", "рано", null]);
+  assert.equal(typicalRatio([...pool, stat(50, 9000, { shorts: false })], now).size, 6, "не Shorts — без отметки");
+  // Сам ролик в свою базу не входит: у каждого из шести — медиана пяти других.
+  const m = typicalRatio(pool, now);
+  assert.equal(m.get(pool[0]!.videoId)!.n, 5);
+  assert.equal(m.get(pool[0]!.videoId)!.label, "▼ ×0,3", "100 против медианы 400");
+});
+
+test("к обычному: один вирусный ролик не сдвигает базу; меньше 5 для сравнения — без отметки", () => {
+  const pool = [stat(30, 100), stat(40, 110), stat(50, 120), stat(60, 130), stat(70, 140)];
+  const viral = stat(80, 1_000_000);
+  const me = stat(90, 120);
+  const m = typicalRatio([...pool, viral, me], now);
+  assert.equal(m.get(me.videoId)!.label, "≈ обычно", "медиана 125, а не среднее со взлётом");
+  assert.equal(m.get(viral.videoId)!.verdict, "up");
+  const thin = typicalRatio([stat(30, 100), stat(40, 100), stat(50, 100), stat(60, 100), stat(70, 300)], now);
+  const last = [...thin.values()].at(-1)!;
+  assert.deepEqual([last.verdict, last.label, last.n], ["thin", null, 4]);
+  assert.match(last.basis, /мало данных: 4 из 5/);
+  assert.equal(TYPICAL.lastN, 20);
+});
+
+test("просмотры в сутки — одно определение для «Статистики» и ленты", () => {
+  const t = now.getTime();
+  assert.equal(viewsPerDay(1000, t - 48 * H, t), 500);
+  assert.equal(viewsPerDay(1000, t - 3 * H, t), 1000, "младше суток делим на сутки");
+  assert.equal(viewsPerDay(1000, t + H, t), 1000, "часы впереди — не делим на ноль");
 });
 
 test("слабый старт: меньше 5 роликов для сравнения — молчим", () => {
