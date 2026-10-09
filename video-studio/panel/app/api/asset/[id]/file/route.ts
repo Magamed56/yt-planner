@@ -4,6 +4,7 @@
 // и с диапазонами (206). Тело — поток, не буфер: у функции Vercel лимит 4,5 МБ на обычный ответ.
 import { requireSession } from "@/lib/auth";
 import { ASSET_CHUNK, assetHeaders, assetType, planRange, type RangePlan } from "@/lib/asset-range";
+import { safeDownloadName } from "@/lib/downloads";
 import { assetDownloadUrl, assetInfo } from "@/lib/github";
 
 export const maxDuration = 60;
@@ -44,11 +45,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   if (!/^\d+$/.test(id)) return text(400, "Неверный файл.");
   // ?download=1 — скачать файлом; без ограничения куска: менеджер загрузок докачивает сам.
-  const download = new URL(request.url).searchParams.get("download") === "1";
+  // ?name= — имя файла с кодом ролика («08a-cover.jpg»): обложки всех релизов зовутся одинаково.
+  const query = new URL(request.url).searchParams;
+  const download = query.get("download") === "1";
   try {
     let a = await asset(Number(id), false);
     const plan = planRange(request.headers.get("range"), a.size, download ? 0 : ASSET_CHUNK);
-    const headers = assetHeaders(a.name, a.type, a.size, plan, download);
+    const headers = assetHeaders(safeDownloadName(query.get("name"), a.name), a.type, a.size, plan, download);
     if (plan.status === 416) return new Response(null, { status: 416, headers });
     let up = await storage(a.url, plan);
     if (up.status === 401 || up.status === 403 || up.status === 404) {

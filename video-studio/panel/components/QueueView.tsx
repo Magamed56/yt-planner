@@ -1,17 +1,19 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { fillNewUploadsAction, findNewUploadsAction, moveVideoAction, undoMoveAction } from "@/app/actions";
+import { fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
 import type { PanelState, Reminder, Row } from "@/lib/state";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/stages";
 import AppShell, { RunwayRing } from "./AppShell";
-import BoardView, { movable, type BoardCell } from "./BoardView";
+import BoardView, { movable, queued, type BoardCell } from "./BoardView";
+import DownloadSheet from "./DownloadSheet";
 import FeedView from "./FeedView";
 import VideoSheet from "./VideoSheet";
 
 type Filter = "ahead" | "all" | Stage;
 export type QueueMode = "feed" | "calendar";
-type Undo = { videoId: string; publishAt: string }[];
+// Чем отменить последнее: переносы на YouTube или прежний порядок очереди выхода.
+type Undo = { moves: { videoId: string; publishAt: string }[] } | { order: string[] };
 
 const NOTICE_ICON = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -21,7 +23,14 @@ const NOTICE_ICON = (
   </svg>
 );
 
-function Notice({ m }: { m: Reminder }) {
+const CHECK_ICON = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="4" />
+    <path d="m8 12 3 3 5-6" />
+  </svg>
+);
+
+function Notice({ m, action }: { m: Reminder; action?: { label: string; onClick: () => void } }) {
   return (
     <div className={`notice ${m.level}`}>
       {NOTICE_ICON}
@@ -32,10 +41,19 @@ function Notice({ m }: { m: Reminder }) {
             открыть →
           </a>
         )}
+        {action && (
+          <button className="link-btn" onClick={action.onClick}>
+            {action.label}
+          </button>
+        )}
       </span>
     </div>
   );
 }
+
+const mb = (bytes: number) => `${Math.round(bytes / 1_048_576)} МБ`;
+// Сколько весят файлы ролика целиком: видео и обе обложки.
+const rowBytes = (r: Row) => (r.release ? r.release.mp4.size + (r.release.cover?.size ?? 0) + (r.release.thumb?.size ?? 0) : 0);
 
 export default function QueueView({ state, initialMode }: { state: PanelState; initialMode: QueueMode }) {
   const router = useRouter();
@@ -45,12 +63,42 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
   const [picked, setPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ text: string; ok: boolean; undo?: Undo } | null>(null);
+  // Выбор роликов для скачивания: null — режим выключен; saving — открыт лист «Скачать».
+  const [chosen, setChosen] = useState<Set<string> | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Вид — в адресе (?view=calendar), без запроса к серверу: данные уже на странице.
   function switchMode(next: QueueMode) {
     setMode(next);
     setPicked(null);
+    if (next === "calendar") stopChoosing();
     window.history.replaceState(null, "", next === "calendar" ? "?view=calendar" : "/");
+  }
+
+  function startChoosing(codes: string[] = []) {
+    setSelected(null);
+    setChosen(new Set(codes));
+  }
+
+  function stopChoosing() {
+    setChosen(null);
+    setSaving(false);
+  }
+
+  function toggleChosen(code: string) {
+    if (!chosen) return;
+    const next = new Set(chosen);
+    if (next.has(code)) next.delete(code);
+    else next.add(code);
+    setChosen(next);
+    if (!next.size) setSaving(false);
+  }
+
+  // Напоминание «Ждут загрузки в Studio» — сразу к скачиванию всех таких роликов.
+  function saveWaiting() {
+    if (mode !== "feed") switchMode("feed");
+    startChoosing(waiting.map((r) => r.code));
+    setSaving(true);
   }
 
   // Одна кнопка: найти ролики, загруженные в Studio руками, и поставить им тексты и время.
@@ -81,16 +129,38 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     }
   }
 
-  // Перенос: на YouTube меняется только время выхода; занятый слот — обмен местами.
+  // Перенос. Запланированный на YouTube — меняется только время выхода (занятый слот — обмен
+  // местами). Ролик-ориентир — меняется местами с другим ориентиром в очереди выхода.
   async function place(code: string, cell: BoardCell) {
     const row = state.rows.find((r) => r.code === code);
     setPicked(null);
-    if (!row || !movable(row) || !row.youtube) return;
-    if (!cell.iso) return setToast({ text: "Сюда нельзя: слот уже прошёл или дальше двух недель — перенесите в Studio.", ok: false });
+    if (!row || cell.row?.code === row.code) return;
+    if (movable(row) && row.youtube) {
+      if (!cell.iso) return setToast({ text: "Сюда нельзя: слот уже прошёл или дальше двух недель — перенесите в Studio.", ok: false });
+      if (cell.row?.stage === "published") return setToast({ text: "Этот ролик уже вышел — его место занято.", ok: false });
+      const videoId = row.youtube.videoId;
+      return void act(async () => {
+        const r = await moveVideoAction(videoId, cell.iso!);
+        return { ...r, undo: "undo" in r && r.undo ? { moves: r.undo } : undefined };
+      });
+    }
+    if (!queued(row)) return;
+    const other = cell.row;
+    if (!other) return setToast({ text: "Ролики без времени на YouTube встают в слоты по очереди — перетащите его на место другого такого ролика.", ok: false });
+    if (!queued(other)) {
+      return setToast({ text: `Здесь ${other.code} — он уже ${other.stage === "published" ? "вышел" : "в расписании YouTube"}. Перетащите ${code} на место ролика с пометкой «ориентир».`, ok: false });
+    }
+    return void act(async () => {
+      const r = await swapQueueAction(row.code, other.code);
+      return { ...r, undo: "undoOrder" in r && r.undoOrder ? { order: r.undoOrder } : undefined };
+    });
+  }
+
+  async function act(fn: () => Promise<{ ok: boolean; message: string; undo?: Undo }>) {
     setBusy(true);
     try {
-      const r = await moveVideoAction(row.youtube.videoId, cell.iso);
-      setToast({ text: r.message, ok: r.ok, undo: "undo" in r ? (r.undo as Undo | undefined) : undefined });
+      const r = await fn();
+      setToast({ text: r.message, ok: r.ok, undo: r.undo });
       if (r.ok) router.refresh();
     } catch (e) {
       setToast({ text: e instanceof Error ? e.message : String(e), ok: false });
@@ -102,7 +172,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
   async function undo(u: Undo) {
     setBusy(true);
     try {
-      const r = await undoMoveAction(u);
+      const r = "order" in u ? await restoreQueueAction(u.order) : await undoMoveAction(u.moves);
       setToast({ text: r.message, ok: r.ok });
       if (r.ok) router.refresh();
     } finally {
@@ -126,6 +196,26 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
   const notes = state.reminders.filter((m) => m.kind !== "runway" && m.level === "info");
   const runway = state.reminders.find((m) => m.kind === "runway");
 
+  // Скачивание пачкой: ролики с файлами в релизе (собранные на компьютере — без файлов).
+  const waiting = state.rows.filter((r) => r.stage === "video" && r.release);
+  const chosenRows = chosen ? state.rows.filter((r) => chosen.has(r.code) && r.release) : [];
+  const chosenBytes = chosenRows.reduce((s, r) => s + rowBytes(r), 0);
+  const visibleWithFiles = rows.filter((r) => r.release);
+  const allVisibleChosen = chosen !== null && visibleWithFiles.length > 0 && visibleWithFiles.every((r) => chosen.has(r.code));
+  const choosingBar = chosen !== null && !saving;
+
+  function toggleVisible() {
+    if (!chosen) return;
+    const next = new Set(chosen);
+    for (const r of visibleWithFiles) {
+      if (allVisibleChosen) next.delete(r.code);
+      else next.add(r.code);
+    }
+    setChosen(next);
+  }
+
+  const noticeAction = (m: Reminder) => (m.kind === "upload" && waiting.length ? { label: waiting.length > 1 ? `⬇ Скачать все ${waiting.length}` : "⬇ Скачать", onClick: saveWaiting } : undefined);
+
   return (
     <AppShell
       active={mode}
@@ -135,7 +225,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
       runwayDays={state.runwayDays}
       runwayLabel={state.scheduleEndLabel}
     >
-      <div className={`workspace${current ? " with-sheet" : ""}`}>
+      <div className={`workspace${current || (chosen && saving) ? " with-sheet" : ""}`}>
         <main>
           <section className="hero">
             <RunwayRing days={state.runwayDays} size={76} />
@@ -166,20 +256,31 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
                 </svg>
                 {busy ? "Работаю…" : "Найти новые загрузки"}
               </button>
+              {mode === "feed" && (
+                <button
+                  className="btn choose-btn"
+                  aria-pressed={chosen !== null}
+                  onClick={() => (chosen ? stopChoosing() : startChoosing())}
+                  title="Отметить несколько роликов и скачать их видео и обложки разом"
+                >
+                  {CHECK_ICON}
+                  {chosen ? "Отменить выбор" : "Выбрать"}
+                </button>
+              )}
             </div>
           </div>
 
           <div className="notices">
             {runway && runway.level !== "info" && <Notice m={runway} />}
             {urgent.map((m, i) => (
-              <Notice key={i} m={m} />
+              <Notice key={i} m={m} action={noticeAction(m)} />
             ))}
             {notes.length > 0 && (
               <details className="notes">
                 <summary>Ещё заметки: {notes.length}</summary>
                 <div className="notices">
                   {notes.map((m, i) => (
-                    <Notice key={i} m={m} />
+                    <Notice key={i} m={m} action={noticeAction(m)} />
                   ))}
                 </div>
               </details>
@@ -188,7 +289,10 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
 
           {mode === "calendar" ? (
             <>
-              <p className="board-hint">Перетащите обложку на другой слот или нажмите на ролик, потом на слот. Занятый слот — ролики поменяются местами.</p>
+              <p className="board-hint">
+                Перетащите ролик на другой слот — мышью или пальцем (нажмите и чуть подержите). Запланированные на YouTube переносятся там же, ориентиры меняются местами в очереди выхода. Можно и без
+                перетаскивания: нажмите запланированный ролик, потом слот.
+              </p>
               <BoardView state={state} picked={picked} busy={busy} onTile={onTile} onPlace={(code, cell) => void place(code, cell)} />
             </>
           ) : (
@@ -206,9 +310,12 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
                   Все {state.rows.length}
                 </button>
               </div>
-              <FeedView state={state} rows={rows} selected={selected} onOpen={setSelected} />
+              {chosen && <p className="board-hint">Нажимайте на ролики — отмеченные ✓ скачаются вместе: видео и обложки. Ролики без готового видео не выбираются.</p>}
+              <FeedView state={state} rows={rows} selected={selected} onOpen={setSelected} chosen={chosen} onToggle={toggleChosen} />
             </>
           )}
+          {/* Полоска выбора закрывает низ ленты — запас, чтобы последние ролики было видно. */}
+          {choosingBar && <div className="selectbar-space" aria-hidden="true" />}
         </main>
         {current && (
           <>
@@ -216,7 +323,32 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
             <VideoSheet key={current.code} row={current} state={state} onClose={() => setSelected(null)} />
           </>
         )}
+        {chosen && saving && (
+          <>
+            <div className="backdrop" onClick={() => setSaving(false)} />
+            <DownloadSheet rows={chosenRows} onClose={() => setSaving(false)} onRemove={toggleChosen} />
+          </>
+        )}
       </div>
+
+      {choosingBar && !pickedRow && (
+        <div className="selectbar" role="status">
+          <span>{chosenRows.length ? `Выбрано: ${chosenRows.length} · ≈ ${mb(chosenBytes)}` : "Отметьте ролики для скачивания"}</span>
+          <div className="selectbar-actions">
+            {visibleWithFiles.length > 0 && (
+              <button className="btn small" onClick={toggleVisible}>
+                {allVisibleChosen ? "Снять все" : `Все с видео (${visibleWithFiles.length})`}
+              </button>
+            )}
+            <button className="btn small go" disabled={!chosenRows.length} onClick={() => setSaving(true)}>
+              ⬇ Скачать
+            </button>
+            <button className="btn small" onClick={stopChoosing}>
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
 
       {pickedRow && (
         <div className="pickbar" role="status">
@@ -231,7 +363,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
           </button>
         </div>
       )}
-      {toast && !pickedRow && (
+      {toast && !pickedRow && !choosingBar && (
         <div className={`toast${toast.ok ? "" : " err"}`} role="status">
           <span>{toast.text}</span>
           {toast.undo && (

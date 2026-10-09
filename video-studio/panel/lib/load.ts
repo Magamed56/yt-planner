@@ -2,7 +2,7 @@
 // секреты, настройки автопилота) и YouTube. YouTube недоступен — очередь всё равно видна.
 import { branchName, getVariable, GithubError, listDir, listReleases, listRuns, listSecretNames, readJson, repoName } from "./github";
 import type { ChannelVideo } from "../../src/pipeline/youtube-fill";
-import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, buildState, parseAutopilot, parseAutopilotLast, type PanelState } from "./state";
+import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, buildState, parseAutopilot, parseAutopilotLast, parseQueueOrder, QUEUE_ORDER_VAR, type PanelState } from "./state";
 import { channelVideos } from "./youtube";
 
 export const STUDIO_DIR = "video-studio";
@@ -16,7 +16,7 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     (videos) => ({ videos, error: null as string | null }),
     (e: unknown) => ({ videos: null, error: errorText(e) }),
   );
-  const [planJson, channelJson, scriptFiles, week1, later, releases, runs, secretNames, autopilotRaw, lastRaw, yt] = await Promise.all([
+  const [planJson, channelJson, scriptFiles, week1, later, releases, runs, secretNames, autopilotRaw, lastRaw, orderRaw, yt] = await Promise.all([
     readJson(`${STUDIO_DIR}/content/plan.json`),
     readJson(`${STUDIO_DIR}/channel.json`),
     listDir(`${STUDIO_DIR}/scripts`),
@@ -27,6 +27,7 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     listSecretNames().catch(() => null),
     getVariable(AUTOPILOT_VAR).catch(() => null),
     getVariable(AUTOPILOT_LAST_VAR).catch(() => null),
+    getVariable(QUEUE_ORDER_VAR).catch(() => null),
     youtube,
   ]);
   if (planJson === null) {
@@ -47,5 +48,6 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     autopilotLast: parseAutopilotLast(lastRaw),
     repo: repoName(),
     branch: branchName(),
+    queueOrder: parseQueueOrder(orderRaw),
   });
 }

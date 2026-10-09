@@ -119,8 +119,10 @@ test("этапы: вышел, запланирован, видео (неделя
   assert.equal(row("08b").release?.mp4.id, 11);
   assert.equal(row("08b").release?.caption?.id, 13);
   assert.equal(row("09a").stage, "studio");
-  assert.equal(row("09b").stage, "topic");
-  assert.deepEqual(state.counts, { topic: 43, script: 1, video: 5, studio: 1, scheduled: 9, published: 1 });
+  // С 09b–10b сценарии тоже уже в scripts/ (тексты для YouTube в этом примере не подставлены).
+  for (const c of ["09b", "10a", "10b"]) assert.equal(row(c).stage, "script", c);
+  assert.equal(row("11a").stage, "topic");
+  assert.deepEqual(state.counts, { topic: 40, script: 4, video: 5, studio: 1, scheduled: 9, published: 1 });
 });
 
 test("ориентир: следующие свободные слоты по порядку плана — с 13.10 12:00 МСК", () => {
@@ -153,7 +155,7 @@ test("напоминания: запас расписания, загрузит�
 
 test("обложки: с YouTube, иначе cover.jpg из релиза, иначе нет (плитка с кодом)", () => {
   assert.equal(row("01b").cover, "https://i9.ytimg.com/vi/01b/mqdefault.jpg");
-  assert.equal(row("08b").cover, "/api/asset/12");
+  assert.equal(row("08b").cover, "/api/asset/12/file");
   assert.equal(row("08b").release?.thumb, null);
   assert.equal(row("06a").cover, null);
 });

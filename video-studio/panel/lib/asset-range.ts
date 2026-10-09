@@ -50,7 +50,10 @@ export function contentDisposition(name: string, download: boolean): string {
 }
 
 export function assetHeaders(name: string, type: string, size: number, plan: RangePlan, download: boolean): Record<string, string> {
-  const base: Record<string, string> = { "Content-Type": type, "Accept-Ranges": "bytes", "Cache-Control": "private, no-store" };
+  // Обложки браузер держит у себя неделю: у файла релиза номер не меняется вместе с содержимым
+  // (новая версия — новый номер), а лента и календарь показывают их десятками.
+  const cache = type.startsWith("image/") ? "private, max-age=604800, immutable" : "private, no-store";
+  const base: Record<string, string> = { "Content-Type": type, "Accept-Ranges": "bytes", "Cache-Control": cache };
   if (plan.status === 416) return { ...base, "Content-Range": `bytes */${size}` };
   base["Content-Disposition"] = contentDisposition(name, download);
   if (plan.status === 206) return { ...base, "Content-Range": `bytes ${plan.start}-${plan.end}/${size}`, "Content-Length": String(plan.end - plan.start + 1) };

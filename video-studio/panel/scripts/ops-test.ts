@@ -227,11 +227,11 @@ async function main() {
 
   await test("порядок тем: позиции (id, day, slot) на месте, содержимое переезжает; двигать можно только planned без сценария", () => {
     const plan = parsePlan(json("content/plan.json"));
-    const locked = new Set(["10a"]); // например, у 10a уже идёт запуск
+    const locked = new Set(["11a"]); // например, у 11a уже идёт запуск
     const movable = movableIds(plan, locked);
-    assert.ok(!movable.includes("01a") && !movable.includes("08a"), "темы со сценарием не двигаются");
-    assert.ok(!movable.includes("10a"));
-    assert.ok(movable.includes("09a") && movable.includes("10b"));
+    assert.ok(!movable.includes("01a") && !movable.includes("10a"), "темы со сценарием не двигаются");
+    assert.ok(!movable.includes("11a"));
+    assert.ok(movable.includes("11b") && movable.includes("12a"));
     // Последнюю подвижную тему — на первое место.
     const order = moveItem(movable, movable.length - 1, 0);
     const next = reorderPlan(plan, movable, order);
@@ -245,7 +245,7 @@ async function main() {
     assert.equal(at(next, movable[1]!).title, at(plan, first).title);
     // Неподвижные — те же объекты, порядок позиций и ключей прежний, план читается.
     assert.equal(at(next, "01a"), at(plan, "01a"));
-    assert.equal(at(next, "10a"), at(plan, "10a"));
+    assert.equal(at(next, "11a"), at(plan, "11a"));
     assert.deepEqual(
       next.items.map((x) => x.id),
       plan.items.map((x) => x.id),
@@ -380,6 +380,9 @@ async function main() {
     assert.match(whole["Content-Disposition"]!, /^attachment; filename="08a-x\.mp4"/);
     assert.equal(whole["Content-Range"], undefined);
     assert.equal(assetHeaders("x.mp4", "video/mp4", size, { status: 416 }, false)["Content-Range"], `bytes */${size}`);
+    // Обложки браузер кэширует (у файла релиза номер меняется вместе с содержимым), видео — нет.
+    assert.equal(assetHeaders("cover.jpg", "image/jpeg", 100, { status: 200 }, false)["Cache-Control"], "private, max-age=604800, immutable");
+    assert.equal(whole["Cache-Control"], "private, no-store");
     assert.equal(contentDisposition("ролик «1».mp4", true), `attachment; filename="_____ _1_.mp4"; filename*=UTF-8''%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%20%C2%AB1%C2%BB.mp4`);
     assert.equal(parseContentRange("bytes */20"), null);
   });
