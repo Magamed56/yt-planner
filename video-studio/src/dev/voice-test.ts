@@ -196,6 +196,14 @@ async function offline() {
     // Тот же сценарий ещё раз на чистом раннере — ни одного запроса (как 10a/10b в usage.jsonl).
     await provider.synthesizeMany!(items(freshDir(), edited));
     assert.equal(calls.length, 2);
+    // Правка сцен вразбивку (1 и 3, вторая — из кэша) — всё равно один запрос, а не по сцене:
+    // иначе кэш тратил бы квоту больше, чем озвучка всего ролика заново.
+    const spread = ["Коротко.", edited[1]!, "Третья сцена — что они чувствуют вместо сладкого: умами, соль и горечь."];
+    const third = await provider.synthesizeMany!(items(freshDir(), spread));
+    assert.equal(calls.length, 3, `один запрос на две сцены вразбивку, было: ${calls.length - 2}`);
+    assert.equal(calls[2], `${spread[0]}\n\n${spread[2]}`);
+    assert.deepEqual(third.map((r) => Boolean(r.cached)), [false, true, false]);
+    assert.ok(third[0]!.durationMs < third[2]!.durationMs, `звук разрезан по своим сценам: ${third[0]!.durationMs} и ${third[2]!.durationMs} мс`);
   });
 
   await test("MP3 (Edge): сырой звук и тайминги провайдера из общего кэша", async () => {

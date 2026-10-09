@@ -105,13 +105,15 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       out.push(!p.clean ? await writeSilence(p.outFileBase) : await fromCaches(p.clean, p.outFileBase, keyOf(voice, p.clean), voice));
     }
 
-    // Подряд идущие неозвученные сцены — в группы не длиннее maxChars.
+    // Неозвученные сцены по порядку — в группы не длиннее maxChars, соседство не нужно:
+    // правка нескольких сцен вразбивку (остальные — из кэша) — один запрос, а не по
+    // запросу на сцену (квота Gemini — ≈ 10 в сутки, без кэша весь ролик и так один запрос).
     const groups: number[][] = [];
     for (let i = 0; i < prepared.length; i++) {
       if (out[i]) continue;
       const last = groups.at(-1);
       const len = last ? last.reduce((a, j) => a + prepared[j]!.clean.length + 2, 0) : Infinity;
-      if (last && last.at(-1) === i - 1 && len + prepared[i]!.clean.length <= maxChars) last.push(i);
+      if (last && len + prepared[i]!.clean.length <= maxChars) last.push(i);
       else groups.push([i]);
     }
 
