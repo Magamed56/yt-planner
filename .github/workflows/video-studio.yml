@@ -57,6 +57,11 @@ on:
         type: choice
         options: [auto, midnight, sunset, emerald, mono]
         default: auto
+      music:
+        description: "Музыка: auto — как обычно (переменная MUSIC, иначе трек из music/ или эмбиент); none — без музыки"
+        type: choice
+        options: [auto, none]
+        default: auto
       upload:
         description: "Куда отдать результат. instagram: render — публикует сразу, batch — ставит в очередь (релиз)"
         type: choice
@@ -125,7 +130,8 @@ jobs:
       LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
       LLM_MODEL: ${{ vars.LLM_MODEL }}
       VISUALS: ${{ vars.VISUALS }}
-      MUSIC: ${{ vars.MUSIC }}
+      # Кнопка «Пересобрать» в панели может выключить музыку (music = none) для одного запуска.
+      MUSIC: ${{ inputs.music == 'none' && 'none' || vars.MUSIC }}
       CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
       # Остальные несекретные настройки из .env.example; пустое значение = умолчание.
       TTS_FALLBACK: ${{ vars.TTS_FALLBACK }}
