@@ -1,29 +1,32 @@
 // Опубликовать уже собранный ролик — после того как вы его посмотрели.
-//   npm run upload -- out/<slug> [--to youtube|instagram|youtube,instagram] [--privacy …] [--schedule | --publish-at <ISO>]
+//   npm run upload -- out/<slug> [--to youtube|instagram|telegram|youtube,instagram,…] [--privacy …] [--schedule | --publish-at <ISO>]
 // YouTube: video.mp4, обложка и youtube.json (заголовок, описание, теги) из папки ролика.
 // Instagram: video.mp4 и instagram.txt (+ instagram.json с кадром обложки).
+// Telegram: video.mp4, подпись telegram.txt или instagram.txt, обложка cover.jpg.
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { loadChannel } from "../pipeline/channel-file";
 import { instagramEnvHelp, missingInstagramEnv, publishRunDir } from "../pipeline/instagram";
 import type { YoutubeMeta } from "../pipeline/meta";
+import { publishTelegramRunDir, telegramConfig } from "../pipeline/telegram";
 import { PRIVACY_VALUES, missingYoutubeEnv, uploadToYoutube, youtubeEnvHelp, type Privacy } from "../pipeline/youtube";
 import { UserError, argsError, fail, ghOutput, ghSummary, loadEnv, rel, resolveInputPath, writeYoutubeResult } from "./common";
 import { SCHEDULE_HELP, describePublishAt, parseUploadTargets, resolvePublishAt, scheduleArgsFrom, wantsSchedule } from "./publish-options";
 
-const HELP = `Публикация готового ролика на YouTube и/или в Instagram.
+const HELP = `Публикация готового ролика на YouTube, в Instagram и/или в канал Telegram.
 
   npm run upload -- out/<папка ролика> [параметры]
 
-  --to youtube|instagram|youtube,instagram   куда (по умолчанию youtube)
-  --privacy private|unlisted|public          видимость на YouTube (по умолчанию private)
+  --to youtube|instagram|telegram   куда, можно несколько через запятую (по умолчанию youtube)
+  --privacy private|unlisted|public видимость на YouTube (по умолчанию private)
 ${SCHEDULE_HELP}
-  --force                      Instagram: опубликовать, даже если ролик уже был опубликован
+  --force                      Instagram, Telegram: опубликовать, даже если ролик уже был опубликован
 
 YouTube: нужны YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN (npm run youtube-auth).
-Instagram: нужны IG_USER_ID и IG_ACCESS_TOKEN (docs/instagram-setup.md). Публикуется сразу:
-у API Instagram нет отложенной публикации.
+Instagram: нужны IG_USER_ID и IG_ACCESS_TOKEN (docs/instagram-setup.md).
+Telegram: нужны TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID (docs/telegram-setup.md, npm run telegram-check).
+Instagram и Telegram публикуются сразу: отложенной публикации в их API нет (расписание — workflow).
 `;
 
 async function main() {
@@ -59,17 +62,18 @@ async function main() {
   const runDir = resolveInputPath(runArg);
   if (!runDir || !fs.statSync(runDir).isDirectory()) throw new UserError(`Папка ролика не найдена: ${runArg}`);
   const targets = parseUploadTargets(String(values.to), "--to");
-  if (!targets.size) throw new UserError(`--to: укажите youtube, instagram или youtube,instagram.`);
+  if (!targets.size) throw new UserError(`--to: укажите youtube, instagram, telegram или несколько через запятую.`);
   const privacy = String(values.privacy) as Privacy;
   if (!PRIVACY_VALUES.includes(privacy)) throw new UserError(`--privacy: ${PRIVACY_VALUES.join(" | ")}.`);
   const schedule = scheduleArgsFrom(values);
-  if (wantsSchedule(schedule) && !targets.has("youtube")) throw new UserError("Расписание (--schedule, --publish-at) работает только для YouTube — у API Instagram отложенной публикации нет.");
+  if (wantsSchedule(schedule) && !targets.has("youtube")) throw new UserError("Расписание (--schedule, --publish-at) работает только для YouTube — у API Instagram и ботов Telegram отложенной публикации нет.");
 
   const video = path.join(runDir, "video.mp4");
   if (!fs.existsSync(video)) throw new UserError(`В ${rel(runDir)} нет video.mp4 — сначала соберите ролик: npm run make -- …`);
   // Ключи проверяем заранее: не публиковать половину, если для второй половины их нет.
   if (targets.has("youtube") && missingYoutubeEnv().length) throw new UserError(`Не заданы ${missingYoutubeEnv().join(", ")}.\n${youtubeEnvHelp()}`);
   if (targets.has("instagram") && missingInstagramEnv().length) throw new UserError(`Не заданы ${missingInstagramEnv().join(", ")}.\n${instagramEnvHelp()}`);
+  if (targets.has("telegram")) telegramConfig(); // нет ключей или они не того вида — объяснит, что сделать
 
   if (targets.has("youtube")) {
     const metaFile = path.join(runDir, "youtube.json");
@@ -111,6 +115,15 @@ async function main() {
     console.log(`\n✔ Instagram: ${link}${r.duplicate ? " (уже был опубликован — второй раз не постил)" : ""}`);
     ghOutput({ instagram_url: r.permalink, instagram_id: r.mediaId, instagram_duplicate: r.duplicate ? "true" : "false" });
     ghSummary(`### 📸 Instagram\n\n${link}${r.duplicate ? " — уже был опубликован, повторно не публиковали" : ""}\n`);
+  }
+
+  if (targets.has("telegram")) {
+    console.log(`\nvideo-studio · ролик в канал Telegram\n  папка: ${rel(runDir)}`);
+    const r = await publishTelegramRunDir(runDir, { force: values.force === true, log: (m) => console.log(`  ${m}`) });
+    const link = r.url ?? `сообщение ${r.messageId} в ${r.chatTitle ?? r.chatId}`;
+    console.log(`\n✔ Telegram: ${link}`);
+    ghOutput({ telegram_url: r.url, telegram_message_id: r.messageId });
+    ghSummary(`### ✈️ Telegram\n\n${link}${r.chatTitle ? ` — «${r.chatTitle}»` : ""}${r.withCover ? ", с обложкой" : ""}\n`);
   }
 }
 

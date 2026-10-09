@@ -27,6 +27,7 @@
 //   CHANNEL_NAME      имя канала для финальной сцены
 //   REMOTION_BROWSER_EXECUTABLE, REMOTION_CHROME_MODE   (headless-shell | chrome-for-testing)
 //   YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN    (загрузка на YouTube из CI)
+//   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID   кросспостинг в канал Telegram (Bot API, docs/telegram-setup.md)
 
 import type { Format, ScriptScene, SceneVisual, VideoScript, WordTiming } from "../types";
 

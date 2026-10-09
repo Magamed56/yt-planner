@@ -15,6 +15,7 @@
     "title-ideas": "tsx src/cli/title-ideas.ts",
     "captions-translate": "tsx src/cli/captions-translate.ts",
     "instagram-token": "tsx src/cli/instagram-token.ts",
+    "telegram-check": "tsx src/cli/telegram-check.ts",
     "brand": "tsx src/cli/brand.ts",
     "studio": "remotion studio src/remotion/index.ts",
     "browser": "remotion browser ensure",

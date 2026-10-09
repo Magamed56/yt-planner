@@ -7,7 +7,7 @@
                                    ──стоки/AI──▶ визуал сцен
                                    ──▶ музыка, звук переходов
                     ──Remotion (моушен-графика)──▶ video.mp4 + обложки + субтитры + описание
-                                                   ──▶ YouTube (в слоты 12:00/19:00) + Instagram Reels
+                                                   ──▶ YouTube (в слоты 12:00/19:00) + Instagram Reels + канал Telegram
 ```
 
 - **Основной формат — Shorts 1080×1920**, есть и горизонтальный 1920×1080.
@@ -27,6 +27,7 @@
 
 - [docs/youtube-setup.md](docs/youtube-setup.md) — оформить канал в YouTube Studio и публиковать по расписанию;
 - [docs/instagram-setup.md](docs/instagram-setup.md) — Reels через официальный API или вручную;
+- [docs/telegram-setup.md](docs/telegram-setup.md) — ролики в канал Telegram через своего бота;
 - [brand/README.md](brand/README.md) — аватар, баннер, водяной знак, обложки «Актуального».
 
 ---
@@ -94,15 +95,17 @@ npm run make -- --topic "Почему мы забываем выученное"
 | `npm run make -- --script scripts/<имя>.json` | Видео по вашему (отредактированному) сценарию |
 | `npm run upload -- out/<имя> [--privacy unlisted] [--schedule]` | Загрузить готовый ролик на YouTube (`--schedule` — в ближайший слот 12:00/19:00 МСК) |
 | `npm run upload -- out/<имя> --to instagram` | Опубликовать Reels в Instagram (`--to youtube,instagram` — в оба) |
+| `npm run upload -- out/<имя> --to telegram` | Отправить ролик в канал Telegram (можно вместе: `--to youtube,telegram`) |
 | `npm run youtube-auth` | Разовая настройка входа в YouTube (печатает `YT_REFRESH_TOKEN`) |
 | `npm run instagram-token [-- --exchange --page --save]` | Токен Instagram: проверить срок, продлить, узнать `IG_USER_ID` |
+| `npm run telegram-check` | Бот Telegram: проверить токен и права в канале, узнать `TELEGRAM_CHAT_ID` |
 | `npm run studio` | Remotion Studio — посмотреть композицию в браузере на демо-данных |
 | `npm run browser` | Заранее скачать браузер для рендера |
 | `npm run typecheck` | Проверка типов |
 
 Другие параметры `make`: `--theme midnight|sunset|emerald|mono`, `--voice edge|piper|gemini|…`,
 `--mood calm|inspiring|upbeat|tech|dark`, `--out папка`, `--no-render` (всё, кроме рендера),
-`--concurrency N`, `--upload youtube|instagram|youtube,instagram`, `--privacy private|unlisted|public`,
+`--concurrency N`, `--upload youtube|instagram|telegram` (можно через запятую), `--privacy private|unlisted|public`,
 расписание YouTube: `--schedule` (ближайший свободный слот), `--schedule-slot N` (N-й слот подряд),
 `--schedule-start 2026-10-14`, `--publish-at <ISO-время>`. Справка: `npm run make -- --help`.
 
@@ -116,7 +119,7 @@ npm run make -- --topic "Почему мы забываем выученное"
 | `description.txt` | Название, описание (призыв, ссылки, хэштеги канала, источники, дисклеймер), теги — для вставки в YouTube Studio |
 | `instagram.txt` | Подпись для Reels: хук, суть, призыв, 5–8 хэштегов из `channel.json`, без ссылок, ≤ 2200 символов. Можно править перед публикацией |
 | `cover.jpg` | Обложка Reels 1080×1920 — кадр конца хука без субтитров (тот же кадр API ставит обложкой) |
-| `youtube-result.json`, `instagram-result.json` | Что и когда опубликовано (защита от повторной публикации) |
+| `youtube-result.json`, `instagram-result.json`, `telegram-result.json` | Что и когда опубликовано (защита от повторной публикации) |
 | `cost.json` | Сколько стоил запуск: токены и деньги LLM, символы озвучки |
 | `script.json`, `props.json` | Сценарий и полная таймлиния — чтобы пересобрать или разобраться |
 | `public/` | Озвучка, визуал и музыка запуска. Повторная сборка того же сценария не озвучивает сцены заново и берёт уже найденные клипы для сцен, у которых не менялись `visualQuery`/`imagePrompt` (подобрать заново — удалите `public/visuals`) |
@@ -178,6 +181,7 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    | `ELEVENLABS_API_KEY` | ElevenLabs | elevenlabs.io |
    | `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN` | Загрузка на YouTube | см. «Загрузка на YouTube» |
    | `IG_USER_ID`, `IG_ACCESS_TOKEN` | Публикация Reels в Instagram | [docs/instagram-setup.md](docs/instagram-setup.md) |
+   | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Ролики в канал Telegram (workflow «Telegram по расписанию») | [docs/telegram-setup.md](docs/telegram-setup.md) |
 
 3. **Variables** (вкладка рядом, необязательно): `CHANNEL_NAME` (имя канала в финальной сцене),
    `LLM_PROVIDER`, `LLM_MODEL`, `LLM_FALLBACKS`, `LLM_EFFORT`, `VISUALS`, `VISUALS_PREFER`,
@@ -342,6 +346,24 @@ instagram для других языков выключены. Что сдела
 
 ---
 
+## Telegram
+
+Официальный Bot API (`api.telegram.org`, `sendVideo`): свой бот от @BotFather — администратор
+канала с правом «Публикация сообщений». Включается только ключами `TELEGRAM_BOT_TOKEN` и
+`TELEGRAM_CHAT_ID`. Все шаги: [docs/telegram-setup.md](docs/telegram-setup.md).
+
+- `npm run upload -- out/<имя> --to telegram` — видео с размерами и потоковым воспроизведением,
+  подпись `telegram.txt` или `instagram.txt` (до 1024 символов, длинная сокращается по абзацам),
+  обложка `cover.jpg`. Файл больше 50 МБ (лимит ботов; рендер по умолчанию ≈ 11 Мбит/с) сам
+  пережимается в копию ≈ 45 МБ ffmpeg'ом из Remotion.
+- Повтор того же ролика блокирует `telegram-result.json` (ещё раз — `--force`). Если связь
+  оборвалась посреди отправки, программа не повторяет вслепую: «неизвестно, вышел ли пост».
+- У ботов нет отложенной публикации. Расписание — workflow «video-studio: Telegram по расписанию»:
+  очередь — релизы GitHub с роликом без `telegram-published.json`.
+- `npm run telegram-check` — проверить бота и узнать id канала.
+
+---
+
 ## Провайдеры и лицензии
 
 | Что | Провайдер | Цена | Лицензия и условия |
@@ -385,10 +407,11 @@ src/pipeline/render.ts    бандл Remotion → MP4 + обложка
 src/pipeline/youtube.ts   загрузка на YouTube (resumable, publishAt)
 src/pipeline/channel.ts   channel.json → умолчания конвейера, слоты расписания (DST-безопасно)
 src/pipeline/instagram.ts Reels через Graph API (resumable на rupload), подпись instagram.txt
+src/pipeline/telegram.ts  канал Telegram через Bot API (sendVideo, пережатие до 50 МБ)
 src/pipeline/cover.ts     обложка Reels cover.jpg (кадр композиции Video)
 src/remotion/             композиция «Video» и обложка «Thumbnail»
-src/cli/                  make, script, upload, youtube-auth, instagram-token, brand
-docs/                     инструкции для человека: YouTube Studio, Instagram
+src/cli/                  make, script, upload, youtube-auth, instagram-token, telegram-check, brand
+docs/                     инструкции для человека: YouTube Studio, Instagram, Telegram
 src/dev/                  dev-скрипты (кадры, предпросмотр, тесты модулей)
 assets/                   шрифты (OFL), копируются в каждый рендер
 examples/demo-ru.json     пример сценария
@@ -416,6 +439,7 @@ out/                      результаты (в git не попадают)
 | YouTube: `время публикации … уже прошло` | Слот наступил раньше, чем закончилась сборка: `npm run upload -- out/<имя> --schedule` возьмёт следующий |
 | Instagram: `токен IG_ACCESS_TOKEN истёк` | `npm run instagram-token -- --exchange --page --save`, затем обновите секрет в GitHub ([docs/instagram-setup.md](docs/instagram-setup.md)) |
 | Instagram: `нет нужного разрешения` / `IG_USER_ID` | Токен без галочек или в `IG_USER_ID` ник вместо числа — `npm run instagram-token` покажет, чего не хватает |
+| Telegram: `канал не найден` / `бот не состоит в канале` | `npm run telegram-check` покажет верный id и права бота ([docs/telegram-setup.md](docs/telegram-setup.md)) |
 | Странные ошибки путей на Windows | Перенесите проект в путь без пробелов и кириллицы (`C:\video\…`) |
 
 Подробный лог любой ошибки: запустите с `DEBUG=1` (PowerShell: `$env:DEBUG=1`).
