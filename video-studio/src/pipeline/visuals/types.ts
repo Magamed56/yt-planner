@@ -30,6 +30,10 @@ export interface Candidate {
   durationSec?: number; // для видео
   width?: number;
   height?: number;
+  // Как показывать картинку: cover — на весь кадр (по умолчанию), contain —
+  // целиком поверх размытой копии (горизонтальное реальное фото в Shorts).
+  fit?: "cover" | "contain";
+  headers?: Record<string, string>; // для скачивания (User-Agent у Wikimedia)
   credit: Credit;
 }
 
@@ -52,10 +56,19 @@ export interface Stage {
 export interface VisualProvider {
   name: string; // имя в VISUALS
   title: string; // для логов и атрибуции
-  kind: "stock" | "ai";
+  // stock — фото/видео-стоки; photo — архивы реальных фото со свободной
+  // лицензией (Wikimedia Commons, Openverse); ai — генерация.
+  kind: "stock" | "photo" | "ai";
   keyEnv: string[]; // обязательные переменные (первая — ключ, передаётся в run)
   signup: string; // где получить ключ
   stages(format: VisualContext["format"]): Stage[];
+}
+
+// Подсказки конвейера к подбору (contracts.ts не трогаем — поле необязательное).
+// realFirst: сцена про реальный объект (рубрики история/природа/космос) —
+// сначала реальные фото, потом стоки и генерация.
+export interface VisualHints {
+  realFirst?: boolean;
 }
 
 // Ошибка источника. quota/auth выключают источник до конца запуска, чтобы не

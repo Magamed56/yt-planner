@@ -24,7 +24,8 @@ import { checkBrowserEnv, preparePublicDir, renderVideo, type RenderResult } fro
 import { generateScript, lintScript, ScriptGenerationError } from "../pipeline/script/index";
 import { slugify } from "../pipeline/slug";
 import { captionsToSrt } from "../pipeline/srt";
-import { findVisual } from "../pipeline/visuals/index";
+import { parsePlan, scriptCode } from "../pipeline/plan";
+import { findVisual, realFirstForPillar } from "../pipeline/visuals/index";
 import { readVisualsManifest, reusableEntry, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { getVoiceProvider, resolvePiperVoice } from "../pipeline/voice/index";
 import { EDGE_DEFAULT_VOICE } from "../pipeline/voice/providers/edge";
@@ -247,6 +248,8 @@ async function main() {
   } catch (e) {
     throw new UserError(errText(e));
   }
+  // Рубрика темы из content/plan.json (для сценариев sut-08a-….json): реальные фото для истории/природы/космоса.
+  const pillar = planPillar(args.script);
   // Голос Gemini, его манера и подпись «облачка» — из канала, если не заданы в окружении.
   const applied = applyChannelDefaults(channel);
   if (channel.file) console.log(`  канал: «${channel.name ?? "без названия"}» (${rel(channel.file)})${applied.length ? `, умолчания: ${applied.join(", ")}` : ""}`);
@@ -338,7 +341,9 @@ async function main() {
     const prev = readVisualsManifest(publicDir);
     const next: Record<string, ManifestEntry> = {};
     const minDur = (i: number) => voices[i].durationMs / 1000 + 0.8;
-    const keys = script.scenes.map((scene) => visualKey(scene, format, process.env));
+    const realFirst = realFirstForPillar(pillar);
+    if (realFirst) console.log(`  рубрика «${pillar}»: сначала реальные фото (Wikimedia Commons, Openverse)`);
+    const keys = script.scenes.map((scene) => visualKey(scene, format, process.env, { realFirst }));
     const reused = script.scenes.map((scene, i) => reusableEntry(prev[scene.id], keys[i], publicDir, minDur(i)));
     // Клипы, которые остаются, — сразу в usedIds: заново подобранные сцены их не повторят.
     const usedIds = new Set<string>(reused.flatMap((e) => (e?.candidateId ? [e.candidateId] : [])));
@@ -353,7 +358,7 @@ async function main() {
         candidateId = old.candidateId;
       } else {
         const before = new Set(usedIds);
-        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds });
+        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds, realFirst });
         candidateId = [...usedIds].find((id) => !before.has(id)) ?? null;
       }
       next[scene.id] = { key: keys[i], result: r, candidateId, minDurationSec: minDur(i) };
@@ -506,6 +511,21 @@ async function main() {
     instagram_url: instagram?.permalink ?? instagram?.mediaId,
   });
   ghSummary(summaryMarkdown(result, render, script));
+}
+
+// ---- Рубрика ролика ----
+
+// Сценарий из плана (scripts/sut-08a-….json) → рубрика темы в content/plan.json.
+// Нет кода, плана или темы — null, всё по умолчанию (битый план не валит сборку).
+function planPillar(scriptFile: string | undefined): string | null {
+  const code = scriptFile ? scriptCode(scriptFile) : null;
+  if (!code) return null;
+  try {
+    const plan = parsePlan(JSON.parse(fs.readFileSync(path.join(ROOT, "content", "plan.json"), "utf8").replace(/^﻿/, "")));
+    return plan.items.find((it) => it.id === code)?.pillar?.trim() || null;
+  } catch {
+    return null;
+  }
 }
 
 // ---- Папка ролика ----

@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { VisualResult } from "../contracts";
 import type { Format, ScriptScene } from "../../types";
-import type { Env } from "./types";
+import type { Env, VisualHints } from "./types";
 
 export interface ManifestEntry {
   key: string; // входы подбора (см. visualKey)
@@ -26,7 +26,7 @@ interface Manifest {
 
 const FILE = "manifest.json";
 
-export function visualKey(scene: ScriptScene, format: Format, env: Env): string {
+export function visualKey(scene: ScriptScene, format: Format, env: Env, hints: VisualHints = {}): string {
   return JSON.stringify({
     kind: scene.kind,
     q: scene.visualQuery?.trim() ?? "",
@@ -35,6 +35,8 @@ export function visualKey(scene: ScriptScene, format: Format, env: Env): string 
     visuals: (env.VISUALS ?? "").trim().toLowerCase(),
     prefer: (env.VISUALS_PREFER ?? "").trim().toLowerCase(),
     style: (env.VISUALS_STYLE ?? "").trim(),
+    // Только когда включено — ключи старых манифестов остаются прежними.
+    ...(hints.realFirst ? { real: 1 } : {}),
   });
 }
 

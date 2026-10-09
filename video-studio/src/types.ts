@@ -66,7 +66,8 @@ export interface WordTiming {
 
 export type SceneVisual =
   | { type: "none" }
-  | { type: "image"; src: string; credit?: string }
+  // fit: "contain" — фото целиком поверх размытой копии (реальное горизонтальное фото в Shorts)
+  | { type: "image"; src: string; credit?: string; fit?: "cover" | "contain" }
   | { type: "video"; src: string; durationSec: number; credit?: string };
 
 // Пути к ассетам (audioSrc, visual.src, music.src, sfx) — относительно
