@@ -11,7 +11,17 @@ import type { GhRelease, GhRun } from "../lib/github";
 import { buildState, parseAutopilot, type StateInput } from "../lib/state";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const json = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
+// План и сценарии «как на 08b»: автопилот каждый день дописывает сценарии в plan.json и scripts/,
+// а тест не должен зависеть от того, докуда он дошёл.
+const FROZEN_AT = "08b";
+const read = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
+const json = (p: string): unknown => {
+  const data = read(p);
+  if (p !== "content/plan.json") return data;
+  const plan = data as { items: { id: string }[] };
+  return { ...plan, items: plan.items.map((it) => (it.id > FROZEN_AT ? { ...it, status: "planned", script: undefined } : it)) };
+};
+const frozenScripts = (files: string[]) => files.filter((f) => !/^sut-(\d{2}[a-z])-/.test(f) || /^sut-(\d{2}[a-z])-/.exec(f)![1]! <= FROZEN_AT);
 const week1 = (json("content/week1-videos.json") as { videos: FillItem[] }).videos;
 
 let passed = 0;
@@ -86,7 +96,7 @@ const input: StateInput = {
   now,
   planJson: json("content/plan.json"),
   channelJson: json("channel.json"),
-  scriptFiles: [...fs.readdirSync(path.join(studio, "scripts")), "sut-08a-test.json"],
+  scriptFiles: [...frozenScripts(fs.readdirSync(path.join(studio, "scripts"))), "sut-08a-test.json"],
   fillLists: [json("content/week1-videos.json"), null],
   releases,
   runs: [

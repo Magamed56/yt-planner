@@ -16,7 +16,16 @@ import { applyScriptEdit, checkScriptEdit, countWords, parseTags, SCRIPT_LIMITS,
 import { buildState, DEFAULT_AUTOPILOT, parseAutopilot, type Row, type RunInfo } from "../lib/state";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const json = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
+// План «как на 08b»: автопилот каждый день дописывает сценарии в plan.json, а проверки порядка тем
+// ждут, что дальние темы ещё без сценария.
+const FROZEN_AT = "08b";
+const read = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
+const json = (p: string): unknown => {
+  const data = read(p);
+  if (p !== "content/plan.json") return data;
+  const plan = data as { items: { id: string }[] };
+  return { ...plan, items: plan.items.map((it) => (it.id > FROZEN_AT ? { ...it, status: "planned", script: undefined } : it)) };
+};
 // validate.ts и schema.ts тянут zod (он есть только в node_modules video-studio): путь — строкой,
 // чтобы проверка типов панели (next build) их не разбирала.
 const pipeline = (rel: string) => import(pathToFileURL(path.join(studio, "src", "pipeline", "script", rel)).href) as Promise<Record<string, unknown>>;
