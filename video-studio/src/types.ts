@@ -19,9 +19,11 @@ export const FPS = 30;
 // quote     — цитата / «сильная фраза»
 // media     — полноэкранный визуал (сток/AI-картинка) с подписью
 // cta       — призыв подписаться в конце
-export type SceneKind = "hook" | "statement" | "list" | "stat" | "quote" | "media" | "cta";
+// quiz      — «Правда или миф?»: утверждение голосом → пауза с обратным отсчётом
+//             (без голоса) → вердикт с коротким пояснением и вопросом зрителю
+export type SceneKind = "hook" | "statement" | "list" | "stat" | "quote" | "media" | "cta" | "quiz";
 
-export const SCENE_KINDS: SceneKind[] = ["hook", "statement", "list", "stat", "quote", "media", "cta"];
+export const SCENE_KINDS: SceneKind[] = ["hook", "statement", "list", "stat", "quote", "media", "cta", "quiz"];
 
 export interface SceneStat {
   value: number; // число, до которого «докручивается» счётчик
@@ -41,6 +43,42 @@ export interface ScriptScene {
   icon?: string; // имя иконки lucide в kebab-case: "brain", "rocket", "clock"
   visualQuery?: string; // АНГЛИЙСКИЙ запрос для стоков (Pexels/Pixabay): "person studying at night"
   imagePrompt?: string; // АНГЛИЙСКИЙ промпт для AI-картинки
+  quiz?: SceneQuiz; // для quiz: ответ и пояснение (narration — само утверждение)
+  chapter?: string; // у первой сцены главы длинного ролика: название главы (карточка + таймкод в описании)
+}
+
+// ---- Викторина и главы (аддитивно) ----
+
+// Сцена quiz: narration — утверждение с вопросом «Правда или миф?», дальше
+// голоса нет — пауза с обратным отсчётом и вердикт; объясняет ответ следующая сцена.
+export interface SceneQuiz {
+  answer: "truth" | "myth";
+  explanation: string; // короткое пояснение на экране после вердикта
+  question?: string; // вопрос зрителю для комментариев (на экране)
+  pauseSec?: number; // пауза на раздумье, 3–5 с
+}
+
+export const QUIZ_PAUSE_SEC = { min: 3, max: 5, default: 3 } as const;
+export const QUIZ_REVEAL_FRAMES = 45; // вердикт держится 1.5 с до перехода
+export const CHAPTER_CARD_FRAMES = 54; // карточка главы ≈ 1.8 с перед голосом её первой сцены
+
+export function quizPauseFrames(scene: { kind?: string; quiz?: { pauseSec?: number } | null }): number {
+  if (scene.kind !== "quiz" || !scene.quiz) return 0;
+  const raw = Number(scene.quiz.pauseSec);
+  const sec = Number.isFinite(raw) && raw > 0 ? Math.min(QUIZ_PAUSE_SEC.max, Math.max(QUIZ_PAUSE_SEC.min, raw)) : QUIZ_PAUSE_SEC.default;
+  return Math.round(sec * FPS);
+}
+
+// Карточка главы — у всех глав, кроме самой первой сцены ролика (хук не задерживаем).
+export function chapterCardFrames(scene: { chapter?: string | null }, index: number): number {
+  return index > 0 && typeof scene.chapter === "string" && scene.chapter.trim() ? CHAPTER_CARD_FRAMES : 0;
+}
+
+// Кадры внутри quiz-сцены (от начала сцены): отсчёт стартует, когда голос закончился.
+export function quizTiming(scene: { kind?: string; quiz?: { pauseSec?: number } | null; audioStartFrame: number; audioDurationMs: number }) {
+  const countdownStart = scene.audioStartFrame + Math.ceil((scene.audioDurationMs / 1000) * FPS);
+  const pauseFrames = quizPauseFrames(scene);
+  return { countdownStart, pauseFrames, revealAt: countdownStart + pauseFrames, revealFrames: pauseFrames ? QUIZ_REVEAL_FRAMES : 0 };
 }
 
 export interface VideoScript {
@@ -113,7 +151,8 @@ export const SCENE_TAIL_FRAMES = 14; // пауза после голоса (ча
 
 // Раскладка сцен на таймлинии. Используется конвейером при сборке props и
 // композицией в calculateMetadata — единственное место, где считается тайминг.
-export function layoutScenes<T extends { audioDurationMs: number }>(
+// Карточка главы сдвигает голос сцены, пауза викторины и вердикт идут после голоса.
+export function layoutScenes<T extends { audioDurationMs: number; kind?: string; quiz?: { pauseSec?: number } | null; chapter?: string | null }>(
   scenes: T[],
   transitionFrames: number = DEFAULT_TRANSITION_FRAMES,
 ): { scenes: (T & { startFrame: number; durationInFrames: number; audioStartFrame: number })[]; durationInFrames: number } {
@@ -121,9 +160,12 @@ export function layoutScenes<T extends { audioDurationMs: number }>(
   const out = scenes.map((scene, i) => {
     const audioFrames = Math.ceil((scene.audioDurationMs / 1000) * FPS);
     const isLast = i === scenes.length - 1;
+    const lead = SCENE_LEAD_FRAMES + chapterCardFrames(scene, i);
+    const pause = quizPauseFrames(scene);
+    const quizTail = pause ? pause + QUIZ_REVEAL_FRAMES : 0;
     // Последней сцене нужен хвост подлиннее — переход после неё не съедает кадры.
-    const durationInFrames = SCENE_LEAD_FRAMES + audioFrames + SCENE_TAIL_FRAMES + (isLast ? FPS : 0);
-    const placed = { ...scene, startFrame: cursor, durationInFrames, audioStartFrame: SCENE_LEAD_FRAMES };
+    const durationInFrames = lead + audioFrames + quizTail + SCENE_TAIL_FRAMES + (isLast ? FPS : 0);
+    const placed = { ...scene, startFrame: cursor, durationInFrames, audioStartFrame: lead };
     cursor += durationInFrames - (isLast ? 0 : transitionFrames);
     return placed;
   });

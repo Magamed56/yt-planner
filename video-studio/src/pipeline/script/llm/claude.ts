@@ -16,7 +16,7 @@ import type {
   BetaMessageParam,
   BetaMessageStreamParams,
 } from "@anthropic-ai/sdk/resources/beta/messages/messages";
-import { claudeCostUsd } from "../pricing";
+import { claudeCostUsd, webSearchCostUsd } from "../pricing";
 import { toClaudeJsonSchema } from "../schema";
 import { LlmError, linkedAbort, type ChatTurn, type CompletionRequest, type CompletionResult, type LlmTarget } from "./types";
 
@@ -49,6 +49,27 @@ const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 const supportsDefaultFallbacks = (model: string) => /^claude-(opus-5-5|opus-5|sonnet-5-5|fable-5-1)$/.test(model);
 // effort не поддерживают Haiku 4.5 / Sonnet 4.5 и старше.
 const supportsEffort = (model: string) => !/haiku|sonnet-4-5|opus-4-[01]|claude-3/.test(model);
+
+// Веб-поиск (план тем: источники фактов). web_search_20260209 — с динамической
+// фильтрацией (Opus/Sonnet 4.6+ и 5.x); старым моделям — базовая версия.
+const WEB_SEARCH_DYNAMIC = "web_search_20260209" as const;
+const WEB_SEARCH_BASIC = "web_search_20250305" as const;
+const supportsDynamicSearch = (model: string) => !/haiku|claude-3|sonnet-4-5|opus-4-[015]\b/.test(model);
+const MAX_PAUSE_CONTINUES = 2; // pause_turn: длинный серверный цикл поиска продолжаем сами
+
+// Все URL, которые модель реально видела: результаты поиска (в т.ч. вложенные,
+// из динамической фильтрации) и цитаты в тексте.
+export function collectSources(content: BetaContentBlock[]): string[] {
+  const urls = new Set<string>();
+  for (const b of content) {
+    if (b.type === "web_search_tool_result" && Array.isArray(b.content)) {
+      for (const r of b.content) if (r.type === "web_search_result" && r.url) urls.add(r.url);
+    } else if (b.type === "text" && Array.isArray(b.citations)) {
+      for (const c of b.citations) if (c.type === "web_search_result_location" && c.url) urls.add(c.url);
+    }
+  }
+  return [...urls];
+}
 
 // Ход ассистента для ремонтного запроса: блоки возвращаем без изменений (так
 // требуют правила «preserved thinking»), но после серверного fallback всё до
@@ -91,7 +112,7 @@ function toParams(turns: ChatTurn[], model: string, compat: number): BetaMessage
   });
 }
 
-function usageOf(msg: BetaMessage, requestedModel: string): { input: number; output: number; cost: number } {
+function usageOf(msg: BetaMessage, requestedModel: string): { input: number; output: number; cost: number; searches: number } {
   const u = msg.usage;
   // usage.iterations — точный учёт по каждой попытке (в т.ч. fallback-моделей
   // по их собственным ценам); верхний usage — только последняя попытка.
@@ -121,7 +142,10 @@ function usageOf(msg: BetaMessage, requestedModel: string): { input: number; out
     output += p.output;
     cost += claudeCostUsd(p.model, p);
   }
-  return { input, output, cost: Math.round(cost * 1e6) / 1e6 };
+  // Поиски оплачиваются отдельно от токенов.
+  const searches = u.server_tool_use?.web_search_requests ?? 0;
+  cost += webSearchCostUsd(searches);
+  return { input, output, cost: Math.round(cost * 1e6) / 1e6, searches };
 }
 
 function classify(label: string, e: unknown, timedOut: boolean, userAborted: boolean): LlmError {
@@ -173,8 +197,12 @@ export function claudeTarget(cfg: ClaudeConfig): LlmTarget {
     maxTokensCap: 64_000,
     async complete(req: CompletionRequest): Promise<CompletionResult> {
       const c = getClient();
+      // Веб-поиск (compat 0 — с динамической фильтрацией, 1 — базовый, 2 — без
+      // поиска). Цитаты у поиска включены всегда, а с output_config.format они
+      // несовместимы (400) — поэтому с поиском схема ответа идёт текстом.
+      const search = req.webSearch && req.compat < 2 ? req.webSearch : null;
       const useFallbacks = req.compat < 1 && supportsDefaultFallbacks(cfg.model);
-      const useFormat = req.compat < 2;
+      const useFormat = req.compat < 2 && !search;
       // Схема — из той же zod-схемы (см. toClaudeJsonSchema). Ответ разбираем
       // сами, а не через messages.parse(): при несовпадении со схемой SDK
       // бросил бы исключение, и мы потеряли бы и текст, и учёт токенов, а нам
@@ -183,6 +211,9 @@ export function claudeTarget(cfg: ClaudeConfig): LlmTarget {
       const system = useFormat
         ? req.system
         : `${req.system}\n\nJSON-схема ответа (строго ей следуй, верни один объект):\n${JSON.stringify(req.jsonSchema)}`;
+      const tools = search
+        ? [{ type: req.compat < 1 && supportsDynamicSearch(cfg.model) ? WEB_SEARCH_DYNAMIC : WEB_SEARCH_BASIC, name: "web_search" as const, max_uses: Math.max(1, Math.round(search.maxUses)) }]
+        : null;
       const params: BetaMessageStreamParams = {
         model: cfg.model,
         max_tokens: req.maxTokens,
@@ -193,30 +224,45 @@ export function claudeTarget(cfg: ClaudeConfig): LlmTarget {
           ...(supportsEffort(cfg.model) ? { effort: cfg.effort } : {}),
           ...(useFormat ? { format: { type: "json_schema", schema } } : {}),
         },
+        ...(tools ? { tools } : {}),
         ...(useFallbacks ? { betas: [FALLBACK_BETA], fallbacks: "default" as const } : {}),
       };
 
       const { signal, cleanup, timedOut } = linkedAbort(cfg.timeoutMs, req.signal);
-      let msg: BetaMessage;
+      let msg: BetaMessage | null = null;
       let stream: ReturnType<AnthropicLike["beta"]["messages"]["stream"]> | null = null;
+      let spent = { input: 0, output: 0, cost: 0, searches: 0 };
+      const add = (m: BetaMessage) => {
+        const u = usageOf(m, cfg.model);
+        spent = { input: spent.input + u.input, output: spent.output + u.output, cost: Math.round((spent.cost + u.cost) * 1e6) / 1e6, searches: spent.searches + u.searches };
+      };
+      const sources = new Set<string>();
       try {
-        stream = c.beta.messages.stream(params, { signal, timeout: cfg.timeoutMs });
-        msg = await stream.finalMessage();
+        let messages = params.messages;
+        for (let round = 0; ; round++) {
+          stream = c.beta.messages.stream({ ...params, messages }, { signal, timeout: cfg.timeoutMs });
+          msg = await stream.finalMessage();
+          stream = null;
+          add(msg);
+          for (const u of collectSources(msg.content)) sources.add(u);
+          if (msg.stop_reason !== "pause_turn" || round >= MAX_PAUSE_CONTINUES) break;
+          // Серверный цикл поиска встал на паузу: возвращаем ход как есть — API продолжит с места остановки.
+          messages = [...messages, { role: "assistant", content: msg.content as unknown as BetaContentBlockParam[] }];
+        }
       } catch (e) {
         const err = classify(label, e, timedOut(), !!req.signal?.aborted);
         // Стрим оборвался (таймаут, сеть) — уже принятые токены оплачены:
         // берём учёт из снимка сообщения (вход точный, выход — не меньше).
         const snap = stream?.currentMessage;
-        if (snap?.usage) {
-          const u = usageOf(snap, cfg.model);
-          err.spent = { inputTokens: u.input, outputTokens: u.output, costUsd: u.cost };
-        }
+        if (snap?.usage) add(snap);
+        if (spent.input || spent.output || spent.cost) err.spent = { inputTokens: spent.input, outputTokens: spent.output, costUsd: spent.cost };
         throw err;
       } finally {
         cleanup();
       }
+      if (!msg) throw new LlmError(`${label}: пустой ответ.`, "unavailable");
 
-      const { input, output, cost } = usageOf(msg, cfg.model);
+      const { input, output, cost } = spent;
       if (msg.stop_reason === "refusal") {
         const cat = msg.stop_details?.category ?? "не указана";
         const err = new LlmError(`${label}: модель отказалась писать сценарий (категория: ${cat}). Попробуйте переформулировать тему.`, "refusal");
@@ -231,7 +277,11 @@ export function claudeTarget(cfg: ClaudeConfig): LlmTarget {
         outputTokens: output,
         costUsd: cost,
         servedBy: msg.model || cfg.model,
-        native: replayContent(msg.content),
+        // С поиском ремонтный ход — просто текстом: блоки поиска пришлось бы
+        // возвращать целиком (с encrypted_content), а без них thinking-блоки
+        // считались бы правкой истории.
+        native: search ? undefined : replayContent(msg.content),
+        ...(search ? { sources: [...sources], webSearchRequests: spent.searches } : {}),
       };
     },
   };

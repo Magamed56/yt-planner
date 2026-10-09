@@ -10,6 +10,7 @@ import { FontGate } from "./fonts";
 import { LayoutContext, computeLayout } from "./lib/layout";
 import { pickTransition } from "./lib/transitions";
 import { sceneComponent } from "./scenes";
+import { ChapterWrap } from "./scenes/ChapterCard"; // карточки глав «Разбора»
 import { StatementScene } from "./scenes/StatementScene";
 import { getTheme } from "./theme";
 
@@ -61,7 +62,7 @@ export const Video: React.FC<VideoCompositionProps> = (props) => {
                     />
                   ) : null}
                   <TransitionSeries.Sequence durationInFrames={Math.max(1, scene.durationInFrames)} name={`${i + 1}. ${scene.kind}`}>
-                    <Comp scene={scene} index={i} theme={theme} video={props} />
+                    <ChapterWrap Comp={Comp} scene={scene} index={i} theme={theme} video={props} />
                   </TransitionSeries.Sequence>
                 </React.Fragment>
               );

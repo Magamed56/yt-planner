@@ -3,16 +3,26 @@
 // нужны. Запуск: npx tsx src/dev/script-test.ts
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
-import type { BetaMessage, BetaMessageStreamParams } from "@anthropic-ai/sdk/resources/beta/messages/messages";
+import type { BetaContentBlock, BetaMessage, BetaMessageStreamParams } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import { extractJson, generateScript, lintScript, ScriptValidationError, validateScript } from "../pipeline/script/index";
-import type { AnthropicLike } from "../pipeline/script/llm/claude";
-import { claudeCostUsd } from "../pipeline/script/pricing";
-import { parsePlan, planNotes, scriptCode } from "../pipeline/plan";
-import type { VideoScript } from "../types";
+import { collectSources, type AnthropicLike } from "../pipeline/script/llm/claude";
+import { claudeCostUsd, webSearchCostUsd } from "../pipeline/script/pricing";
+import { nextPlanPositions, parsePlan, pickPillars, planNotes, refreshPlanStats, scriptCode, sequelTitle, type ContentPlan } from "../pipeline/plan";
+import { assignChapters } from "../pipeline/script/chapters";
+import { coveredFromScript, coveredPromptBlock, findRepeats, indexCovered, loadCovered, ngrams, stems, type CoveredEntry } from "../pipeline/script/covered";
+import { fetchSuggestions, parseSuggestResponse, searchPhrases, suggestionsFor } from "../pipeline/script/suggest";
+import { appendUsage, countPostRequests, llmUsageRecord, ttsUsageRecord, usageNow, type LlmCallInfo } from "../pipeline/script/usage-log";
+import { checkTopics, checkUrl, extractUrl, generatePlanItems, similarTitle } from "../pipeline/script/plan-gen";
+import { LIMITS } from "../pipeline/script/schema";
+import { coerceScene } from "../pipeline/script/validate";
+import { TITLE_MAX, buildYoutubeMeta, chapterTime, youtubeChapters } from "../pipeline/meta";
+import { buildFixtureProps } from "../remotion/fixtures/buildFixture";
+import { CHAPTER_CARD_FRAMES, FPS, QUIZ_REVEAL_FRAMES, SCENE_LEAD_FRAMES, SCENE_TAIL_FRAMES, layoutScenes, quizTiming, type ScriptScene, type VideoScript } from "../types";
 
 // Пауза перед повтором при 503 — в тестах без ожидания.
 process.env.LLM_BUSY_WAIT_MS = "1";
@@ -489,9 +499,9 @@ await test("Landscape: часть с лишним hook уходит в ремо�
   assert.equal(script.scenes.length, 18);
 });
 
-await test("План: 60 тем с кодами, код из имени сценария, пожелания — хук, угол и факты с источниками", () => {
+await test("План: 60+ тем с кодами, код из имени сценария, пожелания — хук, угол и факты с источниками", () => {
   const plan = parsePlan(JSON.parse(readFileSync(path.join(root, "content", "plan.json"), "utf8")));
-  assert.equal(plan.items.length, 60);
+  assert.ok(plan.items.length >= 60, "план только растёт (plan-extend дописывает темы)");
   assert.equal(scriptCode("scripts/sut-08a-pochemu-tak.json"), "08a");
   assert.equal(scriptCode("C:\\x\\scripts\\sut-12B-abc.json"), "12b");
   assert.equal(scriptCode("scripts/kleopatra.json"), null);
@@ -502,6 +512,525 @@ await test("План: 60 тем с кодами, код из имени сцен
   for (const f of item.keyFacts) assert.ok(notes.includes(f.source.trim()), `нет источника: ${f.source}`);
   assert.match(notes, /других фактов и цифр не добавляй/);
   assert.throws(() => parsePlan({ items: [{ id: "8a", title: "x", keyFacts: [] }] }), /вида «08a»/);
+});
+
+// ===================================================================
+// Викторина, «Разбор» с главами, «уже было на канале», подсказки поиска,
+// журнал расхода, план тем (plan-extend / plan-sequel). Всё — без сети.
+
+function quizScript(): VideoScript {
+  return {
+    title: "Правда или миф: золотые рыбки и память",
+    description: "Проверь себя: два утверждения о памяти рыб и людей. #память #мифы #shorts",
+    tags: ["память", "мифы", "рыбы", "викторина", "наука"],
+    language: "ru",
+    format: "shorts",
+    theme: "midnight",
+    scenes: [
+      { id: "s1", kind: "hook", narration: "Проверь себя: правда или миф? Два факта о памяти.", onScreen: "Правда или *миф*?", icon: "brain", visualQuery: "goldfish bowl" },
+      { id: "s2", kind: "quiz", narration: "Говорят, золотая рыбка помнит всего три секунды, а потом всё забывает. Правда или миф?", onScreen: "Рыбка помнит *3 секунды*", icon: "fish", visualQuery: "goldfish swimming", quiz: { answer: "myth", explanation: "В опытах рыбки помнили сигнал месяцами" } },
+      { id: "s3", kind: "statement", narration: "Миф! В опытах золотых рыбок учили нажимать на рычаг ради еды, и они помнили этот трюк месяцами, даже после долгого перерыва.", onScreen: "Помнят *месяцами*", icon: "calendar-check", visualQuery: "aquarium fish feeding" },
+      { id: "s4", kind: "quiz", narration: "Сон помогает закрепить то, что ты выучил за день. Правда или миф?", onScreen: "Сон *закрепляет* память", icon: "moon", visualQuery: "person sleeping bed", quiz: { answer: "truth", explanation: "Во сне мозг переносит знания в долгую память", question: "А ты высыпаешься?" } },
+      { id: "s5", kind: "statement", narration: "Правда! Во сне мозг заново проигрывает дневные события и переносит их в долговременную память, поэтому после сна вспоминать легче.", onScreen: "Мозг *повторяет* день", icon: "brain", visualQuery: "night city lights" },
+      { id: "s6", kind: "cta", narration: "Сколько угадал? Пиши в комментариях и подпишись, чтобы проверить себя завтра.", onScreen: "Сколько *угадал*?", icon: "message-circle" },
+    ],
+  };
+}
+
+const userMsg = (c: Call) => msgs(c).find((m) => m.role === "user")?.content ?? "";
+
+await test("Викторина: схема и проверка quiz, нормализация ответа, мягкие замечания", () => {
+  const s = validateScript(quizScript());
+  assert.equal(s.scenes[1].quiz?.answer, "myth");
+  assert.ok(!lintScript(s).some((w) => /викторин|после quiz|вердикта/.test(w)), lintScript(s).join("\n"));
+  const coerced = coerceScene({ id: "x", kind: "Trivia", narration: "А?", onScreen: "А", quiz: { verdict: "Миф!", explanation: "  Так  ", pauseSec: "10" } }, 0) as Record<string, unknown>;
+  assert.equal(coerced.kind, "quiz");
+  assert.deepEqual(coerced.quiz, { answer: "myth", explanation: "Так", pauseSec: 5 });
+  const falseIsMyth = coerceScene({ id: "x", kind: "quiz", narration: "А?", onScreen: "А", quiz: { answer: false, explanation: "x" } }, 0) as { quiz: { answer: string } };
+  assert.equal(falseIsMyth.quiz.answer, "myth");
+  const statement = coerceScene({ id: "x", kind: "statement", narration: "А", onScreen: "А", quiz: { answer: "truth", explanation: "x" }, chapter: "  «Глава 2: Начало»  " }, 0) as Record<string, unknown>;
+  assert.ok(!("quiz" in statement), "quiz у чужого kind убран");
+  assert.equal(statement.chapter, "Начало", "номер главы и кавычки убраны");
+  const bad = quizScript();
+  delete (bad.scenes[1] as Partial<ScriptScene>).quiz;
+  (bad.scenes[3].quiz as { explanation: string }).explanation = "очень длинное пояснение вердикта из целых семнадцати слов которое никто не успеет прочитать за полторы секунды никак";
+  assert.throws(() => validateScript(bad), (e: unknown) => e instanceof ScriptValidationError && /обязательно поле quiz/.test(e.message) && /quiz\.explanation слишком длинное/.test(e.message));
+});
+
+await test("Тайминг: пауза викторины и вердикт после голоса, карточка главы — перед голосом", () => {
+  const laid = layoutScenes([
+    { audioDurationMs: 1000, chapter: "Вступление" },
+    { audioDurationMs: 2000, kind: "quiz", quiz: { pauseSec: 4 } },
+    { audioDurationMs: 1000, chapter: "Как это работает" },
+    { audioDurationMs: 1000, kind: "quiz", quiz: {} },
+    { audioDurationMs: 1000, kind: "quiz" }, // без данных — обычная сцена
+  ]);
+  const [a, q, c, q2, plain] = laid.scenes;
+  assert.equal(a.audioStartFrame, SCENE_LEAD_FRAMES, "у первой сцены карточки главы нет");
+  assert.equal(q.durationInFrames, SCENE_LEAD_FRAMES + 60 + 4 * FPS + QUIZ_REVEAL_FRAMES + SCENE_TAIL_FRAMES);
+  const t = quizTiming(q);
+  assert.equal(t.countdownStart, SCENE_LEAD_FRAMES + 60);
+  assert.equal(t.revealAt, SCENE_LEAD_FRAMES + 60 + 4 * FPS);
+  assert.equal(c.audioStartFrame, SCENE_LEAD_FRAMES + CHAPTER_CARD_FRAMES, "голос главы — после карточки");
+  assert.equal(c.durationInFrames, SCENE_LEAD_FRAMES + CHAPTER_CARD_FRAMES + 30 + SCENE_TAIL_FRAMES);
+  assert.equal(quizTiming(q2).pauseFrames, 3 * FPS, "пауза по умолчанию — 3 с");
+  assert.equal(plain.durationInFrames, SCENE_LEAD_FRAMES + 30 + SCENE_TAIL_FRAMES + FPS);
+  // Композиция сверяет сумму длительностей с durationInFrames — с паузами она сходится.
+  const props = buildFixtureProps(quizScript());
+  const sum = props.scenes.reduce((s, sc) => s + sc.durationInFrames, 0) - (props.scenes.length - 1) * props.transitionFrames;
+  assert.equal(sum, props.durationInFrames);
+  const plainProps = buildFixtureProps({ ...quizScript(), scenes: quizScript().scenes.map((s) => ({ ...s, kind: s.kind === "quiz" ? ("statement" as const) : s.kind, quiz: undefined })) });
+  assert.equal(props.durationInFrames - plainProps.durationInFrames, 2 * (3 * FPS + QUIZ_REVEAL_FRAMES), "два раунда — две паузы");
+});
+
+await test("Генерация викторины (--quiz): промпт, цели по словам без пауз, нет quiz → ремонт", async () => {
+  const { fn, calls } = mockFetch([chat(JSON.stringify(demo)), chat(JSON.stringify(quizScript()))]);
+  const { script } = await generateScript({ topic: "Мифы о памяти", format: "shorts", quiz: true }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.equal(calls.length, 2);
+  assert.match(userMsg(calls[0]), /викторина «Правда или миф\?»/);
+  assert.match(userMsg(calls[0]), /kind "quiz"/);
+  assert.ok(msgs(calls[1])[3].content.includes('нет ни одной сцены kind "quiz"'));
+  assert.equal(script.scenes.filter((s) => s.kind === "quiz").length, 2);
+  await assert.rejects(generateScript({ topic: "x", format: "landscape", quiz: true }, { env: { GEMINI_API_KEY: "k" }, fetch: mockFetch([]).fn, log }), /только формат shorts/);
+});
+
+await test("«Разбор» (--long): главы из плана, отметки модели и запасная расстановка, лимит 45 сцен", async () => {
+  const headings = ["Почему мы забываем", "Кривая Эббингауза", "Сон и память", "Интервалы", "Что делать"];
+  const outline = {
+    title: "Как работает память: большой разбор",
+    description: "Разбираем память по шагам. #память #мозг #наука",
+    tags: ["память", "мозг"],
+    theme: "midnight",
+    sections: headings.map((h, i) => ({ heading: h, goal: `Цель ${i + 1}`, points: [`Факт ${i + 1}`], seconds: 84 })),
+  };
+  const part1 = chunkScenes(10, { hook: true, seed: 0 }) as Record<string, unknown>[];
+  part1[0].chapter = "Почему мы забываем";
+  part1[5].chapter = "кривая эббингауза"; // регистр не важен
+  const part2 = chunkScenes(10, { seed: 3 }); // модель главы не отметила
+  const part3 = chunkScenes(6, { cta: true, seed: 6 }) as Record<string, unknown>[];
+  part3[0].chapter = "Что делать";
+  const { fn, calls } = mockFetch([chat(JSON.stringify(outline)), chat(JSON.stringify({ scenes: part1 })), chat(JSON.stringify({ scenes: part2 })), chat(JSON.stringify({ scenes: part3 }))]);
+  const { script, warnings } = await generateScript({ topic: "Память", format: "landscape", long: true }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.equal(calls.length, 4);
+  assert.match(userMsg(calls[0]), /главами YouTube/);
+  assert.match(userMsg(calls[0]), /около 420 секунд/, "«Разбор» по умолчанию — 7 минут");
+  assert.match(userMsg(calls[1]), /Главы: у ПЕРВОЙ сцены/);
+  assert.equal(script.scenes.length, 26);
+  const ch = script.scenes.filter((s) => s.chapter).map((s) => [s.id, s.chapter]);
+  assert.deepEqual(
+    ch.map(([, c]) => c),
+    headings,
+  );
+  assert.deepEqual(ch.slice(0, 2).map(([id]) => id), ["s1", "s6"], "отметки модели сохранены");
+  assert.equal(ch[2][0], "s11", "часть без отметок — глава с её первой сцены");
+  assert.deepEqual(warnings, []);
+  // Доля части от лимита «Разбора» (45 сцен): 168 с из 420 → не больше 18 сцен.
+  const tooMany = mockFetch([chat(JSON.stringify(outline)), chat(JSON.stringify({ scenes: chunkScenes(22, { hook: true, seed: 0 }) }))]);
+  await assert.rejects(generateScript({ topic: "Память", format: "landscape", long: true }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: tooMany.fn, log }));
+  assert.ok(userMsg(tooMany.calls[1]).includes("12–18 сцен"), userMsg(tooMany.calls[1]));
+  assert.ok(msgs(tooMany.calls[2])[3].content.includes("нужно не больше 18"), "ремонт: лимит сцен части");
+});
+
+await test("Главы: расстановка по доле слов, таймкоды YouTube (0:00, ≥ 3 глав, ≥ 10 с), описание", () => {
+  const sc = Array.from({ length: 6 }, (_, i) => ({ id: `s${i + 1}`, kind: "statement" as const, narration: words(20, i), onScreen: "x" }));
+  const auto = assignChapters(sc, [{ heading: "Первая", seconds: 50 }, { heading: "Вторая", seconds: 50 }]);
+  assert.deepEqual(auto.map((s) => s.chapter ?? null), ["Первая", null, null, "Вторая", null, null]);
+  const marked = assignChapters([{ ...sc[0], chapter: "первая" }, sc[1], { ...sc[2], chapter: "Вторая!" }, sc[3]], [{ heading: "Первая", seconds: 10 }, { heading: "Вторая", seconds: 90 }]);
+  assert.deepEqual(marked.map((s) => s.chapter ?? null), ["Первая", null, "Вторая", null]);
+
+  const at = (sec: number) => sec * FPS;
+  const chapters = youtubeChapters(
+    [
+      { chapter: "Вступление", startFrame: at(3) },
+      { startFrame: at(20) },
+      { chapter: "Как это работает", startFrame: at(45) },
+      { chapter: "Короткая", startFrame: at(50) },
+      { chapter: "Итог", startFrame: at(120) },
+      { chapter: "Хвост", startFrame: at(195) },
+    ],
+    200,
+  );
+  assert.deepEqual(chapters, [
+    { startSec: 0, title: "Вступление" },
+    { startSec: 45, title: "Как это работает" },
+    { startSec: 120, title: "Итог" },
+  ]);
+  assert.deepEqual(youtubeChapters([{ chapter: "A", startFrame: 0 }, { chapter: "B", startFrame: at(60) }], 300), [], "меньше 3 глав — без таймкодов");
+  assert.equal(chapterTime(75), "1:15");
+  assert.equal(chapterTime(3725), "1:02:05");
+  const script = { ...demo, format: "landscape" as const };
+  const meta = buildYoutubeMeta({ script, format: "landscape", visualCredits: [], musicCredit: null, voiceProvider: "edge", chapters });
+  assert.ok(meta.description.includes("Таймкоды:\n0:00 Вступление\n0:45 Как это работает\n2:00 Итог"), meta.description);
+  const shorts = buildYoutubeMeta({ script: demo, format: "shorts", visualCredits: [], musicCredit: null, voiceProvider: "edge", chapters });
+  assert.ok(!shorts.description.includes("Таймкоды"), "в Shorts глав нет");
+});
+
+await test("«Уже было на канале»: нормализация, n-граммы, повтор, блок для промпта, корпус с диска", () => {
+  assert.deepEqual(stems("Золотые рыбки помнят месяцами"), ["золот", "рыбк", "помня", "месяц"]);
+  assert.equal(ngrams(stems("золотая рыбка помнит всего три секунды")).size, 4);
+  const entries: CoveredEntry[] = [
+    { code: "05a", title: "Память рыбок", texts: ["Золотая рыбка помнит всего три секунды — это миф"] },
+    { code: "02b", title: "Щекотка", texts: ["Себя пощекотать нельзя: мозг предсказывает касание"] },
+  ];
+  const index = indexCovered(entries);
+  const hits = findRepeats(
+    [
+      { id: "s1", kind: "hook", narration: "Говорят, золотая рыбка помнит всего три секунды.", onScreen: "3 секунды?" },
+      { id: "s2", kind: "statement", narration: "Осьминог решает головоломки и открывает банки.", onScreen: "Умный *осьминог*" },
+      { id: "s3", kind: "cta", narration: "Себя пощекотать нельзя, мозг предсказывает касание. Подпишись!", onScreen: "Подпишись" },
+    ],
+    index,
+  );
+  assert.equal(hits.length, 1, "повтор в s1, s2 — новое, cta не проверяется");
+  assert.equal(hits[0].code, "05a");
+  assert.ok(hits[0].ratio >= 0.5);
+  const block = coveredPromptBlock(entries, "Память золотых рыбок");
+  assert.match(block, /05a «Память рыбок»: Золотая рыбка/);
+  assert.match(block, /другие ролики канала: «Щекотка»/);
+  const plan = parsePlan(JSON.parse(readFileSync(path.join(root, "content", "plan.json"), "utf8")));
+  const covered = loadCovered(root, { plan, exclude: ["08a"] });
+  assert.ok(covered.length >= 10);
+  assert.ok(!covered.some((e) => e.code === "08a"), "своя тема — не повтор");
+  const c01a = covered.find((e) => e.code === "01a")!;
+  assert.ok(c01a.texts.some((t) => t.includes("кости")), "факты плана готовой темы в корпусе");
+  assert.ok(!c01a.texts.some((t) => /подпишись/i.test(t)), "призыв cta — не факт");
+});
+
+await test("Повтор уже сказанного: один ремонт с конкретными сценами, затем — только замечание", async () => {
+  const covered = [coveredFromScript("scripts/sut-05a-zabyvanie.json", demo)!];
+  const { fn, calls } = mockFetch([chat(JSON.stringify(demo)), chat(JSON.stringify(demo))]);
+  const { warnings } = await generateScript({ topic: "Память", format: "shorts", covered }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.equal(calls.length, 2, "один ремонтный запрос");
+  assert.match(userMsg(calls[0]), /Уже было на канале/);
+  assert.match(msgs(calls[1])[3].content, /почти дословно повторяет то, что уже было в ролике 05a/);
+  assert.ok(warnings.some((w) => /похожа на уже сказанное в ролике 05a/.test(w)), warnings.join("\n"));
+  // Повтор появился только в исправленном ответе — замечание, а не переход к следующей модели.
+  const broken = quizScript();
+  (broken.scenes[2] as { kind: string }).kind = "transition";
+  const late = mockFetch([chat(JSON.stringify(broken)), chat(JSON.stringify(demo))]);
+  const lateRes = await generateScript({ topic: "Память", format: "shorts", covered }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: late.fn, log });
+  assert.equal(late.calls.length, 2);
+  assert.ok(!msgs(late.calls[1])[3].content.includes("почти дословно"), "в первом ответе повтора не было");
+  assert.ok(lateRes.warnings.some((w) => w.includes("05a")));
+  const fresh = mockFetch([chat(JSON.stringify(demo))]);
+  const other: CoveredEntry[] = [{ code: "01a", title: "Голос", texts: ["Свой голос человек слышит по воздуху и через кости черепа"] }];
+  const r = await generateScript({ topic: "Память", format: "shorts", covered: other }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fresh.fn, log });
+  assert.equal(fresh.calls.length, 1);
+  assert.deepEqual(r.warnings, []);
+});
+
+// Строка → байты windows-1251 (кириллица): так отвечает Google без oe=utf-8.
+function cp1251(s: string): ArrayBuffer {
+  return Uint8Array.from([...s].map((ch) => {
+    const c = ch.codePointAt(0)!;
+    if (c >= 0x410 && c <= 0x44f) return 0xc0 + (c - 0x410);
+    if (ch === "ё") return 0xb8;
+    if (ch === "Ё") return 0xa8;
+    return c < 0x80 ? c : 0x3f;
+  })).buffer as ArrayBuffer;
+}
+
+await test("Подсказки поиска YouTube: JSONP, windows-1251, тихий отказ, фразы из названия", async () => {
+  assert.deepEqual(parseSuggestResponse('window.google.ac.h(["почему цены",[["почему цены растут",0,[512]],["почему цены на <b>бензин</b>",0,[512]]],{"k":1}])'), ["почему цены растут", "почему цены на бензин"]);
+  assert.deepEqual(parseSuggestResponse('["q",["a","b"]]'), ["a", "b"]);
+  assert.deepEqual(parseSuggestResponse("<html>captcha</html>"), []);
+  assert.deepEqual(searchPhrases("Почему цены заканчиваются на 99: эффект левой цифры"), ["почему цены заканчиваются на", "цены заканчиваются"]);
+  assert.equal(LIMITS.title, TITLE_MAX, "предел заголовка сценария = предел meta.ts");
+
+  const body = cp1251('window.google.ac.h(["почему",[["почему небо голубое",0,[512]]],{}])');
+  const seen: string[] = [];
+  const ok = await fetchSuggestions("почему", {
+    fetch: async (url) => {
+      seen.push(String(url));
+      return new Response(body, { status: 200, headers: { "content-type": "text/javascript; charset=windows-1251" } });
+    },
+  });
+  assert.deepEqual(ok, ["почему небо голубое"]);
+  assert.ok(seen[0].startsWith("https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&hl=ru"));
+  assert.ok(seen[0].includes(`q=${encodeURIComponent("почему")}`));
+  assert.deepEqual(await fetchSuggestions("x", { fetch: async () => { throw new Error("ENOTFOUND"); } }), []);
+  assert.deepEqual(await fetchSuggestions("x", { fetch: async () => new Response("", { status: 429 }) }), []);
+  const t0 = Date.now();
+  const hang = (_u: string | URL | Request, init?: RequestInit) => new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted"))));
+  assert.deepEqual(await fetchSuggestions("x", { fetch: hang, timeoutMs: 50 }), []);
+  assert.ok(Date.now() - t0 < 3000, "таймаут, а не зависание");
+  const merged = await suggestionsFor(["почему цены", "цены"], {
+    fetch: async (url) =>
+      new Response(
+        String(url).endsWith(`q=${encodeURIComponent("цены")}`)
+          ? JSON.stringify(["цены", ["цены растут", "почему цены растут"]])
+          : JSON.stringify(["почему цены", ["почему цены растут", "почему цены", "x".repeat(80)]]),
+      ),
+  });
+  assert.deepEqual(merged, ["почему цены растут", "цены растут"], "без дублей, без самой фразы и слишком длинных");
+});
+
+await test("Подсказки в генерации: фразы → запросы → промпт; YT_SUGGEST=0 и сбой — без них", async () => {
+  const sugg = (q: string) => json(200, [q, [[`${q} растут`, 0, [512]], [`${q} в мире`, 0, [512]]], {}]);
+  const { fn, calls } = mockFetch([sugg("цены"), sugg("товары"), chat(JSON.stringify(demo))]);
+  await generateScript({ topic: "Цены", format: "shorts", searchPhrases: ["цены", "товары"] }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.equal(calls.length, 3);
+  assert.ok(calls[0].url.includes("suggestqueries.google.com"));
+  assert.match(userMsg(calls[2]), /подсказки поиска\): «цены растут»; «цены в мире»; «товары растут»/);
+  const off = mockFetch([chat(JSON.stringify(demo))]);
+  await generateScript({ topic: "Цены", format: "shorts", searchPhrases: ["цены"] }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none", YT_SUGGEST: "0" }, fetch: off.fn, log });
+  assert.equal(off.calls.length, 1, "YT_SUGGEST=0 — без запроса подсказок");
+  const broken = mockFetch([json(503, {}), chat(JSON.stringify(demo))]);
+  await generateScript({ topic: "Цены", format: "shorts", searchPhrases: ["цены"] }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: broken.fn, log });
+  assert.ok(!userMsg(broken.calls[1]).includes("подсказки поиска"), "сбой подсказок — молча без них");
+});
+
+await test("Журнал расхода: запись на каждый запрос LLM, точная схема строки, USAGE_LOG, счётчик POST", async () => {
+  const seenCalls: LlmCallInfo[] = [];
+  const { fn } = mockFetch([json(429, { error: { message: "quota" } }), chat(JSON.stringify(demo))]);
+  await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log, onLlmCall: (c) => seenCalls.push(c) });
+  assert.equal(seenCalls.length, 2);
+  assert.deepEqual(seenCalls[0], { provider: "gemini", model: "gemini-3.8-flash", inputTokens: null, outputTokens: null, costUsd: null, ok: false });
+  assert.deepEqual(seenCalls[1], { provider: "gemini", model: "gemini-test", inputTokens: 4000, outputTokens: 2200, costUsd: 0, ok: true });
+
+  const rec = llmUsageRecord(seenCalls[1], "08a", { GITHUB_RUN_ID: "123" }, "2026-10-09T10:37:08Z");
+  assert.deepEqual(Object.keys(rec), ["at", "kind", "code", "provider", "model", "inputTokens", "outputTokens", "costUsd", "calls", "chars", "runId"]);
+  assert.deepEqual(rec, { at: "2026-10-09T10:37:08Z", kind: "script", code: "08a", provider: "gemini", model: "gemini-test", inputTokens: 4000, outputTokens: 2200, costUsd: 0, calls: 1, chars: null, runId: "123" });
+  const tts = ttsUsageRecord({ provider: "gemini", model: "gemini-3.8-flash-tts", calls: 1, chars: 812, costUsd: 0 }, null, {}, "2026-10-09T10:37:08Z");
+  assert.deepEqual(Object.keys(tts), Object.keys(rec));
+  assert.equal(tts.kind, "tts");
+  assert.equal(tts.runId, null);
+  assert.match(usageNow(), /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+
+  const dir = mkdtempSync(path.join(os.tmpdir(), "vs-usage-"));
+  try {
+    const file = path.join(dir, "usage.jsonl");
+    assert.equal(appendUsage(dir, [rec, tts], { USAGE_LOG: file }), file);
+    appendUsage(dir, [rec], { USAGE_LOG: file });
+    const lines = readFileSync(file, "utf8").trim().split("\n");
+    assert.equal(lines.length, 3);
+    assert.deepEqual(JSON.parse(lines[1]), tts);
+    assert.equal(appendUsage(dir, [rec], { USAGE_LOG: "0" }), null);
+    assert.equal(appendUsage(dir, [rec], {}), path.join(dir, "content", "usage.jsonl"), "по умолчанию — content/usage.jsonl");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  const original = globalThis.fetch;
+  const fake = (async () => new Response("ok")) as typeof fetch;
+  globalThis.fetch = fake;
+  try {
+    const r = await countPostRequests(async () => {
+      await fetch("http://tts.local/a", { method: "POST" });
+      await fetch("http://tts.local/model.onnx");
+      await fetch("http://tts.local/b", { method: "post" });
+      return 7;
+    });
+    assert.deepEqual({ value: r.value, posts: r.posts }, { value: 7, posts: 2 });
+    assert.equal(globalThis.fetch, fake, "fetch восстановлен");
+    const failed = await countPostRequests(async () => {
+      await fetch("http://tts.local/a", { method: "POST" });
+      throw new Error("квота");
+    });
+    assert.equal(failed.posts, 1);
+    assert.match(String(failed.error), /квота/);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+// ---- План тем ----
+
+const PLAN_JSON = () => parsePlan(JSON.parse(readFileSync(path.join(root, "content", "plan.json"), "utf8")));
+
+function routeFetch(route: (url: string, init?: RequestInit) => Response | Promise<Response>) {
+  const calls: { url: string; method: string; body: Record<string, unknown> | null }[] = [];
+  const fn = async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    calls.push({ url, method: (init?.method ?? "GET").toUpperCase(), body: init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null });
+    return route(url, init);
+  };
+  return { fn, calls };
+}
+
+await test("План: следующие коды по слотам, рубрики по редкости, «Часть N», сводка и пожелания", () => {
+  const plan = PLAN_JSON();
+  const last = [...plan.items].sort((a, b) => a.id.localeCompare(b.id)).at(-1)!;
+  const pos = nextPlanPositions(plan, 3, ["12:00", "19:00"]);
+  assert.equal(pos.length, 3);
+  assert.ok(pos[0].id > last.id, `${pos[0].id} после ${last.id}`);
+  assert.deepEqual(nextPlanPositions({ items: [{ id: "30b" }, { id: "30a" }] as ContentPlan["items"] }, 3, ["12:00", "19:00"]), [
+    { id: "31a", day: 31, slot: "12:00" },
+    { id: "31b", day: 31, slot: "19:00" },
+    { id: "32a", day: 32, slot: "12:00" },
+  ]);
+  assert.deepEqual(nextPlanPositions({ items: [{ id: "01a" }, { id: "01b" }] as ContentPlan["items"] }, 2, ["10:00", "14:00", "19:00"]).map((p) => p.id), ["01c", "02a"]);
+  assert.throws(() => nextPlanPositions({ items: [{ id: "99b" }] as ContentPlan["items"] }, 1, ["12:00", "19:00"]), /до 99/);
+
+  const few = { items: [{ id: "01a", pillar: "space", slot: "12:00" }, { id: "01b", pillar: "space", slot: "19:00" }, { id: "02a", pillar: "mind", slot: "12:00" }] as ContentPlan["items"] };
+  const picked = pickPillars(few, nextPlanPositions(few, 4, ["12:00", "19:00"]), ["space", "mind", "body"]);
+  assert.equal(picked[0], "body", "самая редкая рубрика первой");
+  for (let i = 1; i < picked.length; i++) assert.notEqual(picked[i], picked[i - 1], "одна рубрика не два раза подряд");
+
+  assert.deepEqual(sequelTitle("Почему свой голос на записи звучит чужим"), { title: "Почему свой голос на записи звучит чужим. Часть 2", part: 2 });
+  assert.deepEqual(sequelTitle("Медуза, которая умеет молодеть. Часть 2"), { title: "Медуза, которая умеет молодеть. Часть 3", part: 3 });
+
+  const copy = structuredClone(plan);
+  const space = (copy.pillars as unknown as { id: string; total: number; "12:00": number }[]).find((p) => p.id === "space")!;
+  const before = { total: space.total, noon: space["12:00"] };
+  copy.items.push({ id: "99a", day: 99, slot: "12:00", pillar: "space", title: "t", hook: "h", angle: "a", keyFacts: [], status: "planned" });
+  refreshPlanStats(copy);
+  assert.equal(copy.days, 99);
+  assert.equal(space.total, before.total + 1);
+  assert.equal(space["12:00"], before.noon + 1);
+
+  const item = plan.items.find((i) => i.id === "05b")!;
+  const loose = planNotes(item, { strict: false, sequel: plan.items.find((i) => i.id === "01a")! });
+  assert.match(loose, /Обязательно используй эти проверенные факты/);
+  assert.match(loose, /Это вторая часть ролика 01a/);
+  assert.match(planNotes(item), /других фактов и цифр не добавляй/, "по умолчанию — строго как раньше");
+});
+
+await test("План: ссылки источников, похожие названия, разбор ответа LLM", () => {
+  assert.equal(extractUrl("Smith 2020, https://doi.org/10.1000/xyz."), "https://doi.org/10.1000/xyz");
+  assert.equal(extractUrl("(источник: https://en.wikipedia.org/wiki/Octopus)"), "https://en.wikipedia.org/wiki/Octopus");
+  assert.equal(extractUrl("https://en.wikipedia.org/wiki/Mercury_(planet)"), "https://en.wikipedia.org/wiki/Mercury_(planet)");
+  assert.equal(extractUrl("Учебник биологии, 2010"), null);
+  assert.equal(extractUrl("http://localhost/x"), null);
+  assert.ok(similarTitle("Почему небо голубое", "Почему небо голубое днём?"));
+  assert.ok(!similarTitle("Почему небо голубое", "Почему кошки мурлычут"));
+
+  const fact = (n: number, url = `https://en.wikipedia.org/wiki/Fact_${n}`) => ({ claim: `Факт номер ${n} про осьминогов и их удивительные сердца`, source: url });
+  const v = checkTopics(
+    {
+      items: [
+        { code: "31a", title: "Почему у осьминога три сердца", hook: "У осьминога три сердца.", angle: "Как устроено.", keyFacts: [fact(1), { claim: "Без ссылки", source: "Учебник" }, fact(2)] },
+        { code: "31b", title: "Почему небо голубое днём", hook: "Небо голубое.", angle: "Рэлей.", keyFacts: [fact(3), fact(4)] },
+        { code: "32a", title: "Как спят дельфины", hook: "Дельфин спит половиной мозга.", angle: "Полушария.", keyFacts: [fact(5)] },
+        { code: "32b", title: "Память золотой рыбки", hook: "Три секунды?", angle: "Миф.", keyFacts: [{ claim: "Золотая рыбка помнит всего три секунды это миф", source: "https://ru.wikipedia.org/wiki/Золотая_рыбка" }, fact(6)] },
+      ],
+    },
+    {
+      positions: ["31a", "31b", "32a", "32b"].map((id) => ({ id, day: 31, slot: "12:00" })),
+      existingTitles: ["Почему небо голубое"],
+      covered: [{ code: "05a", title: "Память рыбок", texts: ["Золотая рыбка помнит всего три секунды — это миф"] }],
+    },
+  );
+  assert.ok(v.ok);
+  if (!v.ok) return;
+  assert.deepEqual([...v.value.topics.keys()], ["31a"], "31b — дубль названия, 32a — мало фактов, 32b — факт уже был");
+  assert.equal(v.value.topics.get("31a")!.keyFacts.length, 2);
+  const notes = v.value.notes.join("\n");
+  for (const part of ["без ссылки", "слишком похожа", "нужно минимум 2", "уже был на канале"]) assert.ok(notes.includes(part), `нет «${part}» в:\n${notes}`);
+  const none = checkTopics({ nope: 1 }, { positions: [{ id: "31a", day: 31, slot: "12:00" }], existingTitles: [], covered: [] });
+  assert.ok(!none.ok, "без items — в ремонт");
+});
+
+await test("План: проверка ссылки по сети — 200/405→GET/404/нет домена/403/таймаут", async () => {
+  const status = (code: number) => async () => new Response(null, { status: code });
+  assert.equal(await checkUrl("https://a.org/x", status(200)), "ok");
+  assert.equal(await checkUrl("https://a.org/x", status(404)), "dead");
+  assert.equal(await checkUrl("https://a.org/x", status(403)), "unknown", "блокировка бота — не выдумка");
+  let n = 0;
+  assert.equal(await checkUrl("https://a.org/x", async (_u, init) => new Response(null, { status: init?.method === "HEAD" ? 405 : 200 })), "ok");
+  assert.equal(await checkUrl("https://nope.invalid/x", async () => { n++; throw Object.assign(new TypeError("fetch failed"), { cause: { code: "ENOTFOUND" } }); }), "dead");
+  assert.ok(n >= 1);
+  const hang = (_u: string | URL | Request, init?: RequestInit) => new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted"))));
+  assert.equal(await checkUrl("https://slow.org/x", hang, 30), "unknown");
+});
+
+await test("plan-extend (Gemini, без поиска): факты без ссылки и с битой ссылкой выброшены, второй заход за недостающей темой", async () => {
+  const plan = { items: [{ id: "30b", day: 30, slot: "19:00", pillar: "nature", title: "Медуза, которая умеет молодеть", hook: "h", angle: "a", keyFacts: [], status: "planned" }] } as ContentPlan;
+  const good = (n: number) => ({ claim: `Проверяемый факт ${n} о теме с конкретными цифрами`, source: `https://en.wikipedia.org/wiki/Topic_${n}` });
+  const round1 = {
+    items: [
+      { code: "31a", title: "Почему у осьминога голубая кровь", hook: "Кровь осьминога голубая.", angle: "Гемоцианин вместо гемоглобина.", keyFacts: [good(1), { claim: "Гемоцианин содержит медь", source: "Учебник биологии" }, { claim: "Факт на битой ссылке", source: "https://dead.example.org/page" }] },
+      { code: "31b", title: "Как пчёлы рассказывают дорогу", hook: "Пчела танцует карту.", angle: "Виляющий танец.", keyFacts: [good(2), good(3)] },
+    ],
+  };
+  const round2 = { items: [{ code: "31a", title: "Почему у осьминога голубая кровь", hook: "Кровь осьминога голубая.", angle: "Гемоцианин.", keyFacts: [good(4), good(5)] }] };
+  const llm = [round1, round2];
+  const { fn, calls } = routeFetch((url) => {
+    if (url.includes("generativelanguage")) return chat(JSON.stringify(llm.shift()));
+    return new Response(null, { status: url.includes("dead.example.org") ? 404 : 200 });
+  });
+  const seenCalls: LlmCallInfo[] = [];
+  const res = await generatePlanItems(
+    {
+      plan,
+      positions: [
+        { id: "31a", day: 31, slot: "12:00", pillar: "nature" },
+        { id: "31b", day: 31, slot: "19:00", pillar: "tech" },
+      ],
+      pillars: [{ id: "nature", title: "Природа и животные" }, { id: "tech", title: "Технологии и ИИ" }],
+      channel: { name: "Суть за минуту", niche: "наука", audience: "все" },
+      covered: [],
+    },
+    { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log, onLlmCall: (c) => seenCalls.push(c) },
+  );
+  const llmCalls = calls.filter((c) => c.url.includes("generativelanguage"));
+  assert.equal(llmCalls.length, 2, "второй заход — только за 31a");
+  const prompt1 = (llmCalls[0].body!.messages as { role: string; content: string }[]).find((m) => m.role === "user")!.content;
+  assert.match(prompt1, /31a — рубрика «Природа и животные»/);
+  assert.match(prompt1, /«Медуза, которая умеет молодеть»/, "существующие темы — в промпте");
+  const system1 = (llmCalls[0].body!.messages as { role: string; content: string }[])[0].content;
+  assert.match(system1, /каждую ссылку проверят запросом по сети/);
+  const prompt2 = (llmCalls[1].body!.messages as { role: string; content: string }[]).find((m) => m.role === "user")!.content;
+  assert.ok(prompt2.includes("31a") && !prompt2.includes("31b —"));
+  assert.ok(calls.some((c) => c.url.includes("dead.example.org")), "ссылки проверены по сети");
+  assert.deepEqual(res.items.map((i) => i.id), ["31a", "31b"]);
+  assert.deepEqual(res.items[0].keyFacts.map((f) => f.source), [good(4).source, good(5).source]);
+  assert.equal(res.items[1].pillar, "tech");
+  assert.equal(res.items[1].status, "planned");
+  assert.deepEqual(res.missing, []);
+  const notes = res.notes.join("\n");
+  assert.ok(notes.includes("без ссылки") && notes.includes("не открывается"), notes);
+  assert.equal(seenCalls.length, 2, "оба запроса — в журнал расхода");
+});
+
+await test("plan-sequel (Claude + веб-поиск): инструмент поиска, pause_turn, ссылки из выдачи без проверки, цена поисков", async () => {
+  const base = { id: "01a", day: 1, slot: "12:00", pillar: "why", title: "Почему свой голос на записи звучит чужим", hook: "Голос чужой.", angle: "Кости.", keyFacts: [{ claim: "Свой голос слышен через кости черепа", source: "Pörschmann 2000" }], status: "script-ready" };
+  const topics = JSON.stringify({ items: [{ code: "31a", title: "Почему мы не узнаём свой голос", hook: "Мозг не узнаёт твой голос.", angle: "Ожидание и привычка.", keyFacts: [{ claim: "Люди хуже оценивают свой записанный голос", source: "https://en.wikipedia.org/wiki/Voice_confrontation" }, { claim: "Костная проводимость меняет тембр", source: "https://www.nature.com/articles/xyz" }] }] });
+  const paused = claudeMessage(
+    [
+      { type: "server_tool_use", id: "srvtoolu_1", name: "web_search", input: { query: "voice confrontation" } },
+      { type: "web_search_tool_result", tool_use_id: "srvtoolu_1", content: [{ type: "web_search_result", url: "https://en.wikipedia.org/wiki/Voice_confrontation", title: "Voice", encrypted_content: "x", page_age: null }] },
+    ],
+    "pause_turn",
+    { server_tool_use: { web_search_requests: 1, web_fetch_requests: 0 } } as Partial<BetaMessage["usage"]>,
+  );
+  const final = claudeMessage(
+    [
+      { type: "text", text: topics.slice(0, 60), citations: null },
+      { type: "text", text: topics.slice(60), citations: [{ type: "web_search_result_location", url: "https://www.nature.com/articles/xyz", title: "N", encrypted_index: "e", cited_text: "c" }] },
+    ],
+    "end_turn",
+    { server_tool_use: { web_search_requests: 2, web_fetch_requests: 0 } } as Partial<BetaMessage["usage"]>,
+  );
+  assert.deepEqual(collectSources([...paused.content, ...final.content] as BetaContentBlock[]), ["https://en.wikipedia.org/wiki/Voice_confrontation", "https://www.nature.com/articles/xyz"]);
+  const { client, calls } = mockClaude([paused, final]);
+  const noNet = routeFetch(() => {
+    throw new Error("сеть не нужна: ссылки из выдачи поиска");
+  });
+  const seenCalls: LlmCallInfo[] = [];
+  const res = await generatePlanItems(
+    { plan: { items: [base] } as ContentPlan, positions: [{ id: "31a", day: 31, slot: "12:00", pillar: "why" }], pillars: [{ id: "why", title: "Почему так?" }], channel: { name: "Суть за минуту" }, covered: [{ code: "01a", title: base.title, texts: base.keyFacts.map((f) => f.claim) }], sequelOf: base },
+    { env: { LLM_PROVIDER: "claude", ANTHROPIC_API_KEY: "sk-test", LLM_FALLBACKS: "none" }, anthropic: client, fetch: noNet.fn, log, onLlmCall: (c) => seenCalls.push(c) },
+  );
+  assert.equal(calls.length, 2, "pause_turn — продолжение тем же ходом");
+  const p0 = calls[0] as unknown as Record<string, unknown>;
+  assert.deepEqual(p0.tools, [{ type: "web_search_20260209", name: "web_search", max_uses: 5 }]);
+  assert.ok(!(p0.output_config as Record<string, unknown>).format, "с поиском — без output_config.format (цитаты несовместимы)");
+  assert.match((p0.system as { text: string }[])[0].text, /JSON-схема ответа/);
+  assert.match((p0.system as { text: string }[])[0].text, /Источники ищи веб-поиском/);
+  assert.match(String((calls[0].messages[0] as { content: string }).content), /продолжение ролика 01a/);
+  const cont = calls[1].messages;
+  assert.equal(cont[cont.length - 1].role, "assistant");
+  assert.equal(((cont[cont.length - 1].content as { type: string }[])[0]).type, "server_tool_use", "пауза возвращена как есть");
+  assert.equal(noNet.calls.length, 0);
+  assert.equal(res.items.length, 1);
+  assert.equal(res.items[0].title, "Почему свой голос на записи звучит чужим. Часть 2");
+  assert.equal(res.items[0].sequelOf, "01a");
+  assert.equal(res.items[0].pillar, "why");
+  const tokens = claudeCostUsd("claude-opus-5-5", { input: 3000, cacheWrite: 0, cacheRead: 0, output: 2000 }) * 2;
+  assert.ok(Math.abs(res.usage[0].costUsd - (tokens + webSearchCostUsd(3))) < 1e-6, `стоимость с поисками: ${res.usage[0].costUsd}`);
+  assert.equal(seenCalls.length, 1);
+  assert.ok(Math.abs((seenCalls[0].costUsd ?? 0) - res.usage[0].costUsd) < 1e-9);
 });
 
 console.log(`\nВсе проверки пройдены: ${passed}.`);

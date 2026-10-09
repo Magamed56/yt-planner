@@ -7,6 +7,8 @@
   "scripts": {
     "make": "tsx src/cli/make.ts",
     "script": "tsx src/cli/script.ts",
+    "plan-extend": "tsx src/cli/plan-extend.ts",
+    "plan-sequel": "tsx src/cli/plan-sequel.ts",
     "upload": "tsx src/cli/upload.ts",
     "youtube-auth": "tsx src/cli/youtube-auth.ts",
     "youtube-fill": "tsx src/cli/youtube-fill.ts",
