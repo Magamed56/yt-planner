@@ -545,7 +545,8 @@
           "source": "Арифметика"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-11a-tvoy-telefon-protiv-kompyutera-apollona-pamyati-v-2-mln-raz.json"
     },
     {
       "id": "11b",
@@ -565,7 +566,8 @@
           "source": "Smith G. S. Human color vision and the unsaturated blue color of the daytime sky. American Journal of Physics 73(7), 590–597 (2005); NASA Space Place, «Why is the sky blue?»"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-11b-pochemu-nebo-goluboe-a-zakat-krasnyy-prostaya-fizika.json"
     },
     {
       "id": "12a",

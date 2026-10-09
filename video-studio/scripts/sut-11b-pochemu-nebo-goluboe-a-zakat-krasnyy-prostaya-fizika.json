@@ -1,0 +1,103 @@
+{
+  "title": "Почему небо голубое, а закат красный: простая физика",
+  "description": "Почему небо голубое, а не фиолетовое, и откуда берётся красный закат. Разбираем рэлеевское рассеяние: почему синий свет рассеивается сильнее красного и что на закате меняет цвет неба.\n#shorts #почемунебоголубое #физика #наука #закат",
+  "tags": [
+    "почему небо голубое",
+    "почему трава зеленая а небо голубое",
+    "небо голубое",
+    "закат",
+    "рэлеевское рассеяние",
+    "физика",
+    "наука",
+    "свет",
+    "атмосфера",
+    "цвет неба",
+    "rayleigh scattering",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Небо голубое не из-за моря. Всё дело в рассеянии.",
+      "onScreen": "Небо голубое *не из-за моря*",
+      "icon": "eye",
+      "visualQuery": "blue sky ocean horizon",
+      "imagePrompt": "cinematic wide shot of a deep blue sky over a calm sea horizon, soft haze, teal and orange palette, high contrast"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Белый солнечный свет — смесь всех цветов. В воздухе он сталкивается с молекулами газа. А в конце узнаешь, почему небо не фиолетовое.",
+      "onScreen": "Белый свет = *все цвета* сразу",
+      "icon": "sun",
+      "visualQuery": "sunlight prism rainbow",
+      "imagePrompt": "cinematic macro of a glass prism splitting a beam of white sunlight into a rainbow, dark background, teal and orange accents"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "В тысяча восемьсот семьдесят первом году лорд Рэлей показал: чем короче волна, тем сильнее она рассеивается.",
+      "onScreen": "Короче волна — *сильнее* рассеяние",
+      "icon": "atom",
+      "visualQuery": "old physics book desk",
+      "imagePrompt": "vintage 19th century physicist desk with brass optical instruments and a candle, warm light against cool blue window glow"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "Причём зависимость — в четвёртой степени. Поэтому синий рассеивается примерно в пять раз сильнее красного и летит к тебе со всех сторон.",
+      "onScreen": "Синий против красного: *×5*",
+      "stat": {
+        "value": 5,
+        "prefix": "≈",
+        "suffix": "×",
+        "label": "синий рассеивается сильнее красного"
+      },
+      "icon": "zap",
+      "visualQuery": "clear blue sky clouds",
+      "imagePrompt": "cinematic upward view into a vivid blue sky with glowing light rays scattering in every direction, teal and orange palette"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "На закате солнце низко, и свет идёт сквозь толстый слой воздуха. Синий теряется по дороге. До тебя доходят красный и оранжевый.",
+      "onScreen": "На закате путь света *длиннее*",
+      "icon": "sunset",
+      "visualQuery": "red sunset horizon city",
+      "imagePrompt": "cinematic low sun touching the horizon, sky glowing deep red and orange, long shadows, atmospheric haze, wide angle"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Но фиолетовый рассеивается ещё сильнее синего. Почему же небо не фиолетовое?",
+      "onScreen": "Почему небо не *фиолетовое*?",
+      "icon": "circle-x",
+      "visualQuery": "purple twilight sky",
+      "imagePrompt": "cinematic twilight sky with a faint violet tint fading into blue, silhouette of hills, moody teal and orange palette"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "Две причины. Солнце излучает фиолетового меньше. А твой глаз к нему куда менее чувствителен.",
+      "onScreen": "2 причины *голубого* неба",
+      "items": [
+        "Солнце светит фиолетовым слабее",
+        "Глаз хуже видит фиолетовый"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "human eye close up",
+      "imagePrompt": "extreme cinematic close-up of a human eye reflecting a blue sky, soft rim light, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты какой закат запомнил самым красным? Напиши в комментариях и подпишись.",
+      "onScreen": "Твой самый *красный* закат?",
+      "icon": "bell-ring"
+    }
+  ]
+}

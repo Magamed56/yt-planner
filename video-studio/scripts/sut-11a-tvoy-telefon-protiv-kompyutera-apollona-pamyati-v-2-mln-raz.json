@@ -1,0 +1,108 @@
+{
+  "title": "Твой телефон против компьютера «Аполлона»: памяти в 2 млн раз больше",
+  "description": "Сколько памяти было у бортового компьютера «Аполлона» AGC, на какой частоте он работал и почему его программы буквально плели из проводов. Сравниваем с оперативной памятью твоего телефона.\n#shorts #аполлон #космос #компьютеры #телефон",
+  "tags": [
+    "аполлон",
+    "компьютер аполлона",
+    "agc",
+    "apollo guidance computer",
+    "космос",
+    "полёт на луну",
+    "история компьютеров",
+    "оперативная память",
+    "твой телефон",
+    "твой первый телефон",
+    "наука",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "У компьютера Аполлона было около четырёх килобайт памяти.",
+      "onScreen": "Компьютер «Аполлона»: *4 КБ* памяти",
+      "icon": "cpu",
+      "visualQuery": "rocket launch night",
+      "imagePrompt": "cinematic low angle shot of a giant Saturn V style rocket on a launch pad at night, floodlights, deep blue and amber palette, mist"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Точнее, две тысячи сорок восемь слов оперативной памяти. А программы для него вообще шили руками, но об этом чуть позже.",
+      "onScreen": "Оперативка — всего *2048* слов",
+      "stat": {
+        "value": 2048,
+        "label": "слов оперативной памяти AGC"
+      },
+      "icon": "atom",
+      "visualQuery": "vintage computer panel buttons",
+      "imagePrompt": "close-up of a vintage spacecraft computer keypad with glowing green segment displays, dark cockpit, deep blue and amber light, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Процессор работал на частоте около одного мегагерца. Одна целая двадцать четыре тысячных, если совсем точно.",
+      "onScreen": "Частота — около *1 МГц*",
+      "stat": {
+        "value": 1.024,
+        "suffix": " МГц",
+        "label": "тактовая частота процессора"
+      },
+      "icon": "timer",
+      "visualQuery": "old circuit board closeup",
+      "imagePrompt": "macro shot of a 1960s circuit board with tiny components, warm amber rim light, dark blue background, cinematic"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "А теперь твой телефон. Восемь гигабайт оперативки — это примерно в два миллиона раз больше, чем у Аполлона.",
+      "onScreen": "8 ГБ против 4 КБ: *×2 млн*",
+      "stat": {
+        "value": 2,
+        "prefix": "≈",
+        "suffix": " млн",
+        "label": "во столько раз больше памяти"
+      },
+      "icon": "smartphone",
+      "visualQuery": "hand holding smartphone night",
+      "imagePrompt": "cinematic close-up of a hand holding a modern smartphone glowing in the dark, the Moon reflected on the screen glass, deep blue and amber palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Сами программы жили в постоянной памяти. Тридцать шесть тысяч восемьсот шестьдесят четыре слова, около семидесяти двух килобайт.",
+      "onScreen": "Программы — всего *72 КБ*",
+      "icon": "book-open",
+      "visualQuery": "astronaut spacecraft cockpit",
+      "imagePrompt": "interior of a cramped vintage space capsule cockpit with switches and dials, soft amber instrument glow, dark blue shadows, wide angle"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "И эту память буквально сплетали вручную. Нули и единицы задавались тем, как провод проходит через крошечные кольца.",
+      "onScreen": "Память *плели* руками",
+      "icon": "key",
+      "visualQuery": "hands weaving copper wire",
+      "imagePrompt": "extreme close-up of hands threading thin copper wire through tiny metal rings, warm amber workshop lamp, dark blue background, shallow depth of field"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Выходит, путь к Луне был зашит в провода. Переписать программу после сборки было нельзя, только сплести заново.",
+      "onScreen": "Путь к Луне *зашит* в провода",
+      "icon": "rocket",
+      "visualQuery": "moon surface footprint",
+      "imagePrompt": "cinematic view of the lunar surface with the Earth rising on the horizon, cold blue light with warm amber glow, vast and quiet"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты бы доверил свою жизнь четырём килобайтам? Напиши в комментариях и подпишись.",
+      "onScreen": "Доверил бы *4 КБ*? Пиши!",
+      "icon": "bell-ring"
+    }
+  ]
+}
