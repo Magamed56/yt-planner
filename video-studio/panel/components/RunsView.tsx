@@ -101,7 +101,7 @@ export default function RunsView({ state }: { state: PanelState }) {
       generatedAt={state.generatedAt}
       activeRuns={state.runs.filter((r) => r.active).length}
       runwayDays={state.runwayDays}
-      runwayLabel={state.scheduleEndLabel}
+      runwayLabel={state.runwayLabel}
     >
       <main className="page">
         <section className="card" id="produce">

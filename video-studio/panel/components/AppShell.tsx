@@ -145,7 +145,7 @@ export default function AppShell({
             <RunwayRing days={runwayDays} />
             <div className="small muted">
               <b style={{ color: "var(--text)", display: "block" }}>запас расписания</b>
-              {loading ? "загружаю…" : runwayLabel ? `до ${runwayLabel}` : "нет запланированных"}
+              {loading ? "загружаю…" : runwayLabel ? `без пропусков до ${runwayLabel}` : runwayDays === null ? "YouTube не ответил" : "ближайший слот пуст"}
             </div>
           </div>
           <div className="small muted">

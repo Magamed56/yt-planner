@@ -11,8 +11,10 @@ export function dailySummary(state: PanelState, now = new Date(state.generatedAt
   const todos = buildTodo(state, now);
   if (!todos.length) return null;
   const parts = todos.map(pushLine);
-  // Запас расписания — для ориентира, даже когда он в порядке (короткий уже в списке дел).
-  if (state.scheduleEnd && !state.youtubeError && !todos.some((t) => t.id === "runway")) parts.push(`расписание до ${shortDate(state.scheduleEnd, state.timezone)}`);
+  // Запас расписания без пропусков — для ориентира, даже когда он в порядке (короткий уже в
+  // списке дел).
+  const until = state.coverage.find((c) => c.level === "scheduled")?.untilIso;
+  if (until && !state.youtubeError && !todos.some((t) => t.id === "runway")) parts.push(state.firstGap ? `расписание до ${shortDate(until, state.timezone)}` : "расписание без пропусков на 60 дней");
   const body = parts.join(" · ");
   return {
     title: todos.some((t) => t.level === "error" || t.id === "runway") ? "Нужно внимание" : "Дела на сегодня",

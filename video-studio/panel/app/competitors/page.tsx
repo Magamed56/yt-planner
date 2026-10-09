@@ -12,7 +12,7 @@ export default async function CompetitorsPage() {
     const [state, { refs, reports }] = await Promise.all([loadState(), loadCompetitors()]);
     return (
       <CompetitorsView
-        shell={{ updated: state.updatedLabel, generatedAt: state.generatedAt, activeRuns: state.runs.filter((r) => r.active).length, runwayDays: state.runwayDays, runwayLabel: state.scheduleEndLabel }}
+        shell={{ updated: state.updatedLabel, generatedAt: state.generatedAt, activeRuns: state.runs.filter((r) => r.active).length, runwayDays: state.runwayDays, runwayLabel: state.runwayLabel }}
         refs={refs}
         reports={reports}
       />

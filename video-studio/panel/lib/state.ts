@@ -95,6 +95,23 @@ export interface SlotCell {
   occupant: string | null; // код ролика, «другое видео» или null — свободно
 }
 
+// «Конвейер»: до какого слота подряд, без пропусков, хватает роликов на этапе не ниже level.
+export type CoverageLevel = "scheduled" | "video" | "script" | "topic";
+export interface Coverage {
+  level: CoverageLevel;
+  untilIso: string | null; // последний слот непрерывного ряда; null — уже ближайший пуст
+  untilLabel: string | null;
+  slots: number;
+}
+
+// Первый будущий слот, на который на YouTube ничего не стоит, и кто его займёт по очереди.
+export interface FirstGap {
+  iso: string;
+  label: string;
+  code: string | null; // ориентир на это время (null — роликов в очереди не хватает)
+  stage: Stage | null;
+}
+
 export interface AutopilotSettings {
   enabled: boolean;
   days: number; // ролики должны быть готовы за столько дней до выхода
@@ -163,10 +180,13 @@ export interface PanelState {
   counts: Record<Stage, number>;
   scheduleEnd: string | null; // последнее запланированное время выхода на канале
   scheduleEndLabel: string | null;
-  runwayDays: number | null; // сколько полных дней расписания впереди (для кольца-секундомера)
+  runwayDays: number | null; // полных дней до первого пустого слота (кольцо-секундомер); null — YouTube недоступен
+  runwayLabel: string | null; // до какого слота расписание без пропусков
+  firstGap: FirstGap | null; // null — пропусков нет на SLOT_GRID_DAYS дней (или YouTube недоступен)
+  coverage: Coverage[]; // запланировано → видео → сценарии → темы; пусто без YouTube
   reminders: Reminder[];
   runs: RunInfo[];
-  slotGrid: SlotCell[]; // слоты на 14 дней вперёд — для переноса
+  slotGrid: SlotCell[]; // слоты на SLOT_GRID_DAYS дней вперёд — перенос и «конвейер»
   youtubeError: string | null;
   missingSecrets: string[] | null; // null — неизвестно (у токена нет права Secrets: Read)
   autopilot: AutopilotSettings;
@@ -213,6 +233,30 @@ export function queueSort<T extends { code: string }>(rows: T[], order: string[]
     .map((r, i) => ({ r, i, k: rank.get(r.code) ?? order.length + i }))
     .sort((a, b) => a.k - b.k)
     .map((x) => x.r);
+}
+
+// Столько же дней вперёд принимает moveVideoAction.
+export const SLOT_GRID_DAYS = 60;
+const COVERAGE_MIN: Record<CoverageLevel, number> = { scheduled: STAGES.indexOf("scheduled"), video: STAGES.indexOf("video"), script: STAGES.indexOf("script"), topic: 0 };
+
+// Слот закрыт на уровне level, если на YouTube на это время что-то стоит (свой ролик или
+// «другое видео»), либо ориентир на это время уже дошёл до этого этапа. Чистая функция.
+export function coverage(rows: Pick<Row, "code" | "stage" | "when" | "whenExact">[], grid: SlotCell[], label: (iso: string) => string): { coverage: Coverage[]; firstGap: FirstGap | null } {
+  const ahead = new Map(rows.filter((r) => !r.whenExact && r.when).map((r) => [Math.floor(Date.parse(r.when!) / 60_000), r]));
+  const at = (c: SlotCell) => ahead.get(Math.floor(Date.parse(c.iso) / 60_000)) ?? null;
+  const covered = (c: SlotCell, min: number) => {
+    const r = at(c);
+    return c.occupant !== null || (r !== null && STAGES.indexOf(r.stage) >= min);
+  };
+  const levels = (Object.keys(COVERAGE_MIN) as CoverageLevel[]).map((level) => {
+    let n = 0;
+    while (n < grid.length && covered(grid[n]!, COVERAGE_MIN[level])) n++;
+    const until = n ? grid[n - 1]!.iso : null;
+    return { level, untilIso: until, untilLabel: until ? label(until) : null, slots: n };
+  });
+  const gap = grid.find((c) => c.occupant === null);
+  const who = gap ? at(gap) : null;
+  return { coverage: levels, firstGap: gap ? { iso: gap.iso, label: label(gap.iso), code: who?.code ?? null, stage: who?.stage ?? null } : null };
 }
 
 const ACTIVE_RUN = new Set(["queued", "in_progress", "waiting", "requested", "pending"]);
@@ -458,13 +502,31 @@ export function buildState(input: StateInput): PanelState {
     missingSecrets = SECRET_NEEDS.filter((s) => !s.names.some((n) => have.has(n))).map((s) => s.label);
   }
 
+  const perDay = Math.max(1, channel.schedule.publishTimesLocal.length);
+  const occupant = new Map<number, string>();
+  for (const r of rows) if (r.stage === "scheduled" && r.when) occupant.set(minute(r.when), r.code);
+  for (const t of taken) if (!occupant.has(minute(t))) occupant.set(minute(t), "другое видео");
+  const slotGrid = upcomingSlots(channel.schedule, SLOT_GRID_DAYS * perDay, { from: now }).map((d) => ({
+    iso: isoNoMs(d),
+    dateKey: f.key(d.getTime()),
+    dateLabel: f.day(d.getTime()),
+    time: f.time(d.getTime()),
+    occupant: occupant.get(minute(d)) ?? null,
+  }));
+  // Запас — до первого пустого слота, а не до последнего запланированного: дыра завтра в 12:00
+  // важнее ролика, стоящего через неделю. Без YouTube о расписании судить нельзя.
+  const pipeline = input.youtubeError ? { coverage: [], firstGap: null } : coverage(rows, slotGrid, labelOf);
+  const gap = pipeline.firstGap;
+  const runwayDays = input.youtubeError ? null : gap ? Math.max(0, Math.floor((ms(gap.iso) - nowMs) / DAY_MS)) : SLOT_GRID_DAYS;
+  const runwayLabel = pipeline.coverage.find((c) => c.level === "scheduled")?.untilLabel ?? null;
+
   const reminders: Reminder[] = [];
   if (input.youtubeError) reminders.push({ kind: "youtube", level: "error", text: `YouTube недоступен: ${input.youtubeError}` });
   else if (!scheduleEnd) reminders.push({ kind: "runway", level: "warn", text: "В расписании YouTube пусто — ни один ролик не запланирован." });
-  else {
-    const days = Math.floor((ms(scheduleEnd) - nowMs) / DAY_MS);
+  else if (gap) {
+    const days = runwayDays ?? 0;
     const left = days < 1 ? "меньше суток" : `${days} ${plural(days, "день", "дня", "дней")}`;
-    reminders.push({ kind: "runway", level: days < 2 ? "warn" : "info", text: `Расписание YouTube заполнено до ${labelOf(scheduleEnd)} — осталось ${left}.` });
+    reminders.push({ kind: "runway", level: days < 2 ? "warn" : "info", text: `Первый пустой слот на YouTube — ${gap.label}: до него ${left}.` });
   }
   const toUpload = rows.filter((r) => r.stage === "video");
   if (toUpload.length) {
@@ -519,17 +581,6 @@ export function buildState(input: StateInput): PanelState {
     });
   }
 
-  const perDay = Math.max(1, channel.schedule.publishTimesLocal.length);
-  const occupant = new Map<number, string>();
-  for (const r of rows) if (r.stage === "scheduled" && r.when) occupant.set(minute(r.when), r.code);
-  for (const t of taken) if (!occupant.has(minute(t))) occupant.set(minute(t), "другое видео");
-  const slotGrid = upcomingSlots(channel.schedule, 14 * perDay, { from: now }).map((d) => ({
-    iso: isoNoMs(d),
-    dateKey: f.key(d.getTime()),
-    dateLabel: f.day(d.getTime()),
-    time: f.time(d.getTime()),
-    occupant: occupant.get(minute(d)) ?? null,
-  }));
 
   const todayKey = f.key(nowMs);
   return {
@@ -544,7 +595,10 @@ export function buildState(input: StateInput): PanelState {
     counts,
     scheduleEnd,
     scheduleEndLabel: scheduleEnd ? labelOf(scheduleEnd) : null,
-    runwayDays: scheduleEnd ? Math.max(0, Math.floor((ms(scheduleEnd) - nowMs) / DAY_MS)) : null,
+    runwayDays,
+    runwayLabel,
+    firstGap: gap,
+    coverage: pipeline.coverage,
     reminders,
     runs,
     slotGrid,

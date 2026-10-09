@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
 import { setBadge } from "@/lib/badge";
-import type { PanelState, Reminder, Row } from "@/lib/state";
+import type { CoverageLevel, PanelState, Reminder, Row } from "@/lib/state";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/stages";
 import { badgeCount, buildTodo } from "@/lib/todo";
 import AppShell, { RunwayRing } from "./AppShell";
@@ -11,6 +11,7 @@ import BoardView, { movable, queued, type BoardCell } from "./BoardView";
 import DownloadSheet from "./DownloadSheet";
 import FeedView from "./FeedView";
 import NowCard from "./NowCard";
+import PipelineStrip from "./PipelineStrip";
 import VideoSheet from "./VideoSheet";
 
 type Filter = "ahead" | "all" | Stage;
@@ -52,6 +53,11 @@ function Notice({ m }: { m: Reminder }) {
   );
 }
 
+// Кто встанет в пустой слот — коротко, для шапки.
+const GAP_STAGE: Record<Stage, string> = { topic: "только тема", script: "есть сценарий", video: "видео готово", studio: "уже в Studio", scheduled: "", published: "" };
+const FEED_DAYS = 10;
+const HINT_KEY = "sut.boardHint"; // «Впереди» — ближайшие дни, остальное по кнопке
+
 const mb = (bytes: number) => `${Math.round(bytes / 1_048_576)} МБ`;
 // Сколько весят файлы ролика целиком: видео и обе обложки.
 const rowBytes = (r: Row) => (r.release ? r.release.mp4.size + (r.release.cover?.size ?? 0) + (r.release.thumb?.size ?? 0) : 0);
@@ -67,6 +73,24 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
   // Выбор роликов для скачивания: null — режим выключен; saving — открыт лист «Скачать».
   const [chosen, setChosen] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  // Подсказку про перетаскивание можно убрать — запоминаем в браузере (может не быть доступа).
+  const [hintHidden, setHintHidden] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(HINT_KEY) === "hidden") setHintHidden(true);
+    } catch {
+      // хранилище недоступно — подсказка просто остаётся
+    }
+  }, []);
+  function hideHint() {
+    setHintHidden(true);
+    try {
+      localStorage.setItem(HINT_KEY, "hidden");
+    } catch {
+      // не запомнили — в следующий раз покажется снова
+    }
+  }
 
   // Вид — в адресе (?view=calendar), без запроса к серверу: данные уже на странице.
   function switchMode(next: QueueMode) {
@@ -137,7 +161,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     setPicked(null);
     if (!row || cell.row?.code === row.code) return;
     if (movable(row) && row.youtube) {
-      if (!cell.iso) return setToast({ text: "Сюда нельзя: слот уже прошёл или дальше двух недель — перенесите в Studio.", ok: false });
+      if (!cell.iso) return setToast({ text: "Сюда нельзя: слот уже прошёл или дальше 60 дней — перенесите в Studio.", ok: false });
       if (cell.row?.stage === "published") return setToast({ text: "Этот ролик уже вышел — его место занято.", ok: false });
       const videoId = row.youtube.videoId;
       return void act(async () => {
@@ -200,6 +224,27 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
   const attention = badgeCount(todos);
   useEffect(() => setBadge(attention), [attention, state.generatedAt]);
 
+  // Шапка: до какого слота расписание без пропусков и где первая дыра.
+  const gap = state.firstGap;
+  const gapCell = gap ? (state.slotGrid.find((c) => c.iso === gap.iso) ?? null) : null;
+  const gapWhen = gapCell ? `${gapCell.dateKey === state.todayKey ? "сегодня" : gapCell.dateKey === state.tomorrowKey ? "завтра" : gapCell.dateLabel} ${gapCell.time}` : (gap?.label ?? "");
+  const heroTitle = state.youtubeError
+    ? "Расписание не проверено"
+    : !state.scheduleEnd
+      ? "Расписание пустое"
+      : !gap
+        ? "Заполнено на 60 дней вперёд"
+        : state.runwayLabel
+          ? `Заполнено до ${state.runwayLabel}`
+          : "Ближайший слот пуст";
+  const heroSub = gap
+    ? `первая дыра: ${gapWhen}${gap.code && gap.stage ? ` (встанет ${gap.code} — ${GAP_STAGE[gap.stage]})` : ""}`
+    : `${state.counts.scheduled} ждут выхода · ${state.counts.video} загрузить в Studio`;
+  function pickLevel(level: CoverageLevel) {
+    if (mode !== "feed") switchMode("feed");
+    setFilter(level);
+  }
+
   // Скачивание пачкой: ролики с файлами в релизе (собранные на компьютере — без файлов).
   const chosenRows = chosen ? state.rows.filter((r) => chosen.has(r.code) && r.release) : [];
   const chosenBytes = chosenRows.reduce((s, r) => s + rowBytes(r), 0);
@@ -225,23 +270,22 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
       generatedAt={state.generatedAt}
       activeRuns={state.runs.filter((r) => r.active).length}
       runwayDays={state.runwayDays}
-      runwayLabel={state.scheduleEndLabel}
+      runwayLabel={state.runwayLabel}
     >
       <div className={`workspace${current || (chosen && saving) ? " with-sheet" : ""}`}>
         <main>
           <section className="hero">
             <RunwayRing days={state.runwayDays} size={76} />
             <div>
-              <b>{state.scheduleEndLabel ? `Расписание до ${state.scheduleEndLabel}` : "Расписание пустое"}</b>
-              <span className="small muted">
-                {state.counts.scheduled} ждут выхода · {state.counts.video} загрузить в Studio
-              </span>
+              <b>{heroTitle}</b>
+              <span className="small muted">{heroSub}</span>
             </div>
           </section>
+          <PipelineStrip coverage={state.coverage} perDay={state.slotTimes.length} gridSlots={state.slotGrid.length} onPick={pickLevel} />
 
           <NowCard
             todos={todos}
-            doneUntil={state.scheduleEndLabel}
+            doneUntil={state.runwayLabel}
             disabled={busy || chosen !== null}
             onDownload={saveWaiting}
             onFind={() => void findNew()}
@@ -301,10 +345,17 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
 
           {mode === "calendar" ? (
             <>
-              <p className="board-hint">
-                Перетащите ролик на другой слот — мышью или пальцем (нажмите и чуть подержите). Запланированные на YouTube переносятся там же, ориентиры меняются местами в очереди выхода. Можно и без
-                перетаскивания: нажмите запланированный ролик, потом слот.
-              </p>
+              {!hintHidden && (
+                <p className="board-hint closable">
+                  <span>
+                    Перетащите ролик на другой слот — мышью или пальцем (нажмите и чуть подержите). Запланированные на YouTube переносятся там же, ориентиры меняются местами в очереди выхода. Можно и
+                    без перетаскивания: нажмите запланированный ролик, потом слот.
+                  </span>
+                  <button type="button" className="btn small ghost" onClick={hideHint} aria-label="Скрыть подсказку">
+                    ✕
+                  </button>
+                </p>
+              )}
               <BoardView state={state} picked={picked} busy={busy} onTile={onTile} onPlace={(code, cell) => void place(code, cell)} />
             </>
           ) : (
@@ -323,7 +374,17 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
                 </button>
               </div>
               {chosen && <p className="board-hint">Нажимайте на ролики — отмеченные ✓ скачаются вместе: видео и обложки. Ролики без готового видео не выбираются.</p>}
-              <FeedView state={state} rows={rows} selected={selected} onOpen={setSelected} chosen={chosen} onToggle={toggleChosen} />
+              <FeedView
+                state={state}
+                rows={rows}
+                selected={selected}
+                onOpen={setSelected}
+                chosen={chosen}
+                onToggle={toggleChosen}
+                // В режиме выбора — всё: «Все с видео» отмечает и то, что ниже.
+                limitDays={filter === "ahead" && !expanded && !chosen ? FEED_DAYS : undefined}
+                onMore={() => setExpanded(true)}
+              />
             </>
           )}
           {/* Полоска выбора закрывает низ ленты — запас, чтобы последние ролики было видно. */}

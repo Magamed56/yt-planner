@@ -216,7 +216,8 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
     void run(() => moveVideoAction(row.youtube!.videoId, c.iso), ask);
   }
   const days: { key: string; label: string; cells: SlotCell[] }[] = [];
-  for (const c of state.slotGrid) {
+  // Список слотов — на три недели: дальше удобнее перетаскиванием в календаре.
+  for (const c of state.slotGrid.filter((x) => x.dateKey <= shiftDateKey(state.todayKey, 20))) {
     let d = days.at(-1);
     if (!d || d.key !== c.dateKey) {
       d = { key: c.dateKey, label: c.dateLabel, cells: [] };
@@ -349,7 +350,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
                 ◀ {prev ? `${prev.dateLabel}${prev.occupant ? ` (${prev.occupant})` : ""}` : "раньше нельзя"}
               </button>
               <button className="btn" disabled={busy || !next} onClick={() => next && moveTo(next)}>
-                {next ? `${next.dateLabel}${next.occupant ? ` (${next.occupant})` : ""}` : "дальше 2 недель — в Studio"} ▶
+                {next ? `${next.dateLabel}${next.occupant ? ` (${next.occupant})` : ""}` : "дальше 60 дней — в Studio"} ▶
               </button>
             </div>
             <div className="btn-row">

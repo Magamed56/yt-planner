@@ -51,7 +51,7 @@ export default async function TikTokPage({ searchParams }: { searchParams: Promi
   return (
     <TikTokView
       data={data}
-      shell={{ updated: state.updatedLabel, generatedAt: state.generatedAt, activeRuns: state.runs.filter((r) => r.active).length, runwayDays: state.runwayDays, runwayLabel: state.scheduleEndLabel }}
+      shell={{ updated: state.updatedLabel, generatedAt: state.generatedAt, activeRuns: state.runs.filter((r) => r.active).length, runwayDays: state.runwayDays, runwayLabel: state.runwayLabel }}
     />
   );
 }

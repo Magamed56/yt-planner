@@ -1,7 +1,7 @@
 // Что сделать руками сейчас — один список для карточки «Сейчас», числа на иконке приложения и
 // утреннего уведомления, чтобы все три говорили одно и то же. Чистая функция по уже собранному
 // состоянию панели, без сети; проверяет scripts/todo-test.ts.
-import { plural } from "./stages";
+import { plural, type Stage } from "./stages";
 import { failedRun, type PanelState, type Row } from "./state";
 
 export type TodoLevel = "error" | "warn" | "info";
@@ -18,6 +18,7 @@ export interface Todo {
   title: string; // что сделать
   detail: string; // срок или подробность
   push: string; // начало строки в уведомлении; коды добавит pushLine
+  pushOwnCodes?: boolean; // коды уже в push — не добавлять
   deadline: string | null; // ISO: к какому времени успеть — для порядка
   codes: string[];
   action: TodoAction | null;
@@ -26,6 +27,15 @@ export interface Todo {
 
 export const STUDIO_URL = "https://studio.youtube.com";
 const MAX_PUSH_CODES = 6;
+// Кто встанет в пустой слот и что с ним сделать.
+const GAP_STAGE: Record<Stage, string> = {
+  topic: "пока только тема",
+  script: "есть сценарий, видео ещё нет",
+  video: "видео готово — загрузите в Studio",
+  studio: "уже в Studio — поставьте время",
+  scheduled: "запланирован",
+  published: "вышел",
+};
 const LEVEL_RANK: Record<TodoLevel, number> = { error: 0, warn: 1, info: 2 };
 const HOUR_MS = 3_600_000;
 const SOON_MS = 48 * HOUR_MS; // загрузить нужно «срочно», если первый ролик выходит раньше
@@ -36,7 +46,7 @@ export function pushCodes(codes: string[]): string {
 }
 
 export function pushLine(t: Todo): string {
-  return t.codes.length ? `${t.push}: ${pushCodes(t.codes)}` : t.push;
+  return t.codes.length && !t.pushOwnCodes ? `${t.push}: ${pushCodes(t.codes)}` : t.push;
 }
 
 // «через 20 ч», «через 3 дня»
@@ -140,22 +150,26 @@ export function buildTodo(state: PanelState, now: Date): Todo[] {
     });
   }
 
-  // Без YouTube о расписании судить нельзя — молчим, а не пугаем «пустым расписанием».
+  // Запас — до первого пустого слота на YouTube (state.firstGap), а не до последнего
+  // запланированного. Без YouTube о расписании судить нельзя — молчим, а не пугаем.
+  const gap = state.firstGap;
   if (!state.youtubeError) {
     const days = state.runwayDays ?? 0;
     if (!state.scheduleEnd) {
       todos.push({ id: "runway", level: "warn", title: "Расписание пусто", detail: "на YouTube не запланирован ни один ролик", push: "расписание пусто", deadline: null, codes: [], action: null });
-    } else if (days < 2) {
-      const left = days < 1 ? "осталось меньше суток" : `остался ${days} ${plural(days, "день", "дня", "дней")}`;
+    } else if (gap && days < 2) {
+      const gapRow = gap.code ? (rowOf.get(gap.code) ?? null) : null;
+      const left = days < 1 ? "меньше суток" : `${days} ${plural(days, "день", "дня", "дней")}`;
       todos.push({
         id: "runway",
         level: "warn",
-        title: `Расписание до ${state.scheduleEndLabel}`,
-        detail: `${left} — загрузите и запланируйте следующие ролики`,
-        push: `расписание до ${shortDate(state.scheduleEnd, state.timezone)} — ${left}`,
-        deadline: state.scheduleEnd,
-        codes: [],
-        action: null,
+        title: `Пустой слот: ${gapRow?.dateKey ? slotLabel(state, gapRow) : gap.label}`,
+        detail: `осталось ${left} · ${gap.code && gap.stage ? `встанет ${gap.code} — ${GAP_STAGE[gap.stage]}` : "роликов в очереди не хватает"}`,
+        push: `пустой слот ${gap.label}${gap.code ? ` — встанет ${gap.code}` : ""}`,
+        pushOwnCodes: true,
+        deadline: gap.iso,
+        codes: gap.code ? [gap.code] : [],
+        action: gapRow?.stage === "studio" ? { kind: "find", label: "Найти новые загрузки" } : gapRow?.stage === "video" && gapRow.release ? { kind: "download", label: "⬇ Скачать", codes: [gapRow.code] } : null,
       });
     }
   }

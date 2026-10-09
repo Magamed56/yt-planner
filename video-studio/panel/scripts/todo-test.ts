@@ -67,7 +67,9 @@ const failedRun: GhRun = {
 };
 // Тексты ролика есть, релиза нет — собран на компьютере.
 const localTexts = (code: string): FillItem => ({ id: code, file: `${code}-x`, durationSec: 55, title: code, description: "", tags: [], categoryId: "27", defaultLanguage: "ru", containsSyntheticMedia: true });
-const far = video("01a", { publishAt: "2026-10-14T16:00:00Z" }); // расписание до ср 14.10 — запас есть
+// Расписание без пропусков до ср 14.10 19:00 МСК: чужие ролики (без кода темы) на всех слотах.
+const fullSlots = ["2026-10-08T16:00:00Z", ...["09", "10", "11", "12", "13", "14"].flatMap((d) => [`2026-10-${d}T09:00:00Z`, `2026-10-${d}T16:00:00Z`])];
+const full = fullSlots.map((iso, i) => video(`other${i}`, { publishAt: iso }));
 const base: StateInput = {
   now,
   planJson: json("content/plan.json"),
@@ -76,7 +78,7 @@ const base: StateInput = {
   fillLists: [],
   releases: [],
   runs: [],
-  videos: [far],
+  videos: full,
   youtubeError: null,
   secretNames: null,
   autopilot: parseAutopilot(null),
@@ -107,18 +109,24 @@ test("загрузить в Studio: коды по времени выхода, �
 });
 
 test("загрузить срочно: первый ролик выходит меньше чем через двое суток", () => {
-  // Свободные слоты раздаются по порядку плана: 01b… встают раньше, поэтому 08a ставим первым в очередь.
-  const t = todo({ releases: [release(1, "08a")], queueOrder: ["08a"] })[0]!;
+  // Расписание пусто — 08a (первый в очереди) встаёт в ближайший слот, сегодня в 19:00.
+  const list = todo({ videos: [], releases: [release(1, "08a")], queueOrder: ["08a"] });
+  const t = list.find((x) => x.id === "upload")!;
   assert.equal(t.level, "warn");
   assert.match(t.detail, /^выходит сегодня 19:00 \(через 4 ч\)$/);
   assert.deepEqual(t.action, { kind: "download", label: "⬇ Скачать", codes: ["08a"] });
+  assert.deepEqual(
+    list.map((x) => x.id),
+    ["upload", "runway"],
+    "оба важные: со сроком — раньше",
+  );
 });
 
 test("каждый вид дела: кнопка одна и действует здесь же", () => {
   const list = todo({
     releases: [release(1, "08a")],
     runs: [failedRun],
-    videos: [far, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })],
+    videos: [...full, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })],
   });
   const by = Object.fromEntries(list.map((t) => [t.id, t]));
   assert.deepEqual(by.run!.action, { kind: "href", label: "Запуски", href: "/runs" });
@@ -136,7 +144,7 @@ test("порядок: срочное → важное (по сроку) → ос
   const list = todo({
     releases: [release(1, "08a"), release(2, "08b")],
     runs: [failedRun],
-    videos: [far, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })],
+    videos: [...full, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })],
   });
   assert.deepEqual(
     list.map((t) => `${t.level}:${t.id}`),
@@ -144,7 +152,7 @@ test("порядок: срочное → важное (по сроку) → ос
   );
   assert.equal(badgeCount(list), 3);
   // Уведомление — те же дела в том же порядке.
-  const msg = dailySummary(buildState({ ...base, releases: [release(1, "08a"), release(2, "08b")], runs: [failedRun], videos: [far, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })] }), now)!;
+  const msg = dailySummary(buildState({ ...base, releases: [release(1, "08a"), release(2, "08b")], runs: [failedRun], videos: [...full, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })] }), now)!;
   assert.equal(msg.body, `${list.map(pushLine).join(" · ")} · расписание до 14.10`.replace(/^./, (c) => c.toUpperCase()));
   assert.equal(msg.badge, 3);
   assert.equal(msg.url, "/runs");
@@ -156,10 +164,15 @@ test("расписание: пусто или меньше двух суток �
     empty.map((t) => [t.id, t.level, t.title]),
     [["runway", "warn", "Расписание пусто"]],
   );
-  const short = todo({ videos: [video("01a", { publishAt: "2026-10-09T16:00:00Z" })] });
-  assert.equal(short[0]!.id, "runway");
-  assert.match(short[0]!.detail, /^остался 1 день/);
-  assert.equal(pushLine(short[0]!), "расписание до 09.10 — остался 1 день");
+  // Сегодня 19:00 и завтра 12:00 заняты, завтра 19:00 — пусто: туда встанет 01a (пока тема).
+  const short = todo({ videos: [video("other0", { publishAt: "2026-10-08T16:00:00Z" }), video("other1", { publishAt: "2026-10-09T09:00:00Z" })] });
+  assert.deepEqual(
+    short.map((t) => [t.id, t.title, t.detail]),
+    [["runway", "Пустой слот: завтра 19:00", "осталось 1 день · встанет 01a — пока только тема"]],
+  );
+  assert.equal(pushLine(short[0]!), "пустой слот пт, 09.10 19:00 — встанет 01a");
+  // Дыра через неделю — не дело на сегодня.
+  assert.deepEqual(todo({ videos: fullSlots.slice(0, 6).map((iso, i) => video(`other${i}`, { publishAt: iso })) }), []);
   const offline = todo({ videos: null, youtubeError: "квота", releases: [release(1, "08a")] });
   assert.deepEqual(
     offline.map((t) => t.id),

@@ -148,7 +148,7 @@ test("ориентир: следующие свободные слоты по п
 
 test("напоминания: запас расписания, загрузить в Studio, заполнить, тексты отличаются, упавший запуск, ключи; коды списком", () => {
   const text = state.reminders.map((r) => r.text).join("\n");
-  assert.match(text, /заполнено до пн, 12\.10 19:00 — осталось 4 дня/);
+  assert.match(text, /Первый пустой слот на YouTube — вт, 13\.10 12:00: до него 4 дня/);
   assert.match(text, /Ждут загрузки в Studio: 06a, 06b, 07a, 07b, 08b/);
   assert.match(text, /В Studio без времени выхода: 09a/);
   assert.match(text, /Тексты на YouTube отличаются от файла: 01b\./);
@@ -166,6 +166,31 @@ test("напоминания: запас расписания, загрузит�
   assert.equal(row("01b").textsDiffer, true);
 });
 
+test("конвейер: первый пустой слот, запас по этапам (без пропусков), сетка слотов на 60 дней", () => {
+  assert.deepEqual(state.firstGap, { iso: "2026-10-13T09:00:00Z", label: "вт, 13.10 12:00", code: "06a", stage: "video" });
+  assert.equal(state.runwayDays, 4);
+  assert.equal(state.runwayLabel, "пн, 12.10 19:00");
+  const cov = Object.fromEntries(state.coverage.map((c) => [c.level, [c.untilLabel, c.slots]]));
+  assert.deepEqual(cov.scheduled, ["пн, 12.10 19:00", 9]);
+  assert.deepEqual(cov.video, ["ср, 14.10 19:00", 13], "06a–07b готовы, 08a — только сценарий");
+  assert.deepEqual(cov.script, ["пт, 16.10 12:00", 16], "08a сценарий, 08b видео, 09a в Studio, 09b — тема");
+  const slots = state.coverage.map((c) => c.slots);
+  assert.deepEqual([...slots].sort((a, b) => a - b), slots, "запланировано ≤ видео ≤ сценарии ≤ темы");
+  assert.equal(state.slotGrid.length, 120, "60 дней × 2 слота — столько же принимает перенос");
+
+  // Завтра в 12:00 на YouTube пусто (02a не загружен) — запас считается до этой дыры, а не до 12.10.
+  const holed = buildState({ ...input, videos: videos.filter((v) => v.videoId !== "v02axx") });
+  assert.deepEqual(holed.firstGap, { iso: "2026-10-09T09:00:00Z", label: "пт, 09.10 12:00", code: "02a", stage: "video" });
+  assert.equal(holed.runwayDays, 0);
+  assert.equal(holed.runwayLabel, "чт, 08.10 19:00");
+  assert.equal(holed.reminders.find((r) => r.kind === "runway")?.level, "warn");
+  assert.equal(holed.scheduleEndLabel, "пн, 12.10 19:00", "последний запланированный — для справки");
+
+  // Без YouTube о запасе не судим.
+  const offline = buildState({ ...input, videos: null, youtubeError: "квота" });
+  assert.deepEqual([offline.runwayDays, offline.firstGap, offline.coverage], [null, null, []]);
+});
+
 test("обложки: с YouTube, иначе cover.jpg из релиза, иначе нет (плитка с кодом)", () => {
   assert.equal(row("01b").cover, "https://i9.ytimg.com/vi/01b/mqdefault.jpg");
   assert.equal(row("08b").cover, "/api/asset/12/file");
@@ -179,8 +204,8 @@ test("запуски: коды из названия запуска — «в р�
   assert.equal(row("08a").running, null);
 });
 
-test("слоты для переноса: 14 дней, занятые — с кодом", () => {
-  assert.equal(state.slotGrid.length, 28);
+test("слоты для переноса: 60 дней, занятые — с кодом", () => {
+  assert.equal(state.slotGrid.length, 120);
   assert.deepEqual(state.slotGrid.slice(0, 2).map((c) => [c.iso, c.occupant]), [
     ["2026-10-08T16:00:00Z", "01b"],
     ["2026-10-09T09:00:00Z", "02a"],

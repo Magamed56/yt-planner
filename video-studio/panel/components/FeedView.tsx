@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { PanelState, Row } from "@/lib/state";
-import { STAGE_LABEL } from "@/lib/stages";
+import { STAGE_LABEL, plural } from "@/lib/stages";
 import CoverMedia, { frameOf } from "./CoverMedia";
 import RunProgressBar from "./RunProgressBar";
 
@@ -53,6 +53,8 @@ export default function FeedView({
   onOpen,
   chosen = null,
   onToggle,
+  limitDays,
+  onMore,
 }: {
   state: PanelState;
   rows: Row[];
@@ -60,6 +62,8 @@ export default function FeedView({
   onOpen: (code: string) => void;
   chosen?: Set<string> | null; // null — режим выбора выключен
   onToggle?: (code: string) => void;
+  limitDays?: number; // показать столько ближайших дней, остальное — кнопкой
+  onMore?: () => void;
 }) {
   const days: { key: string; label: string; approx: boolean; today: boolean; future: boolean; rows: Row[] }[] = [];
   for (const r of rows) {
@@ -75,12 +79,20 @@ export default function FeedView({
   }
   if (!days.length) return <p className="muted">Здесь пусто.</p>;
   const runOf = (code: string) => state.runs.find((x) => x.active && x.codes.includes(code)) ?? null;
+  // Свободно — только будущий слот, на который на YouTube ничего не стоит (вышедший сегодня
+  // в 12:00 в «Впереди» не виден, но слот занят).
+  const freeAt = new Map<string, string[]>();
+  for (const c of state.slotGrid) if (c.occupant === null) freeAt.set(c.dateKey, [...(freeAt.get(c.dateKey) ?? []), c.time]);
+  const shown = limitDays && days.length > limitDays ? days.slice(0, limitDays) : days;
+  const rest = days.slice(shown.length);
+  const restCount = rest.reduce((n, d) => n + d.rows.length, 0);
+  const restUntil = /\d{2}\.\d{2}/.exec([...rest].reverse().find((d) => d.key !== "none")?.rows[0]?.dateLabel ?? "")?.[0];
 
   return (
     <div className="feed">
-      {days.map((d) => {
+      {shown.map((d) => {
         const taken = new Set(d.rows.map((r) => r.timeLabel));
-        const free = d.future && d.key !== "none" ? state.slotTimes.filter((t) => !taken.has(t)) : [];
+        const free = d.future && d.key !== "none" ? (freeAt.get(d.key) ?? []).filter((t) => !taken.has(t)) : [];
         return (
           <section key={d.key} className={`feed-day${d.today ? " today" : ""}`}>
             <h2>
@@ -119,6 +131,12 @@ export default function FeedView({
           </section>
         );
       })}
+      {restCount > 0 && (
+        <button type="button" className="btn feed-more" onClick={onMore}>
+          Ещё {restCount} {plural(restCount, "ролик", "ролика", "роликов")}
+          {restUntil ? ` до ${restUntil}` : ""} →
+        </button>
+      )}
     </div>
   );
 }

@@ -24,7 +24,7 @@ export default async function StatsPage() {
         generatedAt: state.generatedAt,
         activeRuns: state.runs.filter((r) => r.active).length,
         runwayDays: state.runwayDays,
-        runwayLabel: state.scheduleEndLabel,
+        runwayLabel: state.runwayLabel,
       }}
     />
   );
