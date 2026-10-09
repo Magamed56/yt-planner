@@ -30,3 +30,35 @@ export function shiftDateKey(key: string, days: number): string {
   const t = new Date(Date.UTC(y, m - 1, d + days));
   return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
 }
+
+// Название запуска по-русски для списка «Запусков», «Сейчас» и уведомлений — вместо заголовка
+// GitHub («batch: 08a,08b»). kind — RunKind из state.ts (здесь строкой: модуль без импортов).
+export function runLabel(kind: string, title: string, codes: string[]): string {
+  const list = codes.length ? ` · ${codes.join(", ")}` : "";
+  const check = /\(проверка\)/.test(title) ? " (проверка)" : "";
+  switch (kind) {
+    case "batch":
+      return `Ролик${list}`;
+    case "render":
+      return `Сборка видео${list}`;
+    case "draft":
+      return codes.length ? `${codes.length > 1 ? "Сценарии" : "Сценарий"}${list}` : "Сценарии по расписанию";
+    case "plan":
+      return `План ${/\+\d+/.exec(title)?.[0] ?? "+"} тем`;
+    case "titles":
+      return `Названия${list}`;
+    case "captions":
+      return `Субтитры${list}${check}`;
+    case "fill":
+      return `Заполнение YouTube${list}${check}`;
+    case "check":
+      return "Проверка ключей";
+    case "instagram":
+      return "Публикация в Instagram";
+    default:
+      return title;
+  }
+}
+
+// «К обычному»: выше — зелёным, ниже — жёлтым; стрелка и текст есть всегда (не только цвет).
+export const RATIO_CLASS = { up: "good", typical: "neutral", down: "warn", fresh: "neutral", thin: "neutral" } as const;

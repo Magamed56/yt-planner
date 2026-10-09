@@ -1,13 +1,20 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
-import type { PanelState, Reminder, Row } from "@/lib/state";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type NewUpload, fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
+import { setBadge } from "@/lib/badge";
+import type { CoverageLevel, PanelState, Reminder, Row } from "@/lib/state";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/stages";
+import { badgeCount, buildTodo } from "@/lib/todo";
 import AppShell, { RunwayRing } from "./AppShell";
 import BoardView, { movable, queued, type BoardCell } from "./BoardView";
 import DownloadSheet from "./DownloadSheet";
 import FeedView from "./FeedView";
+import FillConfirmSheet from "./FillConfirmSheet";
+import NowCard from "./NowCard";
+import PipelineStrip from "./PipelineStrip";
+import PulseCard from "./PulseCard";
+import { usePlanExtend, useRetry } from "./RetryConfirm";
 import VideoSheet from "./VideoSheet";
 
 type Filter = "ahead" | "all" | Stage;
@@ -30,7 +37,10 @@ const CHECK_ICON = (
   </svg>
 );
 
-function Notice({ m, action }: { m: Reminder; action?: { label: string; onClick: () => void } }) {
+// Эти напоминания — дела с кнопкой в карточке «Сейчас»; в заметках остаются остальные.
+const IN_NOW = new Set<Reminder["kind"]>(["youtube", "runway", "upload", "fill", "problem", "run"]);
+
+function Notice({ m }: { m: Reminder }) {
   return (
     <div className={`notice ${m.level}`}>
       {NOTICE_ICON}
@@ -41,42 +51,124 @@ function Notice({ m, action }: { m: Reminder; action?: { label: string; onClick:
             открыть →
           </a>
         )}
-        {action && (
-          <button className="link-btn" onClick={action.onClick}>
-            {action.label}
-          </button>
-        )}
       </span>
     </div>
   );
 }
 
+// Кто встанет в пустой слот — коротко, для шапки.
+const GAP_STAGE: Record<Stage, string> = { topic: "только тема", script: "есть сценарий", video: "видео готово", studio: "уже в Studio", scheduled: "", published: "" };
+const FEED_DAYS = 10;
+const HINT_KEY = "sut.boardHint"; // «Впереди» — ближайшие дни, остальное по кнопке
+
 const mb = (bytes: number) => `${Math.round(bytes / 1_048_576)} МБ`;
 // Сколько весят файлы ролика целиком: видео и обе обложки.
 const rowBytes = (r: Row) => (r.release ? r.release.mp4.size + (r.release.cover?.size ?? 0) + (r.release.thumb?.size ?? 0) : 0);
 
-export default function QueueView({ state, initialMode }: { state: PanelState; initialMode: QueueMode }) {
+// Адрес главной: ?view=calendar и ?v=08a — открытая карточка (ссылка из уведомления или «Статистики»).
+function queueUrl(mode: QueueMode, code: string | null): string {
+  const p = new URLSearchParams();
+  if (mode === "calendar") p.set("view", "calendar");
+  if (code) p.set("v", code);
+  const q = p.toString();
+  return q ? `?${q}` : "/";
+}
+// Карточку открыли мы (pushState) — «Назад» её закроет. Пришли по ссылке — заменяем адрес.
+const ourSheet = () => typeof window !== "undefined" && typeof (window.history.state as { sheet?: unknown } | null)?.sheet === "string";
+
+export default function QueueView({ state, initialMode, initialSelected = null }: { state: PanelState; initialMode: QueueMode; initialSelected?: string | null }) {
   const router = useRouter();
   const [mode, setMode] = useState<QueueMode>(initialMode);
   const [filter, setFilter] = useState<Filter>("ahead");
-  const [selected, setSelected] = useState<string | null>(null);
+  const known = (code: string | null) => (code && state.rows.some((r) => r.code === code) ? code : null);
+  const [selected, setSelected] = useState<string | null>(() => known(initialSelected));
   const [picked, setPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ text: string; ok: boolean; undo?: Undo } | null>(null);
   // Выбор роликов для скачивания: null — режим выключен; saving — открыт лист «Скачать».
   const [chosen, setChosen] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  // Найденные новые загрузки — список с подтверждением (вместо окна браузера).
+  const [fillAsk, setFillAsk] = useState<{ found: NewUpload[]; notes: string[] } | null>(null);
+  const done = (r: { ok: boolean; message: string }) => {
+    setToast({ text: r.message, ok: r.ok });
+    if (r.ok) router.refresh();
+  };
+  const retry = useRetry(done);
+  const extend = usePlanExtend(done);
+  // Подсказку про перетаскивание можно убрать — запоминаем в браузере (может не быть доступа).
+  const [hintHidden, setHintHidden] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(HINT_KEY) === "hidden") setHintHidden(true);
+    } catch {
+      // хранилище недоступно — подсказка просто остаётся
+    }
+  }, []);
+  function hideHint() {
+    setHintHidden(true);
+    try {
+      localStorage.setItem(HINT_KEY, "hidden");
+    } catch {
+      // не запомнили — в следующий раз покажется снова
+    }
+  }
 
-  // Вид — в адресе (?view=calendar), без запроса к серверу: данные уже на странице.
+  // Вид — в адресе (?view=calendar), без запроса к серверу: данные уже на странице. Открытая
+  // карточка остаётся в адресе.
   function switchMode(next: QueueMode) {
     setMode(next);
     setPicked(null);
     if (next === "calendar") stopChoosing();
-    window.history.replaceState(null, "", next === "calendar" ? "?view=calendar" : "/");
+    window.history.replaceState(window.history.state, "", queueUrl(next, selected));
   }
 
-  function startChoosing(codes: string[] = []) {
+  // Карточка ролика — в адресе (?v=08a): одно «Назад» (и свайп назад на iPhone) закрывает её.
+  function openSheet(code: string) {
+    if (code === selected) return;
+    if (!busy) setFillAsk(null);
+    setSelected(code);
+    if (ourSheet()) window.history.replaceState({ ...window.history.state, sheet: code }, "", queueUrl(mode, code));
+    else window.history.pushState({ sheet: code }, "", queueUrl(mode, code));
+  }
+  function closeSheet() {
+    if (!selected) return;
     setSelected(null);
+    if (ourSheet()) window.history.back();
+    else window.history.replaceState(window.history.state, "", queueUrl(mode, null));
+  }
+  const close = useRef(closeSheet);
+  useEffect(() => {
+    close.current = closeSheet;
+  });
+
+  // Назад/вперёд по истории — карточка из адреса; Escape — закрыть.
+  useEffect(() => {
+    const onPop = () => {
+      const v = new URLSearchParams(window.location.search).get("v");
+      setSelected(v && state.rows.some((r) => r.code === v) ? v : null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close.current();
+    };
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [state.rows]);
+
+  // По ссылке пришёл код, которого нет в плане, — говорим и убираем его из адреса.
+  useEffect(() => {
+    if (!initialSelected || known(initialSelected)) return;
+    setToast({ text: `Ролика ${initialSelected} нет в плане.`, ok: false });
+    window.history.replaceState(window.history.state, "", queueUrl(initialMode, null));
+  }, []);
+
+  function startChoosing(codes: string[] = []) {
+    closeSheet();
     setChosen(new Set(codes));
   }
 
@@ -94,10 +186,10 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     if (!next.size) setSaving(false);
   }
 
-  // Напоминание «Ждут загрузки в Studio» — сразу к скачиванию всех таких роликов.
-  function saveWaiting() {
+  // «Сохранить и загрузить в Studio» — сразу к скачиванию этих роликов.
+  function saveWaiting(codes: string[]) {
     if (mode !== "feed") switchMode("feed");
-    startChoosing(waiting.map((r) => r.code));
+    startChoosing(codes);
     setSaving(true);
   }
 
@@ -117,10 +209,21 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
       if (!r.found.length) {
         return setToast({ text: `Новых загрузок нет. ${extra || "Только что загруженное видео YouTube иногда показывает через пару минут."}`, ok: !extra });
       }
-      const list = r.found.map((f) => `${f.code} «${f.title}» → ${f.whenLabel ?? "без времени"}`).join("\n");
-      if (!window.confirm(`Нашёл новые загрузки:\n${list}\n\nПоставить им название, описание, теги и время выхода?${extra ? `\n\n${extra}` : ""}`)) return;
-      const done = await fillNewUploadsAction(r.found.map((f) => f.code));
+      closeSheet();
+      setFillAsk({ found: r.found, notes: extra ? [extra] : [] });
+    } catch (e) {
+      setToast({ text: e instanceof Error ? e.message : String(e), ok: false });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function applyFound(items: NewUpload[]) {
+    setBusy(true);
+    try {
+      const done = await fillNewUploadsAction(items.map(({ code, videoId, publishAt }) => ({ code, videoId, publishAt })));
       setToast({ text: done.message, ok: done.ok });
+      setFillAsk(null);
       if (done.ok) router.refresh();
     } catch (e) {
       setToast({ text: e instanceof Error ? e.message : String(e), ok: false });
@@ -136,7 +239,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     setPicked(null);
     if (!row || cell.row?.code === row.code) return;
     if (movable(row) && row.youtube) {
-      if (!cell.iso) return setToast({ text: "Сюда нельзя: слот уже прошёл или дальше двух недель — перенесите в Studio.", ok: false });
+      if (!cell.iso) return setToast({ text: "Сюда нельзя: слот уже прошёл или дальше 60 дней — перенесите в Studio.", ok: false });
       if (cell.row?.stage === "published") return setToast({ text: "Этот ролик уже вышел — его место занято.", ok: false });
       const videoId = row.youtube.videoId;
       return void act(async () => {
@@ -186,18 +289,41 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     if (picked && picked !== row.code) return void place(picked, cell);
     if (picked === row.code) return setPicked(null);
     if (movable(row)) return setPicked(row.code);
-    setSelected(row.code);
+    openSheet(row.code);
   }
 
   const rows = state.rows.filter((r) => filter === "all" || (filter === "ahead" ? r.stage !== "published" : r.stage === filter));
   const current = selected ? (state.rows.find((r) => r.code === selected) ?? null) : null;
   const pickedRow = picked ? (state.rows.find((r) => r.code === picked) ?? null) : null;
-  const urgent = state.reminders.filter((m) => m.kind !== "runway" && m.level !== "info");
-  const notes = state.reminders.filter((m) => m.kind !== "runway" && m.level === "info");
-  const runway = state.reminders.find((m) => m.kind === "runway");
+  const urgent = state.reminders.filter((m) => !IN_NOW.has(m.kind) && m.level !== "info");
+  const notes = state.reminders.filter((m) => !IN_NOW.has(m.kind) && m.level === "info");
+  // Время — момента сборки данных: на сервере и в браузере тексты «через 20 ч» совпадут.
+  const todos = useMemo(() => buildTodo(state, new Date(state.generatedAt)), [state]);
+  const attention = badgeCount(todos);
+  useEffect(() => setBadge(attention), [attention, state.generatedAt]);
+
+  // Шапка: до какого слота расписание без пропусков и где первая дыра.
+  const gap = state.firstGap;
+  const gapCell = gap ? (state.slotGrid.find((c) => c.iso === gap.iso) ?? null) : null;
+  const gapWhen = gapCell ? `${gapCell.dateKey === state.todayKey ? "сегодня" : gapCell.dateKey === state.tomorrowKey ? "завтра" : gapCell.dateLabel} ${gapCell.time}` : (gap?.label ?? "");
+  const heroTitle = state.youtubeError
+    ? "Расписание не проверено"
+    : !state.scheduleEnd
+      ? "Расписание пустое"
+      : !gap
+        ? "Заполнено на 60 дней вперёд"
+        : state.runwayLabel
+          ? `Заполнено до ${state.runwayLabel}`
+          : "Ближайший слот пуст";
+  const heroSub = gap
+    ? `первая дыра: ${gapWhen}${gap.code && gap.stage ? ` (встанет ${gap.code} — ${GAP_STAGE[gap.stage]})` : ""}`
+    : `${state.counts.scheduled} ждут выхода · ${state.counts.video} загрузить в Studio`;
+  function pickLevel(level: CoverageLevel) {
+    if (mode !== "feed") switchMode("feed");
+    setFilter(level);
+  }
 
   // Скачивание пачкой: ролики с файлами в релизе (собранные на компьютере — без файлов).
-  const waiting = state.rows.filter((r) => r.stage === "video" && r.release);
   const chosenRows = chosen ? state.rows.filter((r) => chosen.has(r.code) && r.release) : [];
   const chosenBytes = chosenRows.reduce((s, r) => s + rowBytes(r), 0);
   const visibleWithFiles = rows.filter((r) => r.release);
@@ -214,28 +340,39 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
     setChosen(next);
   }
 
-  const noticeAction = (m: Reminder) => (m.kind === "upload" && waiting.length ? { label: waiting.length > 1 ? `⬇ Скачать все ${waiting.length}` : "⬇ Скачать", onClick: saveWaiting } : undefined);
-
   return (
     <AppShell
       active={mode}
       onSection={(s) => (s === "runs" ? router.push("/runs") : switchMode(s))}
       updated={state.updatedLabel}
+      generatedAt={state.generatedAt}
+      activeIds={state.runs.filter((r) => r.active).map((r) => r.id)}
       activeRuns={state.runs.filter((r) => r.active).length}
       runwayDays={state.runwayDays}
-      runwayLabel={state.scheduleEndLabel}
+      runwayLabel={state.runwayLabel}
     >
-      <div className={`workspace${current || (chosen && saving) ? " with-sheet" : ""}`}>
+      <div className={`workspace${current || (chosen && saving) || fillAsk ? " with-sheet" : ""}`}>
         <main>
           <section className="hero">
             <RunwayRing days={state.runwayDays} size={76} />
             <div>
-              <b>{state.scheduleEndLabel ? `Расписание до ${state.scheduleEndLabel}` : "Расписание пустое"}</b>
-              <span className="small muted">
-                {state.counts.scheduled} ждут выхода · {state.counts.video} загрузить в Studio
-              </span>
+              <b>{heroTitle}</b>
+              <span className="small muted">{heroSub}</span>
             </div>
           </section>
+          <PipelineStrip coverage={state.coverage} perDay={state.slotTimes.length} gridSlots={state.slotGrid.length} onPick={pickLevel} />
+
+          <NowCard
+            todos={todos}
+            doneUntil={state.runwayLabel}
+            disabled={busy || retry.busy || extend.busy || chosen !== null}
+            onDownload={saveWaiting}
+            onFind={() => void findNew()}
+            onOpen={openSheet}
+            onRetry={(id) => void retry.start(id)}
+            onExtend={(n) => void extend.start(n)}
+          />
+          {mode === "feed" && <PulseCard pulse={state.pulse} timeZone={state.timezone} onOpen={openSheet} />}
 
           <div className="page-head">
             <h1>{mode === "calendar" ? "Календарь" : "Лента"}</h1>
@@ -270,29 +407,37 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
             </div>
           </div>
 
+          {(urgent.length > 0 || notes.length > 0) && (
           <div className="notices">
-            {runway && runway.level !== "info" && <Notice m={runway} />}
             {urgent.map((m, i) => (
-              <Notice key={i} m={m} action={noticeAction(m)} />
+              <Notice key={i} m={m} />
             ))}
             {notes.length > 0 && (
               <details className="notes">
                 <summary>Ещё заметки: {notes.length}</summary>
                 <div className="notices">
                   {notes.map((m, i) => (
-                    <Notice key={i} m={m} action={noticeAction(m)} />
+                    <Notice key={i} m={m} />
                   ))}
                 </div>
               </details>
             )}
           </div>
+          )}
 
           {mode === "calendar" ? (
             <>
-              <p className="board-hint">
-                Перетащите ролик на другой слот — мышью или пальцем (нажмите и чуть подержите). Запланированные на YouTube переносятся там же, ориентиры меняются местами в очереди выхода. Можно и без
-                перетаскивания: нажмите запланированный ролик, потом слот.
-              </p>
+              {!hintHidden && (
+                <p className="board-hint closable">
+                  <span>
+                    Перетащите ролик на другой слот — мышью или пальцем (нажмите и чуть подержите). Запланированные на YouTube переносятся там же, ориентиры меняются местами в очереди выхода. Можно и
+                    без перетаскивания: нажмите запланированный ролик, потом слот.
+                  </span>
+                  <button type="button" className="btn small ghost" onClick={hideHint} aria-label="Скрыть подсказку">
+                    ✕
+                  </button>
+                </p>
+              )}
               <BoardView state={state} picked={picked} busy={busy} onTile={onTile} onPlace={(code, cell) => void place(code, cell)} />
             </>
           ) : (
@@ -311,7 +456,17 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
                 </button>
               </div>
               {chosen && <p className="board-hint">Нажимайте на ролики — отмеченные ✓ скачаются вместе: видео и обложки. Ролики без готового видео не выбираются.</p>}
-              <FeedView state={state} rows={rows} selected={selected} onOpen={setSelected} chosen={chosen} onToggle={toggleChosen} />
+              <FeedView
+                state={state}
+                rows={rows}
+                selected={selected}
+                onOpen={openSheet}
+                chosen={chosen}
+                onToggle={toggleChosen}
+                // В режиме выбора — всё: «Все с видео» отмечает и то, что ниже.
+                limitDays={filter === "ahead" && !expanded && !chosen ? FEED_DAYS : undefined}
+                onMore={() => setExpanded(true)}
+              />
             </>
           )}
           {/* Полоска выбора закрывает низ ленты — запас, чтобы последние ролики было видно. */}
@@ -319,8 +474,14 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
         </main>
         {current && (
           <>
-            <div className="backdrop" onClick={() => setSelected(null)} />
-            <VideoSheet key={current.code} row={current} state={state} onClose={() => setSelected(null)} />
+            <div className="backdrop" onClick={closeSheet} />
+            <VideoSheet key={current.code} row={current} state={state} onClose={closeSheet} />
+          </>
+        )}
+        {fillAsk && (
+          <>
+            <div className="backdrop" onClick={() => !busy && setFillAsk(null)} />
+            <FillConfirmSheet found={fillAsk.found} notes={fillAsk.notes} busy={busy} onApply={(items) => void applyFound(items)} onClose={() => setFillAsk(null)} />
           </>
         )}
         {chosen && saving && (
@@ -355,7 +516,7 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
           <span>
             Куда перенести {pickedRow.code} ({pickedRow.dateLabel} {pickedRow.timeLabel})? Нажмите на слот.
           </span>
-          <button className="btn small" onClick={() => setSelected(pickedRow.code)}>
+          <button className="btn small" onClick={() => openSheet(pickedRow.code)}>
             Подробнее
           </button>
           <button className="btn small" onClick={() => setPicked(null)}>
@@ -363,7 +524,9 @@ export default function QueueView({ state, initialMode }: { state: PanelState; i
           </button>
         </div>
       )}
-      {toast && !pickedRow && !choosingBar && (
+      {retry.bar}
+      {extend.bar}
+      {toast && !pickedRow && !choosingBar && !retry.open && !extend.open && (
         <div className={`toast${toast.ok ? "" : " err"}`} role="status">
           <span>{toast.text}</span>
           {toast.undo && (

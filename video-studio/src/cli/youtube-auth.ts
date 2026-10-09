@@ -18,6 +18,14 @@ import { ROOT, UserError, fail, loadEnv } from "./common";
 
 const TIMEOUT_MS = 5 * 60_000;
 
+// Что перестанет работать без права, если его галочку сняли на экране согласия Google.
+const SCOPE_NEED: Record<string, string> = {
+  "https://www.googleapis.com/auth/youtube.upload": "не загрузятся ролики",
+  "https://www.googleapis.com/auth/youtube": "не встанут тексты и время выхода (youtube-fill, панель)",
+  "https://www.googleapis.com/auth/youtube.force-ssl": "не загрузятся субтитры (captions-translate) и не отправится первый комментарий из панели",
+  "https://www.googleapis.com/auth/yt-analytics.readonly": "панель не покажет удержание (% досмотра) в «Статистике»",
+};
+
 function openBrowser(url: string): void {
   try {
     // rundll32 на Windows: через cmd «&» в адресе разорвал бы команду.
@@ -166,11 +174,12 @@ async function main() {
       "Google не выдал refresh token. Отзовите доступ приложения на https://myaccount.google.com/permissions и запустите npm run youtube-auth ещё раз.",
     );
   }
-  // Google даёт снять галочки отдельных прав: без force-ssl не загрузятся субтитры (captions-translate).
+  // Google даёт снять галочки отдельных прав — говорим, что без каждого не заработает.
   const granted = (tokens.scope ?? "").split(/\s+/).filter(Boolean);
   const missing = granted.length ? YT_SCOPES.filter((s) => !granted.includes(s)) : [];
   if (missing.length) {
     console.log(`\n⚠ Выданы не все права: нет ${missing.map((s) => s.replace("https://www.googleapis.com/auth/", "")).join(", ")}.`);
+    for (const s of missing) if (SCOPE_NEED[s]) console.log(`  Без ${s.replace("https://www.googleapis.com/auth/", "")} ${SCOPE_NEED[s]}.`);
     console.log("  Запустите npm run youtube-auth ещё раз и оставьте отмеченными все галочки доступа.");
   }
   const title = tokens.access_token ? await channelTitle(tokens.access_token) : null;
@@ -191,6 +200,7 @@ async function main() {
   }
   // Ключ меняется везде, где он есть: иначе панель и второй ПК останутся со старыми правами.
   console.log("Новый YT_REFRESH_TOKEN замените и в Vercel (панель: Settings → Environment Variables, затем Redeploy), и в video-studio/.env на втором компьютере.");
+  console.log("Удержание (% досмотра) в «Статистике» панели: в том же проекте Google Cloud включите «YouTube Analytics API» (APIs & Services → Library → Enable).");
   console.log("Важно: в OAuth consent screen переведите приложение в «In production» — в режиме «Testing» токен перестаёт работать через 7 дней.");
 }
 

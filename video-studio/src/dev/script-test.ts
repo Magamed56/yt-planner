@@ -3,7 +3,7 @@
 // нужны. Запуск: npx tsx src/dev/script-test.ts
 
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,15 +14,16 @@ import { collectSources, type AnthropicLike } from "../pipeline/script/llm/claud
 import { claudeCostUsd, webSearchCostUsd } from "../pipeline/script/pricing";
 import { nextPlanPositions, parsePlan, pickPillars, planNotes, refreshPlanStats, scriptCode, sequelTitle, type ContentPlan } from "../pipeline/plan";
 import { assignChapters } from "../pipeline/script/chapters";
-import { coveredFromScript, coveredPromptBlock, findRepeats, indexCovered, loadCovered, ngrams, stems, type CoveredEntry } from "../pipeline/script/covered";
+import { coveredFromScript, coveredPromptBlock, ctaRepeat, findRepeats, indexCovered, loadCovered, ngrams, recentCtas, stems, type CoveredEntry } from "../pipeline/script/covered";
+import { QUIZ_ROUNDS_PLANNED, QUIZ_SILENCE_SEC, SHORTS_DEFAULT_SECONDS, buildShortsPrompt, buildSystemPrompt, shortsTargets } from "../pipeline/script/prompt";
 import { fetchSuggestions, parseSuggestResponse, searchPhrases, suggestionsFor } from "../pipeline/script/suggest";
 import { appendUsage, countPostRequests, llmUsageRecord, ttsUsageRecord, usageNow, type LlmCallInfo } from "../pipeline/script/usage-log";
 import { checkTopics, checkUrl, extractUrl, generatePlanItems, similarTitle } from "../pipeline/script/plan-gen";
 import { LIMITS } from "../pipeline/script/schema";
-import { coerceScene } from "../pipeline/script/validate";
+import { SHORTS_RULES, WORDS_PER_SECOND, coerceScene, countWords, ctaProblems, titleRepeatsHook, trimCta } from "../pipeline/script/validate";
 import { TITLE_MAX, buildYoutubeMeta, chapterTime, youtubeChapters } from "../pipeline/meta";
 import { buildFixtureProps } from "../remotion/fixtures/buildFixture";
-import { CHAPTER_CARD_FRAMES, FPS, QUIZ_REVEAL_FRAMES, SCENE_LEAD_FRAMES, SCENE_TAIL_FRAMES, layoutScenes, quizTiming, type ScriptScene, type VideoScript } from "../types";
+import { CHAPTER_CARD_FRAMES, FINAL_TAIL_FRAMES, FPS, QUIZ_REVEAL_FRAMES, SCENE_LEAD_FRAMES, SCENE_TAIL_FRAMES, layoutScenes, quizTiming, type ScriptScene, type VideoScript } from "../types";
 
 // Пауза перед повтором при 503 — в тестах без ожидания.
 process.env.LLM_BUSY_WAIT_MS = "1";
@@ -152,7 +153,7 @@ function chunkScenes(n: number, opts: { hook?: boolean; cta?: boolean; seed: num
     return {
       id: `s${i + 1}`,
       kind,
-      narration: kind === "hook" ? "Ты тренируешь память неправильно, и вот почему." : words(26, opts.seed + i),
+      narration: kind === "hook" ? "Ты тренируешь память неправильно, и вот почему." : kind === "cta" ? "А как тренируешь память ты?" : words(26, opts.seed + i),
       onScreen: `Мысль номер *${i + 1}*`,
       ...(kind === "list" ? { items: ["Повторяй", "Вспоминай", "Объясняй"] } : {}),
       icon: "brain",
@@ -532,7 +533,7 @@ function quizScript(): VideoScript {
       { id: "s3", kind: "statement", narration: "Миф! В опытах золотых рыбок учили нажимать на рычаг ради еды, и они помнили этот трюк месяцами, даже после долгого перерыва.", onScreen: "Помнят *месяцами*", icon: "calendar-check", visualQuery: "aquarium fish feeding" },
       { id: "s4", kind: "quiz", narration: "Сон помогает закрепить то, что ты выучил за день. Правда или миф?", onScreen: "Сон *закрепляет* память", icon: "moon", visualQuery: "person sleeping bed", quiz: { answer: "truth", explanation: "Во сне мозг переносит знания в долгую память", question: "А ты высыпаешься?" } },
       { id: "s5", kind: "statement", narration: "Правда! Во сне мозг заново проигрывает дневные события и переносит их в долговременную память, поэтому после сна вспоминать легче.", onScreen: "Мозг *повторяет* день", icon: "brain", visualQuery: "night city lights" },
-      { id: "s6", kind: "cta", narration: "Сколько угадал? Пиши в комментариях и подпишись, чтобы проверить себя завтра.", onScreen: "Сколько *угадал*?", icon: "message-circle" },
+      { id: "s6", kind: "cta", narration: "Сколько угадал? Пиши в комментариях.", onScreen: "Сколько *угадал*?", icon: "message-circle" },
     ],
   };
 }
@@ -574,7 +575,7 @@ await test("Тайминг: пауза викторины и вердикт по
   assert.equal(c.audioStartFrame, SCENE_LEAD_FRAMES + CHAPTER_CARD_FRAMES, "голос главы — после карточки");
   assert.equal(c.durationInFrames, SCENE_LEAD_FRAMES + CHAPTER_CARD_FRAMES + 30 + SCENE_TAIL_FRAMES);
   assert.equal(quizTiming(q2).pauseFrames, 3 * FPS, "пауза по умолчанию — 3 с");
-  assert.equal(plain.durationInFrames, SCENE_LEAD_FRAMES + 30 + SCENE_TAIL_FRAMES + FPS);
+  assert.equal(plain.durationInFrames, SCENE_LEAD_FRAMES + 30 + FINAL_TAIL_FRAMES, "у финала — короткий хвост, без лишней секунды");
   // Композиция сверяет сумму длительностей с durationInFrames — с паузами она сходится.
   const props = buildFixtureProps(quizScript());
   const sum = props.scenes.reduce((s, sc) => s + sc.durationInFrames, 0) - (props.scenes.length - 1) * props.transitionFrames;
@@ -717,6 +718,244 @@ await test("Повтор уже сказанного: один ремонт с �
   const r = await generateScript({ topic: "Память", format: "shorts", covered: other }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fresh.fn, log });
   assert.equal(fresh.calls.length, 1);
   assert.deepEqual(r.warnings, []);
+});
+
+// ===================================================================
+// Правила Shorts: темп по готовым роликам, объём ±15 %, финал-вопрос, сцены media, заголовок.
+
+// Готовые сценарии канала и длительности роликов из content/ — данные калибровки.
+function channelScripts(): { code: string; script: VideoScript }[] {
+  return readdirSync(path.join(root, "scripts"))
+    .filter((f) => f.endsWith(".json"))
+    .sort()
+    .map((f) => ({ code: scriptCode(f) ?? f, script: JSON.parse(readFileSync(path.join(root, "scripts", f), "utf8")) as VideoScript }));
+}
+
+// Демо с добавленными словами в середине (объём мимо цели).
+function padded(extra: number): VideoScript {
+  const d = structuredClone(demo);
+  d.scenes[3].narration += ` ${Array.from({ length: extra }, () => "повторяй").join(" ")}.`;
+  return d;
+}
+
+function withCta(narration: string): VideoScript {
+  const d = structuredClone(demo);
+  d.scenes[d.scenes.length - 1].narration = narration;
+  return d;
+}
+
+await test("Темп: WORDS_PER_SECOND — по готовым роликам канала, Shorts по умолчанию 40–45 с", () => {
+  const durations = new Map<string, number>();
+  for (const f of ["videos.json", "week1-videos.json"]) {
+    const list = (JSON.parse(readFileSync(path.join(root, "content", f), "utf8")) as { videos: { id: string; durationSec?: number }[] }).videos;
+    for (const v of list) if (typeof v.durationSec === "number") durations.set(v.id, v.durationSec);
+  }
+  let words = 0;
+  let seconds = 0;
+  let n = 0;
+  for (const { code, script } of channelScripts()) {
+    const sec = durations.get(code);
+    // Викторина молчит во время отсчёта — в калибровку темпа не годится.
+    if (!sec || script.scenes.some((s) => s.kind === "quiz")) continue;
+    words += script.scenes.reduce((a, s) => a + countWords(s.narration), 0);
+    seconds += sec;
+    n++;
+  }
+  assert.ok(n >= 15, `роликов для калибровки: ${n}`);
+  const rate = words / seconds;
+  assert.ok(Math.abs(rate - WORDS_PER_SECOND) < 0.25, `темп готовых роликов ${rate.toFixed(2)} слова/с, а WORDS_PER_SECOND = ${WORDS_PER_SECOND} — откалибруй заново`);
+  assert.ok(SHORTS_DEFAULT_SECONDS >= 40 && SHORTS_DEFAULT_SECONDS <= 45);
+  const t = shortsTargets(SHORTS_DEFAULT_SECONDS);
+  assert.deepEqual([t.wordsMin, t.wordsMax, t.scenesMin, t.scenesMax], [79, 97, 6, 8]);
+  // Прежние сценарии (≈ 120 слов) — заметно длиннее новой цели.
+  assert.ok(120 / (SHORTS_DEFAULT_SECONDS * WORDS_PER_SECOND) > 1 + SHORTS_RULES.lengthTolerance);
+});
+
+await test("Промпт Shorts: 42 с, 2–3 сцены media, финал-вопрос до 8 слов без «подпишись», title до 50", async () => {
+  const system = buildSystemPrompt();
+  assert.match(system, /один короткий вопрос зрителю по теме ролика, до 8 слов/);
+  assert.match(system, /2–3 сцены "media"/);
+  assert.match(system, /у Shorts до 50 символов/);
+  assert.ok(!/затем призыв подписаться/.test(system), "старое правило финала убрано");
+  assert.ok(!/подпиш/i.test(JSON.stringify(demo.scenes.at(-1))), "пример в промпте — без «подпишись»");
+  const covered: CoveredEntry[] = [{ code: "08b", title: "Рост", texts: ["Утром ты выше, чем вечером"], cta: "А ты замечал, что вечером ниже? Напиши в комментариях и подпишись." }];
+  const { fn, calls } = mockFetch([chat(JSON.stringify(demo))]);
+  await generateScript({ topic: "Память", format: "shorts", covered }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  const user = userMsg(calls[0]);
+  assert.match(user, /около 42 секунд — это 79–97 слов narration суммарно, 6–8 сцен, из них 2–3 — kind "media"/);
+  assert.match(user, /один вопрос зрителю до 8 слов/);
+  assert.match(user, /title — до 50 символов и не повторяет хук/);
+  assert.match(user, /Финалы последних роликов — не повторяй.*«А ты замечал, что вечером ниже\?/);
+  assert.ok(logs.some((l) => /Готово: .*90 слов \(~43 с\)/.test(l)), logs.join("\n"));
+});
+
+await test("Объём ±15 %: первый ответ мимо — ремонт; после ремонта небольшой промах — замечание, большой — следующая модель", async () => {
+  // +20 слов (110 при цели ≈ 88, +25 %) — дважды: ремонт, затем принят с замечанием.
+  const { fn, calls } = mockFetch([chat(JSON.stringify(padded(20))), chat(JSON.stringify(padded(20)))]);
+  const res = await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.equal(calls.length, 2, "один ремонт, без перехода к другой модели");
+  assert.match(msgs(calls[1])[3].content, /общий объём narration 110 слов — для ~42 с нужно 79–97 слов/);
+  assert.ok(res.warnings.some((w) => /объём narration 110 слов вместо ~88 — ролик выйдет на 25 % длиннее цели/.test(w)), res.warnings.join("\n"));
+
+  // +40 слов (+47 %) и после ремонта — это уже не «чуть мимо»: следующая модель.
+  const far = mockFetch([chat(JSON.stringify(padded(40))), chat(JSON.stringify(padded(40))), chat(JSON.stringify(demo))]);
+  const ok = await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: far.fn, log });
+  assert.equal(far.calls.length, 3);
+  assert.notEqual(far.calls[2].body.model, far.calls[0].body.model);
+  assert.equal(ok.script.scenes[3].narration, demo.scenes[3].narration);
+  assert.deepEqual(ok.warnings, [], "ответ в допуске — без замечаний");
+
+  // Первая модель не ответила (429) — строгой остаётся проверка первого настоящего ответа.
+  const late = mockFetch([json(429, {}), chat(JSON.stringify(padded(20))), chat(JSON.stringify(padded(20)))]);
+  await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: late.fn, log });
+  assert.equal(late.calls.length, 3, "429 не тратит строгую проверку: первый ответ ушёл в ремонт");
+  assert.equal(late.calls[1].body.model, late.calls[2].body.model, "ремонт — у той же модели");
+});
+
+await test("Финал: длиннее 8 слов или с «подпишись» — ремонт; не помогло — сокращаем сами или следующая модель", async () => {
+  assert.deepEqual(ctaProblems(demo.scenes), []);
+  const old = "А ты замечал такое? Напиши в комментариях и подпишись, чтобы не пропустить новое.";
+  const problems = ctaProblems(withCta(old).scenes).join("\n");
+  assert.match(problems, /финал \(kind "cta"\) — 13 слов, нужно не больше 8/);
+  assert.match(problems, /не проси подписаться/);
+  assert.equal(ctaProblems(withCta("Подписывайся!").scenes).length, 1);
+  assert.equal(ctaProblems(withCta("Subscribe for more facts").scenes).length, 1);
+  assert.equal(ctaProblems(withCta("Жми на подписку!").scenes).length, 1);
+  assert.deepEqual(ctaProblems(withCta("Чья подпись стоит на купюре?").scenes), [], "«подпись» — не призыв");
+
+  assert.equal(trimCta(old), "А ты замечал такое?");
+  assert.equal(trimCta("А ты замечал, что вечером ниже? Напиши в комментариях и подпишись."), "А ты замечал, что вечером ниже?");
+  assert.equal(trimCta("Точка у тебя исчезла? Напиши в комментариях, на каком расстоянии. И подпишись."), "Точка у тебя исчезла?");
+  assert.equal(trimCta("Подпишись, чтобы не забыть следующий лайфхак для мозга."), null);
+  assert.equal(trimCta("Какой факт из этого ролика удивил тебя сильнее всего и почему"), null, "длинный финал без вопроса не угадать");
+
+  const { fn, calls } = mockFetch([chat(JSON.stringify(withCta(old))), chat(JSON.stringify(withCta(old)))]);
+  const res = await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.equal(calls.length, 2);
+  const repair = msgs(calls[1])[3].content;
+  assert.match(repair, /не проси подписаться/);
+  assert.equal((repair.match(/не проси подписаться/g) ?? []).length, 1, "замечание не дублирует проблему");
+  assert.equal(res.script.scenes.at(-1)!.narration, "А ты замечал такое?");
+  assert.ok(res.warnings.some((w) => w.startsWith("финал сокращён автоматически")), res.warnings.join("\n"));
+
+  const hopeless = mockFetch([chat(JSON.stringify(withCta("Подпишись!"))), chat(JSON.stringify(withCta("Подпишись!"))), chat(JSON.stringify(demo))]);
+  const fixed = await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: hopeless.fn, log });
+  assert.equal(hopeless.calls.length, 3, "сокращать нечего — следующая модель");
+  assert.equal(fixed.script.scenes.at(-1)!.narration, demo.scenes.at(-1)!.narration);
+
+  // «Разбор»: правило финала — в последней части.
+  const outline = { title: "T", description: "D #x", tags: ["a"], sections: [{ heading: "A", goal: "g", points: ["p"], seconds: 100 }, { heading: "B", goal: "g", points: ["p"], seconds: 100 }] };
+  const second = chunkScenes(9, { cta: true, seed: 2 });
+  second[8].narration = "Подпишись на канал и поставь лайк, впереди ещё много интересного.";
+  const land = mockFetch([chat(JSON.stringify(outline)), chat(JSON.stringify({ scenes: chunkScenes(9, { hook: true, seed: 0 }) })), chat(JSON.stringify({ scenes: second })), chat(JSON.stringify({ scenes: chunkScenes(9, { cta: true, seed: 2 }) }))]);
+  const long = await generateScript({ topic: "Память", format: "landscape", targetSeconds: 200 }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: land.fn, log });
+  assert.equal(land.calls.length, 4);
+  assert.match(msgs(land.calls[3])[3].content, /не проси подписаться/);
+  assert.match(userMsg(land.calls[2]), /закончи сценой kind "cta" — один короткий вопрос зрителю по теме \(до 8 слов\)/);
+  assert.equal(long.script.scenes.at(-1)!.narration, "А как тренируешь память ты?");
+});
+
+await test("Финал повторяет прошлые ролики — замечание; старые сценарии проходят validateScript, правило для них — замечание", async () => {
+  const scripts = channelScripts();
+  assert.ok(scripts.length >= 22);
+  // Находка разбора: финал «…и подпишись» у всех готовых роликов — для них это замечание, не ошибка.
+  for (const { code, script } of scripts) {
+    assert.doesNotThrow(() => validateScript(script), `сценарий ${code} больше не проходит validateScript`);
+    assert.ok(lintScript(script).some((w) => w.includes("не проси подписаться")), `${code}: нет замечания о «подпишись»`);
+  }
+  const covered = loadCovered(root);
+  const recent = recentCtas(covered);
+  assert.equal(recent.length, 10, "последние 10 финалов");
+  assert.equal(recent.at(-1)!.code, scripts.at(-1)!.code, "самый свежий — последним");
+  assert.ok(!covered.some((e) => e.texts.some((t) => e.cta && t.includes(e.cta))), "финал — не факт");
+  assert.ok(ctaRepeat("А ты замечал такое? Напиши в комментариях.", recent), "шаблон «напиши в комментариях» уже был");
+  assert.equal(ctaRepeat("А что из вчерашнего ты помнишь сегодня?", recent), null);
+
+  const entries: CoveredEntry[] = [{ code: "08b", title: "Рост", texts: ["Утром ты выше, чем вечером"], cta: "А ты замечал, что вечером ниже? Напиши в комментариях и подпишись." }];
+  const { fn } = mockFetch([chat(JSON.stringify(withCta("А ты замечал такое? Напиши в комментариях.")))]);
+  const res = await generateScript({ topic: "Память", format: "shorts", covered: entries }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.ok(res.warnings.some((w) => /финал «А ты замечал такое\? Напиши в комментариях\.» почти повторяет финал ролика 08b/.test(w)), res.warnings.join("\n"));
+});
+
+await test("Сцены media (2–3 в Shorts) и заголовок (до 50 символов, не пересказ хука) — замечания", () => {
+  const ok = lintScript(validateScript(demo));
+  assert.ok(!ok.some((w) => /kind "media"|title|финал/.test(w)), ok.join("\n"));
+  const one = structuredClone(demo);
+  one.scenes[2].kind = "statement";
+  assert.ok(lintScript(one).some((w) => w.startsWith('сцен kind "media" — 1, в Shorts нужно 2–3')));
+  const four = structuredClone(demo);
+  for (const i of [1, 3]) Object.assign(four.scenes[i], { kind: "media", stat: undefined, items: undefined });
+  assert.ok(lintScript(four).some((w) => w.startsWith('сцен kind "media" — 4')));
+  assert.ok(!lintScript(quizScript()).some((w) => w.includes('kind "media"')), "у викторины своя структура");
+  assert.ok(!lintScript({ ...demo, format: "landscape" }).some((w) => w.includes('kind "media"')));
+
+  // Пары из готовых роликов: 06b и 03b пересказывают хук, 05a — дополняет.
+  assert.ok(titleRepeatsHook("Эта акула может быть старше Санкт-Петербурга", "Эта акула может быть старше Санкт-Петербурга. И это не шутка."));
+  assert.ok(titleRepeatsHook("Самый знаменитый компьютерный баг был настоящим насекомым", "Самый знаменитый компьютерный баг был настоящим насекомым. В прямом смысле."));
+  assert.ok(!titleRepeatsHook("Невидимая горилла: почему ты не видишь очевидное", "Половина зрителей не заметила гориллу прямо у себя перед глазами."));
+  assert.ok(!titleRepeatsHook(demo.title, demo.scenes[0].narration));
+  const echo = { ...demo, title: "Через сутки ты забудешь почти всё выученное" };
+  assert.ok(lintScript(echo).some((w) => w.startsWith("title почти повторяет хук")));
+  const long = { ...demo, title: "Почему ты забываешь шестьдесят шесть процентов за сутки" };
+  assert.ok(long.title.length > 50 && long.title.length <= 70);
+  assert.ok(lintScript(long).some((w) => w.startsWith(`title ${long.title.length} символов — для Shorts лучше до 50`)));
+  assert.ok(!lintScript({ ...long, format: "landscape" }).some((w) => w.includes("лучше до 50")), "у длинного ролика — до 70");
+});
+
+await test("Финал: «подписал»/«подпиши» — не призыв; вопрос чуть длиннее 8 слов после ремонта — замечание, не другая модель", async () => {
+  // Глагол «подписать» (договор, указ) — частая тема истории, призывом не считается.
+  for (const q of ["А ты бы подписал такой указ?", "Кто подписывал Декларацию первым?", "Подпиши открытку маме сегодня?", "Чья подпись на купюре?"]) {
+    assert.deepEqual(ctaProblems(withCta(q).scenes), [], q);
+  }
+  for (const q of ["Подпишись!", "Подпишитесь на канал", "Ну что, подпишешься?", "Не забудь подписаться", "Подписывайтесь", "Стань подписчиком", "Жми на подписку"]) {
+    assert.equal(ctaProblems(withCta(q).scenes).filter((p) => p.includes("не проси подписаться")).length, 1, q);
+  }
+  assert.ok(lintScript({ ...demo, scenes: [...demo.scenes.slice(0, -1), { ...demo.scenes.at(-1)!, onScreen: "*Подпишись*" }] }).some((w) => w.startsWith("onScreen финала")));
+
+  // Вопрос в 9 слов дважды: ремонт, затем принят с замечанием — без перехода к следующей модели.
+  const longQuestion = "А ты замечал, что вчерашнее забывается быстрее, чем позавчерашнее?";
+  assert.equal(countWords(longQuestion), 9);
+  const { fn, calls } = mockFetch([chat(JSON.stringify(withCta(longQuestion))), chat(JSON.stringify(withCta(longQuestion)))]);
+  const res = await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.equal(calls.length, 2);
+  assert.match(msgs(calls[1])[3].content, /финал \(kind "cta"\) — 9 слов, нужно не больше 8/);
+  assert.equal(res.script.scenes.at(-1)!.narration, longQuestion);
+  assert.ok(res.warnings.some((w) => w.startsWith(`финал «${longQuestion}» — 9 слов, лучше до 8`)), res.warnings.join("\n"));
+  assert.ok(!res.warnings.some((w) => w.startsWith("финал сокращён")), "текст не менялся — «сокращён» не пишем");
+
+  // Длинный финал без вопроса так не принимаем — следующая модель.
+  const noQuestion = "Расскажи друзьям про кривую забывания и проверь себя через неделю";
+  const nq = mockFetch([chat(JSON.stringify(withCta(noQuestion))), chat(JSON.stringify(withCta(noQuestion))), chat(JSON.stringify(demo))]);
+  const ok = await generateScript({ topic: "Память", format: "shorts" }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: nq.fn, log });
+  assert.equal(nq.calls.length, 3);
+  assert.equal(ok.script.scenes.at(-1)!.narration, demo.scenes.at(-1)!.narration);
+});
+
+await test("Викторина в 40–45 с: ровно 2 раунда; третий раунд — ремонт с подсказкой убрать раунд", async () => {
+  // Три раунда — это ≈ 95 слов и 13,5 с тишины: в 42 с не влезают ни при каком допуске.
+  const three = quizScript();
+  const extra = structuredClone(three.scenes.slice(1, 3));
+  extra[0].narration = "Говорят, у осьминога три сердца и голубая кровь. Правда или миф?";
+  extra[0].onScreen = "У осьминога *3 сердца*";
+  extra[0].quiz = { answer: "truth", explanation: "Два сердца гонят кровь через жабры" };
+  extra[1].narration = "Правда! Два сердца качают кровь через жабры, третье — по всему телу, а медь делает кровь голубой.";
+  extra[1].onScreen = "Три *сердца*";
+  three.scenes.splice(5, 0, ...extra);
+  three.scenes.forEach((s, i) => (s.id = `s${i + 1}`));
+  const { fn, calls } = mockFetch([chat(JSON.stringify(three)), chat(JSON.stringify(quizScript()))]);
+  const { script } = await generateScript({ topic: "Мифы о памяти", format: "shorts", quiz: true }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log });
+  assert.match(userMsg(calls[0]), /hook → ровно 2 раунда → cta/);
+  assert.match(userMsg(calls[0]), /Два факта о сне/);
+  assert.match(userMsg(calls[0]), /«Сколько из них ты угадал\?»/);
+  assert.ok(!/Пиши в комментариях/.test(userMsg(calls[0])), "пример финала не спорит с системным промптом");
+  assert.match(msgs(calls[1])[3].content, /или оставь 2 раунда викторины/);
+  assert.equal(script.scenes.filter((s) => s.kind === "quiz").length, 2);
+
+  // В минуту три раунда помещаются — их можно предложить.
+  const minute = buildShortsPrompt({ topic: "Мифы о памяти", format: "shorts", quiz: true }, shortsTargets(60 - QUIZ_ROUNDS_PLANNED * QUIZ_SILENCE_SEC));
+  assert.match(minute, /около 60 секунд/);
+  assert.match(minute, /hook → 2–3 раунда → cta/);
+  assert.match(buildSystemPrompt(), /В Shorts \(кроме викторины\) — 2–3 сцены "media"/);
 });
 
 // Строка → байты windows-1251 (кириллица): так отвечает Google без oe=utf-8.

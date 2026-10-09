@@ -26,7 +26,13 @@ interface Manifest {
 
 const FILE = "manifest.json";
 
+// Версия правил отбора (relevance.ts). Поменялась — старые подборы (до
+// проверки «по теме» в них бывали гравюры и случайные совпадения слов)
+// подбираются заново один раз; дальше снова берутся из манифеста.
+export const PICK_RULES_VERSION = 2;
+
 export function visualKey(scene: ScriptScene, format: Format, env: Env, hints: VisualHints = {}): string {
+  const judge = (env.VISUALS_JUDGE ?? "").trim().toLowerCase();
   return JSON.stringify({
     kind: scene.kind,
     q: scene.visualQuery?.trim() ?? "",
@@ -37,6 +43,9 @@ export function visualKey(scene: ScriptScene, format: Format, env: Env, hints: V
     style: (env.VISUALS_STYLE ?? "").trim(),
     // Только когда включено — ключи старых манифестов остаются прежними.
     ...(hints.realFirst ? { real: 1 } : {}),
+    rules: PICK_RULES_VERSION,
+    ...(judge && judge !== "off" && judge !== "none" && judge !== "0" ? { judge, jm: (env.VISUALS_JUDGE_MODEL ?? "").trim() } : {}),
+    ...((env.VISUALS_MIN_PHOTO_PX ?? "").trim() ? { px: env.VISUALS_MIN_PHOTO_PX!.trim() } : {}),
   });
 }
 

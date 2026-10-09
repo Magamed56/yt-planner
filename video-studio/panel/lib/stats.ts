@@ -3,6 +3,7 @@
 // content/usage.jsonl). Только чистые функции без сети и без node:* — их проверяет
 // scripts/stats-test.ts, а подписи считает сервер (в браузере покажется то же самое).
 import type { ChannelStats, ChannelVideo } from "../../src/pipeline/youtube-fill";
+import { retentionOverview, videoRetention, type AnalyticsProblem, type Retention, type RetentionOverview, type VideoRetention } from "./analytics";
 import { plural } from "./stages";
 
 const DAY_MS = 86_400_000;
@@ -41,7 +42,15 @@ export interface RowStats {
   viewsLabel: string; // «1,2 тыс.»
   likesLabel: string | null;
   commentsLabel: string | null;
+  // «К обычному» (lib/insights.ts typicalRatio): во сколько раз больше просмотров в сутки, чем
+  // у обычного Shorts канала. Только у вышедших.
+  ratio?: number | null;
+  ratioLabel?: string | null; // «▲ ×2,3», «≈ обычно», «▼ ×0,4», «рано»; null — без отметки
+  verdict?: Verdict;
+  basis?: string; // «медиана 410 в сутки по 18 роликам · ≈ оценка»
 }
+
+export type Verdict = "up" | "typical" | "down" | "fresh" | "thin";
 
 export function rowStats(v: Pick<ChannelVideo, "viewCount" | "likeCount" | "commentCount">): RowStats | null {
   if (v.viewCount === null || v.viewCount === undefined) return null;
@@ -91,13 +100,22 @@ export interface VideoStat {
   perDayLabel: string;
   mark: "best" | "worst" | null; // по просмотрам в сутки
   thumbnailUrl: string | null;
+  retention?: VideoRetention | null; // % досмотра и средний просмотр из YouTube Analytics; null — нет данных
+  // «К обычному» — как в ленте (lib/insights.ts typicalRatio; заполняет app/stats/load.ts).
+  ratio?: number | null;
+  ratioLabel?: string | null;
+  verdict?: Verdict;
+  basis?: string;
 }
 
 // Shorts — до 3 минут: для порога монетизации считаются только их просмотры.
 const SHORTS_MAX_SEC = 180;
+export const isShorts = (durationSec: number | null) => durationSec === null || durationSec <= SHORTS_MAX_SEC;
+// Просмотры в сутки — одно определение для «Статистики» и ленты: младше суток делим на сутки.
+export const viewsPerDay = (views: number, publishedMs: number, nowMs: number) => views / Math.max(1, Math.max(0, nowMs - publishedMs) / DAY_MS);
 
-// Вышедшие ролики канала с цифрами; по умолчанию — по просмотрам.
-export function videoStats(videos: ChannelVideo[], topics: Topic[], pillars: Pillar[], now: Date, tz: string): VideoStat[] {
+// Вышедшие ролики канала с цифрами; по умолчанию — по просмотрам. retention — строки YouTube Analytics.
+export function videoStats(videos: ChannelVideo[], topics: Topic[], pillars: Pillar[], now: Date, tz: string, retention?: Map<string, Retention> | null): VideoStat[] {
   const byVideo = new Map(topics.map((t) => [t.videoId, t]));
   const pillarTitle = new Map(pillars.map((p) => [p.id, p.title]));
   const day = new Intl.DateTimeFormat("ru-RU", { timeZone: tz, weekday: "short", day: "2-digit", month: "2-digit" });
@@ -110,7 +128,8 @@ export function videoStats(videos: ChannelVideo[], topics: Topic[], pillars: Pil
     const views = v.viewCount ?? 0;
     const age = Math.max(0, nowMs - at);
     const days = Math.max(1, age / DAY_MS);
-    const perDay = views / days;
+    const perDay = viewsPerDay(views, at, nowMs);
+    const shorts = isShorts(v.durationSec);
     list.push({
       videoId: v.videoId,
       code: topic?.code ?? null,
@@ -121,7 +140,7 @@ export function videoStats(videos: ChannelVideo[], topics: Topic[], pillars: Pil
       dateLabel: day.format(at),
       days,
       fresh: age < DAY_MS,
-      shorts: v.durationSec === null || v.durationSec <= SHORTS_MAX_SEC,
+      shorts,
       views,
       likes: v.likeCount ?? null,
       comments: v.commentCount ?? null,
@@ -132,6 +151,7 @@ export function videoStats(videos: ChannelVideo[], topics: Topic[], pillars: Pil
       perDayLabel: formatRate(perDay),
       mark: null,
       thumbnailUrl: v.thumbnailUrl ?? null,
+      retention: videoRetention(retention?.get(v.videoId), shorts),
     });
   }
   // Лучший и худший — по просмотрам в сутки среди роликов старше суток: так старые не
@@ -178,6 +198,7 @@ export interface Monetization {
   tiers: Tier[];
   views90: number; // ≈ просмотры Shorts за 90 дней
   videos90: number; // публичных роликов за 90 дней
+  engaged: boolean; // посчитано по засчитанным просмотрам (engagedViews из Analytics)
 }
 
 function goal(label: string, have: number | null, need: number, approx = false): Goal {
@@ -193,17 +214,22 @@ function goal(label: string, have: number | null, need: number, approx = false):
   };
 }
 
-// Data API не отдаёт просмотры за период (это Analytics API) — берём сумму просмотров
-// Shorts, вышедших за последние 90 дней: для молодого канала это почти то же самое.
+// Data API не отдаёт просмотры за период — берём сумму просмотров Shorts, вышедших за последние
+// 90 дней: для молодого канала это почти то же самое. Порог YouTube считает по засчитанным
+// просмотрам (у Shorts с 2025 года «просмотр» — любой запуск), поэтому, если Analytics их отдал,
+// берём их; у ролика без строки Analytics (свежий) — просмотры Data API.
 export function monetization(channel: ChannelStats | null, videos: VideoStat[], now: Date): Monetization {
   const since = now.getTime() - 90 * DAY_MS;
   const recent = videos.filter((v) => ms(v.publishedAt) >= since);
-  const views90 = recent.filter((v) => v.shorts).reduce((s, v) => s + v.views, 0);
+  const shorts = recent.filter((v) => v.shorts);
+  const engaged = shorts.some((v) => typeof v.retention?.engagedViews === "number");
+  const views90 = shorts.reduce((s, v) => s + (v.retention?.engagedViews ?? v.views), 0);
   const subs = channel?.subscriberCount ?? null;
   const tier = (id: Tier["id"], title: string, perks: string, goals: Goal[]): Tier => ({ id, title, perks, goals, done: goals.every((g) => g.done) });
   return {
     views90,
     videos90: recent.length,
+    engaged,
     tiers: [
       tier("full", "Полная монетизация", "доход от рекламы в Shorts", [
         goal("Подписчики", subs, YPP.full.subscribers),
@@ -507,6 +533,8 @@ export interface StatsInput {
   runsError: string | null;
   usageText: string | null; // content/usage.jsonl; null — файла ещё нет
   usageError: string | null;
+  retention?: Map<string, Retention> | null; // YouTube Analytics по videoId; null — не спрашивали или отказ
+  retentionProblem?: AnalyticsProblem | null; // почему удержания нет (нет права, API выключен…)
 }
 
 export interface StatsData {
@@ -521,12 +549,14 @@ export interface StatsData {
   actionsError: string | null;
   usage: UsageSummary | null; // null — данных ещё нет
   usageError: string | null;
+  retention: RetentionOverview | null; // средний досмотр канала; null — данных Analytics нет
+  retentionProblem: AnalyticsProblem | null;
 }
 
 export function buildStats(input: StatsInput): StatsData {
   const { now } = input;
   const all = input.videos ?? [];
-  const videos = videoStats(all, input.topics, input.pillars, now, input.timezone);
+  const videos = videoStats(all, input.topics, input.pillars, now, input.timezone, input.retention);
   const settled = videos.filter((v) => !v.fresh);
   const description = new Map(all.map((v) => [v.videoId, v.description]));
   const subs = input.channel?.subscriberCount ?? null;
@@ -559,5 +589,7 @@ export function buildStats(input: StatsInput): StatsData {
     actionsError: input.runsError,
     usage,
     usageError: input.usageError,
+    retention: retentionOverview(videos.map((v) => v.retention)),
+    retentionProblem: input.retentionProblem ?? null,
   };
 }

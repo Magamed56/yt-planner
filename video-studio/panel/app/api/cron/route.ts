@@ -3,9 +3,11 @@
 // VAPID). Vercel присылает заголовок Authorization: Bearer <CRON_SECRET>; без него — 401.
 import { timingSafeEqual } from "node:crypto";
 import { runAutopilot } from "@/lib/autopilot";
+import { saveSnapshotQuietly } from "@/lib/history-store";
 import { loadState } from "@/lib/load";
 import { notifyDevices, vapidSetup } from "@/lib/push";
 import { dailySummary } from "@/lib/push-summary";
+import { channelOverview } from "@/lib/youtube";
 
 // Автопилот укладывается в 40 с, остальное — запас на сводку (Hobby разрешает до 300 с).
 export const maxDuration = 90;
@@ -21,9 +23,14 @@ export async function GET(request: Request) {
     let push: Awaited<ReturnType<typeof notifyDevices>> | null = null;
     if (vapidSetup().keys) {
       const state = run.state ?? (await loadState().catch(() => null));
-      const msg = state ? dailySummary(state) : null;
+      const summary = state ? dailySummary(state) : null;
+      // Что автопилот запустил — первой строкой (только если что-то запущено).
+      const auto = run.did.length ? `Автопилот: ${run.did.join("; ")}` : "";
+      const msg = summary ? (auto ? { ...summary, body: `${auto} · ${summary.body}` } : summary) : auto ? { title: "Автопилот запустил сборку", body: auto, url: "/runs", tag: "daily" } : null;
       if (msg) push = await notifyDevices(msg);
     }
+    // Точка истории цифр канала на каждый день — даже если панель неделю не открывали.
+    await saveSnapshotQuietly(channelOverview(), new Date(), run.state?.timezone ?? "Europe/Moscow", { force: true });
     // Частичный сбой (GitHub отказал в одном из действий) виден в логах Vercel как 500.
     return Response.json({ ...run.last, errors: run.errors, push }, { status: run.errors.length ? 500 : 200 });
   } catch (e) {

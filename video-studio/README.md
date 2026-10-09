@@ -7,7 +7,7 @@
                                    ──стоки/AI──▶ визуал сцен
                                    ──▶ музыка, звук переходов
                     ──Remotion (моушен-графика)──▶ video.mp4 + обложки + субтитры + описание
-                                                   ──▶ YouTube (в слоты 12:00/19:00) + Instagram Reels
+                                                   ──▶ YouTube (в слоты 12:00/19:00) + Instagram Reels + канал Telegram
 ```
 
 - **Основной формат — Shorts 1080×1920**, есть и горизонтальный 1920×1080.
@@ -27,6 +27,7 @@
 
 - [docs/youtube-setup.md](docs/youtube-setup.md) — оформить канал в YouTube Studio и публиковать по расписанию;
 - [docs/instagram-setup.md](docs/instagram-setup.md) — Reels через официальный API или вручную;
+- [docs/telegram-setup.md](docs/telegram-setup.md) — ролики в канал Telegram через своего бота;
 - [brand/README.md](brand/README.md) — аватар, баннер, водяной знак, обложки «Актуального».
 
 ---
@@ -34,8 +35,10 @@
 ## Чего ждать по качеству (честно)
 
 **Картинка.** Моушен-графика на тёмных градиентах с иконками: аккуратно и динамично, но узнаваемо
-«шаблонно». Со стоковыми видео (Pexels/Pixabay) ролики заметно живее, поэтому ключ Pexels стоит
-завести сразу: он бесплатный.
+«шаблонно». Со стоковыми видео (Pexels/Pixabay) ролики заметно живее, поэтому ключи Pexels и
+Pixabay стоит завести сразу: они бесплатные. Без них кадры берутся только из Wikimedia Commons и
+Openverse, и только по теме сцены; остальные сцены — на моушен-графике. Подробно и пошагово —
+[docs/visuals.md](docs/visuals.md).
 
 **Голос** решает больше всего:
 
@@ -43,7 +46,7 @@
 |---|---|---|
 | **edge** (по умолчанию без ключа Gemini) | Хороший нейроголос (Дмитрий, Светлана): ровный, «дикторский», мало эмоций. Тайминги слов точные — от сервиса | Неофициальный доступ к сервису Microsoft: может перестать работать без предупреждения, а условия Microsoft такое использование прямо не разрешают. Если Edge не отвечает, конвейер сам переозвучит ролик через Piper |
 | **piper** | Заметно роботизированный, бывают ошибки в ударениях. Годится для черновиков и как запасной | Работает офлайн. Модель (~60 МБ) скачивается сама. Лицензии датасетов: dmitri и denis — CC0, irina — не указана, ruslan — CC BY-NC-SA (только некоммерчески) |
-| **gemini** (по умолчанию, если задан `GEMINI_API_KEY`) | Самый живой из бесплатных, голос по умолчанию — **Charon** (глубокий мужской); слушается подсказки по стилю (`GEMINI_TTS_STYLE`) | Бесплатная квота AI Studio — **около 10 запросов в сутки на модель** (проверено 07.10.2026). Поэтому весь ролик озвучивается **одним запросом** и режется на сцены по паузам: ≈ 10 Shorts в сутки. Кончилась квота — ролик целиком переозвучит Edge (затем Piper). Тайминги слов оцениваются по звуку |
+| **gemini** (по умолчанию, если задан `GEMINI_API_KEY`) | Самый живой из бесплатных, голос по умолчанию — **Charon** (глубокий мужской); слушается подсказки по стилю (`GEMINI_TTS_STYLE`) | Бесплатная квота AI Studio — **около 10 запросов в сутки на модель** (проверено 07.10.2026). Поэтому весь ролик озвучивается **одним запросом** и режется на сцены по паузам: ≈ 10 Shorts в сутки. Кончилась квота — ролик целиком переозвучит Edge (затем Piper), в `qc.json` и сводке запуска будет пометка; с `TTS_FALLBACK=none` (так собирает автопилот панели) сборка вместо этого падает и повторяется на следующий день. Уже озвученный текст берётся из кэша (`.cache/voice`) и квоту не тратит. Тайминги слов оцениваются по звуку |
 | **elevenlabs** | Лучшее качество | Бесплатный план — **без коммерческих прав** и с обязательной атрибуцией. Для монетизируемого канала нужен платный план (от ~$5/мес) |
 | **openai** | Зависит от модели. Qwen3-TTS (Apache-2.0) умеет клонировать ваш голос по образцу | Нужен свой сервер с видеокартой (Colab/Kaggle/свой ПК), см. `.env.example` |
 | **fish** | Хорошее качество, клонирование | Веса Fish Speech — некоммерческая лицензия |
@@ -94,15 +97,17 @@ npm run make -- --topic "Почему мы забываем выученное"
 | `npm run make -- --script scripts/<имя>.json` | Видео по вашему (отредактированному) сценарию |
 | `npm run upload -- out/<имя> [--privacy unlisted] [--schedule]` | Загрузить готовый ролик на YouTube (`--schedule` — в ближайший слот 12:00/19:00 МСК) |
 | `npm run upload -- out/<имя> --to instagram` | Опубликовать Reels в Instagram (`--to youtube,instagram` — в оба) |
+| `npm run upload -- out/<имя> --to telegram` | Отправить ролик в канал Telegram (можно вместе: `--to youtube,telegram`) |
 | `npm run youtube-auth` | Разовая настройка входа в YouTube (печатает `YT_REFRESH_TOKEN`) |
 | `npm run instagram-token [-- --exchange --page --save]` | Токен Instagram: проверить срок, продлить, узнать `IG_USER_ID` |
+| `npm run telegram-check` | Бот Telegram: проверить токен и права в канале, узнать `TELEGRAM_CHAT_ID` |
 | `npm run studio` | Remotion Studio — посмотреть композицию в браузере на демо-данных |
 | `npm run browser` | Заранее скачать браузер для рендера |
 | `npm run typecheck` | Проверка типов |
 
 Другие параметры `make`: `--theme midnight|sunset|emerald|mono`, `--voice edge|piper|gemini|…`,
 `--mood calm|inspiring|upbeat|tech|dark`, `--out папка`, `--no-render` (всё, кроме рендера),
-`--concurrency N`, `--upload youtube|instagram|youtube,instagram`, `--privacy private|unlisted|public`,
+`--concurrency N`, `--upload youtube|instagram|telegram` (можно через запятую), `--privacy private|unlisted|public`,
 расписание YouTube: `--schedule` (ближайший свободный слот), `--schedule-slot N` (N-й слот подряд),
 `--schedule-start 2026-10-14`, `--publish-at <ISO-время>`. Справка: `npm run make -- --help`.
 
@@ -116,7 +121,7 @@ npm run make -- --topic "Почему мы забываем выученное"
 | `description.txt` | Название, описание (призыв, ссылки, хэштеги канала, источники, дисклеймер), теги — для вставки в YouTube Studio |
 | `instagram.txt` | Подпись для Reels: хук, суть, призыв, 5–8 хэштегов из `channel.json`, без ссылок, ≤ 2200 символов. Можно править перед публикацией |
 | `cover.jpg` | Обложка Reels 1080×1920 — кадр конца хука без субтитров (тот же кадр API ставит обложкой) |
-| `youtube-result.json`, `instagram-result.json` | Что и когда опубликовано (защита от повторной публикации) |
+| `youtube-result.json`, `instagram-result.json`, `telegram-result.json` | Что и когда опубликовано (защита от повторной публикации) |
 | `cost.json` | Сколько стоил запуск: токены и деньги LLM, символы озвучки |
 | `script.json`, `props.json` | Сценарий и полная таймлиния — чтобы пересобрать или разобраться |
 | `public/` | Озвучка, визуал и музыка запуска. Повторная сборка того же сценария не озвучивает сцены заново и берёт уже найденные клипы для сцен, у которых не менялись `visualQuery`/`imagePrompt` (подобрать заново — удалите `public/visuals`) |
@@ -170,19 +175,21 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    | Секрет | Для чего | Где взять (бесплатно) |
    |---|---|---|
    | `GEMINI_API_KEY` | Сценарии (и Gemini TTS) | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
-   | `PEXELS_API_KEY` | Стоковые видео и фото | [pexels.com/api](https://www.pexels.com/api/) |
-   | `PIXABAY_API_KEY` | Ещё стоки | [pixabay.com/api/docs](https://pixabay.com/api/docs/) |
+   | `PEXELS_API_KEY` | Стоковые видео и фото — главное для кадров по теме ([docs/visuals.md](docs/visuals.md)) | [pexels.com/api](https://www.pexels.com/api/) |
+   | `PIXABAY_API_KEY` | Ещё стоковые видео | [pixabay.com/api/docs](https://pixabay.com/api/docs/) |
    | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | AI-картинки (FLUX) | dash.cloudflare.com → Workers AI |
    | `GROQ_API_KEY`, `OPENROUTER_API_KEY` | Запасные LLM | console.groq.com, openrouter.ai |
    | `ANTHROPIC_API_KEY` | Claude (платно) | platform.claude.com |
    | `ELEVENLABS_API_KEY` | ElevenLabs | elevenlabs.io |
    | `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN` | Загрузка на YouTube | см. «Загрузка на YouTube» |
    | `IG_USER_ID`, `IG_ACCESS_TOKEN` | Публикация Reels в Instagram | [docs/instagram-setup.md](docs/instagram-setup.md) |
+   | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Ролики в канал Telegram (workflow «Telegram по расписанию») | [docs/telegram-setup.md](docs/telegram-setup.md) |
 
 3. **Variables** (вкладка рядом, необязательно): `CHANNEL_NAME` (имя канала в финальной сцене),
    `LLM_PROVIDER`, `LLM_MODEL`, `LLM_FALLBACKS`, `LLM_EFFORT`, `VISUALS`, `VISUALS_PREFER`,
+   `VISUALS_JUDGE` (`claude` — судья Claude для кадров, платно), `VISUALS_JUDGE_MODEL`, `VISUALS_MIN_PHOTO_PX`,
    `TTS_PROVIDER` (только для расписания — при ручном запуске провайдер и голос выбираются кнопкой: поля «Озвучка» и «Голос»), `TTS_VOICE`,
-   `TTS_RATE`, `TTS_FALLBACK`, `GEMINI_TTS_MODEL`, `GEMINI_TTS_VOICE`, `GEMINI_TTS_STYLE`,
+   `TTS_RATE`, `TTS_FALLBACK`, `TTS_CACHE`, `TTS_CACHE_DAYS`, `GEMINI_TTS_MODEL`, `GEMINI_TTS_VOICE`, `GEMINI_TTS_STYLE`,
    `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL`, `MUSIC`, `MUSIC_MOOD`, `LOUDNESS_TARGET`,
    `RENDER_CONCURRENCY`, `YT_CATEGORY_ID`, `YT_SYNTHETIC_MEDIA`, `PUBLISH_TIMES`, `PUBLISH_TZ`,
    `IG_API_VERSION`, `IG_AI_GENERATED`, `SCHEDULED_TOPIC` (тема для запуска
@@ -216,6 +223,15 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    расписанию (раскомментируйте `schedule` в `.github/workflows/video-studio-instagram.yml`).
    Пакет — до 8–10 роликов: на больше не хватит суточной квоты голоса Gemini. Подробно:
    [docs/youtube-setup.md](docs/youtube-setup.md), [docs/instagram-setup.md](docs/instagram-setup.md).
+4. **voice_fallback** — что делать, если кончилась квота Gemini: **auto** (по умолчанию) — озвучить
+   запасным голосом Edge/Piper (в `qc.json` релиза поле `voice` с `fallback: true`, в сводке — «⚠»);
+   **none** — не подменять: ролик падает с «квота Gemini закончилась — ролик соберётся при повторе».
+   Автопилот панели запускает с **none**.
+
+Озвученные сцены кэшируются между запусками (`actions/cache`, папка `video-studio/.cache/voice`,
+14 дней): пересборка и повтор упавшего запуска того же текста квоту Gemini не тратят — но и дубль
+голоса берут тот же. Нужен новый (оговорка, обрезанное слово) — переменная репозитория
+`TTS_CACHE` = `0` на одну пересборку (потом удалите) или правка текста сцены.
 
 Без `script`, но с `topic` render делает всё сам; без обоих — демо-ролик. **format = auto** берёт формат
 из сценария (для темы без сценария — Shorts); горизонтальный ролик по теме — **format = landscape**.
@@ -240,7 +256,7 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 ## Загрузка на YouTube
 
 1. [console.cloud.google.com](https://console.cloud.google.com) → создайте проект → **APIs & Services →
-   Library → YouTube Data API v3 → Enable**.
+   Library → YouTube Data API v3 → Enable** (и **YouTube Analytics API** — удержание в панели).
 2. **OAuth consent screen**: тип External, добавьте свой Gmail в Test users. Затем **Publish app**
    (статус «In production»): в режиме Testing токен перестаёт работать через 7 дней.
    Проверку Google для личного использования проходить не нужно, будет только предупреждение
@@ -342,6 +358,25 @@ instagram для других языков выключены. Что сдела
 
 ---
 
+## Telegram
+
+Официальный Bot API (`api.telegram.org`, `sendVideo`): свой бот от @BotFather — администратор
+канала с правом «Публикация сообщений». Включается только ключами `TELEGRAM_BOT_TOKEN` и
+`TELEGRAM_CHAT_ID`. Все шаги: [docs/telegram-setup.md](docs/telegram-setup.md).
+
+- `npm run upload -- out/<имя> --to telegram` — видео с размерами и потоковым воспроизведением,
+  подпись `telegram.txt` или `instagram.txt` (до 1024 символов, длинная сокращается по абзацам),
+  обложка `cover.jpg`. Файл больше 50 МБ (лимит ботов; рендер по умолчанию ≈ 11 Мбит/с) сам
+  пережимается в копию ≈ 45 МБ ffmpeg'ом из Remotion.
+- Повтор того же ролика блокирует `telegram-result.json` (ещё раз — `--force`). Если связь
+  оборвалась посреди отправки, программа не повторяет вслепую: «неизвестно, вышел ли пост».
+- У ботов нет отложенной публикации. Расписание — workflow «video-studio: Telegram по расписанию»:
+  очередь — ролики по плану (релизы с `08a-….mp4`) по порядку кодов, по одному свежему релизу на
+  код; код с `telegram-published.json` хоть в одном релизе больше не отправляется.
+- `npm run telegram-check` — проверить бота и узнать id канала.
+
+---
+
 ## Провайдеры и лицензии
 
 | Что | Провайдер | Цена | Лицензия и условия |
@@ -357,7 +392,9 @@ instagram для других языков выключены. Что сдела
 | | Qwen3-TTS (через `openai`) | бесплатно на своём GPU | Apache-2.0, клонирование голоса |
 | | Fish Speech | бесплатно на своём GPU | Некоммерческая лицензия |
 | Визуал | Pexels, Pixabay | бесплатно | Можно в коммерческих роликах, атрибуция не обязательна (мы её добавляем в описание) |
+| | Wikimedia Commons, Openverse | бесплатно, без ключа | Только PD, CC0, CC BY, CC BY-SA; автор, лицензия и ссылка — в описании ролика |
 | | Cloudflare Workers AI (FLUX) | бесплатная суточная квота | Условия Cloudflare и модели |
+| | Судья Claude (`VISUALS_JUDGE=claude`, по желанию) | ≈ $0.01–0.02 за Shorts на `claude-haiku-4-5` | Платно по факту использования; по умолчанию выключен |
 | Рендер | Remotion 4 | бесплатно | См. ниже |
 
 **Remotion** бесплатен для частных лиц, компаний до 3 сотрудников включительно и некоммерческих
@@ -378,17 +415,18 @@ src/types.ts              общий контракт: сценарий, props �
 src/pipeline/contracts.ts контракты модулей и список всех переменных окружения
 src/pipeline/script/      сценарий через LLM + проверка JSON
 src/pipeline/voice/       6 провайдеров озвучки, тайминги слов
-src/pipeline/visuals/     Pexels, Pixabay, Cloudflare, Pollinations
+src/pipeline/visuals/     Pexels, Pixabay, Wikimedia, Openverse, Cloudflare; проверка «по теме» (relevance.ts)
 src/pipeline/audio/       музыка (библиотека или генерация) и звук перехода
 src/pipeline/props.ts     сборка props композиции
 src/pipeline/render.ts    бандл Remotion → MP4 + обложка
 src/pipeline/youtube.ts   загрузка на YouTube (resumable, publishAt)
 src/pipeline/channel.ts   channel.json → умолчания конвейера, слоты расписания (DST-безопасно)
 src/pipeline/instagram.ts Reels через Graph API (resumable на rupload), подпись instagram.txt
+src/pipeline/telegram.ts  канал Telegram через Bot API (sendVideo, пережатие до 50 МБ)
 src/pipeline/cover.ts     обложка Reels cover.jpg (кадр композиции Video)
 src/remotion/             композиция «Video» и обложка «Thumbnail»
-src/cli/                  make, script, upload, youtube-auth, instagram-token, brand
-docs/                     инструкции для человека: YouTube Studio, Instagram
+src/cli/                  make, script, upload, youtube-auth, instagram-token, telegram-check, brand
+docs/                     инструкции для человека: YouTube Studio, Instagram, Telegram
 src/dev/                  dev-скрипты (кадры, предпросмотр, тесты модулей)
 assets/                   шрифты (OFL), копируются в каждый рендер
 examples/demo-ru.json     пример сценария
@@ -408,7 +446,10 @@ out/                      результаты (в git не попадают)
 | Piper: ошибка распаковки на Windows | Нужен встроенный `tar` (Windows 10 и новее). Иначе распакуйте архив модели вручную в `models/` (путь будет в сообщении) |
 | `Нет ни одной доступной LLM` | Задайте `GEMINI_API_KEY` в `.env` (локально) или в секретах (GitHub) |
 | Gemini: 429 / квота | Бесплатная квота на сегодня кончилась — подождите, добавьте `GROQ_API_KEY`/`OPENROUTER_API_KEY` или используйте `--script` |
+| «квота Gemini закончилась — ролик соберётся при повторе» | Голос Gemini на сегодня кончился, а запасной выключен (`TTS_FALLBACK=none`, автопилот): панель перезапустит сборку, вручную — Re-run на следующий день. Озвученное раньше возьмётся из кэша |
+| Пересборка дала ту же оговорку в озвучке | Сцены взяты из кэша (в логе «из кэша»): тот же текст — тот же дубль. Новый: `TTS_CACHE=0 npm run make -- …`, в GitHub — переменная репозитория `TTS_CACHE` = `0` на одну пересборку (потом удалите) |
 | `Сценарий … не прошёл проверку` | В сообщении — список проблем с номерами сцен. Сверьтесь с `examples/demo-ru.json` |
+| Кадры не по теме, в описании только Wikimedia, в логе «Pexels пропущен» | Не заданы `PEXELS_API_KEY` / `PIXABAY_API_KEY` — заведите бесплатные ключи ([docs/visuals.md](docs/visuals.md)). В логе шага «Визуал» видно название каждого взятого файла |
 | Рендер очень медленный или ПК зависает | `RENDER_CONCURRENCY=1`, `VISUALS_PREFER=image`, закройте браузер; или рендерите в GitHub Actions |
 | В логе `Detected differing memory amounts` | Предупреждение Remotion в Docker и облачных контейнерах, на результат не влияет |
 | YouTube: `invalid_grant` | Токен отозван или истёк (приложение в статусе Testing). Переведите в In production и выполните `npm run youtube-auth` |
@@ -416,6 +457,7 @@ out/                      результаты (в git не попадают)
 | YouTube: `время публикации … уже прошло` | Слот наступил раньше, чем закончилась сборка: `npm run upload -- out/<имя> --schedule` возьмёт следующий |
 | Instagram: `токен IG_ACCESS_TOKEN истёк` | `npm run instagram-token -- --exchange --page --save`, затем обновите секрет в GitHub ([docs/instagram-setup.md](docs/instagram-setup.md)) |
 | Instagram: `нет нужного разрешения` / `IG_USER_ID` | Токен без галочек или в `IG_USER_ID` ник вместо числа — `npm run instagram-token` покажет, чего не хватает |
+| Telegram: `канал не найден` / `бот не состоит в канале` | `npm run telegram-check` покажет верный id и права бота ([docs/telegram-setup.md](docs/telegram-setup.md)) |
 | Странные ошибки путей на Windows | Перенесите проект в путь без пробелов и кириллицы (`C:\video\…`) |
 
 Подробный лог любой ошибки: запустите с `DEBUG=1` (PowerShell: `$env:DEBUG=1`).

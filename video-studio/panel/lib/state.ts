@@ -4,11 +4,15 @@
 import { channelFromJson, isoNoMs, localDate, upcomingSlots } from "../../src/pipeline/channel";
 import { parsePlan, scriptCode } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
+import { expectedVoice, realPhotosFirst, STOCK_SECRETS, STOCK_SECRETS_LABEL, type VoiceRef } from "./checks";
 import type { GhRelease, GhRun, GhStep } from "./github";
-import { expectedMs, runProgress, type RunProgress } from "./progress";
-import { releaseVideosOf, type ReleaseVideo } from "./ops";
-import { STAGES, codesLabel, plural, shiftDateKey, type Stage } from "./stages";
-import { rowStats, type RowStats } from "./stats";
+import { expectedMs, minutesLabel, runProgress, stageOf, type RunProgress } from "./progress";
+import { failedRun, releaseVideosOf, type ReleaseVideo } from "./ops";
+import { STAGES, codesLabel, plural, runLabel, shiftDateKey, type Stage } from "./stages";
+import type { StatsHistory } from "./history";
+import { typicalRatio } from "./insights";
+import { buildPulse, type Pulse } from "./pulse";
+import { isShorts, rowStats, viewsPerDay, type RowStats } from "./stats";
 
 export { STAGES, STAGE_LABEL, codesLabel, plural, type Stage } from "./stages";
 
@@ -26,6 +30,8 @@ export interface ReleaseInfo {
   cover: Asset | null; // cover.jpg — вертикальный кадр (обложка Reels)
   thumb: Asset | null; // thumbnail.png — обложка YouTube 1280×720
   caption: Asset | null;
+  qc: Asset | null; // qc.json — автопроверка после рендера (карточка: «Перед загрузкой проверьте»)
+  description: Asset | null; // description.txt — тексты для YouTube, в нём блок «Видео и фото»
 }
 
 export interface YoutubeInfo {
@@ -59,14 +65,18 @@ export interface Row {
   flags: string[];
   running: string | null; // что сейчас делает Actions с этим роликом
   stats?: RowStats | null; // просмотры, лайки, комментарии с YouTube (statistics того же videos.list)
+  voice?: VoiceRef | null; // каким голосом должен быть озвучен (рубрика или канал) — для проверки релиза
+  realPhotos?: boolean; // рубрика «настоящих фото» (history, nature, space): только Wikimedia — норма
 }
 
-export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "other";
+export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "plan" | "titles" | "captions" | "other";
 
 export interface RunInfo {
   id: number;
   workflow: string;
-  title: string;
+  file: string; // файл workflow: «video-studio.yml»
+  title: string; // заголовок GitHub: «batch: 08a,08b»
+  label: string; // по-русски: «Ролик · 08a, 08b»
   kind: RunKind;
   codes: string[];
   active: boolean;
@@ -77,13 +87,17 @@ export interface RunInfo {
   url: string;
   attempt: number; // номер попытки (после «Re-run» — 2 и дальше)
   progress?: RunProgress | null; // у идущего: этапы и ожидаемая длительность
+  failedStage?: string | null; // упавший: этап, на котором сломался («Озвучка и видео»)
+  failedStep?: string | null; // и сам шаг workflow
+  durationLabel?: string | null; // закончившийся: сколько шёл
 }
 
 export interface Reminder {
-  kind: "runway" | "youtube" | "upload" | "fill" | "problem" | "drift" | "run" | "secrets" | "instagram";
+  kind: "runway" | "youtube" | "upload" | "fill" | "problem" | "drift" | "run" | "secrets";
   level: "error" | "warn" | "info";
   text: string;
   href?: string;
+  codes?: string[]; // все коды роликов (в тексте после восьмого — «и ещё N»)
 }
 
 export interface SlotCell {
@@ -92,6 +106,23 @@ export interface SlotCell {
   dateLabel: string;
   time: string;
   occupant: string | null; // код ролика, «другое видео» или null — свободно
+}
+
+// «Конвейер»: до какого слота подряд, без пропусков, хватает роликов на этапе не ниже level.
+export type CoverageLevel = "scheduled" | "video" | "script" | "topic";
+export interface Coverage {
+  level: CoverageLevel;
+  untilIso: string | null; // последний слот непрерывного ряда; null — уже ближайший пуст
+  untilLabel: string | null;
+  slots: number;
+}
+
+// Первый будущий слот, на который на YouTube ничего не стоит, и кто его займёт по очереди.
+export interface FirstGap {
+  iso: string;
+  label: string;
+  code: string | null; // ориентир на это время (null — роликов в очереди не хватает)
+  stage: Stage | null;
 }
 
 export interface AutopilotSettings {
@@ -162,10 +193,18 @@ export interface PanelState {
   counts: Record<Stage, number>;
   scheduleEnd: string | null; // последнее запланированное время выхода на канале
   scheduleEndLabel: string | null;
-  runwayDays: number | null; // сколько полных дней расписания впереди (для кольца-секундомера)
+  runwayDays: number | null; // полных дней до первого пустого слота (кольцо-секундомер); null — YouTube недоступен
+  runwayLabel: string | null; // до какого слота расписание без пропусков
+  firstGap: FirstGap | null; // null — пропусков нет на SLOT_GRID_DAYS дней (или YouTube недоступен)
+  coverage: Coverage[]; // запланировано → видео → сценарии → темы; пусто без YouTube
+  topicsLeft: number; // тем плана без сценария
+  topicsUntil: string | null; // ISO: когда выйдет последний ролик плана (ориентир)
+  topicsUntilLabel: string | null;
+  topicsDays: number | null; // на сколько дней хватит плана
+  pulse: Pulse; // «Пульс»: ряд за неделю, события, последние вышедшие
   reminders: Reminder[];
   runs: RunInfo[];
-  slotGrid: SlotCell[]; // слоты на 14 дней вперёд — для переноса
+  slotGrid: SlotCell[]; // слоты на SLOT_GRID_DAYS дней вперёд — перенос и «конвейер»
   youtubeError: string | null;
   missingSecrets: string[] | null; // null — неизвестно (у токена нет права Secrets: Read)
   autopilot: AutopilotSettings;
@@ -191,6 +230,7 @@ export interface StateInput {
   repo: string;
   branch: string;
   queueOrder?: string[]; // PANEL_QUEUE_ORDER
+  history?: StatsHistory | null; // PANEL_STATS_HISTORY — для «Пульса» (в состояние — только сжатое)
   runSteps?: Record<number, GhStep[]>; // шаги идущих запусков (по id)
 }
 
@@ -214,12 +254,38 @@ export function queueSort<T extends { code: string }>(rows: T[], order: string[]
     .map((x) => x.r);
 }
 
+// Столько же дней вперёд принимает moveVideoAction.
+export const SLOT_GRID_DAYS = 60;
+const COVERAGE_MIN: Record<CoverageLevel, number> = { scheduled: STAGES.indexOf("scheduled"), video: STAGES.indexOf("video"), script: STAGES.indexOf("script"), topic: 0 };
+
+// Слот закрыт на уровне level, если на YouTube на это время что-то стоит (свой ролик или
+// «другое видео»), либо ориентир на это время уже дошёл до этого этапа. Чистая функция.
+export function coverage(rows: Pick<Row, "code" | "stage" | "when" | "whenExact">[], grid: SlotCell[], label: (iso: string) => string): { coverage: Coverage[]; firstGap: FirstGap | null } {
+  const ahead = new Map(rows.filter((r) => !r.whenExact && r.when).map((r) => [Math.floor(Date.parse(r.when!) / 60_000), r]));
+  const at = (c: SlotCell) => ahead.get(Math.floor(Date.parse(c.iso) / 60_000)) ?? null;
+  const covered = (c: SlotCell, min: number) => {
+    const r = at(c);
+    return c.occupant !== null || (r !== null && STAGES.indexOf(r.stage) >= min);
+  };
+  const levels = (Object.keys(COVERAGE_MIN) as CoverageLevel[]).map((level) => {
+    let n = 0;
+    while (n < grid.length && covered(grid[n]!, COVERAGE_MIN[level])) n++;
+    const until = n ? grid[n - 1]!.iso : null;
+    return { level, untilIso: until, untilLabel: until ? label(until) : null, slots: n };
+  });
+  const gap = grid.find((c) => c.occupant === null);
+  const who = gap ? at(gap) : null;
+  return { coverage: levels, firstGap: gap ? { iso: gap.iso, label: label(gap.iso), code: who?.code ?? null, stage: who?.stage ?? null } : null };
+}
+
 const ACTIVE_RUN = new Set(["queued", "in_progress", "waiting", "requested", "pending"]);
 const RUNNING_LABEL: Partial<Record<RunKind, string>> = {
   draft: "пишется сценарий",
   batch: "сценарий и видео в работе",
   render: "собирается видео",
   fill: "заполняются тексты на YouTube",
+  titles: "подбираются названия",
+  captions: "переводятся субтитры",
 };
 const MP4_WITH_CODE = /^(\d{2}[a-z])-.+\.mp4$/i;
 const DAY_MS = 86_400_000;
@@ -231,6 +297,12 @@ const minute = (t: string | number | Date) => Math.floor(ms(t) / 60_000);
 const SECRET_NEEDS: { names: string[]; label: string; why: string }[] = [
   { names: ["GEMINI_API_KEY", "GOOGLE_API_KEY"], label: "GEMINI_API_KEY", why: "без него Actions озвучит ролик голосом Edge, а не Charon" },
   { names: ["ANTHROPIC_API_KEY"], label: "ANTHROPIC_API_KEY", why: "сценарии пишет Claude" },
+  // Хватит любого из двух: оба пустые — визуал берёт только Wikimedia и Openverse (src/pipeline/visuals).
+  {
+    names: STOCK_SECRETS,
+    label: STOCK_SECRETS_LABEL,
+    why: "без них кадры только из Wikimedia и часто мимо темы, стокового видео нет (ключи бесплатные: pexels.com/api, pixabay.com/api/docs)",
+  },
 ];
 
 function formatters(tz: string) {
@@ -251,13 +323,18 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
   if (r.path.endsWith("/video-studio-youtube-fill.yml")) kind = "fill";
   else if (r.path.endsWith("/video-studio-check.yml")) kind = "check";
   else if (r.path.endsWith("/video-studio-instagram.yml")) kind = "instagram";
+  else if (r.path.endsWith("/video-studio-plan.yml")) kind = "plan";
+  else if (r.path.endsWith("/video-studio-titles.yml")) kind = "titles";
+  else if (r.path.endsWith("/video-studio-captions.yml")) kind = "captions";
   else if (r.path.endsWith("/video-studio.yml")) kind = (/^(draft|render|batch)\b/.exec(r.display_title)?.[1] as RunKind | undefined) ?? "other";
   const codes = [...new Set([...r.display_title.matchAll(/(?:^|[^0-9a-z])(\d{2}[a-z])(?=$|[^0-9a-z])/gi)].map((m) => m[1]!.toLowerCase()))];
   const t = Date.parse(r.created_at);
   return {
     id: r.id,
     workflow: r.name,
+    file: r.path.split("/").pop() ?? r.path,
     title: r.display_title,
+    label: runLabel(kind, r.display_title, codes),
     kind,
     codes,
     active: ACTIVE_RUN.has(r.status),
@@ -268,6 +345,35 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
     url: r.html_url,
     attempt: r.run_attempt ?? 1,
   };
+}
+
+// Запуски — свежие первыми; у идущих — этапы и «осталось ≈ N мин» по тому, сколько обычно
+// идут удачные запуски того же вида. Нужен и очереди, и лёгкому /api/runs.
+export function runInfos(ghRuns: GhRun[], steps: Record<number, GhStep[]> | undefined, tz: string): RunInfo[] {
+  const f = formatters(tz);
+  const runs = ghRuns.map((r) => runInfo(r, f)).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
+  const started = new Map(ghRuns.map((r) => [r.id, r.run_started_at ?? r.created_at]));
+  const history = ghRuns
+    .filter((r) => r.status === "completed" && r.conclusion === "success")
+    .map((r) => {
+      const info = runs.find((x) => x.id === r.id)!;
+      return { kind: info.kind, codes: info.codes.length, ms: ms(r.updated_at) - ms(started.get(r.id)!) };
+    });
+  const ended = new Map(ghRuns.map((r) => [r.id, r.updated_at]));
+  for (const r of runs) {
+    if (r.active) {
+      r.progress = runProgress(steps?.[r.id] ?? [], started.get(r.id)!, expectedMs(r.kind, r.codes.length, history));
+      continue;
+    }
+    const took = ms(ended.get(r.id)!) - ms(started.get(r.id)!);
+    r.durationLabel = Number.isFinite(took) && took > 0 ? minutesLabel(took) : null;
+    const broke = r.conclusion === "failure" || r.conclusion === "timed_out" ? steps?.[r.id]?.find((s) => s.conclusion === "failure" || s.conclusion === "timed_out") : undefined;
+    if (broke) {
+      r.failedStep = broke.name;
+      r.failedStage = stageOf(broke.name);
+    }
+  }
+  return runs;
 }
 
 // Самый свежий релиз с файлом «08a-….mp4» на каждый код.
@@ -288,6 +394,8 @@ function releasesByCode(releases: GhRelease[]): Map<string, ReleaseInfo> {
       cover: r.assets.find((a) => a.name === "cover.jpg") ?? null,
       thumb: r.assets.find((a) => a.name === "thumbnail.png") ?? null,
       caption: r.assets.find((a) => a.name === "instagram.txt") ?? null,
+      qc: r.assets.find((a) => a.name === "qc.json") ?? null,
+      description: r.assets.find((a) => a.name === "description.txt") ?? null,
     });
   }
   return out;
@@ -347,20 +455,7 @@ export function buildState(input: StateInput): PanelState {
       .map((p) => p.match.item.id),
   );
 
-  const runs = input.runs.map((r) => runInfo(r, f)).sort((a, b) => ms(b.createdAt) - ms(a.createdAt));
-  // Сколько обычно идут удачные запуски того же вида — для «осталось ≈ N мин».
-  const started = new Map(input.runs.map((r) => [r.id, r.run_started_at ?? r.created_at]));
-  const history = input.runs
-    .filter((r) => r.status === "completed" && r.conclusion === "success")
-    .map((r) => {
-      const info = runs.find((x) => x.id === r.id)!;
-      return { kind: info.kind, codes: info.codes.length, ms: ms(r.updated_at) - ms(started.get(r.id)!) };
-    });
-  for (const r of runs) {
-    if (!r.active) continue;
-    const steps = input.runSteps?.[r.id];
-    r.progress = runProgress(steps ?? [], started.get(r.id)!, expectedMs(r.kind, r.codes.length, history));
-  }
+  const runs = runInfos(input.runs, input.runSteps, tz);
   const running = new Map<string, string>();
   for (const r of runs) if (r.active) for (const c of r.codes) if (!running.has(c)) running.set(c, RUNNING_LABEL[r.kind] ?? "идёт запуск");
 
@@ -417,8 +512,23 @@ export function buildState(input: StateInput): PanelState {
       flags,
       running: running.get(it.id) ?? null,
       stats: v ? rowStats(v) : null,
+      // Нужны только карточке с релизом — остальным строкам не раздуваем данные страницы.
+      voice: release ? expectedVoice(channel, it.pillar) : null,
+      realPhotos: release ? realPhotosFirst(it.pillar) : false,
     };
   });
+
+  // «К обычному» у вышедших — по тем же роликам с YouTube, без лишних запросов.
+  const typical = typicalRatio(
+    videos
+      .filter((v) => v.privacyStatus === "public" && v.publishedAt && Number.isFinite(ms(v.publishedAt)) && v.viewCount !== null && v.viewCount !== undefined)
+      .map((v) => ({ videoId: v.videoId, publishedAt: v.publishedAt!, perDay: viewsPerDay(v.viewCount!, ms(v.publishedAt!), nowMs), shorts: isShorts(v.durationSec) })),
+    now,
+  );
+  for (const r of rows) {
+    const x = r.stage === "published" && r.youtube && r.stats ? typical.get(r.youtube.videoId) : undefined;
+    if (x) Object.assign(r.stats!, { ratio: x.ratio, ratioLabel: x.label, verdict: x.verdict, basis: x.basis });
+  }
 
   // Ориентир для остальных: следующие свободные слоты по порядку плана — так же их раздаст
   // youtube-fill, когда ролики загрузят в Studio.
@@ -449,13 +559,34 @@ export function buildState(input: StateInput): PanelState {
     missingSecrets = SECRET_NEEDS.filter((s) => !s.names.some((n) => have.has(n))).map((s) => s.label);
   }
 
+  const perDay = Math.max(1, channel.schedule.publishTimesLocal.length);
+  const occupant = new Map<number, string>();
+  for (const r of rows) if (r.stage === "scheduled" && r.when) occupant.set(minute(r.when), r.code);
+  for (const t of taken) if (!occupant.has(minute(t))) occupant.set(minute(t), "другое видео");
+  const slotGrid = upcomingSlots(channel.schedule, SLOT_GRID_DAYS * perDay, { from: now }).map((d) => ({
+    iso: isoNoMs(d),
+    dateKey: f.key(d.getTime()),
+    dateLabel: f.day(d.getTime()),
+    time: f.time(d.getTime()),
+    occupant: occupant.get(minute(d)) ?? null,
+  }));
+  // Запас — до первого пустого слота, а не до последнего запланированного: дыра завтра в 12:00
+  // важнее ролика, стоящего через неделю. Без YouTube о расписании судить нельзя.
+  const pipeline = input.youtubeError ? { coverage: [], firstGap: null } : coverage(rows, slotGrid, labelOf);
+  const gap = pipeline.firstGap;
+  const runwayDays = input.youtubeError ? null : gap ? Math.max(0, Math.floor((ms(gap.iso) - nowMs) / DAY_MS)) : SLOT_GRID_DAYS;
+  const runwayLabel = pipeline.coverage.find((c) => c.level === "scheduled")?.untilLabel ?? null;
+
+  // Когда кончится план: время выхода последнего ролика плана (ориентир).
+  const planEnd = rows.reduce<string | null>((end, r) => (r.when && (!end || ms(r.when) > ms(end)) ? r.when : end), null);
+
   const reminders: Reminder[] = [];
   if (input.youtubeError) reminders.push({ kind: "youtube", level: "error", text: `YouTube недоступен: ${input.youtubeError}` });
   else if (!scheduleEnd) reminders.push({ kind: "runway", level: "warn", text: "В расписании YouTube пусто — ни один ролик не запланирован." });
-  else {
-    const days = Math.floor((ms(scheduleEnd) - nowMs) / DAY_MS);
+  else if (gap) {
+    const days = runwayDays ?? 0;
     const left = days < 1 ? "меньше суток" : `${days} ${plural(days, "день", "дня", "дней")}`;
-    reminders.push({ kind: "runway", level: days < 2 ? "warn" : "info", text: `Расписание YouTube заполнено до ${labelOf(scheduleEnd)} — осталось ${left}.` });
+    reminders.push({ kind: "runway", level: days < 2 ? "warn" : "info", text: `Первый пустой слот на YouTube — ${gap.label}: до него ${left}.` });
   }
   const toUpload = rows.filter((r) => r.stage === "video");
   if (toUpload.length) {
@@ -463,28 +594,41 @@ export function buildState(input: StateInput): PanelState {
     reminders.push({
       kind: "upload",
       level: soon ? "warn" : "info",
+      codes: toUpload.map((r) => r.code),
       text: `Ждут загрузки в Studio: ${codesLabel(toUpload.map((r) => r.code))}. Загрузите руками (имя файла начинается с кода), затем «Найти новые загрузки».`,
     });
   }
   const toFill = rows.filter((r) => r.stage === "studio" && !pending.has(r.code));
   if (toFill.length) {
-    reminders.push({ kind: "fill", level: "warn", text: `В Studio без времени выхода: ${codesLabel(toFill.map((r) => r.code))} → «Найти новые загрузки».` });
+    reminders.push({
+      kind: "fill",
+      level: "warn",
+      text: `В Studio без времени выхода: ${codesLabel(toFill.map((r) => r.code))} → «Найти новые загрузки».`,
+      codes: toFill.map((r) => r.code),
+    });
   }
   const problems = rows.filter((r) => dups.has(r.code) || broken.has(r.code));
   if (problems.length) {
-    reminders.push({ kind: "problem", level: "error", text: `Проблемы с загрузкой в Studio: ${codesLabel(problems.map((r) => r.code))} — подробности в карточке ролика.` });
+    reminders.push({
+      kind: "problem",
+      level: "error",
+      text: `Проблемы с загрузкой в Studio: ${codesLabel(problems.map((r) => r.code))} — подробности в карточке ролика.`,
+      codes: problems.map((r) => r.code),
+    });
   }
   const drift = rows.filter((r) => r.textsDiffer);
   if (drift.length) {
     reminders.push({
       kind: "drift",
       level: "info",
+      codes: drift.map((r) => r.code),
       text: `Тексты на YouTube отличаются от файла: ${codesLabel(drift.map((r) => r.code))}. Заполнение их не тронет, пока вы сами не отметите их в проверке.`,
     });
   }
-  const lastDone = runs.find((r) => !r.active && r.kind !== "other" && r.kind !== "check");
-  if (lastDone?.conclusion === "failure" && nowMs - ms(lastDone.createdAt) < 2 * DAY_MS) {
-    reminders.push({ kind: "run", level: "error", text: `Запуск «${lastDone.title}» (${lastDone.createdLabel}) не удался — откройте лог.`, href: lastDone.url });
+  const lastDone = failedRun(runs, nowMs);
+  if (lastDone) {
+    const where = lastDone.failedStage ? ` на этапе «${lastDone.failedStage}»` : "";
+    reminders.push({ kind: "run", level: "error", text: `Запуск «${lastDone.label}» (${lastDone.createdLabel}) не удался${where} — откройте лог.`, href: lastDone.url });
   }
   if (missingSecrets?.length) {
     // Одной причиной — один раз: «YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN — заполнение YouTube из Actions».
@@ -497,23 +641,7 @@ export function buildState(input: StateInput): PanelState {
       href: `https://github.com/${input.repo}/settings/secrets/actions`,
     });
   }
-  reminders.push({
-    kind: "instagram",
-    level: "info",
-    text: "Instagram ждёт токен EAA (проверка Meta). Пока Reels можно выложить с телефона: в карточке ролика — видео, обложка и подпись.",
-  });
 
-  const perDay = Math.max(1, channel.schedule.publishTimesLocal.length);
-  const occupant = new Map<number, string>();
-  for (const r of rows) if (r.stage === "scheduled" && r.when) occupant.set(minute(r.when), r.code);
-  for (const t of taken) if (!occupant.has(minute(t))) occupant.set(minute(t), "другое видео");
-  const slotGrid = upcomingSlots(channel.schedule, 14 * perDay, { from: now }).map((d) => ({
-    iso: isoNoMs(d),
-    dateKey: f.key(d.getTime()),
-    dateLabel: f.day(d.getTime()),
-    time: f.time(d.getTime()),
-    occupant: occupant.get(minute(d)) ?? null,
-  }));
 
   const todayKey = f.key(nowMs);
   return {
@@ -528,7 +656,15 @@ export function buildState(input: StateInput): PanelState {
     counts,
     scheduleEnd,
     scheduleEndLabel: scheduleEnd ? labelOf(scheduleEnd) : null,
-    runwayDays: scheduleEnd ? Math.max(0, Math.floor((ms(scheduleEnd) - nowMs) / DAY_MS)) : null,
+    runwayDays,
+    runwayLabel,
+    firstGap: gap,
+    coverage: pipeline.coverage,
+    topicsLeft: counts.topic,
+    topicsUntil: planEnd,
+    topicsUntilLabel: planEnd ? labelOf(planEnd) : null,
+    topicsDays: planEnd ? Math.max(0, Math.floor((ms(planEnd) - nowMs) / DAY_MS)) : null,
+    pulse: buildPulse(input.history ?? null, rows, runs, now),
     reminders,
     runs,
     slotGrid,

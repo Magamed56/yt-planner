@@ -19,8 +19,16 @@ export const PRIVACY_VALUES: Privacy[] = ["private", "unlisted", "public"];
 
 // youtube.upload — загрузка; youtube — найти свои ролики и поправить им тексты и расписание
 // (npm run youtube-fill для роликов, загруженных в Studio руками); youtube.force-ssl — субтитры
-// (captions.list/insert принимают только его: npm run captions-translate).
-export const YT_SCOPES = ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube", "https://www.googleapis.com/auth/youtube.force-ssl"];
+// (captions.list/insert принимают только его: npm run captions-translate) и первый комментарий из
+// панели; yt-analytics.readonly — удержание в «Статистике» панели (YouTube Analytics API). Analytics
+// по документации принимает и youtube, но отдельное право видно на экране согласия и не зависит от
+// того, что Google поменяет в списке.
+export const YT_SCOPES = [
+  "https://www.googleapis.com/auth/youtube.upload",
+  "https://www.googleapis.com/auth/youtube",
+  "https://www.googleapis.com/auth/youtube.force-ssl",
+  "https://www.googleapis.com/auth/yt-analytics.readonly",
+];
 
 export interface UploadInput {
   videoFile: string;

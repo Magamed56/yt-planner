@@ -5,7 +5,9 @@ import {
   captionAction,
   draftAction,
   fillNewUploadsAction,
+  firstCommentPreviewAction,
   moveVideoAction,
+  postFirstCommentAction,
   rebuildAction,
   saveScriptAction,
   scriptForEditAction,
@@ -15,6 +17,7 @@ import {
   type ActionResult,
   type ScriptText,
 } from "@/app/actions";
+import { COMMENT_MAX, type OwnComment } from "@/lib/first-comment";
 import { DEFAULT_REBUILD, editLock, rebuildLabel, THEME_LABEL, THEMES, VOICE_LABEL, VOICES, type RebuildOptions } from "@/lib/rebuild";
 import { checkScriptEdit, parseTags, SCRIPT_LIMITS, type SceneEdit, type ScriptEdit } from "@/lib/script-edit";
 import type { PanelState, Row, SlotCell } from "@/lib/state";
@@ -22,10 +25,13 @@ import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import { frameOf } from "./CoverMedia";
 import Dots from "./Dots";
 import FilesSaver from "./FilesSaver";
+import { notePending, usePending } from "@/lib/pending";
+import ReleaseChecks from "./ReleaseChecks";
 import RunProgressBar from "./RunProgressBar";
 import Thumb from "./Thumb";
 
 type Undo = { videoId: string; publishAt: string }[];
+type CommentDraft = { text: string; existing: OwnComment | null; posted: string | null };
 type Editing = { sha: string; edit: ScriptEdit; tags: string; problems: string[] };
 
 const KIND_LABEL: Record<string, string> = { hook: "хук", statement: "мысль", list: "список", stat: "цифра", quote: "цитата", media: "кадр", cta: "призыв" };
@@ -117,6 +123,86 @@ function ScriptForm({ value, busy, onChange, onSave, onCancel }: { value: Editin
   );
 }
 
+// Первый комментарий: черновик (вопрос из призыва + источники плана) → правка → отправка. Повторно
+// не отправит: сервер сначала ищет комментарий канала под роликом.
+function FirstComment({ row, busy, setBusy, onToast }: { row: Row; busy: boolean; setBusy: (b: boolean) => void; onToast: (text: string, ok: boolean) => void }) {
+  const [draft, setDraft] = useState<CommentDraft | null>(null);
+  const videoId = row.youtube!.videoId;
+
+  async function open() {
+    setBusy(true);
+    try {
+      const r = await firstCommentPreviewAction(row.code, videoId, row.scriptPath);
+      if ("text" in r) setDraft({ text: r.text, existing: r.existing, posted: null });
+      else onToast(r.message, false);
+    } catch (e) {
+      onToast(e instanceof Error ? e.message : String(e), false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function send() {
+    if (!draft || !window.confirm(`Опубликовать комментарий от имени канала под ${row.code}? Удалить его потом можно только в YouTube.`)) return;
+    setBusy(true);
+    try {
+      const r = await postFirstCommentAction(videoId, draft.text);
+      onToast(r.message, r.ok);
+      const url = "url" in r ? r.url : null;
+      if (r.ok) setDraft({ ...draft, posted: url ?? `https://youtube.com/shorts/${videoId}` });
+      else if (url) setDraft({ ...draft, existing: { id: "", text: "", url } });
+    } catch (e) {
+      onToast(e instanceof Error ? e.message : String(e), false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!draft) {
+    return (
+      <div className="btn-row">
+        <button className="btn" disabled={busy} onClick={open}>
+          💬 Первый комментарий
+        </button>
+      </div>
+    );
+  }
+  if (draft.posted || draft.existing) {
+    const url = draft.posted ?? draft.existing!.url;
+    return (
+      <>
+        <p className="small">
+          {draft.posted ? "✓ Комментарий опубликован — закрепите его в приложении YouTube (⋮ → «Закрепить»)." : "Комментарий канала под роликом уже есть — второй не нужен."}{" "}
+          <a href={url} target="_blank" rel="noreferrer">
+            Открыть ↗
+          </a>
+        </p>
+        {!draft.posted && draft.existing?.text && <div className="caption">{draft.existing.text}</div>}
+      </>
+    );
+  }
+  return (
+    <div className="script-form">
+      <label>
+        Первый комментарий{" "}
+        <span className="muted">
+          {draft.text.trim().length}/{COMMENT_MAX}
+        </span>
+        <textarea rows={6} value={draft.text} onChange={(e) => setDraft({ ...draft, text: e.target.value })} />
+      </label>
+      <p className="muted small">Вопрос — из призыва сценария, источники — из фактов плана. Можно поправить перед отправкой.</p>
+      <div className="btn-row">
+        <button className="btn primary" disabled={busy || !draft.text.trim()} onClick={send}>
+          {busy ? "Отправляю…" : "Опубликовать"}
+        </button>
+        <button className="btn" disabled={busy} onClick={() => setDraft(null)}>
+          Отмена
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function VideoSheet({ row, state, onClose }: { row: Row; state: PanelState; onClose: () => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -127,7 +213,8 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   const [editing, setEditing] = useState<Editing | null>(null);
   const [scriptSaved, setScriptSaved] = useState(false);
   const [rebuild, setRebuild] = useState<RebuildOptions>(DEFAULT_REBUILD);
-  const locked = busy || Boolean(row.running);
+  const pending = usePending();
+  const locked = busy || Boolean(row.running) || pending.has(row.code); // только что запущен — ждём GitHub
   const runOf = row.running ? (state.runs.find((r) => r.active && r.codes.includes(row.code)) ?? null) : null;
   // Править сценарий и пересобирать — только пока ролик не загружен в YouTube.
   const lock = editLock(row, state.youtubeError);
@@ -137,6 +224,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
     setBusy(true);
     try {
       const r = await action();
+      notePending(r);
       setToast({ text: r.message, ok: r.ok, undo: "undo" in r ? (r.undo as Undo | undefined) : undefined });
       if (r.ok) router.refresh();
     } catch (e) {
@@ -216,7 +304,8 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
     void run(() => moveVideoAction(row.youtube!.videoId, c.iso), ask);
   }
   const days: { key: string; label: string; cells: SlotCell[] }[] = [];
-  for (const c of state.slotGrid) {
+  // Список слотов — на три недели: дальше удобнее перетаскиванием в календаре.
+  for (const c of state.slotGrid.filter((x) => x.dateKey <= shiftDateKey(state.todayKey, 20))) {
     let d = days.at(-1);
     if (!d || d.key !== c.dateKey) {
       d = { key: c.dateKey, label: c.dateLabel, cells: [] };
@@ -248,6 +337,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
               👁 {row.stats.viewsLabel}
               {row.stats.likesLabel !== null && ` · 👍 ${row.stats.likesLabel}`}
               {row.stats.commentsLabel !== null && ` · 💬 ${row.stats.commentsLabel}`}
+              {row.stats.verdict && <div className="small muted">{row.stats.ratio ? `${row.stats.ratio.toFixed(1).replace(".", ",")}× к обычному · ${row.stats.basis}` : row.stats.basis}</div>}
             </div>
           )}
           <Dots stage={row.stage} />
@@ -259,7 +349,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       {row.running && (
         <div className="sheet-running">
           <p>⚙ {row.running}…</p>
-          {runOf?.progress && <RunProgressBar progress={runOf.progress} />}
+          {runOf?.progress && <RunProgressBar progress={runOf.progress} runId={runOf.id} />}
         </div>
       )}
       {row.flags.map((f) => (
@@ -272,6 +362,11 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           Тексты на YouTube отличаются от файла (правили в Studio?). Заполнение их не тронет, пока вы сами не отметите ролик в «Запуски» → «Проверить» — там видна
           разница построчно.
         </p>
+      )}
+
+      {/* До загрузки — первым делом: что не так с роликом. Уже на YouTube — ниже, у плеера. */}
+      {row.release && row.stage === "video" && (
+        <ReleaseChecks release={row.release} voice={row.voice ?? null} realPhotos={row.realPhotos ?? false} missingSecrets={state.missingSecrets} title="Перед загрузкой проверьте" />
       )}
 
       <section>
@@ -349,7 +444,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
                 ◀ {prev ? `${prev.dateLabel}${prev.occupant ? ` (${prev.occupant})` : ""}` : "раньше нельзя"}
               </button>
               <button className="btn" disabled={busy || !next} onClick={() => next && moveTo(next)}>
-                {next ? `${next.dateLabel}${next.occupant ? ` (${next.occupant})` : ""}` : "дальше 2 недель — в Studio"} ▶
+                {next ? `${next.dateLabel}${next.occupant ? ` (${next.occupant})` : ""}` : "дальше 60 дней — в Studio"} ▶
               </button>
             </div>
             <div className="btn-row">
@@ -374,11 +469,14 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           </>
         )}
         {row.stage === "published" && row.youtube && (
-          <div className="btn-row">
-            <a className="btn" href={`https://youtube.com/shorts/${row.youtube.videoId}`} target="_blank" rel="noreferrer">
-              Смотреть ↗
-            </a>
-          </div>
+          <>
+            <div className="btn-row">
+              <a className="btn" href={`https://youtube.com/shorts/${row.youtube.videoId}`} target="_blank" rel="noreferrer">
+                Смотреть ↗
+              </a>
+            </div>
+            <FirstComment key={row.code} row={row} busy={busy} setBusy={setBusy} onToast={(text, ok) => setToast({ text, ok })} />
+          </>
         )}
         {row.youtube && (
           <div className="btn-row">
@@ -394,6 +492,10 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           <h4>Посмотреть</h4>
           <Preview mp4Id={row.release.mp4.id} poster={cover ? `/api/asset/${cover.id}/file` : row.cover} />
         </section>
+      )}
+      {/* Вышедший ролик уже не заменить — проверку не грузим. */}
+      {row.release && (row.stage === "studio" || row.stage === "scheduled") && (
+        <ReleaseChecks release={row.release} voice={row.voice ?? null} realPhotos={row.realPhotos ?? false} missingSecrets={state.missingSecrets} title="Проверка ролика" />
       )}
 
       {!lock && (row.stage === "script" || row.stage === "video") && (

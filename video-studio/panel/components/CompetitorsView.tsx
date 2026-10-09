@@ -35,7 +35,7 @@ export default function CompetitorsView({
   refs,
   reports,
 }: {
-  shell: { updated: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
+  shell: { updated: string; generatedAt?: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
   refs: string[];
   reports: CompetitorReport[];
 }) {
@@ -55,7 +55,7 @@ export default function CompetitorsView({
     });
 
   return (
-    <AppShell active="stats" updated={shell.updated} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
+    <AppShell active="stats" updated={shell.updated} generatedAt={shell.generatedAt} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
       <main className="page">
         <div className="page-head">
           <h1>Похожие каналы</h1>

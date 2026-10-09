@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { listChannel, listChannelVideos, type ChannelVideo } from "../../src/pipeline/youtube-fill";
 import { buildState, parseAutopilot } from "../lib/state";
+import { dropTomorrow, etaLabel, kpiTrends } from "../lib/trends";
 import {
   actionsMinutes,
   buildStats,
@@ -81,6 +82,64 @@ const topics: Topic[] = [
 ];
 const plan = json("content/plan.json") as { pillars: Pillar[] };
 const pillars = plan.pillars.map((p) => ({ id: p.id, title: p.title }));
+
+test("тренды: 7 дней к прошлым 7, «вчера / обычно», короткая история — «считаю с …», вышло из слотов", () => {
+  const TZ = "Europe/Moscow";
+  const now = new Date("2026-10-20T09:00:00Z");
+  const day = (n: number) => new Date(Date.UTC(2026, 9, 20 - n)).toISOString().slice(0, 10);
+  // 20 дней: подписчики +2 в день; просмотры +100 в день первые 13 дней, потом +150.
+  const ch = Array.from({ length: 21 }, (_, i) => {
+    const n = 20 - i;
+    const views = 1000 + Math.min(i, 13) * 100 + Math.max(0, i - 13) * 150;
+    return [day(n), 600 + i * 2, views, 10] as [string, number, number, number];
+  });
+  const h = { v: 1 as const, ch, t: [], vid: {} };
+  const published = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((d) => new Date(now.getTime() - d * 0.6 * 86_400_000).toISOString());
+  const t = kpiTrends(h, published, 2, 640, now, TZ);
+  const [subs, views, yest, out] = t.tiles;
+  assert.equal(subs!.delta, "▲ +14 за 7 дн.");
+  assert.equal(subs!.sparkLabel, "подписчики за 21 дн.: с 600 до 640");
+  const nb = (x: string | null | undefined) => x?.replace(/\s/gu, " ");
+  assert.equal(nb(views!.value), "1 050");
+  assert.equal(views!.delta, "▲ +50 % к прошлым 7", "7 дней по 150 = 1 050 против 7 по 100 = 700");
+  assert.equal(yest!.value, "≈ 150");
+  assert.equal(yest!.delta, "обычно 100");
+  assert.equal(out!.value, "10 из 14");
+  assert.equal(t.subsPerDay, 2);
+  assert.equal(nb(t.milestone), "1 000 подписчиков — осталось 360, ≈ 180 дней");
+  // Три дня истории: процента нет, «считаю с …».
+  const short = kpiTrends({ ...h, ch: ch.slice(-3) }, [], 2, 640, now, TZ);
+  assert.equal(short.tiles[1]!.delta, null);
+  assert.equal(short.tiles[1]!.note, "считаю с 18.10 · есть 2 из 7 дней");
+  assert.equal(short.subsPerDay, null, "меньше 3 дней — темп не считаем");
+  // Пусто: работает только «Вышло».
+  const none = kpiTrends({ v: 1, ch: [], t: [], vid: {} }, published, 2, 640, now, TZ);
+  assert.deepEqual(
+    none.tiles.map((x) => x.delta !== null),
+    [false, false, false, true],
+  );
+});
+
+test("темп до цели: дата и дни; рост остановился; больше 2 лет; выпадет из окна 90 дней", () => {
+  const now = new Date("2026-10-20T09:00:00Z");
+  assert.equal(etaLabel(466, 500, 2, now, "Europe/Moscow"), "≈ 2 в день → 500 к 06.11 (17 дней)");
+  assert.equal(etaLabel(466, 500, 0, now, "Europe/Moscow"), "рост остановился — при нынешнем темпе цель не достигается");
+  assert.equal(etaLabel(10, 10_000, 1, now, "Europe/Moscow"), "при нынешнем темпе — больше 2 лет");
+  assert.equal(etaLabel(600, 500, 2, now, "Europe/Moscow"), null, "цель уже есть");
+  assert.equal(etaLabel(466, 500, null, now, "Europe/Moscow"), null);
+  const at = (d: number) => new Date(now.getTime() - d * 86_400_000).toISOString();
+  assert.equal(
+    dropTomorrow(
+      [
+        { publishedAt: at(89.5), views: 1200, shorts: true },
+        { publishedAt: at(88), views: 999, shorts: true },
+        { publishedAt: at(89.2), views: 5000, shorts: false },
+      ],
+      now,
+    ),
+    1200,
+  );
+});
 
 test("числа по-русски: как на YouTube — с отбрасыванием («999 тыс.», а не «1 млн»)", () => {
   assert.equal(formatCount(999), "999");

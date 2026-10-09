@@ -8,7 +8,7 @@ import AppShell from "./AppShell";
 import Thumb from "./Thumb";
 import ViewsChart, { type ChartBar } from "./ViewsChart";
 
-type Shell = { updated: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
+type Shell = { updated: string; generatedAt?: string; activeRuns: number; runwayDays: number | null; runwayLabel: string | null };
 
 export interface TikTokPageData {
   missing: string[]; // не заданы в Vercel
@@ -85,7 +85,7 @@ export default function TikTokView({ data, shell }: { data: TikTokPageData; shel
   }
 
   return (
-    <AppShell active="stats" updated={shell.updated} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
+    <AppShell active="stats" updated={shell.updated} generatedAt={shell.generatedAt} activeRuns={shell.activeRuns} runwayDays={shell.runwayDays} runwayLabel={shell.runwayLabel}>
       <main className="page stats-page">
         <div className="page-head titled">
           <div>

@@ -1,7 +1,7 @@
 "use client";
 import { useRef } from "react";
 import type { PanelState, Row } from "@/lib/state";
-import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
+import { RATIO_CLASS, STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import { usePressDrag } from "@/lib/use-press-drag";
 import CoverMedia, { frameOf } from "./CoverMedia";
 
@@ -17,7 +17,7 @@ export const movable = (r: Row) => r.stage === "scheduled" && Boolean(r.youtube)
 export const queued = (r: Row) => !r.whenExact && r.when !== null && r.stage !== "published";
 export const draggable = (r: Row) => movable(r) || queued(r);
 
-// Куда можно бросить ролик: запланированный — в слот ближайших двух недель (занятый — обмен),
+// Куда можно бросить ролик: запланированный — в слот ближайших 60 дней (занятый — обмен),
 // ролик-ориентир — на место другого ориентира (обмен в очереди).
 export function canDrop(dragged: Row, cell: BoardCell): boolean {
   if (cell.row?.code === dragged.code) return false;
@@ -29,7 +29,7 @@ export interface BoardCell {
   key: string;
   time: string;
   row: Row | null;
-  iso: string | null; // слот, на который можно перенести (ближайшие 14 дней), иначе null
+  iso: string | null; // слот, на который можно перенести (ближайшие 60 дней), иначе null
 }
 
 // Доска недели. Перетаскивание — общий хук usePressDrag: мышью сразу, пальцем — после короткого
@@ -80,8 +80,10 @@ export default function BoardView({
           {week.map((key) => {
             const rows = byDay.get(key) ?? [];
             const past = key < state.todayKey;
-            // Прошлое — только то, что вышло (во сколько вышло), без пустых слотов.
-            const times = [...new Set([...(past ? [] : state.slotTimes), ...rows.map((r) => r.timeLabel)])].sort();
+            // Прошлое — только то, что вышло (во сколько вышло), без пустых слотов; сегодня —
+            // без уже прошедших.
+            const open = past ? [] : state.slotTimes.filter((t) => key !== state.todayKey || grid.has(`${key} ${t}`));
+            const times = [...new Set([...open, ...rows.map((r) => r.timeLabel)])].sort();
             return (
               <div key={key} className={`bday${past ? " past" : ""}${key === state.todayKey ? " today" : ""}`}>
                 <div className="bday-head">
@@ -129,6 +131,11 @@ export default function BoardView({
                             <span className="code">{row.code}</span>
                             <span className="title">{row.title}</span>
                             {!movable(row) && <span className="mark">{row.whenExact ? STAGE_LABEL[row.stage] : `${STAGE_LABEL[row.stage]} · ориентир`}</span>}
+                            {row.stage === "published" && row.stats?.ratioLabel && (
+                              <span className={`ratio ${RATIO_CLASS[row.stats.verdict ?? "typical"]}`} title={row.stats.basis}>
+                                {row.stats.ratioLabel}
+                              </span>
+                            )}
                           </span>
                         </button>
                       </div>

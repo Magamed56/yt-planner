@@ -70,6 +70,7 @@ export function geminiProvider(): RawProvider {
     async synthesizeRaw(text, ctx) {
       if (!key) throw new TtsError("Gemini TTS: не задан GEMINI_API_KEY (ключ бесплатно: https://aistudio.google.com/apikey).");
       let lastErr: TtsError | null = null;
+      let quotaErr: TtsError | null = null; // 429 хоть у одной модели — главная причина для сводки запуска
       for (let idx = start; idx < chain.length; idx++) {
         const m = chain[idx]!;
         for (let attempt = 1; ; attempt++) {
@@ -90,12 +91,16 @@ export function geminiProvider(): RawProvider {
             const fallThrough = e.status === 429 || e.status === 404 || e.status === 400 || (e.status ?? 0) >= 500;
             if (!fallThrough) throw e;
             lastErr = e;
+            if (e.status === 429) quotaErr ??= e;
             if (idx + 1 < chain.length) console.warn(`[озвучка] ${e.message} Пробую следующую модель (${chain[idx + 1]}) — ею будет озвучен и остаток ролика…`);
             break;
           }
         }
       }
-      throw lastErr ?? new TtsError("Gemini TTS: ни одна модель не ответила.", { retryable: true });
+      // Квота кончилась у основной, а запасная модель ответила 404/5xx — наверх отдаём
+      // именно 429: по нему make пишет «квота Gemini закончилась — ролик соберётся при повторе».
+      if (quotaErr && lastErr !== quotaErr) console.warn(`[озвучка] ${lastErr?.message ?? ""}`);
+      throw quotaErr ?? lastErr ?? new TtsError("Gemini TTS: ни одна модель не ответила.", { retryable: true });
     },
   };
 

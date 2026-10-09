@@ -1,20 +1,20 @@
 import React, { useMemo } from "react";
 import { AbsoluteFill, Sequence, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import { createTikTokStyleCaptions, type Caption, type TikTokPage } from "@remotion/captions";
+import type { TikTokPage } from "@remotion/captions";
 import { measureText } from "@remotion/layout-utils";
-import type { TimelineCaption } from "../../types";
+import type { RenderScene, TimelineCaption } from "../../types";
 import { FONT_DISPLAY } from "../fonts";
+import { captionPages } from "../lib/caption-pages";
 import { useLayout } from "../lib/layout";
 import { fitTokens, type FontSpec } from "../lib/text";
 import { type Theme } from "../theme";
 
-// Субтитры в стиле TikTok: страницы по ~1 c речи, текущее слово — цветом
-// акцента с быстрым «поп»-масштабом. Полоса субтитров (lib/layout.ts) не
-// пересекается с зоной основного текста сцены и обходит интерфейс YouTube.
+// Субтитры в стиле TikTok: страницы по ~1 c речи (lib/caption-pages.ts),
+// текущее слово — цветом акцента с быстрым «поп»-масштабом. Полоса субтитров
+// (lib/layout.ts) не пересекается с зоной основного текста сцены и обходит
+// интерфейс YouTube.
 
-const COMBINE_MS = 1000;
 const HOLD_AFTER_MS = 450; // страница висит чуть после последнего слова, но не через всю паузу
-const BREAK_ON_SILENCE_MS = 300; // пауза между предложениями — новая страница
 const WORD_PAD_EM = 0.05; // поля слова: «поп»-масштаб активного слова не наезжает на соседей (амплитуда ниже ограничена промежутком)
 
 const CAPTION_FONT: FontSpec = { fontFamily: FONT_DISPLAY, fontWeight: 800, lineHeight: 1.18, letterSpacingEm: -0.01 };
@@ -31,18 +31,9 @@ function outline(px: number, color: string): string {
   return parts.join(", ");
 }
 
-export const Captions: React.FC<{ captions: TimelineCaption[]; theme: Theme }> = ({ captions, theme }) => {
+export const Captions: React.FC<{ captions: TimelineCaption[]; scenes?: RenderScene[]; theme: Theme }> = ({ captions, scenes, theme }) => {
   const { fps } = useVideoConfig();
-  const pages = useMemo(() => {
-    if (captions.length === 0) return [];
-    // Гарантируем ведущий пробел у всех слов кроме первого — по нему
-    // createTikTokStyleCaptions режет страницы.
-    const prepared: Caption[] = captions.map((c, i) => ({
-      ...c,
-      text: i === 0 ? c.text.trimStart() : c.text.startsWith(" ") ? c.text : ` ${c.text}`,
-    }));
-    return createTikTokStyleCaptions({ captions: prepared, combineTokensWithinMilliseconds: COMBINE_MS, breakOnSilenceAfterMilliseconds: BREAK_ON_SILENCE_MS }).pages;
-  }, [captions]);
+  const pages = useMemo(() => captionPages(captions, scenes), [captions, scenes]);
 
   return (
     <>

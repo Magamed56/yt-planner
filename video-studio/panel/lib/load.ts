@@ -3,15 +3,18 @@
 import { branchName, getVariable, GithubError, listDir, listReleases, listRuns, listSecretNames, readJson, repoName, runSteps, type GhRun, type GhStep } from "./github";
 import type { ChannelVideo } from "../../src/pipeline/youtube-fill";
 import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, buildState, parseAutopilot, parseAutopilotLast, parseQueueOrder, QUEUE_ORDER_VAR, type PanelState } from "./state";
+import { readHistory } from "./history-store";
 import { channelVideos } from "./youtube";
 
 export const STUDIO_DIR = "video-studio";
 
-// Запуски и шаги идущих (их обычно 0–2) — для полоски прогресса. Шаги не пришли — без этапов.
-async function runsWithSteps(): Promise<{ runs: GhRun[]; steps: Record<number, GhStep[]> }> {
+// Запуски и шаги идущих (их обычно 0–2) — для полоски прогресса; и шаги последнего упавшего
+// за двое суток запуска ролика — на каком этапе он сломался. Шаги не пришли — без этапов.
+export async function runsWithSteps(): Promise<{ runs: GhRun[]; steps: Record<number, GhStep[]> }> {
   const runs = await listRuns();
   const active = runs.filter((r) => r.status !== "completed").slice(0, 3);
-  const pairs = await Promise.all(active.map(async (r) => [r.id, await runSteps(r.id).catch(() => [])] as const));
+  const failed = runs.find((r) => r.status === "completed" && (r.conclusion === "failure" || r.conclusion === "timed_out") && r.path.endsWith("/video-studio.yml") && Date.now() - Date.parse(r.created_at) < 2 * 86_400_000);
+  const pairs = await Promise.all([...active, ...(failed ? [failed] : [])].map(async (r) => [r.id, await runSteps(r.id).catch(() => [])] as const));
   return { runs, steps: Object.fromEntries(pairs) };
 }
 
@@ -24,7 +27,7 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     (videos) => ({ videos, error: null as string | null }),
     (e: unknown) => ({ videos: null, error: errorText(e) }),
   );
-  const [planJson, channelJson, scriptFiles, week1, later, releases, runInfo, secretNames, autopilotRaw, lastRaw, orderRaw, yt] = await Promise.all([
+  const [planJson, channelJson, scriptFiles, week1, later, releases, runInfo, secretNames, autopilotRaw, lastRaw, orderRaw, history, yt] = await Promise.all([
     readJson(`${STUDIO_DIR}/content/plan.json`),
     readJson(`${STUDIO_DIR}/channel.json`),
     listDir(`${STUDIO_DIR}/scripts`),
@@ -36,6 +39,7 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     getVariable(AUTOPILOT_VAR).catch(() => null),
     getVariable(AUTOPILOT_LAST_VAR).catch(() => null),
     getVariable(QUEUE_ORDER_VAR).catch(() => null),
+    readHistory(),
     youtube,
   ]);
   if (planJson === null) {
@@ -58,5 +62,6 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     repo: repoName(),
     branch: branchName(),
     queueOrder: parseQueueOrder(orderRaw),
+    history,
   });
 }

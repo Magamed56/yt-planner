@@ -7,6 +7,7 @@
 import { cachedJson, DAY_MS } from "../cache";
 import { getJson } from "../http";
 import { pickRendition } from "../pick";
+import { stockFit } from "../relevance";
 import { envNumber } from "../util";
 import type { Candidate, Stage, StageInput, VisualProvider } from "../types";
 
@@ -37,12 +38,15 @@ interface PixabayResponse {
 
 const MIN_CLIP_SEC = 2;
 
-export function rankPixabayHits(hits: PixabayHit[], input: Pick<StageInput, "ctx">, crop: boolean, maxBytes: number): Candidate[] {
+export function rankPixabayHits(hits: PixabayHit[], input: Pick<StageInput, "ctx" | "query">, crop: boolean, maxBytes: number): Candidate[] {
   const { ctx } = input;
   const out: (Candidate & { long: boolean })[] = [];
   for (const h of hits ?? []) {
     const id = `pixabay:video:${h.id}`;
     if (ctx.usedIds.has(id) || !(h.duration >= MIN_CLIP_SEC)) continue;
+    // Теги клипа («cat, animal, pet») — явный промах мимо (relevance.ts).
+    const fit = input.query ? stockFit(input.query, h.tags ?? "") : null;
+    if (fit && !fit.ok) continue;
     const files = Object.values(h.videos ?? {})
       .filter((v): v is PixabayVariant => !!v && !!v.url && v.width > 0 && v.height > 0 && !(v.size > maxBytes))
       .map((v) => ({ url: v.url, width: v.width, height: v.height }));
@@ -59,6 +63,7 @@ export function rankPixabayHits(hits: PixabayHit[], input: Pick<StageInput, "ctx
       width: best.width,
       height: best.height,
       credit: { provider: "Pixabay", author: h.user ?? null, url: h.pageURL ?? null },
+      meta: { title: h.tags?.trim() || `Pixabay ${h.id}`, ...(fit ? { score: fit.score } : {}) },
       long: h.duration >= ctx.minDurationSec,
     });
   }

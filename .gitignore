@@ -43,3 +43,6 @@ next-env.d.ts
 # сгенерированные файлы (озвучка и т.п.) — большие бинарники, не нужны в git
 /storage/voiceovers/*
 !/storage/voiceovers/.gitkeep
+
+# временные рабочие копии фоновых агентов Claude Code (git worktree) — не код проекта
+/.claude/worktrees/

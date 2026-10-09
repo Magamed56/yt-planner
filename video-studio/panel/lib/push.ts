@@ -33,6 +33,7 @@ export interface PushMessage {
   body: string;
   url?: string; // куда ведёт нажатие: путь панели («/runs») или https-ссылка
   tag?: string; // уведомление с тем же tag заменяет прежнее на устройстве
+  badge?: number; // число на иконке приложения (0 — убрать); нет поля — число не меняется
 }
 
 export interface VapidKeys {
@@ -258,7 +259,7 @@ export async function sendPush(sub: PushSub, msg: PushMessage, keys: VapidKeys, 
   const base = { endpoint: sub.endpoint, label: sub.label };
   let body: Buffer;
   try {
-    const payload = { title: msg.title, body: msg.body, url: msg.url || "/", ...(msg.tag ? { tag: msg.tag } : {}) };
+    const payload = { title: msg.title, body: msg.body, url: msg.url || "/", ...(msg.tag ? { tag: msg.tag } : {}), ...(msg.badge !== undefined ? { badge: msg.badge } : {}) };
     body = encryptPayload(Buffer.from(JSON.stringify(payload)), sub.keys);
   } catch (e) {
     return { ...base, ok: false, status: 0, gone: false, error: `не получилось зашифровать: ${errorText(e)}` };

@@ -4,22 +4,32 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { channelFromJson, isoNoMs, upcomingSlots } from "../../src/pipeline/channel";
-import { parsePlan, PLAN_CODE } from "../../src/pipeline/plan";
+import { parsePlan, PLAN_CODE, scriptCode } from "../../src/pipeline/plan";
 import { applyUpdate, fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
-import { assetText, dispatchWorkflow, getVariable, GithubError, readFileWithSha, readJson, setVariable, writeFile } from "@/lib/github";
+import { dispatchOnce } from "@/lib/dispatch";
+import { buildFirstComment, commentBlocker, commentProblem, commentUrl, ctaQuestion, type OwnComment } from "@/lib/first-comment";
+import { assetText, dispatchWorkflow, getVariable, GithubError, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
+import { canRetry, confirmStale } from "@/lib/ops";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
 import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
 import { SESSION_COOKIE } from "@/lib/session";
 import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, parseQueueOrder, QUEUE_ORDER_VAR, queueSort, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
-import { channelVideos, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
+import { parseUsage, usageSummary } from "@/lib/stats";
+import { plural } from "@/lib/stages";
+import { channelVideos, commentCheck, postComment, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
 
 export interface ActionResult {
   ok: boolean;
   message: string;
+}
+
+// Запуск в GitHub Actions прошёл: какие ролики «в очереди…» до появления запуска в списке.
+export interface DispatchResult extends ActionResult {
+  dispatched?: { codes: string[]; at: string };
 }
 
 export interface MoveResult extends ActionResult {
@@ -56,21 +66,83 @@ function slotLabel(iso: string, tz: string): string {
 
 // ---- запуски workflow ----
 
-export async function draftAction(codes: string[]): Promise<ActionResult> {
+// Платные запуски (Claude, квота голоса) — через dispatchOnce: второе нажатие по тем же
+// роликам, пока первый запуск идёт или только что запущен, получает отказ, а не второй запуск.
+export async function draftAction(codes: string[]): Promise<DispatchResult | ActionResult> {
   return guarded(async () => {
-    const list = await planCodes(codes);
+    const [list, channel] = await Promise.all([planCodes(codes), loadChannel()]);
     if (!list.length) return fail("Отметьте темы из плана.");
-    await dispatchWorkflow("video-studio.yml", { mode: "draft", plan: list.join(",") });
-    return ok(`Запущено: сценарии ${codesLabel(list)}. Обычно 1–3 минуты на тему — следите в «Запусках».`);
+    const dispatched = await dispatchOnce("video-studio.yml", { mode: "draft", plan: list.join(",") }, "draft", list, channel.schedule.timezone);
+    return { ...ok(`Запущено: сценарии ${codesLabel(list)}. Обычно 1–3 минуты на тему — следите в «Запусках».`), dispatched };
   });
 }
 
-export async function videosAction(codes: string[]): Promise<ActionResult> {
+export async function videosAction(codes: string[]): Promise<DispatchResult | ActionResult> {
   return guarded(async () => {
-    const list = await planCodes(codes);
+    const [list, channel] = await Promise.all([planCodes(codes), loadChannel()]);
     if (!list.length) return fail("Отметьте ролики из плана.");
-    await dispatchWorkflow("video-studio.yml", { mode: "batch", plan: list.join(","), upload: "release" });
-    return ok(`Запущено: ${codesLabel(list)} — недостающие сценарии, затем сборка (≈ 8–10 минут на ролик). Видео появится в карточке ролика.`);
+    const dispatched = await dispatchOnce("video-studio.yml", { mode: "batch", plan: list.join(","), upload: "release" }, "batch", list, channel.schedule.timezone);
+    return { ...ok(`Запущено: ${codesLabel(list)} — недостающие сценарии, затем сборка (≈ 8–10 минут на ролик). Видео появится в карточке ролика.`), dispatched };
+  });
+}
+
+// ---- повтор упавшего запуска ----
+
+export interface RetryPreview extends ActionResult {
+  attempt: number; // какая попытка будет
+  confirmLabel: string;
+}
+
+// Что будет стоить повтор — перед подтверждением: озвучки заново и сколько уже потрачено
+// сегодня из бесплатного лимита Gemini (content/usage.jsonl читаем только здесь, по нажатию).
+export async function retryPreviewAction(runId: number): Promise<RetryPreview | ActionResult> {
+  return guarded(async () => {
+    const [state, usageText] = await Promise.all([loadState(), readFile(`${STUDIO_DIR}/content/usage.jsonl`).catch(() => null)]);
+    const run = state.runs.find((r) => r.id === runId);
+    if (!run) return fail("Этого запуска нет в списке — обновите страницу.");
+    const can = canRetry(run, state);
+    if (!can.ok) return fail(`Не повторяю «${run.label}»: ${can.reason}.`);
+    const parsed = usageText ? parseUsage(usageText) : null;
+    const g = parsed?.records.length ? usageSummary(parsed.records, new Date(), state.timezone).gemini : null;
+    const what = can.cost ? `озвучит заново ${can.cost} ${plural(can.cost, "ролик", "ролика", "роликов")}` : "перепишет сценарии (Claude)";
+    return { ok: true, message: `Повтор «${run.label}» ${what}${g ? ` · Gemini сегодня ${g.today}/${g.limit}` : ""}.`, attempt: run.attempt + 1, confirmLabel: `Повторить (попытка ${run.attempt + 1})` };
+  });
+}
+
+export async function retryRunAction(runId: number): Promise<ActionResult> {
+  return guarded(async () => {
+    const state = await loadState();
+    const run = state.runs.find((r) => r.id === runId);
+    if (!run) return fail("Этого запуска нет в списке — обновите страницу.");
+    const can = canRetry(run, state);
+    if (!can.ok) return fail(`Не повторяю «${run.label}»: ${can.reason}.`);
+    await rerunFailedJobs(run.id);
+    return ok(`Запущена попытка ${run.attempt + 1}: «${run.label}». Те же настройки, что в первый раз; следите в «Запусках».`);
+  });
+}
+
+// ---- новые темы в план ----
+
+const PLAN_EXTEND_MAX = 30;
+const planCount = (n: unknown) => Math.min(PLAN_EXTEND_MAX, Math.max(1, Math.floor(Number(n) || 10)));
+
+// Цена — по переменной LLM_PROVIDER (как в workflow «video-studio: план тем»): Claude ищет
+// источники веб-поиском (платно), Gemini — бесплатно, ссылки проверяются запросом по сети.
+export async function planExtendPreviewAction(count: number): Promise<(ActionResult & { confirmLabel: string }) | ActionResult> {
+  return guarded(async () => {
+    const n = planCount(count);
+    const provider = ((await getVariable("LLM_PROVIDER").catch(() => null)) ?? "").trim().toLowerCase();
+    const cost = provider === "claude" ? "платно: Claude + веб-поиск источников" : "бесплатно (Gemini), ссылки на источники проверяются";
+    return { ok: true, message: `Добавить в план ${n} ${plural(n, "тему", "темы", "тем")} — ${cost}. Около 3–5 минут.`, confirmLabel: `Добавить ${n}` };
+  });
+}
+
+export async function planExtendAction(count: number): Promise<DispatchResult | ActionResult> {
+  return guarded(async () => {
+    const n = planCount(count);
+    const channel = await loadChannel();
+    await dispatchOnce("video-studio-plan.yml", { count: String(n) }, "plan", [], channel.schedule.timezone);
+    return ok(`Запущено: +${n} ${plural(n, "тема", "темы", "тем")} в план. Через 3–5 минут они появятся в ленте как «Тема».`);
   });
 }
 
@@ -124,13 +196,15 @@ function textChanges(v: ChannelVideo, i: FillItem): string[] {
 // Как youtube-fill: тексты из week1-videos.json и content/videos.json, ролики канала с поиском
 // (100 единиц квоты: только что загруженное видео плейлист показывает с задержкой), время —
 // следующие свободные слоты после уже занятых.
-async function computeFill() {
+// search — искать ролики ещё и поиском YouTube (≈ 100 единиц квоты): плейлист «Загрузки»
+// (≈ 5 единиц) показывает свежую загрузку не сразу. Без поиска — когда хватает плейлиста.
+async function computeFill(search = true) {
   const [channel, week1, later, planJson, videos, orderRaw] = await Promise.all([
     loadChannel(),
     readJson(`${STUDIO_DIR}/content/week1-videos.json`),
     readJson(`${STUDIO_DIR}/content/videos.json`),
     readJson(`${STUDIO_DIR}/content/plan.json`),
-    channelVideos({ search: true }),
+    channelVideos({ search }),
     getVariable(QUEUE_ORDER_VAR).catch(() => null),
   ]);
   const items: FillItem[] = [];
@@ -186,21 +260,40 @@ export async function fillPreviewAction(): Promise<FillPreview | ActionResult> {
   });
 }
 
+export interface NewUpload {
+  code: string;
+  title: string;
+  videoId: string;
+  publishAt: string | null; // слот, который ролик получит (его же проверим перед записью)
+  whenLabel: string | null;
+  cover: string | null;
+}
+
 export interface NewUploads extends ActionResult {
-  found: { code: string; title: string; whenLabel: string | null }[];
+  found: NewUpload[];
   withoutTexts: string[]; // загружены, но текстов для них нет
   pending: string[]; // YouTube ещё обрабатывает
   duplicates: string[];
 }
 
 // Кнопка «Найти новые загрузки»: что загрузили в Studio руками и какое время им достанется.
+// Сначала — плейлист «Загрузки» (≈ 5 единиц квоты); поиск (≈ 100) — только если там нового нет.
 export async function findNewUploadsAction(): Promise<NewUploads | ActionResult> {
   return guarded(async () => {
-    const { tz, report, updates, withoutTexts } = await computeFill();
+    let fill = await computeFill(false);
+    if (!fill.updates.some(isNewUpload)) fill = await computeFill(true);
+    const { tz, report, updates, withoutTexts } = fill;
     return {
       ok: true,
       message: "",
-      found: updates.filter(isNewUpload).map((p) => ({ code: p.match.item.id, title: p.match.item.title, whenLabel: p.publishAt ? slotLabel(p.publishAt, tz) : null })),
+      found: updates.filter(isNewUpload).map((p) => ({
+        code: p.match.item.id,
+        title: p.match.item.title,
+        videoId: p.match.video.videoId,
+        publishAt: p.publishAt ?? null,
+        whenLabel: p.publishAt ? slotLabel(p.publishAt, tz) : null,
+        cover: p.match.video.thumbnailUrl ?? null,
+      })),
       withoutTexts,
       pending: report.pending.map((x) => x.item.id),
       duplicates: report.duplicates.map((d) => d.item.id),
@@ -210,15 +303,30 @@ export async function findNewUploadsAction(): Promise<NewUploads | ActionResult>
 
 // Тексты и время — сразу из панели, тем же кодом, что youtube-fill (videos.update): результат
 // за секунды, и секреты YT_* в GitHub для этого не нужны. onlyNew — только свежие загрузки.
-async function applyFill(codes: string[], onlyNew: boolean): Promise<ActionResult> {
+// confirmed — что показали владельцу («08a → чт 12:00»): если с тех пор слот заняли или ролик
+// уже заполнен, эту строку не трогаем и говорим почему — ничего не ставится дважды.
+async function applyFill(codes: string[], onlyNew: boolean, confirmed: Map<string, { videoId: string; publishAt: string | null }> = new Map()): Promise<ActionResult> {
   const want = new Set(codes.map((c) => c.trim().toLowerCase()).filter((c) => PLAN_CODE.test(c)));
   if (!want.size) return fail("Отметьте ролики, которым ставить тексты и время.");
-  const { tz, updates } = await computeFill();
-  const todo = updates.filter((p) => want.has(p.match.item.id) && !p.skip && (!onlyNew || isNewUpload(p)));
-  if (!todo.length) return fail("Заполнять нечего: ролики уже заполнены или YouTube их пока не показывает — обновите страницу.");
+  // Без поиска, если плейлист «Загрузки» уже показывает все нужные ролики (≈ 5 единиц квоты).
+  let fill = await computeFill(false);
+  const seen = (f: typeof fill) => [...want].every((c) => f.updates.some((p) => p.match.item.id === c));
+  if (!seen(fill)) fill = await computeFill(true);
+  const { tz, updates } = fill;
+  const problems: string[] = [];
+  const todo = updates.filter((p) => {
+    const code = p.match.item.id;
+    if (!want.has(code) || p.skip || (onlyNew && !isNewUpload(p))) return false;
+    const c = confirmed.get(code);
+    if (c && confirmStale(c, { videoId: p.match.video.videoId, publishAt: p.publishAt ?? null })) {
+      problems.push(`${code}: ${c.publishAt ? `слот ${slotLabel(c.publishAt, tz)}` : "слот"} уже занят или ролик изменился — нажмите «Найти новые загрузки» ещё раз`);
+      return false;
+    }
+    return true;
+  });
+  if (!todo.length) return fail(problems.length ? `Не вышло — ${problems.join("; ")}` : "Заполнять нечего: ролики уже заполнены или YouTube их пока не показывает — обновите страницу.");
   const done: string[] = [];
   const filled: { code: string; videoId: string }[] = [];
-  const problems: string[] = [];
   for (const p of todo) {
     try {
       const r = await applyUpdate({ auth: youtubeAuth }, p);
@@ -237,8 +345,14 @@ async function applyFill(codes: string[], onlyNew: boolean): Promise<ActionResul
   return { ok: done.length > 0, message };
 }
 
-export async function fillNewUploadsAction(codes: string[]): Promise<ActionResult> {
-  return guarded(() => applyFill(codes, true));
+// Коды (карточка ролика) или строки, показанные в «Найти новые загрузки», — с проверкой слота.
+export async function fillNewUploadsAction(items: (string | { code: string; videoId: string; publishAt: string | null })[]): Promise<ActionResult> {
+  return guarded(() => {
+    const list = Array.isArray(items) ? items : [];
+    const confirmed = new Map(list.flatMap((x) => (typeof x === "object" && x && typeof x.code === "string" && typeof x.videoId === "string" ? [[x.code.toLowerCase(), { videoId: x.videoId, publishAt: typeof x.publishAt === "string" ? x.publishAt : null }] as const] : [])));
+    const codes = list.map((x) => (typeof x === "string" ? x : String(x?.code ?? "")));
+    return applyFill(codes, true, confirmed);
+  });
 }
 
 export async function fillApplyAction(codes: string[]): Promise<ActionResult> {
@@ -390,6 +504,69 @@ export async function captionAction(assetId: number): Promise<(ActionResult & { 
   });
 }
 
+// ---- первый комментарий канала под вышедшим роликом ----
+
+export interface FirstCommentPreview extends ActionResult {
+  text: string; // черновик: вопрос из призыва сценария + 1–2 источника из плана
+  existing: OwnComment | null; // комментарий канала уже есть — второй не нужен
+}
+
+export interface CommentPosted extends ActionResult {
+  url: string | null;
+}
+
+const VIDEO_ID = /^[\w-]{6,20}$/;
+// Только что отправленные (videoId → время): двойное нажатие не даст второй комментарий, даже
+// если YouTube ещё не показывает первый в списке.
+const justPosted = new Map<string, number>();
+const POST_GUARD_MS = 10 * 60_000;
+
+// Черновик: ≈ 3 единицы квоты (канал, ролик, страница комментариев) + план и сценарий из GitHub.
+export async function firstCommentPreviewAction(code: string, videoId: string, scriptPath: string | null): Promise<FirstCommentPreview | ActionResult> {
+  return guarded(async () => {
+    const c = String(code ?? "").trim().toLowerCase();
+    if (!PLAN_CODE.test(c) || !VIDEO_ID.test(String(videoId ?? ""))) return fail("Неверный запрос — обновите страницу.");
+    const [planJson, check] = await Promise.all([readJson(`${STUDIO_DIR}/content/plan.json`), commentCheck(videoId)]);
+    if (check.existing) return { ok: true, message: "", text: "", existing: check.existing };
+    const blocked = commentBlocker(check);
+    if (blocked) return fail(blocked);
+    const item = parsePlan(planJson).items.find((i) => i.id === c);
+    if (!item) return fail(`Ролика ${c} нет в плане — обновите страницу.`);
+    // Сценарий — из карточки (путь сверяем с кодом) или из плана; нет — вопрос по названию.
+    const path = [scriptPath, item.script].find((p): p is string => typeof p === "string" && /^scripts\/[\w.-]+\.json$/.test(p) && scriptCode(p) === c);
+    const script = path ? await readJson(`${STUDIO_DIR}/${path}`).catch(() => null) : null;
+    return { ok: true, message: "", text: buildFirstComment({ question: ctaQuestion(script), title: item.title, facts: item.keyFacts }), existing: null };
+  });
+}
+
+// Отправка: проверка заново (≈ 3 единицы) и commentThreads.insert (50 единиц).
+export async function postFirstCommentAction(videoId: string, text: string): Promise<CommentPosted | ActionResult> {
+  return guarded(async () => {
+    if (!VIDEO_ID.test(String(videoId ?? ""))) return fail("Неверный запрос — обновите страницу.");
+    const body = String(text ?? "");
+    const problem = commentProblem(body);
+    if (problem) return fail(problem);
+    const at = justPosted.get(videoId);
+    if (at && Date.now() - at < POST_GUARD_MS) return fail("Комментарий под этим роликом уже отправлен — обновите карточку через минуту.");
+    const check = await commentCheck(videoId);
+    const blocked = commentBlocker(check);
+    if (blocked) return check.existing ? { ok: false, message: blocked, url: check.existing.url } : fail(blocked);
+    justPosted.set(videoId, Date.now());
+    let id: string | null;
+    try {
+      id = await postComment(videoId, check.channelId!, body);
+    } catch (e) {
+      justPosted.delete(videoId); // не дошёл — можно повторить
+      throw e;
+    }
+    return {
+      ok: true,
+      message: "Комментарий опубликован. Закрепите его в приложении YouTube: ⋮ у комментария → «Закрепить» (API этого не умеет).",
+      url: id ? commentUrl(videoId, id) : null,
+    };
+  });
+}
+
 // ---- правка сценария и пересборка: только пока ролик не загружен в YouTube ----
 
 // Строка очереди по коду — с той же проверкой YouTube и запусков, что видит панель.
@@ -446,21 +623,22 @@ export async function saveScriptAction(code: string, sha: string, edit: ScriptEd
   });
 }
 
-export async function rebuildAction(code: string, opts: RebuildOptions): Promise<ActionResult> {
+export async function rebuildAction(code: string, opts: RebuildOptions): Promise<DispatchResult | ActionResult> {
   return guarded(async () => {
     const { state, row } = await rowFor(code);
     const lock = editLock(row, state.youtubeError);
     if (lock) return fail(lock);
     const o: RebuildOptions = { voice: String(opts?.voice ?? "auto"), voiceName: String(opts?.voiceName ?? ""), theme: String(opts?.theme ?? "auto"), music: opts?.music !== false };
+    let dispatched: DispatchResult["dispatched"];
     try {
-      await dispatchWorkflow("video-studio.yml", rebuildInputs(row.code, o));
+      dispatched = await dispatchOnce("video-studio.yml", rebuildInputs(row.code, o), "batch", [row.code], state.timezone);
     } catch (e) {
       // Поле music появилось в workflow вместе с этой кнопкой: пока PR не слит, GitHub его не знает.
       if (e instanceof GithubError && e.status === 422 && /music/.test(e.message)) throw new Error("В workflow ветки ещё нет поля music — слейте PR с ним или соберите с музыкой.");
       throw e;
     }
     const what = row.release || row.localVideo ? "пересборка" : "сборка";
-    return ok(`Запущена ${what} ${row.code}: ${rebuildLabel(o)}. ≈ 8–10 минут в GitHub Actions — новое видео появится в карточке ролика.`);
+    return { ...ok(`Запущена ${what} ${row.code}: ${rebuildLabel(o)}. ≈ 8–10 минут в GitHub Actions — новое видео появится в карточке ролика.`), dispatched };
   });
 }
 

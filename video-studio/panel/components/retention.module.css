@@ -1,0 +1,38 @@
+/* Удержание (YouTube Analytics) на «Статистике» — свой модуль, чтобы не задевать globals.css. */
+
+/* 8 показателей вместо 6: по 4 в ряд, чтобы не оставался один в строке. */
+@media (min-width: 700px) {
+  :global(.kpis).kpis8 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Цифры ролика: 6 вместо 4 — на телефоне 3 × 2, на широком экране в ряд. */
+:global(.vstat-nums).nums6 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (min-width: 760px) {
+  :global(.vstat-nums).nums6 {
+    grid-template-columns: repeat(6, 76px);
+  }
+}
+
+.weak {
+  background: var(--warn);
+}
+
+.low {
+  color: var(--warn);
+}
+
+.card ol {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.card code {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}

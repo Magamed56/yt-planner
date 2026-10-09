@@ -320,7 +320,9 @@ async function main() {
     updated_at: "2026-10-08T11:35:00Z",
     html_url: "https://github.com/x/y/actions/runs/3",
   };
-  const scheduled14 = video("01a", { publishAt: "2026-10-14T16:00:00Z" }); // ср 14.10, 19:00 МСК
+  // Расписание без пропусков до ср 14.10 19:00 МСК: чужие ролики (без кода темы) на всех слотах.
+  const fullSlots = ["2026-10-08T16:00:00Z", ...["09", "10", "11", "12", "13", "14"].flatMap((d) => [`2026-10-${d}T09:00:00Z`, `2026-10-${d}T16:00:00Z`])];
+  const full = fullSlots.map((iso, i) => video(`other${i}`, { publishAt: iso }));
   const base: StateInput = {
     now,
     planJson: json("content/plan.json"),
@@ -329,7 +331,7 @@ async function main() {
     fillLists: [],
     releases: [release(1, "08a"), release(2, "08b")],
     runs: [],
-    videos: [scheduled14],
+    videos: full,
     youtubeError: null,
     secretNames: null,
     autopilot: parseAutopilot(null),
@@ -340,16 +342,18 @@ async function main() {
   const summary = (over: Partial<StateInput> = {}) => dailySummary(buildState({ ...base, ...over }));
 
   await test("сводка: загрузить в Studio + запас расписания — одной строкой", () => {
-    assert.deepEqual(summary(), { title: "Дела на сегодня", body: "Загрузите в Studio: 08a, 08b · расписание до 14.10", url: "/", tag: "daily" });
+    assert.deepEqual(summary(), { title: "Дела на сегодня", body: "Загрузите в Studio: 08a, 08b · расписание до 14.10", url: "/", tag: "daily", badge: 0 });
   });
 
   await test("сводка: упавший запуск и ролик в Studio без времени — «Нужно внимание», ссылка на «Запуски»", () => {
-    const msg = summary({ runs: [failedRun], videos: [scheduled14, video("09a")] });
+    const msg = summary({ runs: [failedRun], videos: [...full, video("09a")] });
     assert.deepEqual(msg, {
       title: "Нужно внимание",
-      body: "Не удался запуск «youtube-fill: 01a (проверка)» · загрузите в Studio: 08a, 08b · в Studio без времени выхода: 09a · расписание до 14.10",
+      // Порядок — как в карточке «Сейчас»: срочное, важное, остальное.
+      body: "Не удался запуск «Заполнение YouTube · 01a (проверка)» · в Studio без времени выхода: 09a · загрузите в Studio: 08a, 08b · расписание до 14.10",
       url: "/runs",
       tag: "daily",
+      badge: 2,
     });
   });
 
@@ -357,15 +361,20 @@ async function main() {
     assert.equal(summary({ releases: [] }), null);
   });
 
-  await test("сводка: расписание кончается или пусто — пишем, даже если больше делать нечего", () => {
+  await test("сводка: пустой слот меньше чем через двое суток или расписание пусто — пишем, даже если больше делать нечего", () => {
     assert.deepEqual(summary({ releases: [], videos: [video("01a", { publishAt: "2026-10-09T09:00:00Z" })] }), {
       title: "Нужно внимание",
-      body: "Расписание до 09.10 — осталось меньше суток",
-      url: "/",
+      body: "Пустой слот чт, 08.10 19:00 — встанет 01b",
+      url: "/?v=01b", // одно видео в главном деле — сразу его карточка
       tag: "daily",
+      badge: 1,
     });
-    assert.equal(summary({ releases: [], videos: [video("01a", { publishAt: "2026-10-09T16:00:00Z" })] })?.body, "Расписание до 09.10 — остался 1 день");
     assert.equal(summary({ releases: [], videos: [] })?.body, "Расписание пусто");
+    assert.equal(summary({ releases: [], videos: [] })?.url, "/", "без ролика — главная");
+    assert.equal(summary({ releases: [release(1, "08a")], videos: full })?.url, "/?v=08a");
+    // Без пропусков на 60 дней — так и пишем.
+    const grid = buildState({ ...base, releases: [], videos: [] }).slotGrid.map((c) => c.iso);
+    assert.equal(summary({ videos: grid.map((iso, i) => video(`other${i}`, { publishAt: iso })) })?.body, "Загрузите в Studio: 08a, 08b · расписание без пропусков на 60 дней");
   });
 
   await test("сводка: YouTube недоступен, дубли загрузки, длинный список кодов", () => {
@@ -374,11 +383,31 @@ async function main() {
       body: "YouTube недоступен — расписание не проверено · загрузите в Studio: 08a, 08b",
       url: "/",
       tag: "daily",
+      badge: 1,
     });
-    const dup = summary({ releases: [], videos: [scheduled14, video("07a"), video("07a", { videoId: "v07a-2" })] });
+    const dup = summary({ releases: [], videos: [...full, video("07a"), video("07a", { videoId: "v07a-2" })] });
     assert.match(dup?.body ?? "", /^Проблемы с загрузкой в Studio: 07a · /);
     const many = ["02a", "02b", "03a", "03b", "04a", "04b", "05a", "05b"].map((c, i) => release(10 + i, c));
     assert.match(summary({ releases: many })?.body ?? "", /^Загрузите в Studio: 02a, 02b, 03a, 03b, 04a, 04b и ещё 2 · расписание до 14\.10$/);
+  });
+
+  await test("сводка с цифрами: «вчера ≈ +1,9 тыс. (обычно 1,6 тыс.)»; без дел — только если заметно; ≤ 178 знаков", () => {
+    // Дневные строки истории: 7 обычных дней по +1 600, вчера +1 900, подписчики 488 → 500.
+    const days = Array.from({ length: 10 }, (_, i) => new Date(Date.UTC(2026, 8, 28 + i)).toISOString().slice(0, 10)); // 28.09–07.10
+    const ch = days.map((d, i) => [d, i === 9 ? 500 : 488 + i, 10_000 + i * 1600 + (i === 9 ? 300 : 0), 5] as [string, number, number, number]);
+    const history = { v: 1 as const, ch, t: [], vid: {} };
+    const withTodo = summary({ history });
+    assert.equal(withTodo?.body, "Загрузите в Studio: 08a, 08b · расписание до 14.10 · вчера ≈ +1,9 тыс. просмотров (обычно 1,6 тыс.) · +4 подписчика");
+    // Дел нет, но перейдён рубеж 500 — «Сводка канала» со ссылкой на «Статистику».
+    const quiet = summary({ releases: [], history });
+    assert.deepEqual(quiet, { title: "Сводка канала", body: "🎉 500 подписчиков · вчера ≈ +1,9 тыс. просмотров (обычно 1,6 тыс.) · +4 подписчика", url: "/stats", tag: "daily", badge: 0 });
+    // Обычный день без дел — тишина.
+    const calm = { ...history, ch: ch.map((r, i) => [r[0], 400 + i, 10_000 + i * 1600, 5] as [string, number, number, number]) };
+    assert.equal(summary({ releases: [], history: calm }), null);
+    // Длинный список дел — цифры отбрасываются, тело не длиннее 178 знаков.
+    const many = ["02a", "02b", "03a", "03b", "04a", "04b", "05a", "05b"].map((c, i) => release(10 + i, c));
+    const long = summary({ releases: many, videos: [...full, video("09a"), video("07a"), video("07a", { videoId: "v07a-2" })], runs: [failedRun], history })!;
+    assert.ok(long.body.length <= 178, `${long.body.length}`);
   });
 
   console.log(`\nВсе проверки уведомлений пройдены: ${passed}.`);

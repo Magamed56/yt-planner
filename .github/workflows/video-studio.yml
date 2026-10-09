@@ -55,6 +55,11 @@ on:
         description: "Голос (необязательно): Charon, Puck, Kore… (gemini) · ru-RU-SvetlanaNeural (edge) · ru_RU-irina-medium (piper)"
         type: string
         required: false
+      voice_fallback:
+        description: "Основной голос не работает (кончилась квота Gemini): auto — озвучить запасным (Edge/Piper, пометка в qc.json); none — не подменять: ролик падает и соберётся при повторе (так запускает автопилот панели)"
+        type: choice
+        options: [auto, none]
+        default: auto
       theme:
         description: "Палитра"
         type: choice
@@ -143,7 +148,14 @@ jobs:
       MUSIC: ${{ inputs.music == 'none' && 'none' || vars.MUSIC }}
       CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
       # Остальные несекретные настройки из .env.example; пустое значение = умолчание.
-      TTS_FALLBACK: ${{ vars.TTS_FALLBACK }}
+      # voice_fallback = none (автопилот панели): без молчаливой подмены голоса на Edge.
+      TTS_FALLBACK: ${{ inputs.voice_fallback == 'none' && 'none' || vars.TTS_FALLBACK }}
+      # Общий кэш озвучки: раннер чистый, кэш живёт между запусками через actions/cache (шаги ниже).
+      TTS_CACHE_DIR: ${{ github.workspace }}/video-studio/.cache/voice
+      # Пересборка берёт тот же текст из кэша — тот же дубль. Нужен новый (оговорка, обрезанное
+      # слово): переменная TTS_CACHE = 0 на время пересборки или правка текста сцены.
+      TTS_CACHE: ${{ vars.TTS_CACHE }}
+      TTS_CACHE_DAYS: ${{ vars.TTS_CACHE_DAYS }}
       GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL }}
       GEMINI_TTS_VOICE: ${{ inputs.voice_name || vars.GEMINI_TTS_VOICE }}
       GEMINI_TTS_STYLE: ${{ vars.GEMINI_TTS_STYLE }}
@@ -152,6 +164,10 @@ jobs:
       LLM_FALLBACKS: ${{ vars.LLM_FALLBACKS }}
       LLM_EFFORT: ${{ vars.LLM_EFFORT }}
       VISUALS_PREFER: ${{ vars.VISUALS_PREFER }}
+      # Судья Claude для кадров (платно, по умолчанию выключен): VISUALS_JUDGE=claude + секрет ANTHROPIC_API_KEY.
+      VISUALS_JUDGE: ${{ vars.VISUALS_JUDGE }}
+      VISUALS_JUDGE_MODEL: ${{ vars.VISUALS_JUDGE_MODEL }}
+      VISUALS_MIN_PHOTO_PX: ${{ vars.VISUALS_MIN_PHOTO_PX }}
       MUSIC_MOOD: ${{ vars.MUSIC_MOOD }}
       LOUDNESS_TARGET: ${{ vars.LOUDNESS_TARGET }}
       YT_CATEGORY_ID: ${{ vars.YT_CATEGORY_ID }}
@@ -212,6 +228,19 @@ jobs:
         with:
           path: video-studio/models
           key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-v1
+
+      # Озвученные сцены прошлых запусков (ключ записи — хэш провайдера, голоса, стиля и текста):
+      # пересборка и повтор упавшего запуска не тратят суточную квоту Gemini заново.
+      # Берётся самый свежий кэш; сохраняется отдельным шагом в конце — даже если запуск упал.
+      - name: Кэш озвучки — восстановить
+        id: voice-cache
+        if: env.MODE != 'draft'
+        uses: actions/cache/restore@v6
+        with:
+          path: video-studio/.cache/voice
+          key: tts-voice-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            tts-voice-${{ runner.os }}-
 
       - name: Системные библиотеки для Chrome Headless Shell
         if: env.MODE != 'draft'
@@ -508,7 +537,13 @@ jobs:
             echo "::error::Для mode=batch укажите сценарии в поле script (список через запятую или маску video-studio/scripts/sut-01*.json) или коды тем в поле plan."
             exit 1
           fi
-          [ "$n" -gt 10 ] && echo "::warning::$n роликов за раз: бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные озвучит Edge. Надёжнее по 8–10 за запуск."
+          if [ "$n" -gt 10 ]; then
+            if [ "$TTS_FALLBACK" = "none" ]; then
+              echo "::warning::$n роликов за раз: бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные упадут (voice_fallback = none) и соберутся при повторе. Надёжнее по 8–10 за запуск."
+            else
+              echo "::warning::$n роликов за раз: бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные озвучит Edge. Надёжнее по 8–10 за запуск."
+            fi
+          fi
           # Точка отсчёта слотов фиксируется один раз: пока идёт пакет, номера слотов не сдвигаются.
           # Без schedule_start — сразу после последнего уже запланированного ролика (или от «сейчас»).
           start="${SCHEDULE_START:-${LAST_TAKEN:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}}"
@@ -550,9 +585,14 @@ jobs:
             yt=$(sed -n 's/^youtube_url=//p' "$out" | tail -n 1)
             at=$(sed -n 's/^youtube_publish_at=//p' "$out" | tail -n 1)
             dur=$(sed -n 's/^duration_sec=//p' "$out" | tail -n 1)
+            # Озвучка: не удалась (квота) или ролик озвучен запасным голосом — видно прямо в таблице.
+            verr=$(sed -n 's/^voice_error=//p' "$out" | tail -n 1)
+            vname=$(sed -n 's/^voice=//p' "$out" | tail -n 1)
+            vfb=$(sed -n 's/^voice_fallback=//p' "$out" | tail -n 1)
             code=""
             if [[ "$(basename "$f")" =~ ^sut-([0-9]{2}[a-z])- ]]; then code="${BASH_REMATCH[1]}"; fi
-            note="$status${yt:+ $yt}${at:+, выйдет $at}"
+            note="$status${verr:+ $verr}${yt:+ $yt}${at:+, выйдет $at}"
+            [ -n "$vfb" ] && note="$note, голос: $vname"
             if [ -n "$release" ] && [ -n "$run_dir" ] && [ -f "$run_dir/video.mp4" ]; then
               # Файл с кодом (08a-….mp4): под этим именем ролик грузят в Studio руками,
               # по коду его находит youtube-fill.
@@ -588,6 +628,16 @@ jobs:
             printf '::error::Не удалось: %s\n' "${failed[@]}"
             exit 1
           fi
+
+      # always(): озвучка упавшего ролика (например, кончилась квота посреди пакета) тоже
+      # пригодится повтору. Ключ — по содержимому кэша: ничего не добавилось — не сохраняем.
+      - name: Кэш озвучки — сохранить
+        if: always() && env.MODE != 'draft' && hashFiles('video-studio/.cache/voice/*.json') != '' && steps.voice-cache.outputs.cache-matched-key != format('tts-voice-{0}-{1}', runner.os, hashFiles('video-studio/.cache/voice/*.json'))
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: video-studio/.cache/voice
+          key: tts-voice-${{ runner.os }}-${{ hashFiles('video-studio/.cache/voice/*.json') }}
 
       # Сценарии (draft и пакет по плану), отметки в плане и тексты собранных роликов для
       # youtube-fill — в ветку. always(): уже готовое не теряется, даже если дальше что-то упало.
@@ -667,10 +717,33 @@ jobs:
             echo "Уведомления не настроены (секреты PANEL_URL и PANEL_NOTIFY_SECRET) — пропускаю."
             exit 0
           fi
-          body=$(jq -n --arg b "${PLAN:-новый ролик} — загрузите в Studio" '{title: "Видео готово", body: $b, url: "/"}')
+          # Один ролик — нажатие открывает сразу его карточку в панели (/?v=08a), несколько — ленту.
+          url="/"
+          if [[ "${PLAN:-}" =~ ^[0-9]{2}[a-z]$ ]]; then url="/?v=$PLAN"; fi
+          body=$(jq -n --arg b "${PLAN:-новый ролик} — загрузите в Studio" --arg u "$url" '{title: "Видео готово", body: $b, url: $u}')
           curl -fsS --max-time 30 -X POST "${PANEL_URL%/}/api/notify" \
             -H "Authorization: Bearer $PANEL_NOTIFY_SECRET" -H "Content-Type: application/json" -d "$body" > /dev/null
           echo "Уведомление отправлено."
+
+      # Сборка или сценарий упали — сразу на телефон, а не утренней сводкой: в «Запусках» панели
+      # видно, на каком этапе, и есть «Повторить». Те же секреты; без них шаг молчит.
+      - name: Уведомить телефон о сбое
+        if: failure() && env.PLAN != ''
+        continue-on-error: true
+        env:
+          PANEL_URL: ${{ secrets.PANEL_URL }}
+          PANEL_NOTIFY_SECRET: ${{ secrets.PANEL_NOTIFY_SECRET }}
+        run: |
+          if [ -z "$PANEL_URL" ] || [ -z "$PANEL_NOTIFY_SECRET" ]; then
+            echo "Уведомления не настроены (секреты PANEL_URL и PANEL_NOTIFY_SECRET) — пропускаю."
+            exit 0
+          fi
+          what="сборка"
+          if [ "${MODE:-}" = "draft" ]; then what="сценарий"; fi
+          body=$(jq -n --arg b "$PLAN — $what не удалась. Откройте «Запуски»: там этап и «Повторить»" '{title: "Сборка не удалась", body: $b, url: "/runs"}')
+          curl -fsS --max-time 30 -X POST "${PANEL_URL%/}/api/notify" \
+            -H "Authorization: Bearer $PANEL_NOTIFY_SECRET" -H "Content-Type: application/json" -d "$body" > /dev/null
+          echo "Уведомление о сбое отправлено."
 
       # Без релиза пакет живёт только в артефакте — на 3 дня (квота хранилища артефактов мала).
       - name: Артефакт пакета
@@ -708,10 +781,17 @@ jobs:
 
       - name: Сводка при ошибке
         if: failure()
+        env:
+          VOICE_ERROR: ${{ steps.render.outputs.voice_error }}
         run: |
           {
             echo "## ❌ Запуск не удался"
             echo ""
+            # Пакет пишет причину по каждому ролику в свою таблицу, render — сюда.
+            if [ -n "$VOICE_ERROR" ]; then
+              echo "**Озвучка:** $VOICE_ERROR."
+              echo ""
+            fi
             echo "Откройте шаг с красным крестиком — в конце его лога строка «✖ Ошибка:» с причиной и подсказкой."
             echo "Частые причины: не задан секрет (GEMINI_API_KEY для темы), ошибка в JSON сценария, исчерпана квота API."
           } >> "$GITHUB_STEP_SUMMARY"

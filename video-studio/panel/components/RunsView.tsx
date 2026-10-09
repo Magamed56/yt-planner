@@ -1,6 +1,7 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   checkKeysAction,
   draftAction,
@@ -12,10 +13,15 @@ import {
   type ActionResult,
   type FillPreview,
 } from "@/app/actions";
-import { pickCleanup } from "@/lib/ops";
+import { setBadge } from "@/lib/badge";
+import { autopilotPreview } from "@/lib/autopilot-rules";
+import { canRetry, pickCleanup } from "@/lib/ops";
+import { notePending, usePending } from "@/lib/pending";
 import type { AutopilotSettings, PanelState, RunInfo } from "@/lib/state";
-import { STAGE_LABEL, codesLabel } from "@/lib/stages";
+import { STAGE_LABEL, codesLabel, plural } from "@/lib/stages";
+import { badgeCount, buildTodo } from "@/lib/todo";
 import AppShell from "./AppShell";
+import { usePlanExtend, useRetry } from "./RetryConfirm";
 import RunProgressBar from "./RunProgressBar";
 
 const KEEP_OPTIONS = [0, 3, 7, 14, 30, 60, 90, 180];
@@ -37,6 +43,9 @@ export default function RunsView({ state }: { state: PanelState }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
+  // Число на иконке приложения — как на главной: сколько дел ждёт внимания.
+  const attention = badgeCount(buildTodo(state, new Date(state.generatedAt)));
+  useEffect(() => setBadge(attention), [attention, state.generatedAt]);
 
   const upcoming = state.rows.filter((r) => r.stage === "topic" || r.stage === "script").slice(0, 12);
   const [picked, setPicked] = useState<string[]>(() => upcoming.filter((r) => !r.running).slice(0, 2).map((r) => r.code));
@@ -48,8 +57,31 @@ export default function RunsView({ state }: { state: PanelState }) {
   const autoChanged = !sameSettings(auto, state.autopilot);
   // Что удалит уборка при выбранном сроке — считается тут же, до «Сохранить» (время — серверное).
   const cleanup = pickCleanup(state.releaseVideos, auto.keepReleaseDays, Date.parse(state.generatedAt));
+  // Что сделает ближайший запуск автопилота с настройками из формы — пересчёт на лету.
+  // Время — серверное (generatedAt): на сервере и в браузере текст совпадает.
+  const next = autopilotPreview(state, auto, new Date(state.generatedAt));
+  const rowOf = new Map(state.rows.map((r) => [r.code, r]));
+  const nextWhen = new Intl.DateTimeFormat("ru-RU", { timeZone: state.timezone, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(next.at));
+  const previewParts = [
+    next.build.length
+      ? `соберёт ${next.build.map((c) => `${c}${rowOf.get(c)?.dateLabel ? ` (выход ${rowOf.get(c)!.dateLabel} ${rowOf.get(c)!.timeLabel})` : ""}`).join(", ")}`
+      : `собирать не будет — ${next.buildSkip ?? "нечего"}`,
+    next.reserve.length ? `запас сценариев: ${next.reserve.join(", ")}` : "",
+    next.retries.length ? `повторит: ${next.retries.join(", ")}` : "",
+    next.cleanup.files ? `уборка: ${next.cleanup.files} видео (${mbText(next.cleanup.bytes)})` : "",
+  ].filter(Boolean);
+  const previewText = `Следующий запуск (${nextWhen}): ${previewParts.join("; ")}${autoChanged ? " — если сохранить эти настройки." : " — если ничего не изменится."}`;
   const keepOptions = KEEP_OPTIONS.includes(auto.keepReleaseDays) ? KEEP_OPTIONS : [...KEEP_OPTIONS, auto.keepReleaseDays].sort((a, b) => a - b);
 
+  const done = (r: { ok: boolean; message: string }) => {
+    setToast({ text: r.message, ok: r.ok });
+    if (r.ok) router.refresh();
+  };
+  const retry = useRetry(done);
+  const extend = usePlanExtend(done);
+  // Только что запущенные — «в очереди», пока GitHub не покажет запуск: второе нажатие не нужно.
+  const pending = usePending();
+  const queuedNow = picked.some((c) => pending.has(c)) || pickedTopics.some((c) => pending.has(c));
   const toggle = (list: string[], code: string) => (list.includes(code) ? list.filter((c) => c !== code) : [...list, code]);
 
   async function run(key: string, action: () => Promise<ActionResult>, confirmText?: string) {
@@ -57,6 +89,7 @@ export default function RunsView({ state }: { state: PanelState }) {
     setBusy(key);
     try {
       const r = await action();
+      notePending(r);
       setToast({ text: r.message, ok: r.ok });
       if (r.ok) router.refresh();
     } catch (e) {
@@ -93,9 +126,11 @@ export default function RunsView({ state }: { state: PanelState }) {
     <AppShell
       active="runs"
       updated={state.updatedLabel}
+      generatedAt={state.generatedAt}
+      activeIds={state.runs.filter((r) => r.active).map((r) => r.id)}
       activeRuns={state.runs.filter((r) => r.active).length}
       runwayDays={state.runwayDays}
-      runwayLabel={state.scheduleEndLabel}
+      runwayLabel={state.runwayLabel}
     >
       <main className="page">
         <section className="card" id="produce">
@@ -107,19 +142,27 @@ export default function RunsView({ state }: { state: PanelState }) {
           <div className="btn-row">
             <button
               className="btn primary"
-              disabled={!picked.length || busy !== null}
+              disabled={!picked.length || busy !== null || queuedNow}
               onClick={() => run("produce", () => videosAction(picked), `Сделать видео: ${codesLabel(picked)}? Сценарии пишет Claude (платно), сборка ≈ 8–10 минут на ролик.`)}
             >
-              Сделать видео ({picked.length})
+              {queuedNow ? "Запускаю… ждём GitHub" : `Сделать видео (${picked.length})`}
             </button>
             <button
               className="btn"
-              disabled={!pickedTopics.length || busy !== null}
+              disabled={!pickedTopics.length || busy !== null || queuedNow}
               onClick={() => run("produce", () => draftAction(pickedTopics), `Только сценарии: ${codesLabel(pickedTopics)}? Это платно (Claude).`)}
             >
               Только сценарии ({pickedTopics.length})
             </button>
           </div>
+          <p className="small plan-runway">
+            {state.topicsUntilLabel
+              ? `Темы плана — до ${state.topicsUntilLabel}: без сценария ${state.topicsLeft}, хватит на ${state.topicsDays} ${plural(state.topicsDays ?? 0, "день", "дня", "дней")}.`
+              : "План тем закончился."}{" "}
+            <button className="btn small" disabled={extend.busy || busy !== null || state.runs.some((r) => r.active && r.kind === "plan")} onClick={() => void extend.start(10)}>
+              + 10 тем
+            </button>
+          </p>
           {upcoming.length === 0 ? (
             <p className="muted">У всех тем плана уже есть видео.</p>
           ) : (
@@ -207,7 +250,7 @@ export default function RunsView({ state }: { state: PanelState }) {
             <label>
               Готовить за{" "}
               <select value={auto.days} onChange={(e) => setAuto({ ...auto, days: Number(e.target.value) })}>
-                {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                {Array.from({ length: 14 }, (_, i) => i + 1).map((d) => (
                   <option key={d} value={d}>
                     {d}
                   </option>
@@ -275,6 +318,7 @@ export default function RunsView({ state }: { state: PanelState }) {
               Запустить сейчас
             </button>
           </div>
+          <p className="small autopilot-next">{previewText}</p>
           {state.autopilotLast && (
             <p className="muted small">
               Последний раз: {state.autopilotLast.atLabel} — {state.autopilotLast.action}
@@ -293,12 +337,36 @@ export default function RunsView({ state }: { state: PanelState }) {
                 <div className="run" key={r.id}>
                   <span>{runIcon(r)}</span>
                   <span>
-                    {r.title} <span className="when">· {r.createdLabel}</span>
+                    <span title={r.title}>{r.label}</span> <span className="when">· {r.createdLabel}</span>
+                    {r.codes.length > 0 && (
+                      <span className="run-codes">
+                        {r.codes.slice(0, 6).map((c) => (
+                          <Link key={c} className="code-chip" href={`/?v=${c}`} title={`Карточка ${c}`}>
+                            {c}
+                          </Link>
+                        ))}
+                      </span>
+                    )}
                   </span>
                   <a href={r.url} target="_blank" rel="noreferrer">
                     лог ↗
                   </a>
-                  {r.active && r.progress && <RunProgressBar progress={r.progress} />}
+                  {r.active && r.progress && <RunProgressBar progress={r.progress} runId={r.id} />}
+                  {!r.active && (r.conclusion === "failure" || r.conclusion === "timed_out") && (
+                    <div className="run-failed small">
+                      <span>
+                        {r.failedStage ? `Упал на этапе «${r.failedStage}»` : "Не удался"}
+                        {r.failedStep && r.failedStep !== r.failedStage ? ` (шаг «${r.failedStep}»)` : ""}
+                        {r.attempt > 1 ? ` · попытка ${r.attempt}` : ""}
+                        {r.durationLabel ? ` · шёл ${r.durationLabel}` : ""}
+                      </span>
+                      {canRetry(r, state).ok && (
+                        <button className="btn small primary" disabled={retry.busy || busy !== null} onClick={() => void retry.start(r.id)}>
+                          Повторить
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -324,7 +392,9 @@ export default function RunsView({ state }: { state: PanelState }) {
           </button>
         </section>
       </main>
-      {toast && (
+      {retry.bar}
+      {extend.bar}
+      {toast && !retry.open && !extend.open && (
         <div className={`toast${toast.ok ? "" : " err"}`} role="status">
           <span>{toast.text}</span>
           <button className="btn small ghost" onClick={() => setToast(null)} aria-label="Скрыть">

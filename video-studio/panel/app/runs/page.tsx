@@ -12,7 +12,7 @@ export default async function RunsPage() {
   try {
     state = await loadState();
   } catch (e) {
-    return <ErrorScreen message={e instanceof Error ? e.message : String(e)} />;
+    return <ErrorScreen title="Не получилось загрузить запуски" message={e instanceof Error ? e.message : String(e)} />;
   }
   return <RunsView state={state} />;
 }

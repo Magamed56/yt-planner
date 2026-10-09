@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { applyChannelDefaults, channelFromJson, nthSlot, parseScheduleStart, upcomingSlots, zonedTimeToUtc, type ChannelConfig } from "../pipeline/channel";
 import { loadChannel } from "../pipeline/channel-file";
 import { coverFrame } from "../pipeline/cover";
+import { apiErrorInfo, explainApiError, isApiDisabled, isScopeError } from "../pipeline/google-api";
 import { buildInstagramCaption, instagramConfig, instagramHashtags, publishReel, publishRunDir, writeInstagramAssets, type InstagramConfig } from "../pipeline/instagram";
 import { DESCRIPTION_MAX_BYTES, buildYoutubeMeta } from "../pipeline/meta";
 import { uploadToYoutube } from "../pipeline/youtube";
@@ -605,6 +606,46 @@ await test("youtube-fill для панели: список без поиска (
   // Вычеркнули строку в Studio и оставили лишнюю пустую — это не правка, ролик не переписываем.
   const gap = vid({ videoId: "G", fileName: `${a.file}.mp4`, privacyStatus: "public", title: a.title, description: `${a.description.replace("\n\n", "\n\n\n")}  `, tags: a.tags, categoryId: a.categoryId });
   assert.equal(planUpdates(matchVideos([a], [gap]), { schedule: channel.schedule, mode: "none" })[0]!.textsChanged, false);
+});
+
+await test("google-api: причины отказа из errors[] и details[] — нет права, API выключен, комментарии выключены", () => {
+  const scope = JSON.stringify({
+    error: {
+      code: 403,
+      message: "Request had insufficient authentication scopes.",
+      errors: [{ message: "Insufficient Permission", domain: "global", reason: "insufficientPermissions" }],
+      status: "PERMISSION_DENIED",
+      details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT", domain: "googleapis.com" }],
+    },
+  });
+  assert.deepEqual(apiErrorInfo(scope).reasons, ["insufficientPermissions", "ACCESS_TOKEN_SCOPE_INSUFFICIENT"]);
+  assert.ok(isScopeError(403, scope));
+  assert.ok(!isApiDisabled(403, scope));
+  // Только details (без errors[]) — тоже нехватка права.
+  assert.ok(isScopeError(403, JSON.stringify({ error: { code: 403, message: "x", details: [{ reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT" }] } })));
+  assert.match(explainApiError(403, scope), /не хватает прав.*yt-analytics\.readonly.*youtube-auth/s);
+
+  const link = "https://console.developers.google.com/apis/api/youtubeanalytics.googleapis.com/overview?project=123";
+  const disabled = JSON.stringify({
+    error: {
+      code: 403,
+      message: `YouTube Analytics API has not been used in project 123 before or it is disabled. Enable it by visiting ${link} then retry.`,
+      errors: [{ reason: "accessNotConfigured", domain: "usageLimits" }],
+      details: [{ reason: "SERVICE_DISABLED", metadata: { service: "youtubeanalytics.googleapis.com", activationUrl: link } }],
+    },
+  });
+  assert.ok(isApiDisabled(403, disabled));
+  assert.ok(!isScopeError(403, disabled));
+  assert.equal(apiErrorInfo(disabled).activationUrl, link);
+  // Ссылки в details нет — берём из текста.
+  assert.equal(apiErrorInfo(JSON.stringify({ error: { message: `… Enable it by visiting ${link} then retry.`, errors: [{ reason: "accessNotConfigured" }] } })).activationUrl, link);
+  assert.match(explainApiError(403, disabled), /не включён.*Enable.*project=123/s);
+
+  assert.match(explainApiError(403, JSON.stringify({ error: { message: "disabled comments", errors: [{ reason: "commentsDisabled" }] } })), /выключены комментарии/);
+  // Не JSON и неизвестная причина — как раньше.
+  assert.deepEqual(apiErrorInfo("<html>"), { reason: "", reasons: [], message: "<html>", activationUrl: null });
+  assert.equal(explainApiError(500, "<html>"), "HTTP 500: <html>");
+  assert.equal(explainApiError(404, JSON.stringify({ error: { message: "nope", errors: [{ reason: "videoNotFound" }] } })), "HTTP 404 videoNotFound: nope");
 });
 
 await test("channel.json, прочитанный панелью из GitHub, = channel.json с диска", () => {

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { CHANNEL_NAME } from "@/lib/channel-name";
 import "./globals.css";
 
 // Шрифты канала из video-studio/assets/fonts (OFL, латиница + кириллица, переменная насыщенность) —
@@ -11,11 +12,17 @@ export const metadata: Metadata = {
   title: "Суть за минуту — панель",
   description: "Очередь роликов, календарь выхода, запуск сборки",
   robots: { index: false, follow: false },
+  // Приложение с экрана «Домой»: своё имя под иконкой и строка статуса поверх тёмной шапки.
+  // iOS читает эти теги при установке — если ничего не поменялось, иконку надо добавить заново.
+  appleWebApp: { capable: true, title: CHANNEL_NAME, statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // cover — страница под вырезом и полоской «Домой»; без него env(safe-area-inset-*) в CSS равны 0
+  // и нижнее меню в приложении с экрана «Домой» уходит под полоску.
+  viewportFit: "cover",
   themeColor: "#0D0A22",
 };
 

@@ -7,6 +7,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expectedMs, minutesLabel, progressAt, runProgress, stageOf } from "../lib/progress";
+import { confirmStale } from "../lib/ops";
+import { runLabel } from "../lib/stages";
 import { buildState, parseAutopilot, parseQueueOrder, queueSort, type StateInput } from "../lib/state";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -116,6 +118,27 @@ test("прогресс запуска: этапы по шагам workflow, ож
   // 2 ролика по 8 мин в истории, сейчас 3 ролика → 24 мин + подготовка.
   assert.equal(expectedMs("batch", 3, [{ kind: "batch", codes: 2, ms: 16 * 60_000 }, { kind: "draft", codes: 1, ms: 60 * 60_000 }]), 24 * 60_000 + 90_000);
   assert.equal(expectedMs("batch", 1, []), 9 * 60_000 + 90_000, "без истории — ориентир");
+});
+
+test("«Найти новые загрузки»: перед записью — тот же ролик и тот же слот, иначе строку не трогаем", () => {
+  const shown = { videoId: "vid08a", publishAt: "2026-10-15T09:00:00Z" };
+  assert.equal(confirmStale(shown, { videoId: "vid08a", publishAt: "2026-10-15T09:00:00Z" }), false);
+  assert.equal(confirmStale(shown, { videoId: "vid08a", publishAt: "2026-10-15T16:00:00Z" }), true, "слот успели занять — ролик съехал бы");
+  assert.equal(confirmStale(shown, { videoId: "vid08a-2", publishAt: "2026-10-15T09:00:00Z" }), true, "загружен заново другим роликом");
+  assert.equal(confirmStale(undefined, { videoId: "x", publishAt: null }), false, "из карточки ролика — без сверки");
+  assert.equal(confirmStale({ videoId: "v", publishAt: null }, { videoId: "v", publishAt: null }), false);
+});
+
+test("названия запусков по-русски вместо заголовков GitHub", () => {
+  assert.equal(runLabel("batch", "batch: 08a,08b", ["08a", "08b"]), "Ролик · 08a, 08b");
+  assert.equal(runLabel("draft", "draft: 09a", ["09a"]), "Сценарий · 09a");
+  assert.equal(runLabel("draft", "draft: по расписанию", []), "Сценарии по расписанию");
+  assert.equal(runLabel("plan", "plan: +10 тем", []), "План +10 тем");
+  assert.equal(runLabel("titles", "titles: 12a", ["12a"]), "Названия · 12a");
+  assert.equal(runLabel("captions", "captions: 08a → en (проверка)", ["08a"]), "Субтитры · 08a (проверка)");
+  assert.equal(runLabel("fill", "youtube-fill: все", []), "Заполнение YouTube");
+  assert.equal(runLabel("check", "video-studio: проверка ключей", []), "Проверка ключей");
+  assert.equal(runLabel("other", "Что-то своё", []), "Что-то своё");
 });
 
 console.log(`\nВсе проверки очереди пройдены: ${passed}.`);

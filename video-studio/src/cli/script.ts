@@ -12,7 +12,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import type { Format, VideoScript } from "../types";
 import { parsePlan, planNotes, PLAN_CODE, scriptCode, type ContentPlan, type PlanItem } from "../pipeline/plan";
-import { generateScript, lintScript, loadCovered, LONG_DEFAULT_SECONDS, ScriptGenerationError, searchPhrases, type ScriptGenRequest } from "../pipeline/script/index";
+import { generateScript, lintScript, loadCovered, LONG_DEFAULT_SECONDS, ScriptGenerationError, searchPhrases, WORDS_PER_SECOND, type ScriptGenRequest } from "../pipeline/script/index";
 import { collectLlmUsage } from "../pipeline/script/usage-log";
 import { slugify } from "../pipeline/slug";
 import { ROOT, UserError, argsError, escapeMd, fail, fmtDuration, ghOutput, ghSummary, loadEnv, rel, reportFailedLlmUsage, writeJson } from "./common";
@@ -35,7 +35,7 @@ const HELP = `Черновик сценария для проверки пере
 пожелания LLM, файл — scripts/sut-<код>-<имя>.json, в плане тема получает status script-ready.
 Темы, у которых сценарий уже есть, пропускаются.
 
---quiz — Shorts из 2–3 раундов: утверждение → пауза с отсчётом → «Правда»/«Миф» → ответ.
+--quiz — Shorts из 2 раундов (с --seconds 60 и больше — до 3): утверждение → пауза с отсчётом → «Правда»/«Миф» → ответ.
 --long — «Разбор» (по умолчанию ${LONG_DEFAULT_SECONDS} с, 25–45 сцен, главы с карточками и таймкодами в описании).
   С --plan файл — scripts/razbor-<код>-<имя>.json: Shorts той же темы и план не трогаются.
   Озвучка: ~7 минут — это ~7000 символов, Gemini TTS режет их на запросы по
@@ -268,7 +268,7 @@ async function main() {
   const last = spent.at(-1);
   const words = script.scenes.reduce((a, s) => a + s.narration.split(/\s+/).filter(Boolean).length, 0);
   console.log(`\n✔ Черновик готов за ${fmtDuration(Date.now() - t0)}: ${rel(file)}`);
-  console.log(`  «${script.title}» — ${script.scenes.length} сцен, ~${words} слов (≈${Math.round(words / 2.6)} с озвучки)`);
+  console.log(`  «${script.title}» — ${script.scenes.length} сцен, ~${words} слов (≈${Math.round(words / WORDS_PER_SECOND)} с ролика)`);
   console.log(`  написал: ${last ? `${last.provider} · ${last.model}` : "LLM"}, стоимость $${cost.toFixed(4)}`);
   for (const w of warnings) console.log(`  замечание: ${w}`);
   console.log(`\nПроверьте факты и формулировки, затем:\n  npm run make -- --script ${rel(file)}`);
@@ -282,7 +282,7 @@ async function main() {
     [
       `## 📝 Черновик: ${escapeMd(script.title)}`,
       "",
-      `Файл: \`video-studio/${relPath}\` · ${script.scenes.length} сцен · ≈${Math.round(words / 2.6)} с · $${cost.toFixed(4)} (${last ? escapeMd(`${last.provider} · ${last.model}`) : "LLM"})`,
+      `Файл: \`video-studio/${relPath}\` · ${script.scenes.length} сцен · ≈${Math.round(words / WORDS_PER_SECOND)} с · $${cost.toFixed(4)} (${last ? escapeMd(`${last.provider} · ${last.model}`) : "LLM"})`,
       "",
       "| # | Тип | Текст диктора | На экране |",
       "|---|---|---|---|",

@@ -8,6 +8,10 @@
 //   TTS_VOICE         голос провайдера (edge: ru-RU-DmitryNeural, piper: ru_RU-dmitri-medium, …)
 //   TTS_RATE          темп для edge, например "+5%"
 //   TTS_LANGUAGE      язык озвучки (en, kk, uz…; ставит make по сценарию): голос по умолчанию, язык Gemini TTS
+//   TTS_FALLBACK      запасные провайдеры через запятую (по умолчанию gemini → edge,piper); none — не подменять
+//   TTS_CACHE         0 — не брать уже озвученные сцены из кэша (ни из папки ролика, ни из общего): новый дубль, он заменит запись общего кэша
+//   TTS_CACHE_DIR     общий кэш озвучки между запусками (по умолчанию ./.cache/voice; none — выключить)
+//   TTS_CACHE_DAYS    сколько дней хранить записи общего кэша (по умолчанию 14)
 //   GEMINI_API_KEY    общий ключ AI Studio — и для сценариев, и для Gemini TTS
 //   GEMINI_TTS_MODEL, GEMINI_TTS_VOICE, GEMINI_TTS_STYLE
 //   ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL
@@ -20,13 +24,17 @@
 //   YT_SUGGEST, YT_SUGGEST_TIMEOUT_MS   подсказки поиска YouTube для заголовка/тегов (0 — выключить)
 //   USAGE_LOG         журнал расхода content/usage.jsonl (0 — не писать, путь — свой файл)
 //   PLAN_WEB_SEARCH, PLAN_CHECK_URLS, PLAN_URL_TIMEOUT_MS   источники фактов для plan-extend / plan-sequel
-//   VISUALS           порядок источников через запятую: pexels,pixabay,cloudflare,pollinations,none
+//   VISUALS           порядок источников через запятую: pexels,pixabay,wikimedia,openverse,cloudflare,pollinations,none
 //   PEXELS_API_KEY, PIXABAY_API_KEY, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN
+//   VISUALS_MIN_PHOTO_PX   короткая сторона фото с Commons, px (по умолчанию 1080)
+//   VISUALS_JUDGE, VISUALS_JUDGE_MODEL, VISUALS_JUDGE_TIMEOUT_MS   судья Claude для кадров (claude — платно, по умолчанию выкл.)
+//   WIKIMEDIA_LICENSES, WIKIMEDIA_USER_AGENT, VISUALS_REAL_PILLARS   реальные фото (docs/visuals.md)
 //   MUSIC             auto | none | generated | <путь к файлу>   (по умолчанию auto)
 //   MUSIC_DIR         папка с треками (по умолчанию ./music)
 //   CHANNEL_NAME      имя канала для финальной сцены
 //   REMOTION_BROWSER_EXECUTABLE, REMOTION_CHROME_MODE   (headless-shell | chrome-for-testing)
 //   YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN    (загрузка на YouTube из CI)
+//   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID   кросспостинг в канал Telegram (Bot API, docs/telegram-setup.md)
 
 import type { Format, ScriptScene, SceneVisual, VideoScript, WordTiming } from "../types";
 
@@ -37,6 +45,21 @@ export interface VoiceResult {
   durationMs: number;
   words: WordTiming[]; // никогда не пустой при непустом тексте
   wordsSource: "provider" | "estimated";
+  voice?: string; // каким голосом озвучено (Charon, ru-RU-DmitryNeural, ru_RU-dmitri-medium)
+  fallbackModel?: string; // запасная модель того же провайдера (Gemini после суточной квоты основной)
+  cached?: boolean; // взято из кэша (папки ролика или общего) — запроса к сервису не было
+}
+
+// Кто на самом деле озвучил ролик — в qc.json (уходит в релиз) и result.json: панель
+// предупреждает о ролике «не тем» голосом до загрузки в Studio.
+export interface VoiceUsed {
+  provider: string; // gemini | edge | piper | …
+  name: string | null; // голос
+  model: string | null; // модель TTS, где она настраивается (Gemini, ElevenLabs, OpenAI-совместимый)
+  requested: string; // какой провайдер был основным
+  fallback: boolean; // озвучил запасной провайдер, а не основной (квота или сбой)
+  modelFallback: boolean; // тот же провайдер, но запасная модель (голос тот же, качество может отличаться)
+  reason: string | null; // почему не основной: «квота Gemini закончилась», первая строка ошибки
 }
 
 export interface VoiceOptions {
@@ -81,7 +104,7 @@ export interface ScriptRequest {
   topic: string;
   format: Format;
   language?: string; // "ru"
-  targetSeconds?: number; // по умолчанию 45 для shorts, 480 для landscape
+  targetSeconds?: number; // по умолчанию 42 для shorts (SHORTS_DEFAULT_SECONDS), 480 для landscape
   notes?: string; // пожелания автора: стиль, аудитория, факты
 }
 
