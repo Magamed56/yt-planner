@@ -4,6 +4,7 @@
 
 import type { Credit, VisualContext } from "../contracts";
 import type { ScriptScene } from "../../types";
+import type { VisualQuery } from "./relevance";
 
 export type Env = Record<string, string | undefined>;
 export type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
@@ -35,12 +36,16 @@ export interface Candidate {
   fit?: "cover" | "contain";
   headers?: Record<string, string>; // для скачивания (User-Agent у Wikimedia)
   credit: Credit;
+  // Что известно о кадре: название файла, описание/теги — для логов (видно,
+  // ЧТО попало в ролик) и для судьи Claude (VISUALS_JUDGE, judge.ts).
+  meta?: { title: string; text?: string; score?: number };
 }
 
 export interface StageInput {
   scene: ScriptScene;
   ctx: VisualContext;
   queries: string[]; // английские запросы для стоков, по убыванию точности
+  query?: VisualQuery; // разобранный запрос сцены — для проверки «по теме» (relevance.ts)
   deps: VisualDeps;
   key: string; // ключ API источника
 }
@@ -64,11 +69,16 @@ export interface VisualProvider {
   stages(format: VisualContext["format"]): Stage[];
 }
 
-// Подсказки конвейера к подбору (contracts.ts не трогаем — поле необязательное).
+// Подсказки конвейера к подбору (contracts.ts не трогаем — поля необязательные).
 // realFirst: сцена про реальный объект (рубрики история/природа/космос) —
 // сначала реальные фото, потом стоки и генерация.
+// topicQueries: visualQuery всех сцен ролика — слово, которое повторяется во
+// многих сценах («cat»), считается предметом ролика (relevance.ts).
+// topic: название ролика — контекст для судьи Claude (judge.ts).
 export interface VisualHints {
   realFirst?: boolean;
+  topicQueries?: string[];
+  topic?: string;
 }
 
 // Ошибка источника. quota/auth выключают источник до конца запуска, чтобы не

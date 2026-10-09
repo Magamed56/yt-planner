@@ -32,7 +32,7 @@ import { applyLanguageVoice } from "../pipeline/lang";
 import { slugify } from "../pipeline/slug";
 import { captionsToSrt } from "../pipeline/srt";
 import { parsePlan, scriptCode } from "../pipeline/plan";
-import { findVisual, realFirstForPillar } from "../pipeline/visuals/index";
+import { findVisual, realFirstForPillar, visualsJudgeStats } from "../pipeline/visuals/index";
 import { readVisualsManifest, reusableEntry, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { getVoiceProvider, resolvePiperVoice } from "../pipeline/voice/index";
 import { EDGE_DEFAULT_VOICE } from "../pipeline/voice/providers/edge";
@@ -397,6 +397,8 @@ async function main() {
     const realFirst = realFirstForPillar(pillar);
     if (realFirst) console.log(`  рубрика «${pillar}»: сначала реальные фото (Wikimedia Commons, Openverse)`);
     const keys = script.scenes.map((scene) => visualKey(scene, format, process.env, { realFirst }));
+    // Запросы всех сцен: слово, которое повторяется во многих («cat»), — предмет ролика (visuals/relevance.ts).
+    const topicQueries = script.scenes.map((s) => s.visualQuery ?? "");
     const reused = script.scenes.map((scene, i) => reusableEntry(prev[scene.id], keys[i], publicDir, minDur(i)));
     // Клипы, которые остаются, — сразу в usedIds: заново подобранные сцены их не повторят.
     const usedIds = new Set<string>(reused.flatMap((e) => (e?.candidateId ? [e.candidateId] : [])));
@@ -411,7 +413,7 @@ async function main() {
         candidateId = old.candidateId;
       } else {
         const before = new Set(usedIds);
-        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds, realFirst });
+        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds, realFirst, topicQueries, topic: script.title });
         candidateId = [...usedIds].find((id) => !before.has(id)) ?? null;
       }
       next[scene.id] = { key: keys[i], result: r, candidateId, minDurationSec: minDur(i) };
@@ -424,6 +426,8 @@ async function main() {
     const again = reused.filter(Boolean).length;
     console.log(`  визуал найден для ${found} из ${out.length} сцен${found < out.length ? " (остальные — чистая моушен-графика)" : ""}`);
     if (again) console.log(`  ${again} — из прошлого запуска; подобрать заново: удалите ${rel(path.join(publicDir, "visuals"))}`);
+    const judge = visualsJudgeStats();
+    if (judge.calls) console.log(`  судья Claude (${judge.model}): ${judge.calls} запросов, ≈ $${judge.costUsd.toFixed(4)}`);
     return out;
   });
 

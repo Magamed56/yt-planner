@@ -152,6 +152,10 @@ jobs:
       LLM_FALLBACKS: ${{ vars.LLM_FALLBACKS }}
       LLM_EFFORT: ${{ vars.LLM_EFFORT }}
       VISUALS_PREFER: ${{ vars.VISUALS_PREFER }}
+      # Судья Claude для кадров (платно, по умолчанию выключен): VISUALS_JUDGE=claude + секрет ANTHROPIC_API_KEY.
+      VISUALS_JUDGE: ${{ vars.VISUALS_JUDGE }}
+      VISUALS_JUDGE_MODEL: ${{ vars.VISUALS_JUDGE_MODEL }}
+      VISUALS_MIN_PHOTO_PX: ${{ vars.VISUALS_MIN_PHOTO_PX }}
       MUSIC_MOOD: ${{ vars.MUSIC_MOOD }}
       LOUDNESS_TARGET: ${{ vars.LOUDNESS_TARGET }}
       YT_CATEGORY_ID: ${{ vars.YT_CATEGORY_ID }}
