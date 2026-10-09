@@ -32,7 +32,7 @@ const STYLE = new Set(
 
 // Признаки: цвет, возраст, размер, время суток. Чуть уточняют, но не решают.
 const MODIFIER = new Set(
-  "old vintage antique retro new modern ancient historic historical medieval classic common small tiny little big large huge giant dark bright night day daytime morning evening sunny cloudy clear wet dry hot empty full young elderly red blue green yellow orange purple violet pink white black golden gold silver brown grey gray colorful colourful single wooden plastic metallic".split(
+  "old vintage antique retro new modern ancient historic historical medieval classic common small tiny little big large huge giant great dark bright night day daytime morning evening sunny cloudy clear wet dry hot empty full young elderly red blue green yellow orange purple violet pink white black golden gold silver brown grey gray colorful colourful single wooden plastic metallic".split(
     " ",
   ),
 );
@@ -54,6 +54,10 @@ const NOUN_ING = new Set(
 
 // Слова названий файлов, которые ничего не говорят о сюжете.
 const FILE_NOISE = new Set("jpg jpeg png webp tif tiff img dsc dscf dscn file edit edited crop cropped retouched version cc by sa".split(" "));
+
+// Слова о виде изображения, а не о предмете: «Edme Mariotte portrait» — это
+// сам Мариотт, слово portrait у файла может и не стоять.
+const IMAGE_KIND = new Set("portrait painting drawing engraving illustration sketch lithograph etching".split(" "));
 
 // Слова без ударений и регистра: «México» → «mexico», «façonirter» → «faconirter».
 export function words(text: string | null | undefined): string[] {
@@ -112,6 +116,10 @@ export interface VisualQuery {
   text: string; // visualQuery сцены (как есть)
   terms: Term[]; // значимые слова по порядку
   proper: string[]; // основы имён собственных (Apollo, Tenochtitlan): у стоков их обычно нет
+  // Предмет, к которому имя — лишь определение: «Greenland shark» → shark,
+  // «Bengal tiger» → tiger, «Tenochtitlan model» → model. Одно имя без него —
+  // другой предмет (ледник Гренландии, бенгальская кошка).
+  heads: string[];
   bonus: Term[]; // имена собственные из imagePrompt (Saturn V) — только добавка к баллу и к запросу Commons
   subjectStems: string[]; // слова предмета (без признаков) — для «точности» названия
   lower: string; // запрос строчными — что он сам просит (map, painting…)
@@ -205,7 +213,19 @@ export function visualQuery(scene: Pick<ScriptScene, "visualQuery" | "imagePromp
   }
   const top = bonus.slice(0, 3);
   const subjectStems = [...terms.filter((t) => t.weight >= 0.5), ...top].map((t) => t.stem);
-  return { text, terms, proper: [...proper], bonus: top, subjectStems, lower: text.toLowerCase() };
+  // Имя (не аббревиатура: DNA, ISS — сами предмет) и следом обычное
+  // существительное — это «какой именно предмет». Слова о виде изображения
+  // (portrait) предметом не считаются. Если имя — предмет всего ролика
+  // («Saturn rings» в ролике про Сатурн), следующее слово — лишь деталь.
+  const acronyms = new Set(text.split(/[^\p{L}\p{N}]+/u).filter((w) => /^\p{Lu}{2,}$/u.test(w)).map((w) => stem(words(w)[0] ?? "")));
+  const heads: string[] = [];
+  terms.forEach((t, i) => {
+    const next = terms[i + 1];
+    if (!proper.has(t.stem) || acronyms.has(t.stem) || !next || proper.has(next.stem)) return;
+    if (anchors.has(t.stem) && !anchors.has(next.stem)) return;
+    if ((next.kind === "noun" || next.kind === "subject") && !IMAGE_KIND.has(next.stem) && !heads.includes(next.stem)) heads.push(next.stem);
+  });
+  return { text, terms, proper: [...proper], heads, bonus: top, subjectStems, lower: text.toLowerCase() };
 }
 
 // Запросы к архивам реальных фото (Commons): только предмет кадра, без стиля и
@@ -259,7 +279,8 @@ const KIND_RULES: KindRule[] = [
   },
   {
     kind: "карта",
-    title: /\b(maps?|atlas|plan of|nautical chart)\b/i,
+    // «atlas of», а не просто atlas: ракета Atlas V, горы Атлас, бабочка-атлас — фото.
+    title: /\b(maps?|atlas of|plan of|nautical chart)\b/i,
     cats: /\b(maps?|atlases|cartography)\b/i,
     desc: /\b(map of|topographic map)\b/i,
     allow: /\b(maps?|atlas|chart)\b/,
@@ -279,8 +300,9 @@ const KIND_RULES: KindRule[] = [
   },
   {
     kind: "скан/документ",
+    // Не просто «scan»: «retina scan», «CT scan» — снимки, а не сканы книг.
     title:
-      /\b(page|pages|pg\.?\s?\d+|plate \d+|fig\.?\s?\d+|book cover|scan|scanned|document|newspaper|letter|manuscript|codex|postcard|postage stamp|stamp|banknote|ticket|poster|screenshot|screen shot|bulletin|journal|catalogu?e|guide to|account of)\b|\bp\.\s?\d+/i,
+      /\b(page|pages|pg\.?\s?\d+|plate \d+|fig\.?\s?\d+|book cover|(?:book|page|document) scans?|scanned|document|newspaper|letter|manuscript|codex|postcard|postage stamp|stamp|banknote|ticket|poster|screenshot|screen shot|bulletin|journal|catalogu?e|guide to|account of)\b|\bp\.\s?\d+/i,
     cats: /\b(book scans?|scanned|scans|pages? from|plates? from|illustrations? from|documents|newspapers|letters|manuscripts|postcards|postage stamps|stamps of|banknotes|posters|screenshots|internet archive book images|biodiversity heritage library)\b/i,
     desc: /\b(?:plate|fig(?:ure)?|page)\.?\s*[0-9ivxlc]+\b|\bpp?\.\s*\d+\b|\bscanned from\b/i,
     allow: /\b(manuscript|document|newspaper|letter|page|scroll|parchment|codex|stamp|postcard|poster|screenshot|banknote|ticket)s?\b/,
@@ -296,6 +318,20 @@ const KIND_RULES: KindRule[] = [
 
 const JUNK_AUTHOR = /internet archive book images|biodiversity heritage library/i;
 
+// Служебные категории Commons (геометка, лицензия, способ загрузки, Wikidata)
+// ничего не говорят о сюжете, а их слова ловят правила: «Pages with maps» есть
+// у множества фото с координатами — это не карта, и «pages» в ней — не страницы.
+const SERVICE_CATEGORY =
+  /^(pages?|files?|media|images?|uploads?|artworks?|items?|photos?) (with|without|using|needing|missing|lacking|from|by|uploaded|reviewed|taken by)\b|^(uploaded|transferred|imported) (with|via|from|by)\b|^self-published|^(cc|cc0|gfdl|pd|fal)\b|^licen[cs]e\b|^flickr(review| images| streams)|\bwikidata\b|\bcampaign:/i;
+
+export function subjectCategories(raw: string | null | undefined): string {
+  return (raw ?? "")
+    .split("|")
+    .map((c) => c.trim())
+    .filter((c) => c && !SERVICE_CATEGORY.test(c))
+    .join("|");
+}
+
 export interface MatchFields {
   title: string; // название файла без «File:» и расширения
   categories?: string; // категории Commons через «|» или теги Openverse
@@ -307,9 +343,10 @@ export interface MatchFields {
 export function nonPhotoKind(q: Pick<VisualQuery, "lower">, f: MatchFields): string | null {
   const scan = KIND_RULES.find((r) => r.kind === "скан/документ");
   if (f.author && JUNK_AUTHOR.test(f.author) && !scan?.allow.test(q.lower)) return "скан/документ";
+  const cats = subjectCategories(f.categories);
   for (const r of KIND_RULES) {
     if (r.allow.test(q.lower)) continue;
-    if (r.title.test(f.title) || r.cats.test(f.categories ?? "") || (r.desc ? r.desc.test(f.description ?? "") : false)) return r.kind;
+    if (r.title.test(f.title) || r.cats.test(cats) || (r.desc ? r.desc.test(f.description ?? "") : false)) return r.kind;
   }
   return null;
 }
@@ -341,13 +378,17 @@ function contentWords(title: string): string[] {
 export const MIN_RECALL = 0.5;
 export const MIN_RECALL_PRECISE = 0.4;
 export const MIN_PRECISION = 0.66;
+// Название из 8+ слов, где из запроса меньше десятой части, — описание
+// чужой сцены (самое низкое у удачных подборов 10a–12b — 0.17).
+export const MIN_WORDS_FOR_PRECISION = 8;
+export const MIN_PRECISION_LONG = 0.1;
 
 export function photoFit(q: VisualQuery, f: MatchFields): Fit {
   const kind = nonPhotoKind(q, f);
   if (kind) return { ok: false, score: 0, recall: 0, precision: 0, evidence: 0, why: `не фото: ${kind}` };
   if (q.terms.length === 0) return { ok: false, score: 0, recall: 0, precision: 0, evidence: 0, why: "пустой запрос" };
   const title = words(f.title).map(stem);
-  const cats = words(f.categories).map(stem);
+  const cats = words(subjectCategories(f.categories)).map(stem);
   const desc = words(f.description).map(stem);
   // Главные слова: конкретные существительные (и предмет ролика); если их
   // нет — обстановка («city street»), иначе всё, что есть.
@@ -378,6 +419,17 @@ export function photoFit(q: VisualQuery, f: MatchFields): Fit {
   const cw = contentWords(f.title);
   const precision = cw.length ? cw.filter((w) => hasStem(q.subjectStems, stem(w))).length / cw.length : 0;
   const need = Math.min(2, mainTotal) - 1e-9;
+  // Имя совпало, а предмета при нём нет ни в названии, ни в категориях:
+  // «Greenland shark» → «Ilulissat Icefjord, Greenland» — это не акула, даже
+  // если акула упомянута в описании (поиск Commons находит и по описанию).
+  const headless = q.heads.find((h) => !hasStem(title, h) && !hasStem(cats, h));
+  if (headless) return { ok: false, score: 0, recall, precision, evidence, why: `есть имя, но нет предмета «${headless}»` };
+  // Длинное название-предложение, где слово запроса — мимоходом: «A night
+  // market stall… vendors weigh durians… on their smartphone» на «hand holding
+  // smartphone». Короткие названия («IMG 1234») этим не задеваем.
+  if (cw.length >= MIN_WORDS_FOR_PRECISION && precision < MIN_PRECISION_LONG) {
+    return { ok: false, score: 0, recall, precision, evidence, why: `в длинном названии слова запроса мимоходом (точность ${precision.toFixed(2)})` };
+  }
   const ok = evidence > 0 && ((recall >= MIN_RECALL && evidence >= need) || (!broken && recall >= MIN_RECALL_PRECISE && precision >= MIN_PRECISION));
   let score = recall + 0.3 * precision;
   const bonus = q.bonus.filter((t) => hasStem(title, t.stem) || hasStem(cats, t.stem)).length;
@@ -388,29 +440,48 @@ export function photoFit(q: VisualQuery, f: MatchFields): Fit {
   return { ok, score: Math.round(score * 1000) / 1000, recall, precision, evidence, why };
 }
 
+// Для стоков слово может стоять частью составного: «smartphone» ↔ «mobile
+// phone», «sunlight» ↔ «light», «fingertips» ↔ «fingers», «bathtub» ↔ «bath».
+// Только для мягкой проверки стоков: у фото Commons это дало бы «rock» ↔ «rocket».
+function looseHas(stems: string[], s: string): boolean {
+  return stems.some((x) => {
+    if (sameStem(x, s)) return true;
+    const [a, b] = x.length <= s.length ? [x, s] : [s, x];
+    return a.length >= 4 && (b.startsWith(a) || b.endsWith(a));
+  });
+}
+
 // Стоки (Pexels, Pixabay) ищут по смыслу и отдают в основном то, что надо, а
 // описание у них скупое (адрес страницы, alt, теги). Поэтому проверка мягкая:
-// отсекаем только явный промах — ни одного слова запроса в описании. Имя
-// собственное в запросе (Apollo, Tenochtitlan) сток не покажет — такой клип
-// берём, только если имя есть в описании, иначе очередь реальных фото.
+// отсекаем только явный промах — нет ни предмета, ни обстановки запроса
+// (действие «holding», «walking» само по себе не в счёт: «person holding a cup»
+// на «hand holding smartphone»). Предмет ролика (cat в ролике про кошек)
+// обязателен: собака на «person petting cat» — промах. Имя собственное
+// (Apollo, Tenochtitlan) сток не покажет — такой клип берём, только если имя
+// есть в описании, иначе очередь реальных фото.
 export function stockFit(q: VisualQuery, text: string): Fit {
   const stems = words(text).map(stem);
   const base = { score: 0, recall: 0, precision: 0, evidence: 0 };
   if (q.proper.length && !q.proper.some((p) => hasStem(stems, p))) return { ...base, ok: false, why: "в описании нет имени из запроса" };
+  // «Greenland shark»: клип «greenland landscape» — имя есть, а акулы нет.
+  const headless = q.heads.find((h) => !hasStem(stems, h));
+  if (headless) return { ...base, ok: false, why: `есть имя, но нет предмета «${headless}»` };
   if (stems.length === 0 || q.terms.length === 0) return { ...base, ok: true, why: "без описания" };
+  const anchor = q.terms.find((t) => t.kind === "subject" && !q.proper.includes(t.stem) && !looseHas(stems, t.stem));
+  if (anchor) return { ...base, ok: false, why: `в описании нет предмета ролика «${anchor.word}»` };
   let total = 0;
   let got = 0;
   let any = false;
   for (const t of q.terms) {
     total += t.weight;
-    if (hasStem(stems, t.stem)) {
+    if (looseHas(stems, t.stem)) {
       got += t.weight;
-      if (t.weight >= 0.5) any = true;
+      if (t.weight >= 0.5 && t.kind !== "action") any = true;
     }
   }
   const recall = total ? got / total : 0;
   const ok = any || recall >= 0.3;
-  return { ...base, ok, recall, score: recall, why: ok ? `совпадение ${recall.toFixed(2)}` : "ни одного слова запроса в описании" };
+  return { ...base, ok, recall, score: recall, why: ok ? `совпадение ${recall.toFixed(2)}` : "в описании нет ни предмета, ни обстановки запроса" };
 }
 
 // Описание клипа Pexels — в адресе страницы: /video/a-cat-sniffing-a-cake-855029/.

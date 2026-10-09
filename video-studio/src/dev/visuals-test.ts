@@ -14,7 +14,7 @@ import { judgeConfig, parseVerdict } from "../pipeline/visuals/judge";
 import { PICK_RULES_VERSION, visualKey } from "../pipeline/visuals/manifest";
 import { authorText, htmlToText, licenseFamily } from "../pipeline/visuals/providers/open-licenses";
 import { rankCommonsPages } from "../pipeline/visuals/providers/wikimedia";
-import { nonPhotoKind, photoFit, photoQueries, topicAnchors, visualQuery } from "../pipeline/visuals/relevance";
+import { nonPhotoKind, photoFit, photoQueries, slugText, stockFit, subjectCategories, topicAnchors, visualQuery } from "../pipeline/visuals/relevance";
 import type { ScriptScene } from "../types";
 
 const tmpRoot = await mkdtemp(path.join(os.tmpdir(), "video-studio-visuals-test-"));
@@ -790,6 +790,77 @@ await test("Манифест: новая версия правил отбора 
   assert.ok(key.includes(`"rules":${PICK_RULES_VERSION}`), key);
   assert.notEqual(visualKey(sc, "shorts", { VISUALS_JUDGE: "claude" }), key, "включили судью — подобрать заново");
   assert.equal(visualKey(sc, "shorts", { VISUALS_JUDGE: "off" }), key);
+});
+
+// ---- Ревью: обходы правил и лишние отказы ----
+
+await test("Имя — определение к предмету: «Greenland shark» без акулы не берём, у стоков тоже", () => {
+  const lowerQs = ["cat sniffing cake", "dna model laboratory", "tiger walking grass", "sea lion rocks"];
+  const vq = (text: string) => visualQuery({ visualQuery: text }, { topicQueries: [...lowerQs, text] });
+  const shark = vq("Greenland shark");
+  assert.deepEqual([shark.proper, shark.heads], [["greenland"], ["shark"]]);
+  // Поиск Commons находит и по описанию — «shark» в описании ледника не спасает.
+  const ice = photoFit(shark, { title: "Ilulissat Icefjord, Greenland", description: "Icebergs; a Greenland shark was caught nearby" });
+  assert.equal(ice.ok, false, ice.why);
+  assert.ok(photoFit(shark, { title: "Somniosus microcephalus (Greenland shark)" }).ok);
+  assert.equal(photoFit(vq("Bengal tiger walking"), { title: "Bengal cat lying on a sofa", categories: "Bengal cats" }).ok, false, "бенгальская кошка ≠ тигр");
+  assert.ok(photoFit(vq("Bengal tiger walking"), { title: "Bengal tiger walking in Ranthambore" }).ok);
+  // Макет по-испански: предмет в категории — годится; только руины — нет.
+  const model = vq("Tenochtitlan model");
+  assert.ok(photoFit(model, { title: "Maqueta de Tenochtitlan", categories: "Scale models of Tenochtitlan" }).ok);
+  assert.equal(photoFit(model, { title: "Templo Mayor ruins, Tenochtitlan", categories: "Templo Mayor" }).ok, false);
+  // portrait — вид изображения, а не предмет; аббревиатура (DNA) — сама предмет.
+  assert.deepEqual(vq("Edme Mariotte portrait").heads, []);
+  assert.ok(photoFit(vq("Edme Mariotte portrait"), { title: "Edme Mariotte" }).ok);
+  assert.deepEqual(vq("DNA model laboratory").heads, []);
+  // Имя — предмет всего ролика: «Saturn rings» в ролике про Сатурн — сам Сатурн годится.
+  const saturnQs = ["Saturn rings close", "saturn planet space", "saturn moon titan", "bathtub water", "saturn cassini"];
+  const rings = visualQuery({ visualQuery: "Saturn rings close" }, { topicQueries: saturnQs });
+  assert.deepEqual(rings.heads, []);
+  assert.ok(photoFit(rings, { title: "Saturn during Equinox", categories: "Photographs of Saturn by Cassini" }).ok);
+  // Стоки: имя есть, предмета нет — мимо.
+  assert.equal(stockFit(shark, "greenland landscape aerial").ok, false);
+  assert.ok(stockFit(shark, "greenland shark swimming under ice").ok);
+});
+
+await test("Стоки с ключами: синоним-составное слово проходит, чужой предмет и одно действие — нет", () => {
+  const slug = (s: string) => slugText(`https://www.pexels.com/video/${s}-1000001/`);
+  const phone = visualQuery({ visualQuery: "hand holding smartphone night" });
+  // Раньше «mobile phone» на «smartphone» считался промахом — терялись нужные клипы.
+  assert.ok(stockFit(phone, slug("person-using-a-mobile-phone-in-the-dark")).ok);
+  assert.ok(stockFit(visualQuery({ visualQuery: "sunlight prism rainbow" }), slug("light-refracting-through-a-glass")).ok);
+  assert.ok(stockFit(visualQuery({ visualQuery: "fingers bathtub bubbles" }), slug("bath-with-foam-and-fingers")).ok);
+  // Совпало только действие («holding») — это не сюжет сцены.
+  assert.equal(stockFit(phone, slug("person-holding-a-cup-of-coffee")).ok, false);
+  // Предмет ролика обязателен: в ролике про кошек собака не годится.
+  const pet = visualQuery({ visualQuery: "person petting cat" }, { topicQueries: Q10A });
+  assert.equal(stockFit(pet, slug("woman-petting-a-dog-on-the-couch")).ok, false);
+  assert.ok(stockFit(pet, slug("person-petting-a-ginger-cat")).ok);
+  // Обстановка без главного слова — ещё не промах (сток ищет по смыслу).
+  assert.ok(stockFit(visualQuery({ visualQuery: "blue sky ocean horizon" }), slug("calm-sea-under-blue-sky")).ok);
+  assert.ok(stockFit(phone, "").ok, "без описания — доверяем поиску стока");
+});
+
+await test("Служебные категории Commons и слова-омонимы не отсекают нормальные фото", () => {
+  const giza = visualQuery({ visualQuery: "giza pyramid desert" });
+  const fields = { title: "Great Pyramid of Giza from the desert", categories: "Great Pyramid of Giza|Pages with maps|Media with locations|Self-published work|CC-BY-SA-4.0" };
+  assert.equal(nonPhotoKind(giza, fields), null, "«Pages with maps» — геометка, а не карта");
+  assert.ok(photoFit(giza, fields).ok);
+  assert.equal(subjectCategories(fields.categories), "Great Pyramid of Giza");
+  // Слово «pages» из служебной категории не совпадение для «book pages».
+  assert.equal(photoFit(visualQuery({ visualQuery: "old history book pages" }), { title: "Antique cottage", categories: "Pages with maps|Houses in Kent" }).evidence, 0);
+  assert.equal(nonPhotoKind(visualQuery({ visualQuery: "rocket launch night" }), { title: "Atlas V 401 rocket launch at night" }), null, "Atlas V — ракета, не атлас");
+  assert.match(nonPhotoKind(visualQuery({ visualQuery: "old harbour town" }), { title: "Atlas of the harbours of Europe, 1850" }) ?? "", /карта/);
+  assert.equal(nonPhotoKind(visualQuery({ visualQuery: "eye retina examination doctor" }), { title: "Retina scan at an eye doctor" }), null, "медицинский снимок, не скан книги");
+  assert.match(nonPhotoKind(visualQuery({ visualQuery: "old desk candle" }), { title: "Book scan of an old desk catalogue" }) ?? "", /скан/);
+  // Длинное название-предложение со словом запроса мимоходом — мимо, причём по своему правилу.
+  const durian = photoFit(visualQuery({ visualQuery: "hand holding smartphone night" }), {
+    title: "DZ3 0627 A night market stall in Sattahip Thailand - vendors weigh durians as a young buyer uses his phone to scan or pay while another customer captures the scene on their smartphone",
+  });
+  assert.equal(durian.ok, false);
+  assert.match(durian.why, /мимоходом/);
+  // Название без слов («IMG 4821»), всё в категориях — берём.
+  assert.ok(photoFit(visualQuery({ visualQuery: "cat tongue close up" }, { topicQueries: Q10A }), { title: "IMG 4821", categories: "Cat tongues|Tabby cats|Pages with maps" }).ok);
 });
 
 await rm(tmpRoot, { recursive: true, force: true });
