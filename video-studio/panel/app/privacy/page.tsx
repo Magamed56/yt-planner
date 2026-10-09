@@ -11,6 +11,7 @@ export const metadata = { title: "Политика конфиденциальн�
 const GOOGLE_PRIVACY = "http://www.google.com/policies/privacy";
 const REVOKE = "https://security.google.com/settings/security/permissions";
 const YT_TERMS = "https://www.youtube.com/t/terms";
+const TIKTOK_PRIVACY = "https://www.tiktok.com/legal/privacy-policy";
 
 function Ext({ href }: { href: string }) {
   return (
@@ -47,6 +48,15 @@ export default function PrivacyPage() {
         названия, описания, теги, статус и время публикации, имена загруженных файлов, обложки и статистику (просмотры, лайки,
         комментарии, подписчики). Для сравнения сервис может читать открытую информацию других каналов (названия и статистику роликов).
         Данные других пользователей YouTube сервис не собирает.
+      </p>
+
+      <h2>TikTok</h2>
+      <p>
+        По желанию владелец подключает свой аккаунт TikTok (TikTok Login Kit). Сервис получает: имя и аватар профиля, имя пользователя,
+        число подписчиков, лайков и роликов, список публичных роликов с подписями, обложками и статистикой (просмотры, лайки, комментарии,
+        репосты) — только чтобы показать владельцу статистику. Ничего не публикует и не меняет. Ключ доступа хранится в зашифрованном виде;
+        отключить доступ можно кнопкой «Отключить» в панели или в настройках TikTok (Безопасность → Управление приложениями). Действует и{" "}
+        <Ext href={TIKTOK_PRIVACY} />.
       </p>
 
       <h2>Как мы используем данные</h2>
@@ -103,6 +113,15 @@ export default function PrivacyPage() {
           channel’s videos, their titles, descriptions, tags, privacy status and publish time, uploaded file names, thumbnails and
           statistics (views, likes, comments, subscribers). To compare performance it may read public information of other channels
           (video titles and statistics). The service does not collect data about other YouTube users.
+        </p>
+
+        <h2>TikTok</h2>
+        <p>
+          Optionally the owner connects their own TikTok account (TikTok Login Kit). The service accesses the profile name, avatar and
+          username, follower, like and video counts, and the list of public videos with captions, covers and statistics (views, likes,
+          comments, shares) — only to show the owner their statistics. Nothing is posted or changed. The access token is stored encrypted;
+          access can be revoked with “Disconnect” in the panel or in TikTok settings (Security → Manage app permissions). The TikTok Privacy
+          Policy also applies: <Ext href={TIKTOK_PRIVACY} />.
         </p>
 
         <h2>How we use it</h2>

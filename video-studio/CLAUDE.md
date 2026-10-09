@@ -28,7 +28,9 @@
   `privacyStatus: private`, `containsSyntheticMedia` всегда. Instagram: «Instagram API with Facebook
   Login for Business» (`graph.facebook.com` + resumable на `rupload.facebook.com`) — только он
   грузит локальный файл без публичного URL; у API нет отложенной публикации (расписание — workflow
-  с очередью в релизах). Никаких неофициальных библиотек и логинов по паролю.
+  с очередью в релизах). TikTok: только чтение статистики (Login Kit + Display API, панель,
+  `docs/tiktok-setup.md`) — публиковать через API TikTok не даёт инструментам для своего аккаунта.
+  Никаких неофициальных библиотек и логинов по паролю.
 
 ## Где что
 
@@ -62,7 +64,8 @@
   videos.update; логика — `src/pipeline/youtube-fill.ts`, данные — `content/week1-videos.json`).
 - `src/dev/` — dev-скрипты: `stills.ts`, `preview.ts`, `voice-test.ts`, `script-test.ts`, `visuals-test.ts`,
   `publish-test.ts` (канал, слоты, описание, publishAt, Instagram на подменённом fetch).
-- `docs/` — инструкции для человека: `youtube-setup.md` (Studio, расписание), `instagram-setup.md`.
+- `docs/` — инструкции для человека: `youtube-setup.md` (Studio, расписание), `instagram-setup.md`,
+  `tiktok-setup.md`; `improvements.md` — разбор, что улучшить дальше (по приоритету).
 - `.github/workflows/video-studio.yml` (в корне репозитория) — draft / render / batch в GitHub Actions
   (batch: ролик i → слот i через `--schedule-slot i --schedule-start <старт>`, релиз на ролик);
   `video-studio-instagram.yml` — публикует самый старый релиз с `instagram.json` без
