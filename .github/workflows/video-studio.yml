@@ -563,7 +563,8 @@ jobs:
           DRAFT_FORMAT: ${{ steps.draft.outputs.format }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          for p in scripts content/plan.json content/videos.json; do
+          # content/usage.jsonl — журнал расхода LLM и TTS (дописывают script и make).
+          for p in scripts content/plan.json content/videos.json content/usage.jsonl; do
             if [ -e "$p" ]; then git add -A -- "$p"; fi
           done
           if git diff --cached --quiet; then
@@ -576,6 +577,7 @@ jobs:
             what=()
             git diff --cached --quiet -- scripts || what+=("сценарии")
             git diff --cached --quiet -- content/videos.json || what+=("тексты для YouTube")
+            git diff --cached --quiet -- content/usage.jsonl || what+=("расход")
             msg="video-studio: ${what[0]:-план}${what[1]:+ и ${what[1]}}${PLAN:+ ($PLAN)}"
           fi
           git config user.name "github-actions[bot]"

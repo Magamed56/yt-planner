@@ -16,6 +16,9 @@
 //   LLM_PROVIDER      gemini | claude | groq | openrouter | ollama | custom   (по умолчанию gemini)
 //   LLM_MODEL, LLM_BASE_URL, LLM_API_KEY
 //   ANTHROPIC_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY
+//   YT_SUGGEST, YT_SUGGEST_TIMEOUT_MS   подсказки поиска YouTube для заголовка/тегов (0 — выключить)
+//   USAGE_LOG         журнал расхода content/usage.jsonl (0 — не писать, путь — свой файл)
+//   PLAN_WEB_SEARCH, PLAN_CHECK_URLS, PLAN_URL_TIMEOUT_MS   источники фактов для plan-extend / plan-sequel
 //   VISUALS           порядок источников через запятую: pexels,pixabay,cloudflare,pollinations,none
 //   PEXELS_API_KEY, PIXABAY_API_KEY, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN
 //   MUSIC             auto | none | generated | <путь к файлу>   (по умолчанию auto)
