@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import { decideAutopilot } from "../lib/autopilot";
+import { autopilotPreview, nextCronAt } from "../lib/autopilot-rules";
 import type { GhRelease, GhRun } from "../lib/github";
 import { buildState, parseAutopilot, type StateInput } from "../lib/state";
 
@@ -153,7 +154,7 @@ test("напоминания: запас расписания, загрузит�
   assert.match(text, /В Studio без времени выхода: 09a/);
   assert.match(text, /Тексты на YouTube отличаются от файла: 01b\./);
   assert.equal(row("02a").textsDiffer, false);
-  assert.match(text, /youtube-fill: 01a \(проверка\).*не удался/);
+  assert.match(text, /Заполнение YouTube · 01a \(проверка\).*не удался/);
   assert.match(text, /нет: GEMINI_API_KEY — без него .*Edge/);
   assert.doesNotMatch(text, /YT_CLIENT_ID/); // тексты на YouTube ставит сама панель — YT_* в GitHub ей не нужны
   assert.match(text, /затем «Найти новые загрузки»/);
@@ -221,6 +222,20 @@ test("автопилот: на 3 дня всё готово; на 8 — нуже
   assert.equal(withKey.missingSecrets?.length, 0);
   assert.match(decideAutopilot({ ...withKey, youtubeError: "квота" }, { enabled: true, days: 8 }, now).skip ?? "", /YouTube недоступен/);
   assert.deepEqual(parseAutopilot('{"enabled":true,"days":40}'), { ...parseAutopilot(null), enabled: true, days: 3 });
+});
+
+test("превью автопилота: следующий запуск 06:00 МСК, сборка — то же решение, что примет cron в это время", () => {
+  const withKey = buildState({ ...input, secretNames: ["ANTHROPIC_API_KEY", "GEMINI_API_KEY"] });
+  assert.equal(nextCronAt(now).toISOString(), "2026-10-09T03:00:00.000Z");
+  assert.equal(nextCronAt(new Date("2026-10-09T02:59:00Z")).toISOString(), "2026-10-09T03:00:00.000Z");
+  const settings = { ...parseAutopilot(null), enabled: true, days: 8, scriptReserve: 2 };
+  const p = autopilotPreview(withKey, settings, now);
+  assert.equal(p.at, "2026-10-09T03:00:00.000Z");
+  assert.deepEqual(p.build, decideAutopilot(withKey, settings, nextCronAt(now)).codes);
+  assert.deepEqual(p.build, ["08a", "09b"], "к 06:00 горизонт 8 дней захватит и 09b");
+  assert.equal(p.reserve.length, 2, "запас — ближайшие темы после собираемого");
+  const off = autopilotPreview(withKey, { ...settings, enabled: false }, now);
+  assert.deepEqual([off.build, off.buildSkip, off.reserve], [[], "автопилот выключен", []]);
 });
 
 console.log(`\nВсе проверки панели пройдены: ${passed}.`);

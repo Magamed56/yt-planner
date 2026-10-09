@@ -8,7 +8,7 @@ import RunProgressBar from "./RunProgressBar";
 
 // Подпись на обложке: этап и, если нужно, что сделать.
 function chipText(r: Row, queued: boolean): string {
-  if (r.running) return `в работе: ${r.running}`;
+  if (r.running) return r.running;
   if (queued) return "в очереди…";
   if (r.stage === "video") return "Видео — загрузить в Studio";
   if (r.stage === "studio") return "В Studio — нужно время";

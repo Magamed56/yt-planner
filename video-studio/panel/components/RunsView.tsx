@@ -14,13 +14,14 @@ import {
   type FillPreview,
 } from "@/app/actions";
 import { setBadge } from "@/lib/badge";
+import { autopilotPreview } from "@/lib/autopilot-rules";
 import { canRetry, pickCleanup } from "@/lib/ops";
 import { notePending, usePending } from "@/lib/pending";
 import type { AutopilotSettings, PanelState, RunInfo } from "@/lib/state";
-import { STAGE_LABEL, codesLabel } from "@/lib/stages";
+import { STAGE_LABEL, codesLabel, plural } from "@/lib/stages";
 import { badgeCount, buildTodo } from "@/lib/todo";
 import AppShell from "./AppShell";
-import { useRetry } from "./RetryConfirm";
+import { usePlanExtend, useRetry } from "./RetryConfirm";
 import RunProgressBar from "./RunProgressBar";
 
 const KEEP_OPTIONS = [0, 3, 7, 14, 30, 60, 90, 180];
@@ -56,12 +57,28 @@ export default function RunsView({ state }: { state: PanelState }) {
   const autoChanged = !sameSettings(auto, state.autopilot);
   // Что удалит уборка при выбранном сроке — считается тут же, до «Сохранить» (время — серверное).
   const cleanup = pickCleanup(state.releaseVideos, auto.keepReleaseDays, Date.parse(state.generatedAt));
+  // Что сделает ближайший запуск автопилота с настройками из формы — пересчёт на лету.
+  // Время — серверное (generatedAt): на сервере и в браузере текст совпадает.
+  const next = autopilotPreview(state, auto, new Date(state.generatedAt));
+  const rowOf = new Map(state.rows.map((r) => [r.code, r]));
+  const nextWhen = new Intl.DateTimeFormat("ru-RU", { timeZone: state.timezone, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(next.at));
+  const previewParts = [
+    next.build.length
+      ? `соберёт ${next.build.map((c) => `${c}${rowOf.get(c)?.dateLabel ? ` (выход ${rowOf.get(c)!.dateLabel} ${rowOf.get(c)!.timeLabel})` : ""}`).join(", ")}`
+      : `собирать не будет — ${next.buildSkip ?? "нечего"}`,
+    next.reserve.length ? `запас сценариев: ${next.reserve.join(", ")}` : "",
+    next.retries.length ? `повторит: ${next.retries.join(", ")}` : "",
+    next.cleanup.files ? `уборка: ${next.cleanup.files} видео (${mbText(next.cleanup.bytes)})` : "",
+  ].filter(Boolean);
+  const previewText = `Следующий запуск (${nextWhen}): ${previewParts.join("; ")}${autoChanged ? " — если сохранить эти настройки." : " — если ничего не изменится."}`;
   const keepOptions = KEEP_OPTIONS.includes(auto.keepReleaseDays) ? KEEP_OPTIONS : [...KEEP_OPTIONS, auto.keepReleaseDays].sort((a, b) => a - b);
 
-  const retry = useRetry((r) => {
+  const done = (r: { ok: boolean; message: string }) => {
     setToast({ text: r.message, ok: r.ok });
     if (r.ok) router.refresh();
-  });
+  };
+  const retry = useRetry(done);
+  const extend = usePlanExtend(done);
   // Только что запущенные — «в очереди», пока GitHub не покажет запуск: второе нажатие не нужно.
   const pending = usePending();
   const queuedNow = picked.some((c) => pending.has(c)) || pickedTopics.some((c) => pending.has(c));
@@ -138,6 +155,14 @@ export default function RunsView({ state }: { state: PanelState }) {
               Только сценарии ({pickedTopics.length})
             </button>
           </div>
+          <p className="small plan-runway">
+            {state.topicsUntilLabel
+              ? `Темы плана — до ${state.topicsUntilLabel}: без сценария ${state.topicsLeft}, хватит на ${state.topicsDays} ${plural(state.topicsDays ?? 0, "день", "дня", "дней")}.`
+              : "План тем закончился."}{" "}
+            <button className="btn small" disabled={extend.busy || busy !== null || state.runs.some((r) => r.active && r.kind === "plan")} onClick={() => void extend.start(10)}>
+              + 10 тем
+            </button>
+          </p>
           {upcoming.length === 0 ? (
             <p className="muted">У всех тем плана уже есть видео.</p>
           ) : (
@@ -225,7 +250,7 @@ export default function RunsView({ state }: { state: PanelState }) {
             <label>
               Готовить за{" "}
               <select value={auto.days} onChange={(e) => setAuto({ ...auto, days: Number(e.target.value) })}>
-                {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                {Array.from({ length: 14 }, (_, i) => i + 1).map((d) => (
                   <option key={d} value={d}>
                     {d}
                   </option>
@@ -293,6 +318,7 @@ export default function RunsView({ state }: { state: PanelState }) {
               Запустить сейчас
             </button>
           </div>
+          <p className="small autopilot-next">{previewText}</p>
           {state.autopilotLast && (
             <p className="muted small">
               Последний раз: {state.autopilotLast.atLabel} — {state.autopilotLast.action}
@@ -311,7 +337,7 @@ export default function RunsView({ state }: { state: PanelState }) {
                 <div className="run" key={r.id}>
                   <span>{runIcon(r)}</span>
                   <span>
-                    {r.title} <span className="when">· {r.createdLabel}</span>
+                    <span title={r.title}>{r.label}</span> <span className="when">· {r.createdLabel}</span>
                     {r.codes.length > 0 && (
                       <span className="run-codes">
                         {r.codes.slice(0, 6).map((c) => (
@@ -367,7 +393,8 @@ export default function RunsView({ state }: { state: PanelState }) {
         </section>
       </main>
       {retry.bar}
-      {toast && !retry.open && (
+      {extend.bar}
+      {toast && !retry.open && !extend.open && (
         <div className={`toast${toast.ok ? "" : " err"}`} role="status">
           <span>{toast.text}</span>
           <button className="btn small ghost" onClick={() => setToast(null)} aria-label="Скрыть">

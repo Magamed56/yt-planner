@@ -46,14 +46,16 @@ export function addDispatch(list: Dispatch[], d: Dispatch, nowMs: number): Dispa
 }
 
 const overlap = (a: string[], b: string[]) => a.filter((c) => b.includes(c));
+// Запуск без роликов (план тем) — «тот же», если совпадают файл и вид.
+const touches = (want: DispatchWant, codes: string[], kind: string) => (want.codes.length ? overlap(codes, want.codes).length > 0 : kind === want.kind);
 
 // Причина отказа или null. Отказываем, если по тем же роликам того же workflow:
 // - идёт (или ждёт в очереди) запуск — любой вид: сборка поверх сценария тоже конфликт;
 // - тот же вид запускали меньше 3 минут назад и он не упал (повтор после сбоя — можно);
 // - нажимали меньше 3 минут назад, а GitHub ещё не показал этот запуск.
 export function dispatchConflict(want: DispatchWant, runs: RunLike[], recent: Dispatch[], nowMs: number, timeLabel: (iso: string) => string): string | null {
-  const same = runs.filter((r) => r.file === want.file && overlap(r.codes, want.codes).length);
-  const say = (codes: string[], what: string) => `${codes.join(", ")} ${what} — второй раз не запускаю.`;
+  const same = runs.filter((r) => r.file === want.file && touches(want, r.codes, r.kind));
+  const say = (codes: string[], what: string) => `${codes.length ? codes.join(", ") : "Этот запуск"} ${what} — второй раз не запускаю.`;
   const active = same.find((r) => r.active);
   if (active) return say(overlap(active.codes, want.codes), `уже в работе (запуск ${timeLabel(active.createdAt)})`);
   const fresh = same.find((r) => r.kind === want.kind && nowMs - Date.parse(r.createdAt) < RECENT_MS && r.conclusion !== "failure" && r.conclusion !== "cancelled");
@@ -61,7 +63,7 @@ export function dispatchConflict(want: DispatchWant, runs: RunLike[], recent: Di
   const pressed = recent.find(
     (d) =>
       d.file === want.file &&
-      overlap(d.codes, want.codes).length &&
+      touches(want, d.codes, d.kind) &&
       nowMs - Date.parse(d.at) < RECENT_MS &&
       !same.some((r) => Date.parse(r.createdAt) >= Date.parse(d.at) - SEEN_SLACK_MS),
   );

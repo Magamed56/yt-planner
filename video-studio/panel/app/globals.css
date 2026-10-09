@@ -2588,3 +2588,17 @@ a.code-chip {
   gap: 6px 10px;
   color: var(--error);
 }
+.plan-runway {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+.autopilot-next {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card-2);
+}

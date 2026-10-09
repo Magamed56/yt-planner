@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import { ASSET_CHUNK, assetHeaders, assetType, contentDisposition, parseContentRange, planRange } from "../lib/asset-range";
-import type { GhRelease } from "../lib/github";
+import { listReleases, nextPage, type GhRelease } from "../lib/github";
 import { addDispatch, dispatchConflict, parseDispatches, type RunLike } from "../lib/dispatch-guard";
 import { canRetry, DAY_MS, decideReserve, failedRun, pickCleanup, pickRetries, releaseVideosOf, RETRY_MAX } from "../lib/ops";
 import { rebuildInputs, DEFAULT_REBUILD } from "../lib/rebuild";
@@ -57,6 +57,7 @@ const run = (over: Partial<RunInfo>): RunInfo => ({
   url: "",
   attempt: 1,
   ...over,
+  label: over.label ?? over.title ?? "",
 });
 const rowsOf = (list: [string, Row["stage"], string?][]) => list.map(([code, stage, running]) => ({ code, stage, running: running ?? null }) as Row);
 
@@ -343,6 +344,31 @@ async function main() {
     assert.equal(whole["Cache-Control"], "private, no-store");
     assert.equal(contentDisposition("ролик «1».mp4", true), `attachment; filename="_____ _1_.mp4"; filename*=UTF-8''%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%20%C2%AB1%C2%BB.mp4`);
     assert.equal(parseContentRange("bytes */20"), null);
+  });
+
+  await test("релизы: больше сотни — по ссылке Link на следующие страницы, не больше 5", async () => {
+    assert.equal(nextPage('<https://api.github.com/repositories/1/releases?per_page=100&page=2>; rel="next", <https://api.github.com/repositories/1/releases?per_page=100&page=3>; rel="last"'), "/repositories/1/releases?per_page=100&page=2");
+    assert.equal(nextPage(null), null);
+    assert.equal(nextPage('<https://evil.example/x>; rel="next"'), null, "только адрес API GitHub");
+    const realFetch = globalThis.fetch;
+    const token = process.env.GITHUB_TOKEN;
+    process.env.GITHUB_TOKEN = "t";
+    const seen: string[] = [];
+    globalThis.fetch = (async (url: string) => {
+      seen.push(url);
+      const page = Number(/[?&]page=(\d+)/.exec(url)?.[1] ?? 1);
+      const items = Array.from({ length: page < 7 ? 100 : 3 }, (_, i) => ({ id: page * 1000 + i }));
+      const link = page < 7 ? `<https://api.github.com/repositories/1/releases?per_page=100&page=${page + 1}>; rel="next"` : "";
+      return new Response(JSON.stringify(items), { status: 200, headers: link ? { link } : {} });
+    }) as typeof fetch;
+    try {
+      const all = await listReleases();
+      assert.equal(all.length, 500, "5 страниц по 100");
+      assert.equal(seen.length, 5);
+    } finally {
+      globalThis.fetch = realFetch;
+      process.env.GITHUB_TOKEN = token;
+    }
   });
 
   await test("«Повторить» руками: упавший, не отменённый, меньше 3 попыток, ролики ещё не готовы", () => {

@@ -89,6 +89,7 @@ export async function videosAction(codes: string[]): Promise<DispatchResult | Ac
 
 export interface RetryPreview extends ActionResult {
   attempt: number; // какая попытка будет
+  confirmLabel: string;
 }
 
 // Что будет стоить повтор — перед подтверждением: озвучки заново и сколько уже потрачено
@@ -99,11 +100,11 @@ export async function retryPreviewAction(runId: number): Promise<RetryPreview | 
     const run = state.runs.find((r) => r.id === runId);
     if (!run) return fail("Этого запуска нет в списке — обновите страницу.");
     const can = canRetry(run, state);
-    if (!can.ok) return fail(`Не повторяю «${run.title}»: ${can.reason}.`);
+    if (!can.ok) return fail(`Не повторяю «${run.label}»: ${can.reason}.`);
     const parsed = usageText ? parseUsage(usageText) : null;
     const g = parsed?.records.length ? usageSummary(parsed.records, new Date(), state.timezone).gemini : null;
     const what = can.cost ? `озвучит заново ${can.cost} ${plural(can.cost, "ролик", "ролика", "роликов")}` : "перепишет сценарии (Claude)";
-    return { ok: true, message: `Повтор «${run.title}» ${what}${g ? ` · Gemini сегодня ${g.today}/${g.limit}` : ""}.`, attempt: run.attempt + 1 };
+    return { ok: true, message: `Повтор «${run.label}» ${what}${g ? ` · Gemini сегодня ${g.today}/${g.limit}` : ""}.`, attempt: run.attempt + 1, confirmLabel: `Повторить (попытка ${run.attempt + 1})` };
   });
 }
 
@@ -113,9 +114,34 @@ export async function retryRunAction(runId: number): Promise<ActionResult> {
     const run = state.runs.find((r) => r.id === runId);
     if (!run) return fail("Этого запуска нет в списке — обновите страницу.");
     const can = canRetry(run, state);
-    if (!can.ok) return fail(`Не повторяю «${run.title}»: ${can.reason}.`);
+    if (!can.ok) return fail(`Не повторяю «${run.label}»: ${can.reason}.`);
     await rerunFailedJobs(run.id);
-    return ok(`Запущена попытка ${run.attempt + 1}: «${run.title}». Те же настройки, что в первый раз; следите в «Запусках».`);
+    return ok(`Запущена попытка ${run.attempt + 1}: «${run.label}». Те же настройки, что в первый раз; следите в «Запусках».`);
+  });
+}
+
+// ---- новые темы в план ----
+
+const PLAN_EXTEND_MAX = 30;
+const planCount = (n: unknown) => Math.min(PLAN_EXTEND_MAX, Math.max(1, Math.floor(Number(n) || 10)));
+
+// Цена — по переменной LLM_PROVIDER (как в workflow «video-studio: план тем»): Claude ищет
+// источники веб-поиском (платно), Gemini — бесплатно, ссылки проверяются запросом по сети.
+export async function planExtendPreviewAction(count: number): Promise<(ActionResult & { confirmLabel: string }) | ActionResult> {
+  return guarded(async () => {
+    const n = planCount(count);
+    const provider = ((await getVariable("LLM_PROVIDER").catch(() => null)) ?? "").trim().toLowerCase();
+    const cost = provider === "claude" ? "платно: Claude + веб-поиск источников" : "бесплатно (Gemini), ссылки на источники проверяются";
+    return { ok: true, message: `Добавить в план ${n} ${plural(n, "тему", "темы", "тем")} — ${cost}. Около 3–5 минут.`, confirmLabel: `Добавить ${n}` };
+  });
+}
+
+export async function planExtendAction(count: number): Promise<DispatchResult | ActionResult> {
+  return guarded(async () => {
+    const n = planCount(count);
+    const channel = await loadChannel();
+    await dispatchOnce("video-studio-plan.yml", { count: String(n) }, "plan", [], channel.schedule.timezone);
+    return ok(`Запущено: +${n} ${plural(n, "тема", "темы", "тем")} в план. Через 3–5 минут они появятся в ленте как «Тема».`);
   });
 }
 

@@ -23,7 +23,10 @@ export async function GET(request: Request) {
     let push: Awaited<ReturnType<typeof notifyDevices>> | null = null;
     if (vapidSetup().keys) {
       const state = run.state ?? (await loadState().catch(() => null));
-      const msg = state ? dailySummary(state) : null;
+      const summary = state ? dailySummary(state) : null;
+      // Что автопилот запустил — первой строкой (только если что-то запущено).
+      const auto = run.did.length ? `Автопилот: ${run.did.join("; ")}` : "";
+      const msg = summary ? (auto ? { ...summary, body: `${auto} · ${summary.body}` } : summary) : auto ? { title: "Автопилот запустил сборку", body: auto, url: "/runs", tag: "daily" } : null;
       if (msg) push = await notifyDevices(msg);
     }
     // Точка истории цифр канала на каждый день — даже если панель неделю не открывали.

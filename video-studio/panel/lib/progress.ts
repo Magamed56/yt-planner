@@ -38,7 +38,7 @@ export function expectedMs(kind: string, codes: number, history: { kind: string;
     .filter((h) => h.kind === kind && h.ms > 60_000)
     .map((h) => h.ms / Math.max(1, h.codes))
     .sort((a, b) => a - b);
-  const fallback = kind === "draft" ? 90_000 : kind === "fill" || kind === "check" ? 60_000 : 9 * 60_000;
+  const fallback = kind === "draft" || kind === "titles" ? 90_000 : kind === "fill" || kind === "check" ? 60_000 : kind === "plan" ? 4 * 60_000 : 9 * 60_000;
   const median = per.length ? per[Math.floor(per.length / 2)]! : fallback;
   return Math.round(median * n + (kind === "draft" ? 60_000 : 90_000));
 }

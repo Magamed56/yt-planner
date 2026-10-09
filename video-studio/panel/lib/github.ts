@@ -125,10 +125,27 @@ export interface GhRelease {
   assets: GhAsset[];
 }
 
+// Ссылка на следующую страницу из заголовка Link: <…?page=2>; rel="next" — путь без адреса API.
+export function nextPage(link: string | null): string | null {
+  const m = /<([^>]+)>;\s*rel="next"/.exec(link ?? "");
+  if (!m) return null;
+  const url = new URL(m[1]!);
+  return url.origin === API ? url.pathname + url.search : null;
+}
+
+// Релизы — до 5 страниц по 100: иначе уборка и превью автопилота не видят релизы старше
+// ≈ 50 дней (два ролика в день). Пока релизов меньше сотни — один запрос, как раньше.
+const RELEASE_PAGES = 5;
 export async function listReleases(): Promise<GhRelease[]> {
-  const res = await gh(`/repos/${repoName()}/releases?per_page=100`);
-  if (!res.ok) throw await failure(res, "релизы");
-  return (await res.json()) as GhRelease[];
+  const out: GhRelease[] = [];
+  let path: string | null = `/repos/${repoName()}/releases?per_page=100`;
+  for (let i = 0; path && i < RELEASE_PAGES; i++) {
+    const res = await gh(path);
+    if (!res.ok) throw await failure(res, "релизы");
+    out.push(...((await res.json()) as GhRelease[]));
+    path = nextPage(res.headers.get("link"));
+  }
+  return out;
 }
 
 export interface GhRun {

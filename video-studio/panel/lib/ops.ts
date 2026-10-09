@@ -92,16 +92,16 @@ export function pickRetries(
   let left = budget;
   for (const r of failed) {
     if (retryTodo(r, runs, rows, launched).covered) {
-      skipped.push(`«${r.title}» — уже готово или запущено заново`);
+      skipped.push(`«${r.label}» — уже готово или запущено заново`);
       continue;
     }
     if (out.length >= RETRY_MAX) {
-      skipped.push(`«${r.title}» — не больше ${RETRY_MAX} повторов за раз`);
+      skipped.push(`«${r.label}» — не больше ${RETRY_MAX} повторов за раз`);
       continue;
     }
     const cost = retryCost(r);
     if (cost > left) {
-      skipped.push(`«${r.title}» — не хватает лимита озвучек на сегодня`);
+      skipped.push(`«${r.label}» — не хватает лимита озвучек на сегодня`);
       continue;
     }
     left -= cost;

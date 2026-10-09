@@ -7,7 +7,7 @@ import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem
 import type { GhRelease, GhRun, GhStep } from "./github";
 import { expectedMs, minutesLabel, runProgress, stageOf, type RunProgress } from "./progress";
 import { failedRun, releaseVideosOf, type ReleaseVideo } from "./ops";
-import { STAGES, codesLabel, plural, shiftDateKey, type Stage } from "./stages";
+import { STAGES, codesLabel, plural, runLabel, shiftDateKey, type Stage } from "./stages";
 import { typicalRatio } from "./insights";
 import { isShorts, rowStats, viewsPerDay, type RowStats } from "./stats";
 
@@ -62,13 +62,14 @@ export interface Row {
   stats?: RowStats | null; // просмотры, лайки, комментарии с YouTube (statistics того же videos.list)
 }
 
-export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "other";
+export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "plan" | "titles" | "captions" | "other";
 
 export interface RunInfo {
   id: number;
   workflow: string;
   file: string; // файл workflow: «video-studio.yml»
-  title: string;
+  title: string; // заголовок GitHub: «batch: 08a,08b»
+  label: string; // по-русски: «Ролик · 08a, 08b»
   kind: RunKind;
   codes: string[];
   active: boolean;
@@ -189,6 +190,10 @@ export interface PanelState {
   runwayLabel: string | null; // до какого слота расписание без пропусков
   firstGap: FirstGap | null; // null — пропусков нет на SLOT_GRID_DAYS дней (или YouTube недоступен)
   coverage: Coverage[]; // запланировано → видео → сценарии → темы; пусто без YouTube
+  topicsLeft: number; // тем плана без сценария
+  topicsUntil: string | null; // ISO: когда выйдет последний ролик плана (ориентир)
+  topicsUntilLabel: string | null;
+  topicsDays: number | null; // на сколько дней хватит плана
   reminders: Reminder[];
   runs: RunInfo[];
   slotGrid: SlotCell[]; // слоты на SLOT_GRID_DAYS дней вперёд — перенос и «конвейер»
@@ -270,6 +275,8 @@ const RUNNING_LABEL: Partial<Record<RunKind, string>> = {
   batch: "сценарий и видео в работе",
   render: "собирается видео",
   fill: "заполняются тексты на YouTube",
+  titles: "подбираются названия",
+  captions: "переводятся субтитры",
 };
 const MP4_WITH_CODE = /^(\d{2}[a-z])-.+\.mp4$/i;
 const DAY_MS = 86_400_000;
@@ -301,6 +308,9 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
   if (r.path.endsWith("/video-studio-youtube-fill.yml")) kind = "fill";
   else if (r.path.endsWith("/video-studio-check.yml")) kind = "check";
   else if (r.path.endsWith("/video-studio-instagram.yml")) kind = "instagram";
+  else if (r.path.endsWith("/video-studio-plan.yml")) kind = "plan";
+  else if (r.path.endsWith("/video-studio-titles.yml")) kind = "titles";
+  else if (r.path.endsWith("/video-studio-captions.yml")) kind = "captions";
   else if (r.path.endsWith("/video-studio.yml")) kind = (/^(draft|render|batch)\b/.exec(r.display_title)?.[1] as RunKind | undefined) ?? "other";
   const codes = [...new Set([...r.display_title.matchAll(/(?:^|[^0-9a-z])(\d{2}[a-z])(?=$|[^0-9a-z])/gi)].map((m) => m[1]!.toLowerCase()))];
   const t = Date.parse(r.created_at);
@@ -309,6 +319,7 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
     workflow: r.name,
     file: r.path.split("/").pop() ?? r.path,
     title: r.display_title,
+    label: runLabel(kind, r.display_title, codes),
     kind,
     codes,
     active: ACTIVE_RUN.has(r.status),
@@ -546,6 +557,9 @@ export function buildState(input: StateInput): PanelState {
   const runwayDays = input.youtubeError ? null : gap ? Math.max(0, Math.floor((ms(gap.iso) - nowMs) / DAY_MS)) : SLOT_GRID_DAYS;
   const runwayLabel = pipeline.coverage.find((c) => c.level === "scheduled")?.untilLabel ?? null;
 
+  // Когда кончится план: время выхода последнего ролика плана (ориентир).
+  const planEnd = rows.reduce<string | null>((end, r) => (r.when && (!end || ms(r.when) > ms(end)) ? r.when : end), null);
+
   const reminders: Reminder[] = [];
   if (input.youtubeError) reminders.push({ kind: "youtube", level: "error", text: `YouTube недоступен: ${input.youtubeError}` });
   else if (!scheduleEnd) reminders.push({ kind: "runway", level: "warn", text: "В расписании YouTube пусто — ни один ролик не запланирован." });
@@ -594,7 +608,7 @@ export function buildState(input: StateInput): PanelState {
   const lastDone = failedRun(runs, nowMs);
   if (lastDone) {
     const where = lastDone.failedStage ? ` на этапе «${lastDone.failedStage}»` : "";
-    reminders.push({ kind: "run", level: "error", text: `Запуск «${lastDone.title}» (${lastDone.createdLabel}) не удался${where} — откройте лог.`, href: lastDone.url });
+    reminders.push({ kind: "run", level: "error", text: `Запуск «${lastDone.label}» (${lastDone.createdLabel}) не удался${where} — откройте лог.`, href: lastDone.url });
   }
   if (missingSecrets?.length) {
     // Одной причиной — один раз: «YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN — заполнение YouTube из Actions».
@@ -626,6 +640,10 @@ export function buildState(input: StateInput): PanelState {
     runwayLabel,
     firstGap: gap,
     coverage: pipeline.coverage,
+    topicsLeft: counts.topic,
+    topicsUntil: planEnd,
+    topicsUntilLabel: planEnd ? labelOf(planEnd) : null,
+    topicsDays: planEnd ? Math.max(0, Math.floor((ms(planEnd) - nowMs) / DAY_MS)) : null,
     reminders,
     runs,
     slotGrid,
