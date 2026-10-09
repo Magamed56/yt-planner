@@ -59,3 +59,6 @@ export function runLabel(kind: string, title: string, codes: string[]): string {
       return title;
   }
 }
+
+// «К обычному»: выше — зелёным, ниже — жёлтым; стрелка и текст есть всегда (не только цвет).
+export const RATIO_CLASS = { up: "good", typical: "neutral", down: "warn", fresh: "neutral", thin: "neutral" } as const;

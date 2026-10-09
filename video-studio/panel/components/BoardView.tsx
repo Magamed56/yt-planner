@@ -1,10 +1,9 @@
 "use client";
 import { useRef } from "react";
 import type { PanelState, Row } from "@/lib/state";
-import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
+import { RATIO_CLASS, STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import { usePressDrag } from "@/lib/use-press-drag";
 import CoverMedia, { frameOf } from "./CoverMedia";
-import { RATIO_CLASS } from "./FeedView";
 
 const WEEKDAYS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 const weekday = (key: string) => {

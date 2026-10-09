@@ -2678,3 +2678,33 @@ a.code-chip {
     padding: 0;
   }
 }
+.vstat-yt {
+  justify-self: end;
+  color: var(--muted);
+}
+.vstat-title .ratio {
+  justify-self: start;
+  margin: 2px 0 0;
+}
+
+/* ---- тренды в плитках «Статистики» ---- */
+.kpi-delta {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.kpi-delta.up {
+  color: var(--ok);
+}
+.kpi-delta.down {
+  color: var(--warn);
+}
+.kpi .spark {
+  display: block;
+  margin: 2px 0;
+  color: var(--accent);
+}
+.goal-pace {
+  margin: -2px 0 8px;
+}

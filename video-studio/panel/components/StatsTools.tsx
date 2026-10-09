@@ -88,7 +88,7 @@ export function WeakStartCard({ extras }: { extras: StatsExtras }) {
               const running = f.code ? titlesRunning.includes(f.code) : false;
               return (
                 <li key={f.videoId} className={s.item}>
-                  <a className={s.head} href={`https://youtube.com/shorts/${f.videoId}`} target="_blank" rel="noreferrer">
+                  <a className={s.head} href={f.code ? `/?v=${f.code}` : `https://youtube.com/shorts/${f.videoId}`} target={f.code ? undefined : "_blank"} rel={f.code ? undefined : "noreferrer"}>
                     <Thumb src={f.thumbnailUrl} code={f.code ?? "—"} />
                     <span className={s.title}>
                       <b>{f.title}</b>

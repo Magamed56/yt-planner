@@ -1,8 +1,12 @@
 // Запись истории цифр канала (lib/history.ts) в переменную репозитория. Не Contents API: каждый
 // коммит запускал бы деплой Vercel. Ошибка записи — только в лог: из-за неё страница не падает.
 import type { ChannelListing } from "../../src/pipeline/youtube-fill";
+import { cache } from "react";
 import { getVariable, setVariable } from "./github";
-import { HISTORY_VAR, parseHistory, recordSnapshot, serializeHistory, snapshotDue, trimHistory } from "./history";
+import { HISTORY_VAR, parseHistory, recordSnapshot, serializeHistory, snapshotDue, trimHistory, type StatsHistory } from "./history";
+
+// Прочитать историю один раз на запрос: её берут и очередь («Пульс»), и «Статистика» (тренды).
+export const readHistory = cache(async (): Promise<StatsHistory> => parseHistory(await getVariable(HISTORY_VAR).catch(() => null)));
 
 // force — ежедневный cron: точка дня нужна, даже если час ещё не прошёл.
 export async function saveSnapshot(listing: ChannelListing, now: Date, timeZone: string, opts: { force?: boolean } = {}): Promise<"saved" | "fresh" | "same"> {

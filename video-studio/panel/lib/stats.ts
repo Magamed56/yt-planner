@@ -101,6 +101,11 @@ export interface VideoStat {
   mark: "best" | "worst" | null; // по просмотрам в сутки
   thumbnailUrl: string | null;
   retention?: VideoRetention | null; // % досмотра и средний просмотр из YouTube Analytics; null — нет данных
+  // «К обычному» — как в ленте (lib/insights.ts typicalRatio; заполняет app/stats/load.ts).
+  ratio?: number | null;
+  ratioLabel?: string | null;
+  verdict?: Verdict;
+  basis?: string;
 }
 
 // Shorts — до 3 минут: для порога монетизации считаются только их просмотры.

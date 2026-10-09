@@ -2,9 +2,9 @@
 // «Пульс»: что изменилось с прошлого визита и последние вышедшие Shorts с «×N к обычному».
 // Прошлый визит помнит этот браузер (localStorage) — у телефона и компьютера он свой. Текст
 // «с прошлого визита» появляется после загрузки страницы: сервер не знает, когда вы заходили.
+import { RATIO_CLASS } from "@/lib/stages";
 import { useEffect, useState } from "react";
 import { crossedMilestone, seriesAt, shortCount, type Pulse } from "@/lib/pulse";
-import { RATIO_CLASS } from "./FeedView";
 
 const SEEN_KEY = "sut.lastSeen";
 const WEEK_MS = 7 * 86_400_000;

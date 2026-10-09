@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { PanelState, Row } from "@/lib/state";
-import { STAGE_LABEL, plural } from "@/lib/stages";
+import { RATIO_CLASS, STAGE_LABEL, plural } from "@/lib/stages";
 import CoverMedia, { frameOf } from "./CoverMedia";
 import { usePending } from "@/lib/pending";
 import RunProgressBar from "./RunProgressBar";
@@ -14,9 +14,6 @@ function chipText(r: Row, queued: boolean): string {
   if (r.stage === "studio") return "В Studio — нужно время";
   return STAGE_LABEL[r.stage];
 }
-
-// «К обычному»: выше — зелёным, ниже — жёлтым; стрелка и текст есть всегда (не только цвет).
-export const RATIO_CLASS = { up: "good", typical: "neutral", down: "warn", fresh: "neutral", thin: "neutral" } as const;
 
 // Отметка выбора на обложке: «on» — выбран, «off» — можно выбрать, «none» — файлов нет.
 type Mark = "on" | "off" | "none" | null;
