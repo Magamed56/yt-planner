@@ -1,4 +1,5 @@
 import { measureText } from "@remotion/layout-utils";
+import { isThousandsTail } from "./numbers";
 
 // Разбор разметки onScreen: *слово* — акцент. Звёздочки могут стоять внутри
 // «слова» вместе с пунктуацией ("*Неделя.*", "*Подпишись*,"), поэтому режем
@@ -48,9 +49,27 @@ export function parseMarkup(input: string): TextToken[] {
     if (prev && /^[—–\-:;,.!?…]+$/.test(t.text)) {
       prev.runs.push({ text: " " + t.text, accent: false });
       prev.text += " " + t.text;
+    } else if (prev && isThousandsTail(prev.text, t.text)) {
+      // «28 000» — одно слово через неразрывный пробел: число не рвётся
+      // переносом и докручивается целиком (lib/numbers.ts).
+      const lastAccent = prev.runs[prev.runs.length - 1]?.accent ?? false;
+      prev.runs = joinRuns([...prev.runs, { text: " ", accent: lastAccent && (t.runs[0]?.accent ?? false) }, ...t.runs]);
+      prev.text += " " + t.text;
+      prev.accent = prev.accent || t.accent;
     } else merged.push(t);
   }
   return merged;
+}
+
+// Соседние куски с одинаковым стилем — в один (число целиком внутри одного куска).
+function joinRuns(runs: TextRun[]): TextRun[] {
+  const out: TextRun[] = [];
+  for (const r of runs) {
+    const last = out[out.length - 1];
+    if (last && last.accent === r.accent) last.text += r.text;
+    else out.push({ ...r });
+  }
+  return out;
 }
 
 export const stripMarkup = (s: string): string => s.replace(/\*/g, "");

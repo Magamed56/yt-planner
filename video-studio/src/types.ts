@@ -32,6 +32,20 @@ export interface SceneStat {
   label: string; // подпись под цифрой
 }
 
+// Карта: точка на стилизованной карте мира с пульсирующей меткой (сцена про место).
+export interface SceneMap {
+  lat: number; // широта, −90…90
+  lon: number; // долгота, −180…180
+  label: string; // подпись метки по-русски: «Гиза», «Санкт-Петербург»
+  zoom?: "world" | "region" | "city"; // насколько приблизить (по умолчанию region)
+}
+
+// Сравнение 2–4 величин одного типа: анимированные столбики.
+export interface SceneCompare {
+  items: { label: string; value: number }[];
+  suffix?: string; // единицы после числа: " лет", "%"
+}
+
 // Сцена сценария — то, что пишет LLM (или человек руками в JSON).
 export interface ScriptScene {
   id: string; // "s1", "s2", …
@@ -45,6 +59,8 @@ export interface ScriptScene {
   imagePrompt?: string; // АНГЛИЙСКИЙ промпт для AI-картинки
   quiz?: SceneQuiz; // для quiz: ответ и пояснение (narration — само утверждение)
   chapter?: string; // у первой сцены главы длинного ролика: название главы (карточка + таймкод в описании)
+  map?: SceneMap; // необязательно: сцена показывает место на карте
+  compare?: SceneCompare; // необязательно: сцена показывает сравнение столбиками
 }
 
 // ---- Викторина и главы (аддитивно) ----
@@ -104,7 +120,8 @@ export interface WordTiming {
 
 export type SceneVisual =
   | { type: "none" }
-  | { type: "image"; src: string; credit?: string }
+  // fit: "contain" — фото целиком поверх размытой копии (реальное горизонтальное фото в Shorts)
+  | { type: "image"; src: string; credit?: string; fit?: "cover" | "contain" }
   | { type: "video"; src: string; durationSec: number; credit?: string };
 
 // Пути к ассетам (audioSrc, visual.src, music.src, sfx) — относительно
@@ -128,6 +145,15 @@ export interface TimelineCaption {
   confidence: number | null;
 }
 
+// Звуки монтажа (синтезируются локально, src/pipeline/audio/sfx.ts), пути — от publicDir.
+export interface SfxSet {
+  whooshes: string[]; // варианты свиста переходов — по кругу
+  pop: string | null; // пункт списка, столбик сравнения, метка на карте
+  impact: string | null; // удар при раскрытии крупной цифры
+  rise: string | null; // нарастание к удару
+  sting: string | null; // искра бренд-заставки
+}
+
 export interface VideoProps {
   title: string;
   format: Format;
@@ -138,6 +164,8 @@ export interface VideoProps {
   durationInFrames: number; // итоговая длина ролика
   music: { src: string; volume: number; duckedVolume: number } | null;
   whooshSrc: string | null; // звук перехода (генерируется локально)
+  sfx?: SfxSet | null; // набор звуков монтажа; нет — только whooshSrc (старые props.json)
+  brandIntro?: boolean; // бренд-заставка ≤ 0,5 с поверх начала хука (channel.json → brandIntro, BRAND_INTRO)
   sfxVolume: number;
   showCaptions: boolean;
   showProgressBar: boolean;

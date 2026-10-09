@@ -8,7 +8,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { VisualContext } from "../pipeline/contracts";
-import { buildPlan, findVisual, pickRendition, resetVisualsState, VISUAL_PROVIDERS } from "../pipeline/visuals/index";
+import { buildYoutubeMeta } from "../pipeline/meta";
+import { buildPlan, findVisual, pickRendition, realFirstForPillar, resetVisualsState, VISUAL_PROVIDERS } from "../pipeline/visuals/index";
+import { authorText, htmlToText, licenseFamily } from "../pipeline/visuals/providers/open-licenses";
 import type { ScriptScene } from "../types";
 
 const tmpRoot = await mkdtemp(path.join(os.tmpdir(), "video-studio-visuals-test-"));
@@ -278,8 +280,10 @@ await test("Cloudflare: FLUX.2 JSON {result:{image: base64}} → png; landscape 
 
 await test("Нет ключей → тихий пропуск, одно сообщение на источник за запуск", async ({ publicDir, cacheDir }) => {
   const { fn, calls } = mockFetch(() => null);
-  const r1 = await findVisual(scene(), ctxFor(publicDir), { fetch: fn, env: {}, log, cacheDir });
-  const r2 = await findVisual(scene({ id: "s2" }), ctxFor(publicDir), { fetch: fn, env: {}, log, cacheDir });
+  // Только источники с ключами (реальные фото ключа не требуют — их тест ниже).
+  const env = { VISUALS: "pexels,pixabay,cloudflare" };
+  const r1 = await findVisual(scene(), ctxFor(publicDir), { fetch: fn, env, log, cacheDir });
+  const r2 = await findVisual(scene({ id: "s2" }), ctxFor(publicDir), { fetch: fn, env, log, cacheDir });
   assert.deepEqual(r1, { visual: { type: "none" }, credit: null });
   assert.deepEqual(r2, { visual: { type: "none" }, credit: null });
   assert.equal(calls.length, 0);
@@ -349,6 +353,164 @@ await test("Сцена без английского запроса и пром�
   const r = await findVisual(scene({ visualQuery: "календарь", imagePrompt: undefined }), ctxFor(publicDir), { fetch: fn, env: { PEXELS_API_KEY: "k", PIXABAY_API_KEY: "p" }, log, cacheDir });
   assert.equal(r.visual.type, "none");
   assert.equal(calls.length, 0);
+});
+
+// ---- Реальные фото: Wikimedia Commons и Openverse ----
+
+// Страница ответа Commons (action=query&generator=search&prop=imageinfo, formatversion=2).
+const commonsPage = (
+  pageid: number,
+  index: number,
+  title: string,
+  over: { width?: number; height?: number; mime?: string; license?: string; short?: string; artist?: string; restrictions?: string; description?: string; categories?: string } = {},
+) => ({
+  pageid,
+  ns: 6,
+  title: `File:${title}.jpg`,
+  index,
+  imageinfo: [
+    {
+      width: over.width ?? 4000,
+      height: over.height ?? 3000,
+      mime: over.mime ?? "image/jpeg",
+      url: `https://upload.wikimedia.org/wikipedia/commons/a/ab/${pageid}.jpg`,
+      descriptionurl: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(title.replace(/ /g, "_"))}.jpg`,
+      thumburl: `https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/${pageid}.jpg/1280px-${pageid}.jpg?utm_source=commons.wikimedia.org`,
+      thumbwidth: 1280,
+      thumbheight: 960,
+      extmetadata: {
+        License: { value: over.license ?? "cc-by-sa-4.0" },
+        LicenseShortName: { value: over.short ?? "CC BY-SA 4.0" },
+        Artist: { value: over.artist ?? '<a href="//commons.wikimedia.org/wiki/User:Foo" title="User:Foo">Foo &amp; Bar</a>' },
+        ...(over.restrictions ? { Restrictions: { value: over.restrictions } } : {}),
+        ...(over.description ? { ImageDescription: { value: over.description } } : {}),
+        ...(over.categories ? { Categories: { value: over.categories } } : {}),
+      },
+    },
+  ],
+});
+
+await test("Лицензии и автор: семейства, HTML автора → текст", () => {
+  assert.equal(licenseFamily("cc-by-sa-4.0"), "cc-by-sa");
+  assert.equal(licenseFamily("cc-by-2.0"), "cc-by");
+  assert.equal(licenseFamily("by"), "cc-by", "Openverse пишет без cc-");
+  assert.equal(licenseFamily("pd"), "pd");
+  assert.equal(licenseFamily("pdm"), "pd");
+  assert.equal(licenseFamily("cc0"), "cc0");
+  assert.equal(licenseFamily("cc-by-nc-sa-4.0"), null, "NC — нельзя");
+  assert.equal(licenseFamily("cc-by-nd-4.0"), null, "ND — нельзя");
+  assert.equal(licenseFamily("gfdl"), null);
+  assert.equal(licenseFamily(""), null);
+  assert.equal(htmlToText('<a href="x">Ivan&#160;Petrov</a>'), "Ivan Petrov");
+  assert.equal(htmlToText("<span>Unknown author</span>Unknown author"), "Unknown author");
+  assert.equal(authorText("<span>Unknown author</span>Unknown author"), null, "неизвестный автор — не автор");
+  assert.equal(authorText("Uncredited"), null);
+  assert.equal(authorText('<a href="//x">NASA/JPL</a>'), "NASA/JPL");
+});
+
+await test("Wikimedia: только свободные лицензии без ограничений, мусор мимо, атрибуция и User-Agent", async ({ publicDir, cacheDir }) => {
+  const pages = [
+    commonsPage(5, 5, "Giza pyramids at dawn portrait", { width: 3000, height: 4000, license: "pd", short: "Public domain", artist: "NASA" }),
+    commonsPage(1, 1, "Giza pyramid NC", { license: "cc-by-nc-sa-4.0", short: "CC BY-NC-SA 4.0" }),
+    commonsPage(2, 2, "Giza pyramid with tourist", { restrictions: "personality" }),
+    commonsPage(3, 3, "Pyramids of Egypt (Page 130)", { license: "pd", short: "Public domain" }),
+    commonsPage(6, 6, "Giza sunset panorama", { width: 9000, height: 2000 }),
+    commonsPage(7, 7, "Sunset over Dulmen", {}),
+    commonsPage(8, 0, "Giza pyramid in a workshop", { license: "pd", artist: "Uncredited", description: "<p>Plate 16. The pyramid model</p>" }),
+    commonsPage(10, 8, "Desert pyramid scan", { license: "pd", categories: "Pyramids|Book scans" }),
+    commonsPage(11, 1, "Giza", { width: 3000, height: 4000, license: "cc0", short: "CC0" }), // одно совпавшее слово из трёх
+    commonsPage(4, 4, "Giza pyramid complex", {}),
+  ];
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/w/api.php")) return json(200, { batchcomplete: true, query: { pages } });
+    if (c.url.startsWith("https://thumb.wikimedia.org/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    return null;
+  });
+  const ctx = ctxFor(publicDir);
+  const r = await findVisual(scene({ id: "s1", visualQuery: "giza pyramid desert" }), ctx, { fetch: fn, env: { VISUALS: "wikimedia" }, log, cacheDir });
+  // NC, «права личности», скан страницы, панорама и закат без слова из запроса — пропущены.
+  assert.deepEqual(r.visual, { type: "image", src: "visuals/s1.jpg", credit: "Wikimedia Commons: Foo & Bar (CC BY-SA 4.0)", fit: "contain" });
+  assert.deepEqual(r.credit, { provider: "Wikimedia Commons", author: "Foo & Bar (CC BY-SA 4.0)", url: "https://commons.wikimedia.org/wiki/File:Giza_pyramid_complex.jpg" });
+  assert.ok(ctx.usedIds.has("wikimedia:4"));
+  const api = new URL(calls[0].url);
+  assert.equal(api.searchParams.get("generator"), "search");
+  assert.equal(api.searchParams.get("gsrnamespace"), "6");
+  assert.ok(api.searchParams.get("gsrsearch")!.startsWith("giza pyramid desert filemime:image/jpeg"), api.searchParams.get("gsrsearch")!);
+  assert.equal(api.searchParams.get("iiurlwidth"), "1280");
+  assert.ok(calls[0].headers["user-agent"]?.startsWith("video-studio/"), "понятный User-Agent обязателен");
+  assert.ok(calls[1].url.startsWith("https://thumb.wikimedia.org/"), "качаем миниатюру из API, а не оригинал");
+  assert.ok(calls[1].headers["user-agent"]?.startsWith("video-studio/"), "и при скачивании");
+  assert.equal(readFileSync(path.join(publicDir, "visuals", "s1.jpg")).length, JPG.length);
+
+  // Следующая сцена: №4 уже в ролике → портретное PD-фото, на весь кадр (cover).
+  const r2 = await findVisual(scene({ id: "s2", visualQuery: "giza pyramid desert" }), ctx, { fetch: fn, env: { VISUALS: "wikimedia" }, log, cacheDir });
+  assert.deepEqual(r2.visual, { type: "image", src: "visuals/s2.jpg", credit: "Wikimedia Commons: NASA (общественное достояние)" });
+
+  // Описание ролика: автор, лицензия и страница файла.
+  const meta = buildYoutubeMeta({
+    script: { title: "Пирамиды", description: "Текст.", tags: [], language: "ru", format: "shorts", scenes: [] },
+    format: "shorts",
+    visualCredits: [r.credit, r2.credit],
+    musicCredit: null,
+    voiceProvider: "edge",
+  });
+  assert.ok(meta.description.includes("Wikimedia Commons — Foo & Bar (CC BY-SA 4.0) https://commons.wikimedia.org/wiki/File:Giza_pyramid_complex.jpg"), meta.description);
+  assert.ok(meta.description.includes("NASA (общественное достояние)"), meta.description);
+
+  // WIKIMEDIA_LICENSES=pd,cc0 — BY-SA больше не берём.
+  const r3 = await findVisual(scene({ id: "s3", visualQuery: "giza pyramid desert" }), ctxFor(publicDir), { fetch: fn, env: { VISUALS: "wikimedia", WIKIMEDIA_LICENSES: "pd,cc0" }, log, cacheDir });
+  assert.equal(r3.credit?.author, "NASA (общественное достояние)");
+});
+
+await test("Реальные фото первыми: realFirst и рубрики VISUALS_REAL_PILLARS", async ({ publicDir, cacheDir }) => {
+  const p = (name: string) => ({ provider: VISUAL_PROVIDERS[name], key: "k" });
+  const all = [p("pexels"), p("pixabay"), p("wikimedia"), p("openverse"), p("cloudflare")];
+  const plain = buildPlan(all, "shorts", false).map((s) => `${s.provider.name}:${s.stage.media}`);
+  assert.deepEqual(plain, ["pexels:video", "pixabay:video", "pexels:image", "pixabay:video", "wikimedia:image", "openverse:image", "cloudflare:image"]);
+  const real = buildPlan(all, "shorts", false, true).map((s) => s.provider.name);
+  assert.deepEqual(real, ["wikimedia", "openverse", "pexels", "pixabay", "pexels", "pixabay", "cloudflare"]);
+
+  assert.equal(realFirstForPillar("history", {}), true);
+  assert.equal(realFirstForPillar("nature", {}), true);
+  assert.equal(realFirstForPillar("money", {}), false);
+  assert.equal(realFirstForPillar(null, {}), false);
+  assert.equal(realFirstForPillar("tech", { VISUALS_REAL_PILLARS: "history,tech" }), true);
+  assert.equal(realFirstForPillar("history", { VISUALS_REAL_PILLARS: "none" }), false);
+
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/")) return json(200, { query: { pages: [commonsPage(9, 1, "Viking helmet Gjermundbu", { width: 3000, height: 4000 })] } });
+    if (c.url.startsWith("https://thumb.wikimedia.org/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    return null; // Pexels не должен понадобиться
+  });
+  const env = { VISUALS: "pexels,wikimedia", PEXELS_API_KEY: "k" };
+  const r = await findVisual(scene({ visualQuery: "viking helmet museum" }), { ...ctxFor(publicDir), realFirst: true }, { fetch: fn, env, log, cacheDir });
+  assert.equal(r.credit?.provider, "Wikimedia Commons");
+  assert.ok(!calls.some((c) => c.url.includes("pexels")), "до стока дело не дошло");
+});
+
+await test("Без ключей вообще: реальные фото всё равно находятся (VISUALS по умолчанию)", async ({ publicDir, cacheDir }) => {
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/")) return json(200, { query: { pages: [] } });
+    if (c.url.startsWith("https://api.openverse.org/v1/images/")) {
+      return json(200, {
+        result_count: 3,
+        results: [
+          { id: "a1", title: "Octopus on reef", url: "https://live.staticflickr.com/1/a1_b.jpg", foreign_landing_url: "https://www.flickr.com/photos/x/1", creator: "", license: "by", license_version: "2.0", source: "flickr", width: 1024, height: 768 },
+          { id: "a2", title: "Octopus small", url: "https://live.staticflickr.com/1/a2.jpg", creator: "Ann", license: "by", license_version: "2.0", source: "flickr", width: 500, height: 375 },
+          { id: "a3", title: "Common octopus", url: "https://inaturalist-open-data.s3.amazonaws.com/photos/3/original.jpeg", foreign_landing_url: "https://www.inaturalist.org/photos/3", creator: "Maria", license: "by", license_version: "4.0", source: "inaturalist", width: 2048, height: 1536 },
+        ],
+      });
+    }
+    if (c.url.startsWith("https://inaturalist-open-data.s3.amazonaws.com/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    return null;
+  });
+  const r = await findVisual(scene({ visualQuery: "octopus coral reef" }), ctxFor(publicDir), { fetch: fn, env: {}, log, cacheDir });
+  // a1 — CC BY без автора (атрибуция неполная), a2 — слишком мелкое.
+  assert.deepEqual(r.credit, { provider: "iNaturalist", author: "Maria (CC BY 4.0)", url: "https://www.inaturalist.org/photos/3" });
+  const ov = new URL(calls.find((c) => c.url.startsWith("https://api.openverse.org/"))!.url);
+  assert.equal(ov.searchParams.get("license"), "by,by-sa,cc0,pdm");
+  assert.equal(ov.searchParams.get("excluded_source"), "wikimedia");
+  assert.ok(calls.every((c) => !c.url.includes("pexels") && !c.url.includes("pixabay") && !c.url.includes("cloudflare")));
 });
 
 await rm(tmpRoot, { recursive: true, force: true });

@@ -122,13 +122,14 @@ export async function downloadToFile(
   dest: string,
   timeoutMs: number,
   maxBytes: number,
+  headers?: Record<string, string>,
 ): Promise<{ bytes: number; contentType: string }> {
   await mkdir(path.dirname(dest), { recursive: true });
   const part = `${dest}.part`;
   const { signal, cleanup, timedOut } = linkedAbort(timeoutMs);
   let out: ReturnType<typeof createWriteStream> | null = null;
   try {
-    const res = await f(url, { redirect: "follow", signal });
+    const res = await f(url, headers ? { redirect: "follow", signal, headers } : { redirect: "follow", signal });
     if (!res.ok) throw statusError(what, res.status, await res.text().catch(() => ""));
     const len = Number(res.headers.get("content-length") ?? 0);
     if (len > maxBytes) throw new VisualError(`${what}: файл ${(len / 1e6).toFixed(1)} МБ больше лимита ${(maxBytes / 1e6).toFixed(0)} МБ.`);

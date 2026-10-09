@@ -14,6 +14,7 @@ import {
   type Format,
   type RenderScene,
   type SceneVisual,
+  type SfxSet,
   type ThemeName,
   type VideoProps,
   type VideoScript,
@@ -36,6 +37,8 @@ export interface BuildPropsInput {
   visuals?: (VisualResult | null | undefined)[]; // по порядку script.scenes
   music: MusicChoice | null;
   whooshSrc: string | null; // уже относительно publicDir ("sfx/whoosh.wav")
+  sfx?: SfxSet | null; // остальные звуки монтажа (audio/makeSfx)
+  brandIntro?: boolean; // бренд-заставка поверх начала хука
   format?: Format;
   theme?: ThemeName;
   transitionFrames?: number;
@@ -131,6 +134,8 @@ export function buildVideoProps(input: BuildPropsInput): VideoProps {
     durationInFrames: laid.durationInFrames,
     music: input.music ? { src: toPublicSrc(publicDir, input.music.src), ...musicVolumes(input.music, input.musicVolume) } : null,
     whooshSrc: input.whooshSrc ? toPublicSrc(publicDir, input.whooshSrc) : null,
+    sfx: input.sfx ? sfxPaths(publicDir, input.sfx) : null,
+    brandIntro: Boolean(input.brandIntro),
     sfxVolume: clamp01(envNumber("SFX_VOLUME") ?? SFX_VOLUME),
     showCaptions: input.showCaptions ?? true,
     showProgressBar: input.showProgressBar ?? true,
@@ -142,6 +147,17 @@ export function buildVideoProps(input: BuildPropsInput): VideoProps {
 }
 
 export const propsDurationSec = (p: Pick<VideoProps, "durationInFrames">): number => p.durationInFrames / FPS;
+
+function sfxPaths(publicDir: string, sfx: SfxSet): SfxSet {
+  const one = (src: string | null) => (src ? toPublicSrc(publicDir, src) || null : null);
+  return {
+    whooshes: sfx.whooshes.map((s) => toPublicSrc(publicDir, s)).filter(Boolean),
+    pop: one(sfx.pop),
+    impact: one(sfx.impact),
+    rise: one(sfx.rise),
+    sting: one(sfx.sting),
+  };
+}
 
 function ctaCommentFromEnv(): string | null {
   const v = process.env.CTA_COMMENT?.trim();
