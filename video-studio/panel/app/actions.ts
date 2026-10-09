@@ -307,7 +307,7 @@ export async function saveAutopilotAction(settings: AutopilotSettings): Promise<
     await setVariable(AUTOPILOT_VAR, JSON.stringify(value));
     const parts = [
       value.enabled ? `автопилот включён: ролики готовятся за ${days} дн. до выхода${reserve ? `, запас сценариев — ${reserve}` : ""}` : "автопилот выключен",
-      value.retryFailed ? "упавшие сборки повторяются раз" : "упавшие сборки не повторяются",
+      value.retryFailed ? "упавшая сборка повторяется один раз" : "упавшие сборки не повторяются",
       keep ? `видео из релизов удаляются через ${keep} дн. после выхода` : "видео из релизов не удаляются",
     ];
     return ok(`Сохранено: ${parts.join("; ")}.`);
