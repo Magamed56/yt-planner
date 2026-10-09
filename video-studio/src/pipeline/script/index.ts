@@ -6,7 +6,7 @@
 // LLM_FALLBACKS или все бесплатные провайдеры с ключами.
 
 export { generateScript, ScriptGenerationError, type ScriptDeps, type ScriptResult } from "./generate";
-export { validateScript, lintScript, ScriptValidationError } from "./validate";
+export { validateScript, lintScript, ScriptValidationError, WORDS_PER_SECOND } from "./validate";
 export { extractJson } from "./json";
 export { resolveChain, LLM_PROVIDERS, type LlmProviderName } from "./llm/chain";
 export { VideoScriptSchema, toCompatJsonSchema } from "./schema";

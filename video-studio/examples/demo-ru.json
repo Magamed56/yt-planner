@@ -27,11 +27,11 @@
     },
     {
       "id": "s3",
-      "kind": "statement",
+      "kind": "media",
       "narration": "Но мозг не ленится. Он просто экономит энергию и стирает всё, что считает ненужным.",
       "onScreen": "Мозг не ленится. Он *экономит* энергию",
       "icon": "battery-low",
-      "visualQuery": "neurons abstract blue",
+      "visualQuery": "brain scan monitor",
       "imagePrompt": "abstract neural network of glowing blue neurons, some connections dimming, macro shot"
     },
     {
@@ -65,9 +65,9 @@
     {
       "id": "s7",
       "kind": "cta",
-      "narration": "Подпишись, чтобы не забыть следующий лайфхак для мозга.",
-      "onScreen": "*Подпишись*, чтобы не забыть",
-      "icon": "bell-ring"
+      "narration": "А что из вчерашнего ты помнишь сегодня?",
+      "onScreen": "Что из вчерашнего помнишь *ты*?",
+      "icon": "message-circle"
     }
   ]
 }

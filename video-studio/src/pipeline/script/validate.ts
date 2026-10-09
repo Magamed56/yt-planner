@@ -6,6 +6,7 @@
 import type { z } from "zod";
 import type { Format, ScriptRequest } from "../contracts";
 import { QUIZ_PAUSE_SEC, SCENE_KINDS, THEME_NAMES, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
+import { stems } from "./covered";
 import { LIMITS, ScriptSceneSchema, VideoScriptSchema } from "./schema";
 
 export class ScriptValidationError extends Error {
@@ -234,7 +235,70 @@ export interface LintOptions {
   targetSeconds?: number;
 }
 
-export const WORDS_PER_SECOND = 2.6; // темп русской озвучки ≈ 150 слов/мин
+// Темп ГОТОВОГО ролика — слова narration на секунду вместе с паузами между сценами:
+// цель задаётся длительностью ролика, а не чистой речи. Калибровка 10.2026 — 20 Shorts
+// без викторины (scripts/ ÷ durationSec из content/videos.json и week1-videos.json):
+// в сумме 2,11 (1,75–2,46, медиана 2,17). С прежними 2,6 «45 секунд» выходили в 57.
+export const WORDS_PER_SECOND = 2.1;
+
+// Правила Shorts, которых схема не знает. Объём: первый ответ модели — строго ±15 %
+// (иначе ремонт), после ремонта небольшой промах — только замечание (generate.ts).
+export const SHORTS_RULES = {
+  lengthTolerance: 0.15,
+  lengthHard: { min: 0.75, max: 1.3 }, // за этими границами — ремонт всегда
+  ctaWordsMax: 8,
+  // После ремонта вопрос чуть длиннее 8 слов — замечание: из-за лишнего слова не
+  // бросаем ответ сильной модели ради более слабой.
+  ctaWordsSoft: 12,
+  titleChars: 50,
+  media: { min: 2, max: 3 },
+} as const;
+
+// Подписку показывает финальная сцена (кнопка с курсором), голосом её не просим.
+// Призыв — возвратные формы («подпишись», «подписывайтесь», «подписаться»),
+// «подписка», «подписчик». «Подписал договор», «подпиши», «подпись» — не призыв:
+// иначе вопрос по истории («А ты бы подписал такой указ?») ушёл бы в ремонт.
+const SUBSCRIBE = /подпи[шс]\p{L}*?(?:ся|сь)(?!\p{L})|подписк|подписч|subscri/iu;
+
+const ctaScene = (scenes: unknown[]): Loose | null => {
+  const last = scenes[scenes.length - 1];
+  return isObj(last) && str(last.kind) === "cta" ? last : null;
+};
+
+// Финал: один короткий вопрос без «подпишись». Жёстко — только при генерации
+// (generate.ts); у готовых сценариев из scripts/ это замечание в lintScenes.
+export function ctaProblems(scenes: unknown[]): string[] {
+  const cta = ctaScene(scenes);
+  if (!cta) return [];
+  const label = `сцена №${scenes.length}${str(cta.id) ? ` (${str(cta.id)})` : ""}`;
+  const narration = str(cta.narration);
+  const out: string[] = [];
+  const words = countWords(narration);
+  if (words > SHORTS_RULES.ctaWordsMax) out.push(`${label}: финал (kind "cta") — ${words} слов, нужно не больше ${SHORTS_RULES.ctaWordsMax}: один короткий вопрос зрителю по теме, который возвращает к хуку`);
+  if (SUBSCRIBE.test(narration)) out.push(`${label}: в финале не проси подписаться — кнопку подписки ролик показывает сам; оставь только вопрос зрителю по теме`);
+  return out;
+}
+
+// Ремонт не помог: убираем фразы с «подпишись», а если всё ещё длинно — оставляем
+// только вопрос. null — исправить нечем (например, весь финал — «Подпишись!»).
+export function trimCta(narration: string, maxWords: number = SHORTS_RULES.ctaWordsMax): string | null {
+  const sentences = (narration.match(/[^.!?…]+[.!?…]*/g) ?? []).map((s) => s.trim()).filter((s) => countWords(s) > 0);
+  let kept = sentences.filter((s) => !SUBSCRIBE.test(s));
+  if (countWords(kept.join(" ")) > maxWords) kept = kept.filter((s) => /\?\s*$/.test(s));
+  const out = kept.join(" ").trim();
+  return out && countWords(out) <= maxWords ? out : null;
+}
+
+// Заголовок пересказывает хук: в ленте Shorts зритель видит и то и другое разом.
+// Доля значимых слов заголовка, которые уже есть в хуке.
+export function titleRepeatsHook(title: string, hook: string): boolean {
+  const t = new Set(stems(title));
+  if (t.size < 2) return false;
+  const h = new Set(stems(hook));
+  let common = 0;
+  for (const w of t) if (h.has(w)) common++;
+  return common / t.size >= 0.6;
+}
 
 export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
   const out: string[] = [];
@@ -276,21 +340,45 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
   });
 
   const words = scenes.reduce<number>((sum, s) => sum + (isObj(s) ? countWords(str(s.narration)) : 0), 0);
+  const shorts = opts.format === "shorts";
   if (opts.targetSeconds) {
     const target = opts.targetSeconds * WORDS_PER_SECOND;
-    if (words < target * 0.75 || words > target * 1.3) {
-      out.push(`общий объём narration ${words} слов, а для ~${opts.targetSeconds} с нужно около ${Math.round(target)}`);
+    const tol = SHORTS_RULES.lengthTolerance;
+    const [lo, hi] = shorts ? [1 - tol, 1 + tol] : [0.75, 1.3];
+    if (words < target * lo || words > target * hi) {
+      out.push(`общий объём narration ${words} слов, а для ~${Math.round(opts.targetSeconds)} с нужно около ${Math.round(target)}`);
     }
   }
-  if (opts.format === "shorts" && (scenes.length < 5 || scenes.length > 12)) {
-    out.push(`для Shorts лучше 6–9 сцен (сейчас ${scenes.length})`);
+  if (shorts && (scenes.length < 5 || scenes.length > 12)) {
+    out.push(`для Shorts лучше 6–8 сцен (сейчас ${scenes.length})`);
+  }
+  // Викторина строится из раундов — там сцены media не к месту.
+  const quiz = scenes.some((s) => isObj(s) && s.kind === "quiz");
+  if (shorts && !quiz && scenes.length) {
+    const media = scenes.filter((s) => isObj(s) && s.kind === "media").length;
+    const { min, max } = SHORTS_RULES.media;
+    if (media < min || media > max) out.push(`сцен kind "media" — ${media}, в Shorts нужно ${min}–${max}: живое видео по visualQuery там, где есть что показать (действие, место, процесс)`);
+  }
+  out.push(...ctaProblems(scenes));
+  const cta = ctaScene(scenes);
+  if (cta) {
+    if (str(cta.narration) && !/\?/.test(str(cta.narration))) out.push(`финал (kind "cta") — вопрос зрителю по теме: закончи его знаком «?»`);
+    if (SUBSCRIBE.test(str(cta.onScreen))) out.push(`onScreen финала — сам вопрос коротко, без «подпишись»: кнопка подписки уже на экране`);
   }
   return out;
 }
 
 export function lintScript(script: VideoScript, opts: Partial<LintOptions> = {}): string[] {
-  const out = lintScenes(script.scenes, { format: opts.format ?? script.format, targetSeconds: opts.targetSeconds });
+  const format = opts.format ?? script.format;
+  const out = lintScenes(script.scenes, { format, targetSeconds: opts.targetSeconds });
   if (script.title.length > 70) out.push(`title длиннее 70 символов — в поиске YouTube обрежется`);
+  else if (format === "shorts" && script.title.length > SHORTS_RULES.titleChars) {
+    out.push(`title ${script.title.length} символов — для Shorts лучше до ${SHORTS_RULES.titleChars}: в ленте видно только начало`);
+  }
+  const hook = script.scenes[0]?.kind === "hook" ? script.scenes[0].narration : "";
+  if (hook && titleRepeatsHook(script.title, hook)) {
+    out.push(`title почти повторяет хук («${hook}») — пусть заголовок дополняет его (тема и обещание ответа), а не пересказывает первую фразу`);
+  }
   if (!/#[\p{L}\p{N}_]+/u.test(script.description)) out.push("в description нет хэштегов");
   // YouTube считает описание в байтах (≤ 5000), кириллица — 2 байта на букву;
   // ещё нужно место под источники, музыку и голос (meta.ts их свернёт/обрежет).

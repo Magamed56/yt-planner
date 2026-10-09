@@ -16,6 +16,7 @@ export interface CoveredEntry {
   code: string | null; // «05a», если известен
   title: string; // заголовок ролика или темы плана
   texts: string[]; // факты: narration/onScreen сцен, claim из плана
+  cta?: string; // финал ролика: не факт, но по нему видно одинаковые концовки
 }
 
 // Код ролика из имени сценария: sut-08a-… (Shorts) и razbor-08a-… («Разбор»).
@@ -74,7 +75,42 @@ export function coveredFromScript(file: string, script: { title?: unknown; scene
     .filter((s) => s && typeof s.narration === "string" && s.kind !== "cta")
     .map((s) => sceneText({ narration: s.narration ?? "", onScreen: typeof s.onScreen === "string" ? s.onScreen : "" }));
   if (!texts.length) return null;
-  return { code: coveredCode(file), title: typeof script.title === "string" ? script.title : path.basename(file, ".json"), texts };
+  const last = (script.scenes as Partial<ScriptScene>[]).at(-1);
+  const cta = last && last.kind === "cta" && typeof last.narration === "string" ? last.narration.trim() : "";
+  return { code: coveredCode(file), title: typeof script.title === "string" ? script.title : path.basename(file, ".json"), texts, ...(cta ? { cta } : {}) };
+}
+
+// ---- Финалы прошлых роликов ----
+
+export interface RecentCta {
+  code: string | null;
+  title: string;
+  cta: string;
+}
+
+// Последние финалы: loadCovered идёт по именам файлов (sut-01a…), то есть по порядку выхода.
+export function recentCtas(entries: CoveredEntry[], limit = 10): RecentCta[] {
+  return entries.flatMap((e) => (e.cta ? [{ code: e.code, title: e.title, cta: e.cta }] : [])).slice(-limit);
+}
+
+// Финал повторяет прошлый, если половина его значимых слов уже была в одном из
+// прошлых финалов («Напиши в комментариях и подпишись» у всех подряд).
+export function ctaRepeat(cta: string, recent: RecentCta[], minShare = 0.5): RecentCta | null {
+  const mine = new Set(stems(cta));
+  if (!mine.size) return null;
+  let best: RecentCta | null = null;
+  let bestShare = 0;
+  for (const r of recent) {
+    const theirs = new Set(stems(r.cta));
+    let common = 0;
+    for (const w of mine) if (theirs.has(w)) common++;
+    const share = common / mine.size;
+    if (share >= minShare && share > bestShare) {
+      best = r;
+      bestShare = share;
+    }
+  }
+  return best;
 }
 
 // Сценарии из scripts/ + факты тем плана, у которых ролик уже есть.
