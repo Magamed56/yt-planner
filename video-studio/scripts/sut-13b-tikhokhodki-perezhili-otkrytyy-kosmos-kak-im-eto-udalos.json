@@ -1,0 +1,104 @@
+{
+  "title": "Тихоходки пережили открытый космос. Как им это удалось?",
+  "description": "Как тихоходки выжили десять дней в открытом космосе на спутнике FOTON-M3 в 2007 году и почему солнечный ультрафиолет оказался для них опаснее вакуума. Разбираем криптобиоз — состояние, в котором жизнь почти останавливается.\n#shorts #тихоходки #космос #биология #наука",
+  "tags": [
+    "тихоходки",
+    "космос",
+    "криптобиоз",
+    "ангидробиоз",
+    "foton-m3",
+    "биология",
+    "животные",
+    "наука",
+    "открытый космос",
+    "экстремофилы",
+    "tardigrades",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Это животное выжило в открытом космосе. Без скафандра.",
+      "onScreen": "Выжило в космосе *без скафандра*",
+      "icon": "rocket",
+      "visualQuery": "earth orbit space",
+      "imagePrompt": "cinematic view of Earth from low orbit with a tiny glowing microscopic creature floating in the foreground, deep blue and black palette, dramatic sun rim light"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это тихоходка. Длина около половины миллиметра. И её главный секрет я раскрою в конце.",
+      "onScreen": "Тихоходка: всего *≈0,5 мм*",
+      "icon": "microscope",
+      "visualQuery": "microscope laboratory slide",
+      "imagePrompt": "macro shot of a chubby eight-legged tardigrade on green moss, soft blue rim light, shallow depth of field, dark background"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "В две тысячи седьмом году их отправили на орбиту на спутнике Фотон-М три. Десять дней прямо в вакууме.",
+      "onScreen": "Миссия FOTON-M3, *2007*",
+      "stat": {
+        "value": 10,
+        "suffix": " дней",
+        "label": "в открытом космосе на орбите"
+      },
+      "icon": "calendar-check",
+      "visualQuery": "satellite orbit earth",
+      "imagePrompt": "cinematic shot of a small capsule satellite orbiting Earth, cold blue light, stars in deep black background"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Результат: вакуум почти не снизил выживаемость. После возвращения ожили почти все.",
+      "onScreen": "Вакуум? Выжили *почти все*",
+      "icon": "circle-check",
+      "visualQuery": "scientist microscope lab",
+      "imagePrompt": "scientist silhouette looking into a microscope in a dark lab lit by cool blue monitor light, cinematic mood"
+    },
+    {
+      "id": "s5",
+      "kind": "quiz",
+      "narration": "А теперь проверь себя. Солнечный ультрафиолет в космосе они тоже пережили? Правда или миф? Миф. Под полным солнечным светом выжили лишь единицы.",
+      "onScreen": "Ультрафиолет им тоже *не страшен*?",
+      "icon": "sun",
+      "visualQuery": "sun flare space",
+      "imagePrompt": "intense raw sunlight blazing in black space, harsh ultraviolet glow, lens flare, cinematic blue and violet palette",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Под полным солнечным УФ выжили лишь единицы",
+        "question": "Как думаешь, что опаснее для жизни?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Почему вакуум им не страшен? Перед полётом тихоходок высушили. Они сжались в сухой бочонок и почти остановили обмен веществ.",
+      "onScreen": "Сжаться в *бочонок*",
+      "icon": "hourglass",
+      "visualQuery": "dry moss macro",
+      "imagePrompt": "macro shot of a dried curled-up tardigrade shaped like a tiny barrel on dry moss, soft blue rim light, dark background"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Это состояние называют криптобиозом. Тихоходка не бронированная. Она просто ставит жизнь на паузу и ждёт хороших времён.",
+      "onScreen": "Не броня, а *пауза* жизни",
+      "icon": "timer",
+      "visualQuery": "water drop moss",
+      "imagePrompt": "single water droplet falling onto moss where a tiny tardigrade begins to unfold, cinematic blue light, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А какое животное, по-твоему, ещё выдержало бы космос? Пиши в комментариях и подписывайся.",
+      "onScreen": "Кто ещё выдержит космос? *Подпишись*",
+      "icon": "bell-ring"
+    }
+  ]
+}

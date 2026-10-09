@@ -1,0 +1,113 @@
+{
+  "title": "Сатурн легче воды: почему эта планета плавала бы",
+  "description": "Средняя плотность Сатурна — всего 687 кг/м³, а у воды — 1000 кг/м³. Разбираем, почему газовый гигант легче воды, из чего он состоит и где подвох в знаменитом факте про ванну.\n#shorts #сатурн #космос #астрономия",
+  "tags": [
+    "сатурн",
+    "плотность сатурна",
+    "сатурн легче воды",
+    "планеты",
+    "космос",
+    "астрономия",
+    "газовый гигант",
+    "водород",
+    "гелий",
+    "солнечная система",
+    "наука",
+    "shorts",
+    "saturn"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Сатурн менее плотный, чем вода. Он бы плавал.",
+      "onScreen": "Сатурн бы *плавал* в воде",
+      "icon": "droplet",
+      "visualQuery": "saturn planet rings space",
+      "imagePrompt": "cinematic view of the planet Saturn with glowing rings floating above a dark calm ocean surface, deep blue and gold palette, soft rim light"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Вот цифры. Кубометр воды весит тысячу килограммов. А кубометр Сатурна в среднем весит шестьсот восемьдесят семь.",
+      "onScreen": "Вода против *Сатурна*",
+      "stat": {
+        "value": 687,
+        "suffix": " кг/м³",
+        "label": "средняя плотность Сатурна"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Вода",
+            "value": 1000
+          },
+          {
+            "label": "Сатурн",
+            "value": 687
+          }
+        ],
+        "suffix": " кг/м³"
+      }
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Это почти на треть меньше, чем у воды. Значит, в теории Сатурн бы всплыл. Но есть подвох.",
+      "onScreen": "На треть *легче* воды",
+      "icon": "trending-down",
+      "visualQuery": "ball floating water pool",
+      "imagePrompt": "cinematic close-up of a golden sphere floating on dark water, gentle ripples, cool blue light with warm gold highlights, shallow depth of field"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Как гигантская планета может быть легче воды? Всё дело в том, из чего она сделана.",
+      "onScreen": "Гигант, но *лёгкий*?",
+      "icon": "circle-help",
+      "visualQuery": "telescope night sky stars",
+      "imagePrompt": "silhouette of a telescope pointed at a starry night sky with Saturn visible as a bright dot, deep blue tones, cinematic wide shot"
+    },
+    {
+      "id": "s5",
+      "kind": "list",
+      "narration": "Сатурн состоит в основном из водорода и гелия. Это самые лёгкие элементы во Вселенной.",
+      "onScreen": "Из чего *состоит* Сатурн",
+      "items": [
+        "Водород",
+        "Гелий"
+      ],
+      "icon": "atom",
+      "visualQuery": "gas clouds swirling",
+      "imagePrompt": "macro view of swirling golden and pale blue gas bands like Saturn's atmosphere, soft glowing light, cinematic"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Плотность — это масса, делённая на объём. Много лёгкого газа в огромном объёме дают скромную цифру.",
+      "onScreen": "Плотность = масса / *объём*",
+      "icon": "flask-conical",
+      "visualQuery": "balloons sky helium",
+      "imagePrompt": "enormous translucent gas sphere drifting in dark space, layered golden bands, dramatic rim light, sense of vast scale"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Теперь подвох. Ванны размером с Сатурн не существует. Так что это мысленный эксперимент, а не реальный опыт.",
+      "onScreen": "Ванны такой *нет*",
+      "icon": "triangle-alert",
+      "visualQuery": "empty bathtub dark room",
+      "imagePrompt": "surreal cinematic shot of a tiny bathtub in empty space beside a giant Saturn, deep blue and gold palette, moody lighting"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А какой факт о космосе удивил тебя сильнее? Пиши в комментариях и подписывайся.",
+      "onScreen": "Твой любимый факт о *космосе*?",
+      "icon": "bell-ring"
+    }
+  ]
+}

@@ -633,7 +633,8 @@
           "source": "NASA Science, «Saturn: Facts»"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-13a-saturn-legche-vody-pochemu-eta-planeta-plavala-by.json"
     },
     {
       "id": "13b",
@@ -653,7 +654,8 @@
           "source": "Møbjerg N. et al. Survival in extreme environments – on the current knowledge of adaptations in tardigrades. Acta Physiologica 202(3), 409–420 (2011)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-13b-tikhokhodki-perezhili-otkrytyy-kosmos-kak-im-eto-udalos.json"
     },
     {
       "id": "14a",
