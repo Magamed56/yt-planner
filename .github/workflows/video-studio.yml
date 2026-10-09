@@ -325,7 +325,7 @@ jobs:
           tag="video-${code:+$code-}${SLUG:0:60}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
           files=("$mp4" "$RUN_DIR/captions.srt" "$RUN_DIR/description.txt")
           # instagram.txt и cover.jpg — для ручной публикации Reels с телефона.
-          for f in thumbnail.png cover.jpg instagram.txt; do
+          for f in thumbnail.png cover.jpg instagram.txt qc.json; do
             [ -f "$RUN_DIR/$f" ] && files+=("$RUN_DIR/$f")
           done
           gh release create "$tag" "${files[@]}" --prerelease --target "$GITHUB_SHA" --title "$TITLE" --notes-file "$RUN_DIR/description.txt"
@@ -526,7 +526,7 @@ jobs:
               if [ -n "$code" ]; then mp4="$run_dir/$code-${slug:0:60}.mp4"; cp "$run_dir/video.mp4" "$mp4"; fi
               tag="video-${code:+$code-}${slug:0:50}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}-${slot}"
               rfiles=("$mp4" "$run_dir/captions.srt" "$run_dir/description.txt")
-              for x in thumbnail.png cover.jpg instagram.txt youtube-result.json; do
+              for x in thumbnail.png cover.jpg instagram.txt youtube-result.json qc.json; do
                 [ -f "$run_dir/$x" ] && rfiles+=("$run_dir/$x")
               done
               # instagram.json в релизе = ролик в очереди Instagram (её разбирает отдельный workflow).
