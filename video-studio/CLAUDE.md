@@ -67,7 +67,9 @@
   (batch: ролик i → слот i через `--schedule-slot i --schedule-start <старт>`, релиз на ролик);
   `video-studio-instagram.yml` — публикует самый старый релиз с `instagram.json` без
   `instagram-published.json` (расписание закомментировано); `video-studio-youtube-fill.yml` —
-  `youtube-fill` кнопкой из GitHub.
+  `youtube-fill` кнопкой из GitHub; `video-studio-titles.yml` — `npm run title-ideas -- <коды>`
+  (новые названия для слабого старта → `content/title-ideas.json`, общий модуль
+  `src/pipeline/title-ideas.ts`, LLM — `script/title-gen.ts`; применяет панель).
 - `.claude/skills/` — официальные скиллы Remotion (skills@1.7.1, версия 4.0.534, `skills-lock.json`).
   Обновить: `DISABLE_TELEMETRY=1 npx -y skills@1.7.1 update -p -y`.
 
