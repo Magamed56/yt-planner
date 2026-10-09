@@ -6,6 +6,9 @@ import { logoutAction } from "@/app/actions";
 import { plural } from "@/lib/stages";
 
 export type Section = "feed" | "calendar" | "runs";
+// Пункты меню: лента и календарь на главной переключаются без перезагрузки, остальные — ссылки.
+type NavItem = Section | "plan";
+const NAV: NavItem[] = ["feed", "calendar", "plan", "runs"];
 
 // Кольцо-секундомер из знака канала: заполнено на столько дней расписания из недели.
 export function RunwayRing({ days, size = 52 }: { days: number | null; size?: number }) {
@@ -36,7 +39,7 @@ export function RunwayRing({ days, size = 52 }: { days: number | null; size?: nu
   );
 }
 
-const ICONS: Record<Section, React.ReactNode> = {
+const ICONS: Record<NavItem, React.ReactNode> = {
   feed: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
   calendar: (
     <>
@@ -44,12 +47,13 @@ const ICONS: Record<Section, React.ReactNode> = {
       <path d="M16 2v4M8 2v4M3 10h18" />
     </>
   ),
+  plan: <path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />,
   runs: <path d="m6 4 14 8-14 8z" />,
 };
-const LABEL: Record<Section, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски" };
-const HREF: Record<Section, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs" };
+const LABEL: Record<NavItem, string> = { feed: "Лента", calendar: "Календарь", plan: "План", runs: "Запуски" };
+const HREF: Record<NavItem, string> = { feed: "/", calendar: "/?view=calendar", plan: "/plan", runs: "/runs" };
 
-function Icon({ section }: { section: Section }) {
+function Icon({ section }: { section: NavItem }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {ICONS[section]}
@@ -66,7 +70,7 @@ export default function AppShell({
   runwayLabel,
   children,
 }: {
-  active: Section;
+  active: NavItem;
   onSection?: (s: Section) => void; // на главной лента и календарь переключаются без перезагрузки
   updated: string;
   activeRuns: number;
@@ -88,13 +92,13 @@ export default function AppShell({
     return () => clearInterval(timer);
   }, [activeRuns, router]);
 
-  const link = (s: Section, className?: string, withIcon = true) => (
+  const link = (s: NavItem, className?: string, withIcon = true) => (
     <Link
       key={s}
       href={HREF[s]}
       className={`${className ?? ""}${active === s ? " active" : ""}`}
       onClick={(e) => {
-        if (onSection && s !== "runs") {
+        if (onSection && (s === "feed" || s === "calendar")) {
           e.preventDefault();
           onSection(s);
         }
@@ -118,7 +122,7 @@ export default function AppShell({
           <span className="tag">СУТЬ</span>ЗА МИНУТУ
         </Link>
         <nav className="side-nav" aria-label="Разделы">
-          {(["feed", "calendar", "runs"] as Section[]).map((s) => link(s))}
+          {NAV.map((s) => link(s))}
         </nav>
         <div className="side-foot">
           <div className="runway-card">
@@ -159,7 +163,7 @@ export default function AppShell({
       <div className="content">{children}</div>
 
       <nav className="tabbar" aria-label="Разделы">
-        {(["feed", "calendar", "runs"] as Section[]).map((s) => link(s))}
+        {NAV.map((s) => link(s))}
       </nav>
     </div>
   );

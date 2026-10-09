@@ -1153,6 +1153,13 @@ h4 {
 }
 
 /* ---- Операции ---- */
+/* Нижнее меню — сколько пунктов, столько колонок (добавился «План»). */
+.tabbar {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
 /* плеер в карточке ролика: вертикальное видео не выше экрана */
 .preview {
   display: block;
@@ -1232,3 +1239,65 @@ h4 {
   font-size: 13px;
 }
 
+/* экран «План»: порядок тем */
+.plan-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+.plan-item[draggable="true"] {
+  cursor: grab;
+}
+.plan-item.locked {
+  background: transparent;
+  border-style: dashed;
+  color: var(--muted);
+}
+.plan-item.moved {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+}
+.plan-item.over {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+}
+.plan-item.dragging {
+  opacity: 0.45;
+}
+.plan-code {
+  font: 900 13px var(--display);
+  color: var(--accent);
+}
+.plan-item.locked .plan-code {
+  color: var(--dim);
+}
+.plan-main {
+  display: grid;
+  min-width: 0;
+}
+.plan-title {
+  font-weight: 700;
+}
+.plan-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+.plan-move {
+  display: flex;
+  gap: 4px;
+}
+.plan-move .btn {
+  width: 40px;
+  padding: 0;
+}

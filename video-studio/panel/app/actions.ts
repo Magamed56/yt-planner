@@ -10,6 +10,7 @@ import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
 import { assetText, dispatchWorkflow, GithubError, readFileWithSha, readJson, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
+import { lockedCodes, movableIds, reorderPlan } from "@/lib/plan-order";
 import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/lib/rebuild";
 import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
 import { SESSION_COOKIE } from "@/lib/session";
@@ -415,6 +416,28 @@ export async function rebuildAction(code: string, opts: RebuildOptions): Promise
     }
     const what = row.release || row.localVideo ? "пересборка" : "сборка";
     return ok(`Запущена ${what} ${row.code}: ${rebuildLabel(o)}. ≈ 8–10 минут в GitHub Actions — новое видео появится в карточке ролика.`);
+  });
+}
+
+// ---- порядок тем плана ----
+
+// order[i] — чья тема встаёт на i-ю подвижную позицию. Позиции (код, день, слот) не двигаются:
+// код — в именах файлов сценариев и видео. Подвижные темы сервер считает сам, по свежей очереди.
+export async function savePlanOrderAction(order: string[], sha: string): Promise<ActionResult> {
+  return guarded(async () => {
+    const valid = Array.isArray(order) && order.length <= 200 && order.every((c) => typeof c === "string" && PLAN_CODE.test(c)) && typeof sha === "string" && /^[0-9a-f]{40}$/.test(sha);
+    if (!valid) return fail("Неверный запрос — обновите страницу.");
+    const path = `${STUDIO_DIR}/content/plan.json`;
+    const [file, state] = await Promise.all([readFileWithSha(path), loadState()]);
+    if (!file) return fail("В ветке нет content/plan.json.");
+    if (file.sha !== sha) return fail("План успели изменить (записался сценарий или правка на GitHub) — обновите страницу и расставьте темы заново.");
+    const plan = parsePlan(JSON.parse(file.text));
+    const movable = movableIds(plan, lockedCodes(state.rows));
+    const next = reorderPlan(plan, movable, order);
+    const moved = movable.filter((id, i) => order[i] !== id).length;
+    if (!moved) return ok("Порядок не изменился.");
+    await writeFile(path, `${JSON.stringify(next, null, 2)}\n`, sha, "video-studio: порядок тем плана из панели");
+    return ok(`Порядок сохранён: тем на новых местах — ${moved}. Коды и дни остались прежними, переехали сами темы.`);
   });
 }
 
