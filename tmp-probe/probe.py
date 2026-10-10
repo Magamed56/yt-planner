@@ -21,7 +21,7 @@ for ref in [l.strip() for l in open("tmp-probe/channels.txt", encoding="utf-8") 
     st, html = get(url)
     cid = (re.search(r'"externalId":"(UC[\w-]+)"', html) or re.search(r'channel_id=(UC[\w-]+)', html) or [None, None])[1] if st == 200 else None
     title = (re.search(r'<meta property="og:title" content="([^"]*)"', html) or [None, None])[1] if st == 200 else None
-    subs = (re.search(r'"subscriberCountText":\{"accessibility":\{"accessibilityData":\{"label":"([^"]+)"', html) or re.search(r'"subscriberCountText":"([^"]+)"', html) or re.search(r'([\d\s,.]+\s*(?:тыс\.|млн)?\s*подписчик\w*)', html) or [None, None])[1] if st == 200 else None
+    subs = (re.search(r'"content":"([\d.,\s]+\s*(?:K|M|тыс\.|млн)?\s*(?:subscribers?|подписчик\w*))"', html) or re.search(r'([\d.,]+\s*(?:K|M|тыс\.|млн)?\s*(?:subscribers|подписчик\w*))', html) or [None, None])[1] if st == 200 else None
     ch = {"ref": ref, "status": st, "channelId": cid, "title": title, "subscribers": subs, "videos": []}
     if cid:
         fs, feed = get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}")
@@ -39,6 +39,13 @@ for ref in [l.strip() for l in open("tmp-probe/channels.txt", encoding="utf-8") 
                 time.sleep(0.3)
         except Exception as ex:
             ch["feedError"] = f"{fs} {ex}"
+    if cid and not ch["videos"]:
+        # RSS пустая (у новых каналов так бывает) — список Shorts со страницы канала: название и «N views».
+        base = url.rstrip("/")
+        ss, sh = get(base + "/shorts")
+        items = re.findall(r'"entityId":"shorts-shelf-item-([\w-]{11})".{0,4000}?"primaryText":\{"content":"((?:[^"\\]|\\.)*)"\},"secondaryText":\{"content":"([^"]*)"', sh, re.S)
+        ch["shortsTab"] = [{"id": i, "title": t, "views": v} for i, t, v in items[:30]]
+        ch["shortsTabStatus"] = ss
     out.append(ch)
     time.sleep(1)
 print("PROBE_JSON_BEGIN"); print(json.dumps(out, ensure_ascii=False)); print("PROBE_JSON_END")
