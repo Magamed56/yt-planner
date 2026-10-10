@@ -59,8 +59,8 @@ export function useRetry(onResult: (r: ActionResult) => void) {
   return { ...c, start: (runId: number) => c.start(() => retryPreviewAction(runId), () => retryRunAction(runId)) };
 }
 
-// «Добавить 10 тем» в план (workflow «video-studio: план тем»).
+// «Добавить 10 тем» в план (workflow «video-studio: план тем»); long — темы «Разбора».
 export function usePlanExtend(onResult: (r: ActionResult) => void) {
   const c = useConfirmBar(onResult);
-  return { ...c, start: (count = 10) => c.start(() => planExtendPreviewAction(count), () => planExtendAction(count)) };
+  return { ...c, start: (count = 10, long = false) => c.start(() => planExtendPreviewAction(count, long), () => planExtendAction(count, long)) };
 }

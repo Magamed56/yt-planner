@@ -238,6 +238,10 @@ export default function QueueView({ state, initialMode, initialSelected = null }
     const row = state.rows.find((r) => r.code === code);
     setPicked(null);
     if (!row || cell.row?.code === row.code) return;
+    // У «Разборов» свои слоты (вт/чт/сб 21:00): потоки не смешиваются.
+    if (Boolean(row.long) !== Boolean(cell.row ? cell.row.long : cell.long)) {
+      return setToast({ text: row.long ? "«Разбор» встаёт только в слоты «Разборов» (вт/чт/сб 21:00)." : "Shorts не ставятся в слот «Разбора» — только в свои 12:00 и 19:00.", ok: false });
+    }
     if (movable(row) && row.youtube) {
       if (!cell.iso) return setToast({ text: "Сюда нельзя: слот уже прошёл или дальше 60 дней — перенесите в Studio.", ok: false });
       if (cell.row?.stage === "published") return setToast({ text: "Этот ролик уже вышел — его место занято.", ok: false });
@@ -431,7 +435,7 @@ export default function QueueView({ state, initialMode, initialSelected = null }
                 <p className="board-hint closable">
                   <span>
                     Перетащите ролик на другой слот — мышью или пальцем (нажмите и чуть подержите). Запланированные на YouTube переносятся там же, ориентиры меняются местами в очереди выхода. Можно и
-                    без перетаскивания: нажмите запланированный ролик, потом слот.
+                    без перетаскивания: нажмите запланированный ролик, потом слот. «Разборы» (вт/чт/сб 21:00) двигаются только по своим слотам.
                   </span>
                   <button type="button" className="btn small ghost" onClick={hideHint} aria-label="Скрыть подсказку">
                     ✕

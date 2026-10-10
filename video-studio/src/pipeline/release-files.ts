@@ -2,9 +2,11 @@
 // роликов из списков youtube-fill с файлами на диске и с уже существующими релизами. Чистые
 // функции — проверяются в src/dev/release-test.ts без сети и диска.
 import path from "node:path";
+import { MP4_WITH_CODE, mp4Code, stripCode } from "./codes";
 import type { FillItem } from "./youtube-fill";
 
-export const MP4_WITH_CODE = /^(\d{2}[a-z])-.+\.mp4$/i; // как в панели: релиз узнаётся по файлу «08a-….mp4»
+// Как в панели: релиз узнаётся по файлу «08a-….mp4» (или «L01-….mp4» у «Разбора»).
+export { MP4_WITH_CODE };
 export const SIDE_FILES = ["cover.jpg", "thumbnail.png", "instagram.txt", "description.txt", "captions.srt"];
 
 // Что нашлось на диске: готовый файл «01a-….mp4» или папка рендера out/<ролик>/.
@@ -19,7 +21,7 @@ export interface UploadPlan {
   others: string[]; // ещё файлы с тем же именем в других папках — какой ушёл на YouTube, неизвестно
 }
 
-export const slugOf = (file: string) => file.replace(/^\d{2}[a-z]-/i, "");
+export const slugOf = (file: string) => stripCode(file);
 
 // Тег — латиница из имени файла; слишком длинные GitHub не любит.
 export function releaseTag(item: FillItem): string {
@@ -32,8 +34,8 @@ export function codesWithRelease(releases: { draft?: boolean; assets?: { name: s
   for (const r of releases) {
     if (r.draft) continue;
     for (const a of r.assets ?? []) {
-      const m = MP4_WITH_CODE.exec(a.name);
-      if (m) out.add(m[1]!.toLowerCase());
+      const code = mp4Code(a.name);
+      if (code) out.add(code);
     }
   }
   return out;

@@ -44,6 +44,7 @@ function Cover({ row, mark, queued }: { row: Row; mark: Mark; queued: boolean })
     <span className={`cover${hasMedia ? "" : " empty"}`}>
       {hasMedia ? <CoverMedia src={row.cover} video={frameOf(row)} onFail={() => setEmpty(true)} /> : blank}
       <span className="time">{row.timeLabel}</span>
+      {row.long && <span className="long-badge">Разбор</span>}
       {views}
       {hasMedia && <span className="chip-stage">{chipText(row, queued)}</span>}
       {!hasMedia && queued && !row.running && <span className="chip-stage">в очереди…</span>}
@@ -53,8 +54,9 @@ function Cover({ row, mark, queued }: { row: Row; mark: Mark; queued: boolean })
 }
 
 
-// Лента: день — две обложки (12:00 и 19:00), как ролики встанут на канале. В режиме выбора
-// нажатие отмечает ролик для скачивания (только с файлами в релизе), карточка не открывается.
+// Лента: день — две обложки (12:00 и 19:00), как ролики встанут на канале; во вт/чт/сб — ещё
+// «Разбор» в 21:00 (значок «Разбор», обложка 16:9). В режиме выбора нажатие отмечает ролик для
+// скачивания (только с файлами в релизе), карточка не открывается.
 export default function FeedView({
   state,
   rows,
@@ -91,8 +93,13 @@ export default function FeedView({
   const runOf = (code: string) => state.runs.find((x) => x.active && x.codes.includes(code)) ?? null;
   // Свободно — только будущий слот, на который на YouTube ничего не стоит (вышедший сегодня
   // в 12:00 в «Впереди» не виден, но слот занят).
-  const freeAt = new Map<string, string[]>();
-  for (const c of state.slotGrid) if (c.occupant === null) freeAt.set(c.dateKey, [...(freeAt.get(c.dateKey) ?? []), c.time]);
+  const freeAt = new Map<string, { time: string; long: boolean }[]>();
+  const addFree = (grid: PanelState["slotGrid"] | undefined, long: boolean) => {
+    for (const c of grid ?? []) if (c.occupant === null) freeAt.set(c.dateKey, [...(freeAt.get(c.dateKey) ?? []), { time: c.time, long }]);
+  };
+  addFree(state.slotGrid, false);
+  // Свободные 21:00 «Разборов» — только когда «Разборы» уже в плане, иначе это шум.
+  if (state.rows.some((r) => r.long)) addFree(state.longSlotGrid, true);
   const shown = limitDays && days.length > limitDays ? days.slice(0, limitDays) : days;
   const rest = days.slice(shown.length);
   const restCount = rest.reduce((n, d) => n + d.rows.length, 0);
@@ -102,7 +109,7 @@ export default function FeedView({
     <div className="feed">
       {shown.map((d) => {
         const taken = new Set(d.rows.map((r) => r.timeLabel));
-        const free = d.future && d.key !== "none" ? (freeAt.get(d.key) ?? []).filter((t) => !taken.has(t)) : [];
+        const free = d.future && d.key !== "none" ? (freeAt.get(d.key) ?? []).filter((s) => !taken.has(s.time)).sort((a, b) => a.time.localeCompare(b.time)) : [];
         return (
           <section key={d.key} className={`feed-day${d.today ? " today" : ""}`}>
             <h2>
@@ -116,7 +123,7 @@ export default function FeedView({
                 return (
                   <button
                     key={r.code}
-                    className={`vcard stage-${r.stage}${r.code === selected && !chosen ? " active" : ""}${mark === "on" ? " chosen" : ""}${mark === "none" ? " nofiles" : ""}`}
+                    className={`vcard stage-${r.stage}${r.long ? " long" : ""}${r.code === selected && !chosen ? " active" : ""}${mark === "on" ? " chosen" : ""}${mark === "none" ? " nofiles" : ""}`}
                     aria-pressed={chosen ? mark === "on" : undefined}
                     disabled={mark === "none"}
                     onClick={() => (chosen ? onToggle?.(r.code) : onOpen(r.code))}
@@ -129,11 +136,11 @@ export default function FeedView({
                   </button>
                 );
               })}
-              {free.map((t) => (
-                <div key={t} className="vcard free">
+              {free.map((s) => (
+                <div key={s.time} className={`vcard free${s.long ? " long" : ""}`}>
                   <span className="cover empty">
                     свободно
-                    <small>{t}</small>
+                    <small>{s.long ? `${s.time} · «Разбор»` : s.time}</small>
                   </span>
                 </div>
               ))}

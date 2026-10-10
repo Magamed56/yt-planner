@@ -149,7 +149,7 @@ function FirstComment({ row, busy, setBusy, onToast }: { row: Row; busy: boolean
       const r = await postFirstCommentAction(videoId, draft.text);
       onToast(r.message, r.ok);
       const url = "url" in r ? r.url : null;
-      if (r.ok) setDraft({ ...draft, posted: url ?? `https://youtube.com/shorts/${videoId}` });
+      if (r.ok) setDraft({ ...draft, posted: url ?? (row.long ? `https://youtube.com/watch?v=${videoId}` : `https://youtube.com/shorts/${videoId}`) });
       else if (url) setDraft({ ...draft, existing: { id: "", text: "", url } });
     } catch (e) {
       onToast(e instanceof Error ? e.message : String(e), false);
@@ -293,10 +293,15 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   }
 
   // Перенос: свободный слот — сразу (с «Отменить»), занятый — обмен местами после вопроса.
-  const slotAt = (key: string, time: string) => state.slotGrid.find((c) => c.dateKey === key && c.time === time) ?? null;
-  const prev = row.dateKey ? slotAt(shiftDateKey(row.dateKey, -1), row.timeLabel) : null;
-  const next = row.dateKey ? slotAt(shiftDateKey(row.dateKey, 1), row.timeLabel) : null;
+  // «Разбор» — по своим слотам (вт/чт/сб 21:00): «соседний» — предыдущий и следующий из них.
+  const grid = row.long ? (state.longSlotGrid ?? []) : state.slotGrid;
+  const slotAt = (key: string, time: string) => grid.find((c) => c.dateKey === key && c.time === time) ?? null;
   const isCurrent = (c: SlotCell) => row.when !== null && Date.parse(c.iso) === Date.parse(row.when);
+  const at = row.when ? Date.parse(row.when) : Number.NaN;
+  const prev = !row.dateKey ? null : row.long ? ([...grid].reverse().find((c) => Date.parse(c.iso) < at) ?? null) : slotAt(shiftDateKey(row.dateKey, -1), row.timeLabel);
+  const next = !row.dateKey ? null : row.long ? (grid.find((c) => Date.parse(c.iso) > at) ?? null) : slotAt(shiftDateKey(row.dateKey, 1), row.timeLabel);
+  const watchUrl = (id: string) => (row.long ? `https://youtube.com/watch?v=${id}` : `https://youtube.com/shorts/${id}`);
+  const buildTime = row.long ? "≈ 40–60 минут" : "≈ 8–10 минут";
   function moveTo(c: SlotCell) {
     if (!row.youtube || isCurrent(c)) return;
     const other = c.occupant && c.occupant !== row.code ? c.occupant : null;
@@ -305,7 +310,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   }
   const days: { key: string; label: string; cells: SlotCell[] }[] = [];
   // Список слотов — на три недели: дальше удобнее перетаскиванием в календаре.
-  for (const c of state.slotGrid.filter((x) => x.dateKey <= shiftDateKey(state.todayKey, 20))) {
+  for (const c of grid.filter((x) => x.dateKey <= shiftDateKey(state.todayKey, 20))) {
     let d = days.at(-1);
     if (!d || d.key !== c.dateKey) {
       d = { key: c.dateKey, label: c.dateLabel, cells: [] };
@@ -325,8 +330,9 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       <div className="sheet-head">
         <Thumb src={row.cover} video={frameOf(row)} code={row.code} className="big" />
         <div className="sheet-title">
-          <span className="badge">
-            {row.code} · {STAGE_LABEL[row.stage]}
+          <span className={`badge${row.long ? " long" : ""}`}>
+            {row.code}
+            {row.long ? " · «Разбор» 16:9" : ""} · {STAGE_LABEL[row.stage]}
           </span>
           <h3>{row.title}</h3>
           <div className="muted small">
@@ -375,7 +381,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           <>
             <p>Сценария ещё нет — его напишет Claude по хуку, углу подачи и фактам из плана.</p>
             <div className="btn-row">
-              <button className="btn primary" disabled={locked} onClick={() => run(() => videosAction([row.code]), `Сценарий и видео для ${row.code}: Claude пишет сценарий (платно), сборка ≈ 10 минут в GitHub Actions. Запустить?`)}>
+              <button className="btn primary" disabled={locked} onClick={() => run(() => videosAction([row.code]), `Сценарий и видео для ${row.code}: Claude пишет сценарий (платно), сборка ${row.long ? buildTime : "≈ 10 минут"} в GitHub Actions. Запустить?`)}>
                 Сценарий и видео
               </button>
               <button className="btn" disabled={locked} onClick={() => run(() => draftAction([row.code]), `Только сценарий для ${row.code} (Claude, платно)?`)}>
@@ -388,7 +394,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
           <>
             <p>Сценарий готов. Проверьте факты и соберите видео.</p>
             <div className="btn-row">
-              <button className="btn primary" disabled={locked} onClick={() => run(() => videosAction([row.code]), `Собрать видео ${row.code} (≈ 8–10 минут в GitHub Actions)?`)}>
+              <button className="btn primary" disabled={locked} onClick={() => run(() => videosAction([row.code]), `Собрать видео ${row.code} (${buildTime} в GitHub Actions)?`)}>
                 Собрать видео
               </button>
               <a className="btn" href={`${gh}/edit/${state.branch}/video-studio/${row.scriptPath}`} target="_blank" rel="noreferrer">
@@ -403,7 +409,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
               <ol>
                 <li>Скачайте видео и обложки — в именах файлов уже есть код: {row.release.mp4.name}.</li>
                 <li>YouTube Studio → «Создать» → «Добавить видео» (в приложении YouTube — «+»). Ничего не заполняйте.</li>
-                <li>Через пару минут на главном экране — «Найти новые загрузки»: встанут название, описание, теги и время.</li>
+                <li>Через пару минут на главном экране — «Найти новые загрузки»: встанут название, описание, теги и время{row.long ? ", а «Разбору» — ещё и обложка 16:9 из релиза" : ""}.</li>
               </ol>
               <FilesSaver items={[{ code: row.code, release: row.release }]} />
               <div className="btn-row">
@@ -438,7 +444,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
         )}
         {row.stage === "scheduled" && (
           <>
-            <p className="muted small">Одно нажатие — тот же слот на соседний день. Если там другой ролик, они поменяются местами.</p>
+            <p className="muted small">{row.long ? "Одно нажатие — соседний слот «Разборов» (вт/чт/сб 21:00)." : "Одно нажатие — тот же слот на соседний день."} Если там другой ролик, они поменяются местами.</p>
             <div className="move-quick">
               <button className="btn" disabled={busy || !prev} onClick={() => prev && moveTo(prev)}>
                 ◀ {prev ? `${prev.dateLabel}${prev.occupant ? ` (${prev.occupant})` : ""}` : "раньше нельзя"}
@@ -471,7 +477,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
         {row.stage === "published" && row.youtube && (
           <>
             <div className="btn-row">
-              <a className="btn" href={`https://youtube.com/shorts/${row.youtube.videoId}`} target="_blank" rel="noreferrer">
+              <a className="btn" href={watchUrl(row.youtube.videoId)} target="_blank" rel="noreferrer">
                 Смотреть ↗
               </a>
             </div>
@@ -502,7 +508,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
         <section>
           <details className="rebuild">
             <summary>{row.stage === "video" ? "Пересобрать: другой голос, палитра, музыка" : "Собрать с другим голосом, палитрой, без музыки"}</summary>
-            <p className="muted small">Новое видео появится в карточке вместо прежнего (прежнее останется в своём релизе). ≈ 8–10 минут в GitHub Actions.</p>
+            <p className="muted small">Новое видео появится в карточке вместо прежнего (прежнее останется в своём релизе). {buildTime} в GitHub Actions.</p>
             <div className="rebuild-fields">
               <label>
                 Голос
@@ -536,7 +542,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
               <button
                 className="btn"
                 disabled={locked}
-                onClick={() => run(() => rebuildAction(row.code, rebuild), `${row.stage === "video" ? "Пересобрать" : "Собрать"} ${row.code}: ${rebuildLabel(rebuild)}? ≈ 8–10 минут в GitHub Actions.`)}
+                onClick={() => run(() => rebuildAction(row.code, rebuild), `${row.stage === "video" ? "Пересобрать" : "Собрать"} ${row.code}: ${rebuildLabel(rebuild)}? ${buildTime} в GitHub Actions.`)}
               >
                 {row.stage === "video" ? "Пересобрать" : "Собрать"}
               </button>
@@ -548,7 +554,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
       {row.release && (
         <section>
           <h4>Файлы ролика</h4>
-          <p className="muted small">Instagram ждёт токен EAA (проверка Meta) — пока Reels с телефона: видео, обложка 9:16 и подпись.</p>
+          {!row.long && <p className="muted small">Instagram ждёт токен EAA (проверка Meta) — пока Reels с телефона: видео, обложка 9:16 и подпись.</p>}
           {/* На этапе «видео» те же файлы — выше, в «Что дальше». */}
           {row.stage !== "video" && <FilesSaver items={[{ code: row.code, release: row.release }]} />}
           <div className="btn-row">
@@ -619,7 +625,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
                   <button
                     className="btn small primary"
                     disabled={locked}
-                    onClick={() => run(() => rebuildAction(row.code, DEFAULT_REBUILD), `Собрать ${row.code} по исправленному сценарию (≈ 8–10 минут в GitHub Actions)?`)}
+                    onClick={() => run(() => rebuildAction(row.code, DEFAULT_REBUILD), `Собрать ${row.code} по исправленному сценарию (${buildTime} в GitHub Actions)?`)}
                   >
                     {row.stage === "script" ? "Собрать видео" : "Собрать заново"}
                   </button>

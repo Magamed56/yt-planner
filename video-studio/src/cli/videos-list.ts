@@ -6,13 +6,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import type { YoutubeMeta } from "../pipeline/meta";
-import { PLAN_CODE } from "../pipeline/plan";
+import { normCode } from "../pipeline/codes";
 import { fillItemsOf, upsertFillItem, type FillItem } from "../pipeline/youtube-fill";
 import { ROOT, UserError, argsError, fail, rel, resolveInputPath, writeJson } from "./common";
 
 const HELP = `Добавить собранный ролик в список текстов для youtube-fill.
 
   npx tsx src/cli/videos-list.ts <папка ролика> --code 08a --file 08a-<имя> --duration 57.3 [--list content/videos.json]
+  («Разбор» по длинному плану: --code L01 --file L01-<имя>)
 
 --file — имя файла видео без .mp4, с которым ролик загрузят в Studio (по коду в нём его найдёт youtube-fill).
 `;
@@ -45,10 +46,11 @@ function main() {
   }
   const runDir = positionals[0] ? resolveInputPath(positionals[0]) : null;
   if (!runDir) throw new UserError(`Не найдена папка ролика: ${positionals[0] ?? "(не указана)"}\n\n${HELP}`);
-  const code = String(values.code ?? "").trim().toLowerCase();
-  if (!PLAN_CODE.test(code)) throw new UserError(`--code: код ролика вида «08a», а не «${values.code ?? ""}».`);
+  // Shorts — «08a», «Разбор» по длинному плану — «L01».
+  const code = normCode(values.code);
+  if (!code) throw new UserError(`--code: код ролика вида «08a» или «L01», а не «${values.code ?? ""}».`);
   const file = String(values.file ?? "").trim().replace(/\.mp4$/i, "");
-  if (!file.toLowerCase().startsWith(`${code}-`)) throw new UserError(`--file должен начинаться с кода «${code}-»: по нему youtube-fill узнаёт ролик в Studio.`);
+  if (!file.toLowerCase().startsWith(`${code.toLowerCase()}-`)) throw new UserError(`--file должен начинаться с кода «${code}-»: по нему youtube-fill узнаёт ролик в Studio.`);
   const durationSec = Number(values.duration);
   if (!(durationSec > 0)) throw new UserError("--duration: длительность ролика в секундах.");
   const metaFile = path.join(runDir, "youtube.json");

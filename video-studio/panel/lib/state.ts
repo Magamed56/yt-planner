@@ -1,8 +1,10 @@
 // Состояние очереди: план (60 тем) + сценарии + видео (релизы; неделя 1 — файлы на компьютере)
 // + YouTube (загружено, запланировано, вышло) + запуски Actions. Этап ролика вычисляется, руками
 // не ставится. buildState — чистая функция без сети (её проверяет scripts/state-test.ts).
-import { channelFromJson, isoNoMs, localDate, upcomingSlots } from "../../src/pipeline/channel";
-import { parsePlan, scriptCode } from "../../src/pipeline/plan";
+import { channelFromJson, isoNoMs, localDate, longScheduleOf, upcomingSlots } from "../../src/pipeline/channel";
+import { codesIn, mp4Code, normCode } from "../../src/pipeline/codes";
+import { LONG_TOPICS_LOW, parseLongPlan } from "../../src/pipeline/long-plan";
+import { parsePlan, scriptCode, type ContentPlan } from "../../src/pipeline/plan";
 import { fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem } from "../../src/pipeline/youtube-fill";
 import { expectedVoice, realPhotosFirst, STOCK_SECRETS, STOCK_SECRETS_LABEL, type VoiceRef } from "./checks";
 import type { GhRelease, GhRun, GhStep } from "./github";
@@ -29,6 +31,7 @@ export interface ReleaseInfo {
   mp4: Asset;
   cover: Asset | null; // cover.jpg — вертикальный кадр (обложка Reels)
   thumb: Asset | null; // thumbnail.png — обложка YouTube 1280×720
+  thumbJpg?: Asset | null; // thumbnail.jpg — та же обложка до 2 МБ (есть, если PNG для YouTube великоват)
   caption: Asset | null;
   qc: Asset | null; // qc.json — автопроверка после рендера (карточка: «Перед загрузкой проверьте»)
   description: Asset | null; // description.txt — тексты для YouTube, в нём блок «Видео и фото»
@@ -67,6 +70,7 @@ export interface Row {
   stats?: RowStats | null; // просмотры, лайки, комментарии с YouTube (statistics того же videos.list)
   voice?: VoiceRef | null; // каким голосом должен быть озвучен (рубрика или канал) — для проверки релиза
   realPhotos?: boolean; // рубрика «настоящих фото» (history, nature, space): только Wikimedia — норма
+  long?: boolean; // «Разбор» (L01…, content/long-plan.json): 16:9, ~7 минут, свои слоты вт/чт/сб 21:00
 }
 
 export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "plan" | "titles" | "captions" | "other";
@@ -93,7 +97,7 @@ export interface RunInfo {
 }
 
 export interface Reminder {
-  kind: "runway" | "youtube" | "upload" | "fill" | "problem" | "drift" | "run" | "secrets";
+  kind: "runway" | "youtube" | "upload" | "fill" | "problem" | "drift" | "run" | "secrets" | "long";
   level: "error" | "warn" | "info";
   text: string;
   href?: string;
@@ -132,6 +136,9 @@ export interface AutopilotSettings {
   retryFailed: boolean; // упавший за сутки запуск перезапустить один раз
   keepReleaseDays: number; // видео в релизах — столько дней после выхода; 0 — не удалять
   scriptReserve: number; // у ближайших N тем без видео сценарий пишется заранее (0–10)
+  // «Разборы» (L01…): готовить их, как Shorts, за days дней — не больше одного за запуск; мало тем —
+  // заказать новые (workflow «план тем», long). Нет поля (старый JSON) — включено.
+  long?: boolean;
 }
 
 export interface AutopilotLast {
@@ -147,7 +154,7 @@ export const AUTOPILOT_VAR = "PANEL_AUTOPILOT";
 // коды по очереди. Нет переменной — по порядку плана.
 export const QUEUE_ORDER_VAR = "PANEL_QUEUE_ORDER";
 export const AUTOPILOT_LAST_VAR = "PANEL_AUTOPILOT_LAST";
-export const DEFAULT_AUTOPILOT: AutopilotSettings = { enabled: false, days: 3, retryFailed: true, keepReleaseDays: 0, scriptReserve: 0 };
+export const DEFAULT_AUTOPILOT: AutopilotSettings = { enabled: false, days: 3, retryFailed: true, keepReleaseDays: 0, scriptReserve: 0, long: true };
 export const KEEP_RELEASE_MAX = 365;
 export const SCRIPT_RESERVE_MAX = 10;
 
@@ -166,6 +173,7 @@ export function parseAutopilot(raw: string | null): AutopilotSettings {
       retryFailed: typeof j.retryFailed === "boolean" ? j.retryFailed : d.retryFailed,
       keepReleaseDays: intIn(j.keepReleaseDays, 0, KEEP_RELEASE_MAX, d.keepReleaseDays),
       scriptReserve: intIn(j.scriptReserve, 0, SCRIPT_RESERVE_MAX, d.scriptReserve),
+      long: typeof j.long === "boolean" ? j.long : true,
     };
   } catch {
     return { ...DEFAULT_AUTOPILOT };
@@ -212,6 +220,13 @@ export interface PanelState {
   repo: string;
   branch: string;
   releaseVideos: ReleaseVideo[]; // mp4 в релизах у уже вышедших роликов — для уборки релизов
+  // «Разборы» (L01…): свои слоты (вт/чт/сб 21:00) — отдельно от Shorts: запас расписания,
+  // «конвейер» и первая дыра выше считаются только по Shorts.
+  longSlotGrid: SlotCell[];
+  longSlotTimes: string[];
+  longWeekdays: number[]; // 0 — вс … 6 — сб
+  longTopicsLeft: number; // тем «Разбора» без сценария
+  longPlanError: string | null; // content/long-plan.json не разобрался — «Разборов» в очереди нет
 }
 
 export interface StateInput {
@@ -232,13 +247,15 @@ export interface StateInput {
   queueOrder?: string[]; // PANEL_QUEUE_ORDER
   history?: StatsHistory | null; // PANEL_STATS_HISTORY — для «Пульса» (в состояние — только сжатое)
   runSteps?: Record<number, GhStep[]>; // шаги идущих запусков (по id)
+  longPlanJson?: unknown; // content/long-plan.json (null/нет — «Разборов» нет)
 }
 
-// «["09a","07a"]» → коды; битое — пустой список (порядок плана).
+// «["09a","07a","L02"]» → коды; битое — пустой список (порядок плана). «Разборы» в том же
+// списке: их очередь своя (свои слоты), но порядок хранится вместе.
 export function parseQueueOrder(raw: string | null): string[] {
   try {
     const j: unknown = JSON.parse(raw ?? "");
-    return Array.isArray(j) ? [...new Set(j.filter((c): c is string => typeof c === "string" && /^\d{2}[a-z]$/.test(c)))] : [];
+    return Array.isArray(j) ? [...new Set(j.flatMap((c) => (typeof c === "string" && normCode(c) === c ? [c] : [])))] : [];
   } catch {
     return [];
   }
@@ -287,8 +304,9 @@ const RUNNING_LABEL: Partial<Record<RunKind, string>> = {
   titles: "подбираются названия",
   captions: "переводятся субтитры",
 };
-const MP4_WITH_CODE = /^(\d{2}[a-z])-.+\.mp4$/i;
 const DAY_MS = 86_400_000;
+// Слоты «Разборов» вперёд — те же ~60 дней, что у сетки Shorts (3 в неделю ≈ 26).
+const LONG_GRID_SLOTS = Math.ceil((SLOT_GRID_DAYS / 7) * 3);
 const ms = (t: string | number | Date) => (t instanceof Date ? t.getTime() : typeof t === "number" ? t : Date.parse(t));
 const minute = (t: string | number | Date) => Math.floor(ms(t) / 60_000);
 
@@ -327,7 +345,8 @@ function runInfo(r: GhRun, f: ReturnType<typeof formatters>): RunInfo {
   else if (r.path.endsWith("/video-studio-titles.yml")) kind = "titles";
   else if (r.path.endsWith("/video-studio-captions.yml")) kind = "captions";
   else if (r.path.endsWith("/video-studio.yml")) kind = (/^(draft|render|batch)\b/.exec(r.display_title)?.[1] as RunKind | undefined) ?? "other";
-  const codes = [...new Set([...r.display_title.matchAll(/(?:^|[^0-9a-z])(\d{2}[a-z])(?=$|[^0-9a-z])/gi)].map((m) => m[1]!.toLowerCase()))];
+  // «batch: 08a,08b», «batch: L01» — коды Shorts и «Разборов» (общий разбор — src/pipeline/codes.ts).
+  const codes = codesIn(r.display_title);
   const t = Date.parse(r.created_at);
   return {
     id: r.id,
@@ -376,14 +395,14 @@ export function runInfos(ghRuns: GhRun[], steps: Record<number, GhStep[]> | unde
   return runs;
 }
 
-// Самый свежий релиз с файлом «08a-….mp4» на каждый код.
+// Самый свежий релиз с файлом «08a-….mp4» (или «L01-….mp4») на каждый код.
 function releasesByCode(releases: GhRelease[]): Map<string, ReleaseInfo> {
   const out = new Map<string, ReleaseInfo>();
   for (const r of releases) {
     if (r.draft) continue;
-    const mp4 = r.assets.find((a) => MP4_WITH_CODE.test(a.name));
+    const mp4 = r.assets.find((a) => mp4Code(a.name));
     if (!mp4) continue;
-    const code = MP4_WITH_CODE.exec(mp4.name)![1]!.toLowerCase();
+    const code = mp4Code(mp4.name)!;
     const prev = out.get(code);
     if (prev && ms(prev.createdAt) >= ms(r.created_at)) continue;
     out.set(code, {
@@ -393,6 +412,7 @@ function releasesByCode(releases: GhRelease[]): Map<string, ReleaseInfo> {
       mp4,
       cover: r.assets.find((a) => a.name === "cover.jpg") ?? null,
       thumb: r.assets.find((a) => a.name === "thumbnail.png") ?? null,
+      thumbJpg: r.assets.find((a) => a.name === "thumbnail.jpg") ?? null,
       caption: r.assets.find((a) => a.name === "instagram.txt") ?? null,
       qc: r.assets.find((a) => a.name === "qc.json") ?? null,
       description: r.assets.find((a) => a.name === "description.txt") ?? null,
@@ -409,28 +429,45 @@ export function buildState(input: StateInput): PanelState {
   const tz = channel.schedule.timezone;
   const f = formatters(tz);
   const labelOf = (iso: string) => `${f.day(ms(iso))} ${f.time(ms(iso))}`;
-  const pillarTitle = new Map((plan.pillars ?? []).map((p) => [p.id, p.title]));
 
-  // Сценарий — файл scripts/sut-<код>-….json (или ссылка в плане на существующий файл).
+  // «Разборы» — свой план (content/long-plan.json) и свои слоты; битый файл не роняет очередь Shorts.
+  let longPlan: ContentPlan = { items: [] };
+  let longPlanError: string | null = null;
+  try {
+    longPlan = parseLongPlan(input.longPlanJson ?? null);
+  } catch (e) {
+    longPlanError = e instanceof Error ? e.message : String(e);
+  }
+  const longSchedule = longScheduleOf(channel);
+  const longCodes = new Set(longPlan.items.map((it) => it.id));
+  const allItems = [...plan.items, ...longPlan.items];
+  const pillarTitle = new Map([...(longPlan.pillars ?? []), ...(plan.pillars ?? [])].map((p) => [p.id, p.title]));
+
+  // Сценарий — файл scripts/sut-<код>-….json, у «Разбора» — razbor-L01-….json (или ссылка в плане
+  // на существующий файл).
   const scripts = new Map<string, string>();
   for (const name of input.scriptFiles) {
     const c = scriptCode(name);
     if (c && !scripts.has(c)) scripts.set(c, `scripts/${name}`);
   }
-  for (const it of plan.items) {
+  for (const it of allItems) {
     if (it.script && !scripts.has(it.id) && input.scriptFiles.includes(it.script.replace(/^scripts\//, ""))) scripts.set(it.id, it.script);
   }
 
+  // Ключ — код в каноническом виде («08a», «L01»), как id в планах.
   const texts = new Map<string, FillItem>();
   for (const list of input.fillLists) {
-    for (const it of fillItemsOf(list)) if (it?.id && !texts.has(it.id.toLowerCase())) texts.set(it.id.toLowerCase(), it);
+    for (const it of fillItemsOf(list)) {
+      const key = it?.id ? (normCode(it.id) ?? it.id.toLowerCase()) : null;
+      if (key && !texts.has(key)) texts.set(key, it);
+    }
   }
   const releases = releasesByCode(input.releases);
 
   // YouTube: тот же поиск, что у youtube-fill (код в имени файла или названии, длительность).
   // Теме без текстов — заглушка с кодом и названием плана; длительность NaN — по ней не ищем.
   const videos = input.videos ?? [];
-  const items: FillItem[] = plan.items.map(
+  const items: FillItem[] = allItems.map(
     (it) =>
       texts.get(it.id) ?? {
         id: it.id,
@@ -459,7 +496,8 @@ export function buildState(input: StateInput): PanelState {
   const running = new Map<string, string>();
   for (const r of runs) if (r.active) for (const c of r.codes) if (!running.has(c)) running.set(c, RUNNING_LABEL[r.kind] ?? "идёт запуск");
 
-  const rows: Row[] = plan.items.map((it) => {
+  const rows: Row[] = allItems.map((it) => {
+    const long = longCodes.has(it.id);
     const v = matched.get(it.id) ?? pending.get(it.id) ?? dups.get(it.id)?.[0] ?? null;
     const release = releases.get(it.id) ?? null;
     const hasTexts = texts.has(it.id);
@@ -515,6 +553,7 @@ export function buildState(input: StateInput): PanelState {
       // Нужны только карточке с релизом — остальным строкам не раздуваем данные страницы.
       voice: release ? expectedVoice(channel, it.pillar) : null,
       realPhotos: release ? realPhotosFirst(it.pillar) : false,
+      ...(long ? { long: true } : {}),
     };
   });
 
@@ -532,15 +571,19 @@ export function buildState(input: StateInput): PanelState {
 
   // Ориентир для остальных: следующие свободные слоты по порядку плана — так же их раздаст
   // youtube-fill, когда ролики загрузят в Studio.
+  // «Разборы» — так же, но в свои слоты (вт/чт/сб 21:00): потоки друг у друга слоты не забирают.
   const taken = videos.filter((v) => v.privacyStatus === "private" && v.publishAt && ms(v.publishAt) > nowMs).map((v) => v.publishAt!);
-  const waiting = queueSort(
-    rows.filter((r) => r.stage !== "scheduled" && r.stage !== "published"),
-    input.queueOrder ?? [],
-  );
-  const slots = upcomingSlots(channel.schedule, waiting.length, { from: now, taken });
-  waiting.forEach((r, i) => {
-    r.when = slots[i] ? isoNoMs(slots[i]) : null;
-  });
+  for (const long of [false, true]) {
+    const waiting = queueSort(
+      rows.filter((r) => Boolean(r.long) === long && r.stage !== "scheduled" && r.stage !== "published"),
+      input.queueOrder ?? [],
+    );
+    const slots = upcomingSlots(long ? longSchedule : channel.schedule, waiting.length, { from: now, taken });
+    waiting.forEach((r, i) => {
+      r.when = slots[i] ? isoNoMs(slots[i]) : null;
+    });
+  }
+  const shortRows = rows.filter((r) => !r.long);
   for (const r of rows) {
     if (!r.when) continue;
     const t = ms(r.when);
@@ -563,22 +606,25 @@ export function buildState(input: StateInput): PanelState {
   const occupant = new Map<number, string>();
   for (const r of rows) if (r.stage === "scheduled" && r.when) occupant.set(minute(r.when), r.code);
   for (const t of taken) if (!occupant.has(minute(t))) occupant.set(minute(t), "другое видео");
-  const slotGrid = upcomingSlots(channel.schedule, SLOT_GRID_DAYS * perDay, { from: now }).map((d) => ({
+  const cell = (d: Date): SlotCell => ({
     iso: isoNoMs(d),
     dateKey: f.key(d.getTime()),
     dateLabel: f.day(d.getTime()),
     time: f.time(d.getTime()),
     occupant: occupant.get(minute(d)) ?? null,
-  }));
+  });
+  const slotGrid = upcomingSlots(channel.schedule, SLOT_GRID_DAYS * perDay, { from: now }).map(cell);
+  const longSlotGrid = upcomingSlots(longSchedule, LONG_GRID_SLOTS * longSchedule.publishTimesLocal.length, { from: now }).map(cell);
   // Запас — до первого пустого слота, а не до последнего запланированного: дыра завтра в 12:00
-  // важнее ролика, стоящего через неделю. Без YouTube о расписании судить нельзя.
-  const pipeline = input.youtubeError ? { coverage: [], firstGap: null } : coverage(rows, slotGrid, labelOf);
+  // важнее ролика, стоящего через неделю. Без YouTube о расписании судить нельзя. Только Shorts:
+  // у «Разборов» свои слоты, их пропуск — не дыра в ежедневном расписании.
+  const pipeline = input.youtubeError ? { coverage: [], firstGap: null } : coverage(shortRows, slotGrid, labelOf);
   const gap = pipeline.firstGap;
   const runwayDays = input.youtubeError ? null : gap ? Math.max(0, Math.floor((ms(gap.iso) - nowMs) / DAY_MS)) : SLOT_GRID_DAYS;
   const runwayLabel = pipeline.coverage.find((c) => c.level === "scheduled")?.untilLabel ?? null;
 
-  // Когда кончится план: время выхода последнего ролика плана (ориентир).
-  const planEnd = rows.reduce<string | null>((end, r) => (r.when && (!end || ms(r.when) > ms(end)) ? r.when : end), null);
+  // Когда кончится план: время выхода последнего ролика плана Shorts (ориентир).
+  const planEnd = shortRows.reduce<string | null>((end, r) => (r.when && (!end || ms(r.when) > ms(end)) ? r.when : end), null);
 
   const reminders: Reminder[] = [];
   if (input.youtubeError) reminders.push({ kind: "youtube", level: "error", text: `YouTube недоступен: ${input.youtubeError}` });
@@ -630,6 +676,20 @@ export function buildState(input: StateInput): PanelState {
     const where = lastDone.failedStage ? ` на этапе «${lastDone.failedStage}»` : "";
     reminders.push({ kind: "run", level: "error", text: `Запуск «${lastDone.label}» (${lastDone.createdLabel}) не удался${where} — откройте лог.`, href: lastDone.url });
   }
+  // «Разборы»: план не читается или тем почти не осталось (новые закажет автопилот).
+  const longTopicsLeft = rows.filter((r) => r.long && r.stage === "topic").length;
+  if (longPlanError) reminders.push({ kind: "long", level: "warn", text: `«Разборы» не показаны: ${longPlanError} Поправьте файл на GitHub.` });
+  // Файла длинного плана нет — потока «Разборов» в этой ветке ещё нет: не напоминаем.
+  else if (input.longPlanJson !== null && input.longPlanJson !== undefined && longTopicsLeft < LONG_TOPICS_LOW) {
+    reminders.push({
+      kind: "long",
+      level: "info",
+      href: "/runs#long",
+      text: longPlan.items.length
+        ? `Тем «Разбора» без сценария: ${longTopicsLeft}. Новые закажет автопилот (workflow «план тем», long) — или «+ темы «Разбора»» в «Запусках».`
+        : "В плане «Разборов» (content/long-plan.json) пока нет тем — их закажет автопилот (workflow «план тем», long) или «+ темы «Разбора»» в «Запусках».",
+    });
+  }
   if (missingSecrets?.length) {
     // Одной причиной — один раз: «YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN — заполнение YouTube из Actions».
     const byWhy = new Map<string, string[]>();
@@ -660,7 +720,7 @@ export function buildState(input: StateInput): PanelState {
     runwayLabel,
     firstGap: gap,
     coverage: pipeline.coverage,
-    topicsLeft: counts.topic,
+    topicsLeft: shortRows.filter((r) => r.stage === "topic").length,
     topicsUntil: planEnd,
     topicsUntilLabel: planEnd ? labelOf(planEnd) : null,
     topicsDays: planEnd ? Math.max(0, Math.floor((ms(planEnd) - nowMs) / DAY_MS)) : null,
@@ -675,5 +735,10 @@ export function buildState(input: StateInput): PanelState {
     repo: input.repo,
     branch: input.branch,
     releaseVideos: releaseVideosOf(input.releases, new Map(rows.filter((r) => r.stage === "published" && r.when).map((r) => [r.code, r.when!]))),
+    longSlotGrid,
+    longSlotTimes: longSchedule.publishTimesLocal,
+    longWeekdays: longSchedule.weekdays ?? [],
+    longTopicsLeft,
+    longPlanError,
   };
 }

@@ -5,8 +5,9 @@
 // язык, «не для детей», отметку о синтетическом контенте и publishAt через
 // videos.update. Ролики, у которых уже есть время выхода, не сдвигаем.
 
-import { isoNoMs, upcomingSlots, type ChannelSchedule } from "./channel";
-import { accessToken, explainApiError, type Auth } from "./google-api";
+import { isoNoMs, longScheduleOf, upcomingSlots, type ChannelSchedule } from "./channel";
+import { CODE_SRC, isLongCode, stripCode } from "./codes";
+import { accessToken, apiErrorInfo, explainApiError, isScopeError, type Auth } from "./google-api";
 
 const API = "https://www.googleapis.com/youtube/v3";
 
@@ -95,10 +96,12 @@ export function parseIsoDuration(s: string | null | undefined): number | null {
   return sec > 0 ? sec : null;
 }
 
-// Код ролика («01a») как отдельное слово: «01a-pochemu.mp4», «01a pochemu», «Ролик 01a».
+// Код ролика («01a», «L01») как отдельное слово: «01a-pochemu.mp4», «01a pochemu», «Ролик 01a».
+// Коды в списке — строчными: «L01» ищется как «l01».
+const CODE_WORD = new RegExp(`(?:^|[^0-9a-zа-яё])(${CODE_SRC})(?=$|[^0-9a-zа-яё])`, "g");
 function codeIn(text: string | null, codes: Set<string>): string | null {
   if (!text) return null;
-  for (const m of text.toLowerCase().matchAll(/(?:^|[^0-9a-zа-яё])(\d{2}[a-z])(?=$|[^0-9a-zа-яё])/g)) {
+  for (const m of text.toLowerCase().matchAll(CODE_WORD)) {
     if (codes.has(m[1]!)) return m[1]!;
   }
   return null;
@@ -115,7 +118,7 @@ function identify(video: ChannelVideo, items: FillItem[], codes: Set<string>): {
   if (fromTitle) return { item: byId.get(fromTitle)!, by: "название" };
   // Имя файла без кода (переименовали) или уже проставленное нами название — повторный запуск.
   for (const item of items) {
-    const slug = norm(item.file).replace(/^\d{2}[a-z]-/, "");
+    const slug = stripCode(norm(item.file));
     if ((video.fileName && norm(video.fileName).includes(slug)) || norm(video.title).includes(slug)) return { item, by: "файл" };
     if (video.title.trim() === item.title.trim()) return { item, by: "название" };
   }
@@ -123,7 +126,7 @@ function identify(video: ChannelVideo, items: FillItem[], codes: Set<string>): {
 }
 
 const DURATION_TOLERANCE_SEC = 1.5;
-const CODE_LIKE = /(?:^|[^0-9a-zа-яё])\d{2}[a-z](?=$|[^0-9a-zа-яё])/i;
+const CODE_LIKE = new RegExp(`(?:^|[^0-9a-zа-яё])(?:${CODE_SRC})(?=$|[^0-9a-zа-яё])`, "i");
 
 export function matchVideos(items: FillItem[], videos: ChannelVideo[]): MatchReport {
   const codes = new Set(items.map((i) => i.id.toLowerCase()));
@@ -203,10 +206,11 @@ const textsMatch = (v: ChannelVideo, i: FillItem) =>
   sameTags(v.tags, i.tags);
 
 // Кому какой слот: по порядку списка, следующие свободные слоты после «сейчас»
-// (или после start), уже назначенные времена не сдвигаем и не занимаем.
+// (или после start), уже назначенные времена не сдвигаем и не занимаем. «Разборы» (L01…)
+// получают слоты своего расписания (longSchedule: вт/чт/сб 21:00), Shorts — своего: потоки не смешиваются.
 export function planUpdates(
   report: MatchReport,
-  opts: { schedule: ChannelSchedule; mode: ScheduleMode; start?: Date | null; now?: Date; taken?: Iterable<string> },
+  opts: { schedule: ChannelSchedule; longSchedule?: ChannelSchedule | null; mode: ScheduleMode; start?: Date | null; now?: Date; taken?: Iterable<string> },
 ): PlannedUpdate[] {
   const now = opts.now ?? new Date();
   const future = (iso: string | null) => (iso ? Date.parse(iso) > now.getTime() : false);
@@ -214,11 +218,15 @@ export function planUpdates(
   // Время ставим только приватным: publishAt у unlisted и у уже выходивших YouTube отвергает.
   const needSlot = report.matches.filter((m) => m.video.privacyStatus === "private" && !future(m.video.publishAt));
   const from = opts.start && opts.start.getTime() > now.getTime() ? opts.start : now;
-  const slots =
-    opts.mode === "slots"
-      ? upcomingSlots(opts.schedule, needSlot.length, { from, taken: [...kept.map((m) => m.video.publishAt!), ...(opts.taken ?? [])] })
-      : [];
-  let next = 0;
+  const taken = [...kept.map((m) => m.video.publishAt!), ...(opts.taken ?? [])];
+  const isLong = (m: FillMatch) => isLongCode(m.item.id);
+  const longSchedule = opts.longSchedule ?? longScheduleOf({ schedule: opts.schedule });
+  const queue = (list: Date[]) => {
+    let i = 0;
+    return () => list[i++];
+  };
+  const nextShort = queue(opts.mode === "slots" ? upcomingSlots(opts.schedule, needSlot.filter((m) => !isLong(m)).length, { from, taken }) : []);
+  const nextLong = queue(opts.mode === "slots" ? upcomingSlots(longSchedule, needSlot.filter(isLong).length, { from, taken }) : []);
   return report.matches.map((match) => {
     const v = match.video;
     const textsChanged = !textsMatch(v, match.item);
@@ -228,7 +236,7 @@ export function planUpdates(
     if (future(v.publishAt)) {
       return { match, privacyStatus: "private", publishAt: v.publishAt, keptPublishAt: true, textsChanged, skip: !textsChanged };
     }
-    const slot = opts.mode === "slots" ? slots[next++] : undefined;
+    const slot = opts.mode === "slots" ? (isLong(match) ? nextLong() : nextShort()) : undefined;
     const publishAt = slot ? isoNoMs(slot) : null;
     // Без слота видео остаётся как было (обычно «Ограниченный доступ») — опубликуете сами.
     return { match, privacyStatus: publishAt ? "private" : v.privacyStatus, publishAt, keptPublishAt: false, textsChanged, skip: !textsChanged && !publishAt };
@@ -411,4 +419,43 @@ export async function applyUpdate(deps: ApiDeps, p: PlannedUpdate): Promise<Appl
       ? "YouTube не принял время выхода (так бывает, пока проект Google не прошёл аудит API) — поставьте «Запланировать» в Studio вручную"
       : null;
   return { plan: p, publishAt, privacyStatus, warning };
+}
+
+// ---- Своя обложка «Разбора» (thumbnails.set, 50 единиц квоты) ----
+// У Shorts обложка — кадр из ролика, её не трогаем. Длинному ролику кадр YouTube выбирает сам,
+// поэтому после «Найти новые загрузки» ставим thumbnail.png (или .jpg) из релиза.
+
+export const THUMBNAIL_MAX_BYTES = 2 * 1024 * 1024; // предел YouTube для своей обложки
+
+// Причина отказа по-русски — с тем, что сделать. Свои обложки YouTube разрешает только
+// подтверждённым каналам (youtube.com/verify): иначе 403 forbidden.
+export function explainThumbnailError(status: number, body: string): string {
+  const { reason } = apiErrorInfo(body);
+  const manual = "поставьте обложку в Studio вручную (thumbnail.png из релиза)";
+  if (status === 403 && !isScopeError(status, body) && reason !== "insufficientPermissions")
+    return `YouTube не разрешает этому каналу свои обложки — подтвердите канал по телефону (youtube.com/verify, «Расширенные функции»), а пока ${manual}.`;
+  if (status === 413 || reason === "mediaBodyTooLarge") return `файл обложки больше 2 МБ — ${manual}.`;
+  if (reason === "invalidImage") return `YouTube не принял картинку (формат или размер) — ${manual}.`;
+  if (status === 429 || reason === "uploadRateLimitExceeded") return `слишком много обложек подряд — повторите позже или ${manual}.`;
+  return `${explainApiError(status, body).replace(/\.$/, "")} — ${manual}.`;
+}
+
+export async function setThumbnail(deps: ApiDeps, videoId: string, image: Uint8Array, contentType: "image/png" | "image/jpeg"): Promise<void> {
+  if (!image.byteLength) throw new Error("файл обложки пустой — поставьте обложку в Studio вручную.");
+  if (image.byteLength > THUMBNAIL_MAX_BYTES) throw new Error(`обложка ${Math.ceil(image.byteLength / 1024)} КБ, а YouTube принимает до 2 МБ — поставьте её в Studio вручную.`);
+  const f = deps.fetch ?? fetch;
+  const url = `https://www.googleapis.com/upload/youtube/v3/thumbnails/set?${new URLSearchParams({ videoId, uploadType: "media" })}`;
+  let res: Response;
+  try {
+    res = await f(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${await accessToken(deps.auth)}`, "Content-Type": contentType },
+      body: image as BodyInit,
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch (e) {
+    throw new Error(`нет связи с YouTube (${e instanceof Error ? e.message : String(e)}) — обложку поставьте в Studio вручную.`, { cause: e });
+  }
+  const text = await res.text();
+  if (!res.ok) throw new Error(explainThumbnailError(res.status, text));
 }

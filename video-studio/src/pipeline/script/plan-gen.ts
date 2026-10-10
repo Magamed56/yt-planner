@@ -7,6 +7,8 @@
 
 import { z } from "zod";
 import type { LlmUsage } from "../contracts";
+import { normCode } from "../codes";
+import { LONG_CHAPTERS_MAX, LONG_FACTS, LONG_MIN_FACTS } from "../long-plan";
 import type { ContentPlan, PlanFact, PlanItem, PlanPosition } from "../plan";
 import { sequelTitle } from "../plan";
 import { coveredPromptBlock, findRepeats, indexCovered, stems, type CoveredEntry } from "./covered";
@@ -20,6 +22,11 @@ import { coerceMeta, countWords, formatZodIssues, unwrap } from "./validate";
 export const MIN_FACTS = 2;
 const TITLE_SOFT = 70;
 
+const FactSchema = z.object({
+  claim: z.string().trim().min(1).max(500).describe("проверяемый факт с конкретикой"),
+  source: z.string().trim().min(1).max(500).describe("прямая ссылка https://… на страницу с этим фактом"),
+});
+
 const PlanTopicsSchema = z.object({
   items: z
     .array(
@@ -28,26 +35,39 @@ const PlanTopicsSchema = z.object({
         title: z.string().trim().min(1).max(100).describe("название ролика по-русски, до 70 символов"),
         hook: z.string().trim().min(1).max(200).describe("первая фраза ролика, до 12 слов"),
         angle: z.string().trim().min(1).max(700).describe("угол подачи и развязка, 1–2 предложения"),
-        keyFacts: z
-          .array(
-            z.object({
-              claim: z.string().trim().min(1).max(500).describe("проверяемый факт с конкретикой"),
-              source: z.string().trim().min(1).max(500).describe("прямая ссылка https://… на страницу с этим фактом"),
-            }),
-          )
-          .min(1)
-          .max(6),
+        keyFacts: z.array(FactSchema).min(1).max(6),
       }),
     )
     .min(1)
     .max(40),
 });
 
+// «Разбор» (~7 минут, content/long-plan.json): больше фактов и набросок глав.
+const LongTopicsSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        code: z.string().trim().optional().describe("код темы из запроса, например L04"),
+        title: z.string().trim().min(1).max(100).describe("название ролика по-русски, до 70 символов"),
+        hook: z.string().trim().min(1).max(200).describe("первая фраза ролика, до 15 слов"),
+        angle: z.string().trim().min(1).max(900).describe("угол подачи, линия рассказа и развязка, 2–3 предложения"),
+        keyFacts: z.array(FactSchema).min(1).max(LONG_FACTS.max + 2),
+        chapters: z.array(z.string().trim().min(1).max(80)).max(LONG_CHAPTERS_MAX).optional().describe("4–6 коротких названий глав по порядку"),
+      }),
+    )
+    .min(1)
+    .max(12),
+});
+
+type TopicsSchema = typeof PlanTopicsSchema | typeof LongTopicsSchema;
+const schemaFor = (long: boolean): TopicsSchema => (long ? LongTopicsSchema : PlanTopicsSchema);
+
 export interface PlanTopic {
   title: string;
   hook: string;
   angle: string;
   keyFacts: PlanFact[];
+  chapters?: string[]; // только «Разбор»
 }
 
 // ---- Ссылки ----
@@ -138,12 +158,21 @@ export interface PlanChannel {
   audience?: string | null;
 }
 
-export function buildPlanSystemPrompt(webSearch: boolean): string {
-  return `Ты — редактор и фактчекер русскоязычного научно-популярного канала коротких роликов (YouTube Shorts, ~40–45 секунд). Придумываешь темы и подбираешь к ним проверенные факты с источниками.
+export function buildPlanSystemPrompt(webSearch: boolean, long = false): string {
+  const intro = long
+    ? "Ты — редактор и фактчекер русскоязычного научно-популярного канала. Подбираешь темы для «Разборов» — горизонтальных роликов YouTube на ~7 минут с главами — и проверенные факты к ним с источниками."
+    : "Ты — редактор и фактчекер русскоязычного научно-популярного канала коротких роликов (YouTube Shorts, ~40–45 секунд). Придумываешь темы и подбираешь к ним проверенные факты с источниками.";
+  const scope = long
+    ? `- Тема «Разбора» — вопрос с историей, механизмом или спором внутри: материала на 7 минут и 4–6 глав (как это устроено, как узнали, что из этого следует, частые заблуждения). Не тема на минуту и не пересказ учебника целиком.
+- keyFacts — ${LONG_FACTS.min}–${LONG_FACTS.max} фактов на тему: проверяемые, с конкретикой (кто, когда, сколько, как устроено), разные — на всю длину ролика.
+- chapters — 4–6 коротких названий глав по порядку рассказа (до 5 слов, без нумерации).`
+    : `- Тема — один конкретный вопрос или удивительный факт, который можно раскрыть за минуту; не пересказ целой области.
+- keyFacts — 2–4 факта на тему: проверяемые, с конкретикой (кто, когда, сколько, как устроено).`;
+  const format = long ? '{"items": [{"code", "title", "hook", "angle", "keyFacts": [{"claim", "source"}], "chapters": ["…"]}]}' : '{"items": [{"code", "title", "hook", "angle", "keyFacts": [{"claim", "source"}]}]}';
+  return `${intro}
 
 ## Правила
-- Тема — один конкретный вопрос или удивительный факт, который можно раскрыть за минуту; не пересказ целой области.
-- keyFacts — 2–4 факта на тему: проверяемые, с конкретикой (кто, когда, сколько, как устроено).
+${scope}
 - source у каждого факта — ОДНА прямая ссылка https://… на страницу, где этот факт написан: Википедия (ru или en), научная статья (doi.org, pubmed, nature.com, science.org…), сайт научной организации, музея или крупного СМИ. Факт без ссылки не пиши вовсе.${
     webSearch
       ? "\n- Источники ищи веб-поиском и бери ссылки из его результатов; факт, для которого источник не нашёлся, не пиши."
@@ -154,7 +183,7 @@ export function buildPlanSystemPrompt(webSearch: boolean): string {
 - Не повторяй темы и факты, которые уже есть на канале (список в запросе).
 
 ## Формат ответа
-Ответь ТОЛЬКО одним JSON-объектом, без markdown и пояснений: {"items": [{"code", "title", "hook", "angle", "keyFacts": [{"claim", "source"}]}]}.`;
+Ответь ТОЛЬКО одним JSON-объектом, без markdown и пояснений: ${format}.`;
 }
 
 function channelLine(ch: PlanChannel): string {
@@ -176,13 +205,15 @@ export function buildExtendPrompt(input: {
   plan: ContentPlan;
   covered: CoveredEntry[];
   alsoTitles?: string[]; // принятые в прошлом заходе — их тоже не повторять
+  long?: boolean; // темы «Разбора» (content/long-plan.json)
+  extraTitles?: string[]; // «Разбор»: темы Shorts — их «Разборы» не берут
 }): string {
   const wanted = input.positions.map((p) => `- ${p.id} — рубрика «${pillarTitle(input.pillars, p.pillar)}»`).join("\n");
   // Темы плана + ролики не из плана (написанные по --topic); факты сверит проверка ответа.
-  const titles = [...new Set([...input.plan.items.map((i) => i.title), ...input.covered.map((e) => e.title), ...(input.alsoTitles ?? [])])].map((t) => `«${t}»`).join("; ");
+  const titles = [...new Set([...input.plan.items.map((i) => i.title), ...(input.extraTitles ?? []), ...input.covered.map((e) => e.title), ...(input.alsoTitles ?? [])])].map((t) => `«${t}»`).join("; ");
   return `${channelLine(input.channel)}
 
-Нужно ${input.positions.length} новых тем — по одной на каждый код, рубрика задана:
+Нужно ${input.positions.length} новых ${input.long ? "тем для «Разборов» (~7 минут, 16:9, с главами; таких тем не должно быть среди Shorts канала)" : "тем"} — по одной на каждый код, рубрика задана:
 ${wanted}
 
 Темы, которые уже есть на канале или в плане, — их и близкие к ним не повторяй: ${titles}
@@ -225,6 +256,7 @@ export interface TopicsVerdictCtx {
   existingTitles: string[];
   covered: CoveredEntry[];
   minFacts?: number;
+  long?: boolean; // «Разбор»: схема с главами и до 14 фактов
 }
 
 export interface CheckedTopics {
@@ -245,21 +277,26 @@ export function checkTopics(raw: unknown, ctx: TopicsVerdictCtx): Verdict<Checke
     if (!isObj(it)) return it;
     const o = coerceMeta(it);
     for (const f of ["hook", "angle", "code"]) if (typeof o[f] === "string") o[f] = (o[f] as string).replace(/\s+/g, " ").trim();
-    if (typeof o.code === "string") o.code = o.code.toLowerCase();
+    // «31A» → «31a», «l04» → «L04» — как коды в запросе.
+    if (typeof o.code === "string") o.code = normCode(o.code) ?? o.code.toLowerCase();
     if (Array.isArray(o.keyFacts)) o.keyFacts = o.keyFacts.filter(isObj).map((f) => ({ claim: String(f.claim ?? "").trim(), source: String(f.source ?? f.url ?? "").trim() }));
+    if (ctx.long && Array.isArray(o.chapters)) o.chapters = o.chapters.filter((c): c is string => typeof c === "string" && Boolean(c.trim())).slice(0, LONG_CHAPTERS_MAX);
     return o;
   });
-  const parsed = PlanTopicsSchema.safeParse({ items });
+  const schema = schemaFor(Boolean(ctx.long));
+  const parsed = schema.safeParse({ items });
   if (!parsed.success) {
     // Схема не сошлась целиком — принимаем годные темы по одной.
-    const good = items.filter((it) => PlanTopicsSchema.shape.items.element.safeParse(it).success);
+    const good = items.filter((it) => schema.shape.items.element.safeParse(it).success);
     if (!good.length) return { ok: false, problems: formatZodIssues(parsed.error, { items }, "items"), warnings: [] };
-    return accept(PlanTopicsSchema.shape.items.parse(good), ctx);
+    return accept(schema.shape.items.parse(good) as LooseTopic[], ctx);
   }
-  return accept(parsed.data.items, ctx);
+  return accept(parsed.data.items as LooseTopic[], ctx);
 }
 
-function accept(list: z.infer<typeof PlanTopicsSchema>["items"], ctx: TopicsVerdictCtx): Verdict<CheckedTopics> {
+type LooseTopic = z.infer<typeof PlanTopicsSchema>["items"][number] & { chapters?: string[] };
+
+function accept(list: LooseTopic[], ctx: TopicsVerdictCtx): Verdict<CheckedTopics> {
   const minFacts = ctx.minFacts ?? MIN_FACTS;
   const notes: string[] = [];
   const topics = new Map<string, PlanTopic>();
@@ -296,7 +333,8 @@ function accept(list: z.infer<typeof PlanTopicsSchema>["items"], ctx: TopicsVerd
     }
     if (it.title.length > TITLE_SOFT) notes.push(`${code}: название длиннее ${TITLE_SOFT} символов — в поиске обрежется`);
     if (countWords(it.hook) > 15) notes.push(`${code}: хук длиннее 12 слов — сократите при написании сценария`);
-    topics.set(code, { title: it.title.trim(), hook: it.hook.trim(), angle: it.angle.trim(), keyFacts: facts });
+    const chapters = (it.chapters ?? []).map((c) => c.replace(/^\s*\d+[.)]\s*/, "").trim()).filter(Boolean);
+    topics.set(code, { title: it.title.trim(), hook: it.hook.trim(), angle: it.angle.trim(), keyFacts: facts, ...(chapters.length ? { chapters } : {}) });
     titles.push(it.title);
   });
   if (!topics.size) return { ok: false, problems: notes.length ? notes : ["ни одной годной темы"], warnings: [] };
@@ -312,6 +350,8 @@ export interface PlanGenInput {
   channel: PlanChannel;
   covered: CoveredEntry[];
   sequelOf?: PlanItem | null; // plan-sequel: первая часть
+  long?: boolean; // plan-extend --long: темы «Разбора» (8–12 фактов, главы)
+  extraTitles?: string[]; // названия, которых не должно быть среди новых тем (Shorts для «Разбора»)
 }
 
 export interface PlanGenResult {
@@ -334,8 +374,11 @@ export async function generatePlanItems(input: PlanGenInput, deps: ScriptDeps = 
   const usage = new UsageBook();
   const notes: string[] = [];
   const done = new Map<string, PlanTopic>();
-  const titles = input.plan.items.map((i) => i.title);
+  const long = Boolean(input.long) && !input.sequelOf;
+  const titles = [...input.plan.items.map((i) => i.title), ...(input.extraTitles ?? [])];
   const sequel = input.sequelOf ?? null;
+  const minFacts = long ? LONG_MIN_FACTS : MIN_FACTS;
+  const schema = schemaFor(long);
 
   // Два захода: второй — свежим запросом только за недостающими темами.
   for (let round = 0; round < 2; round++) {
@@ -343,29 +386,32 @@ export async function generatePlanItems(input: PlanGenInput, deps: ScriptDeps = 
     if (!positions.length) break;
     const user = sequel
       ? buildSequelPrompt({ channel: input.channel, base: sequel, position: positions[0]!, pillars: input.pillars, covered: input.covered })
-      : buildExtendPrompt({ channel: input.channel, positions, pillars: input.pillars, plan: input.plan, covered: input.covered, alsoTitles: [...done.values()].map((t) => t.title) });
+      : buildExtendPrompt({ channel: input.channel, positions, pillars: input.pillars, plan: input.plan, covered: input.covered, alsoTitles: [...done.values()].map((t) => t.title), long, extraTitles: input.extraTitles });
     let res: { value: CheckedTopics; sources: string[] };
     try {
       res = await generateStructured({
         chain,
-        system: buildPlanSystemPrompt(searchOn),
+        system: buildPlanSystemPrompt(searchOn, long),
         user,
         schemaName: "plan_topics",
-        zodSchema: PlanTopicsSchema,
-        jsonSchema: toCompatJsonSchema(PlanTopicsSchema),
+        zodSchema: schema,
+        jsonSchema: toCompatJsonSchema(schema),
         validate: (raw) =>
           checkTopics(raw, {
             positions,
             // Часть 2 называется как первая — её не сравниваем с ней самой.
             existingTitles: sequel ? titles.filter((t) => t !== sequel.title) : [...titles, ...[...done.values()].map((t) => t.title)],
             covered: input.covered,
+            minFacts,
+            long,
           }),
-        what: sequel ? `«Часть 2» для ${sequel.id}` : `${positions.length} новых тем (заход ${round + 1})`,
+        what: sequel ? `«Часть 2» для ${sequel.id}` : `${positions.length} новых тем${long ? " «Разбора»" : ""} (заход ${round + 1})`,
         usage,
         log,
         signal: deps.signal,
         onCall: deps.onLlmCall,
-        ...(searchOn ? { webSearch: { maxUses: Math.min(30, Math.max(5, positions.length * 3)) } } : {}),
+        // У «Разбора» фактов втрое больше — и поисков на тему больше.
+        ...(searchOn ? { webSearch: { maxUses: Math.min(30, Math.max(5, positions.length * (long ? 8 : 3))) } } : {}),
       });
     } catch (e) {
       notes.push(e instanceof Error ? e.message : String(e));
@@ -391,7 +437,7 @@ export async function generatePlanItems(input: PlanGenInput, deps: ScriptDeps = 
     }
     for (const [code, t] of res.value.topics) {
       const keyFacts = t.keyFacts.filter((f) => !dead.has(f));
-      if (keyFacts.length < MIN_FACTS) {
+      if (keyFacts.length < minFacts) {
         notes.push(`${code}: после проверки ссылок фактов осталось ${keyFacts.length} — тема пропущена`);
         continue;
       }
@@ -412,6 +458,7 @@ export async function generatePlanItems(input: PlanGenInput, deps: ScriptDeps = 
       hook: t.hook,
       angle: t.angle,
       keyFacts: t.keyFacts,
+      ...(long && t.chapters?.length ? { chapters: t.chapters } : {}),
       status: "planned",
       ...(sequel ? { sequelOf: sequel.id } : {}),
     });

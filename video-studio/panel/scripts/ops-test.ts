@@ -75,6 +75,7 @@ async function main() {
       retryFailed: false,
       keepReleaseDays: 30,
       scriptReserve: 4,
+      long: true, // «Разборы» — поле новее остальных: в старом JSON его нет, по умолчанию включено
     });
     const bad = parseAutopilot('{"retryFailed":"нет","keepReleaseDays":-1,"scriptReserve":11}');
     assert.deepEqual([bad.retryFailed, bad.keepReleaseDays, bad.scriptReserve], [true, 0, 0]);

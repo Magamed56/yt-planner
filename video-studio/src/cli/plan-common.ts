@@ -2,13 +2,16 @@
 // сводка в консоль и в GitHub Actions.
 import fs from "node:fs";
 import path from "node:path";
+import { longScheduleOf } from "../pipeline/channel";
 import { channelFile, loadChannel } from "../pipeline/channel-file";
+import { LONG_PLAN_FILE, parseLongPlan } from "../pipeline/long-plan";
 import { parsePlan, refreshPlanStats, type ContentPlan, type PlanItem } from "../pipeline/plan";
 import { loadCovered, type CoveredEntry } from "../pipeline/script/covered";
 import type { PlanChannel } from "../pipeline/script/plan-gen";
 import { ROOT, UserError, escapeMd, ghOutput, ghSummary, rel, writeJson } from "./common";
 
 export const PLAN_FILE = path.join(ROOT, "content", "plan.json");
+export const LONG_PLAN_PATH = path.join(ROOT, ...LONG_PLAN_FILE.split("/"));
 
 export function readPlan(): ContentPlan {
   try {
@@ -18,9 +21,25 @@ export function readPlan(): ContentPlan {
   }
 }
 
+// План «Разборов» (content/long-plan.json). Файла ещё нет — пустой план: первые темы допишет
+// npm run plan-extend -- --long.
+export function readLongPlan(): ContentPlan {
+  try {
+    if (!fs.existsSync(LONG_PLAN_PATH)) return { items: [] };
+    return parseLongPlan(JSON.parse(fs.readFileSync(LONG_PLAN_PATH, "utf8").replace(/^﻿/, "")));
+  } catch (e) {
+    throw new UserError(`Не прочитать ${rel(LONG_PLAN_PATH)}: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
+export function saveLongPlan(plan: ContentPlan, added: PlanItem[]): void {
+  plan.items.push(...added);
+  writeJson(LONG_PLAN_PATH, plan);
+}
+
 // Ниша, аудитория и рубрики — из channel.json (их нет в разобранном ChannelConfig),
 // слоты дня — из расписания канала.
-export function readChannelInfo(plan: ContentPlan): { channel: PlanChannel; pillars: { id: string; title: string }[]; slots: string[] } {
+export function readChannelInfo(plan: ContentPlan): { channel: PlanChannel; pillars: { id: string; title: string }[]; slots: string[]; longTime: string } {
   const cfg = loadChannel();
   let raw: Record<string, unknown> = {};
   const file = channelFile();
@@ -42,6 +61,7 @@ export function readChannelInfo(plan: ContentPlan): { channel: PlanChannel; pill
     channel: { name: cfg.name ?? str(plan.channel), niche: str(raw.niche), audience: str(raw.audience) },
     pillars,
     slots: cfg.schedule.publishTimesLocal,
+    longTime: longScheduleOf(cfg).publishTimesLocal[0] ?? "21:00",
   };
 }
 
@@ -61,8 +81,8 @@ export function savePlan(plan: ContentPlan, added: PlanItem[]): void {
   writeJson(PLAN_FILE, plan);
 }
 
-export function reportNewTopics(what: string, items: PlanItem[], notes: string[], missing: string[], dryRun: boolean, pillarTitle: (id: string) => string): void {
-  console.log(`\n${items.length ? "✔" : "✖"} ${what}: ${items.length}${dryRun ? " (--dry-run: план не записан)" : ` → ${rel(PLAN_FILE)}`}`);
+export function reportNewTopics(what: string, items: PlanItem[], notes: string[], missing: string[], dryRun: boolean, pillarTitle: (id: string) => string, file = PLAN_FILE): void {
+  console.log(`\n${items.length ? "✔" : "✖"} ${what}: ${items.length}${dryRun ? " (--dry-run: план не записан)" : ` → ${rel(file)}`}`);
   for (const it of items) {
     console.log(`  ${it.id} · ${pillarTitle(it.pillar)} · «${it.title}»`);
     for (const f of it.keyFacts) console.log(`      — ${f.claim.slice(0, 110)}${f.claim.length > 110 ? "…" : ""}\n        ${f.source}`);

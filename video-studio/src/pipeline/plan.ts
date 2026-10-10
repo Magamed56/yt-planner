@@ -19,6 +19,7 @@ export interface PlanItem {
   status: string; // planned | script-ready
   script?: string; // scripts/sut-08a-….json — когда сценарий написан
   sequelOf?: string; // «Часть 2»: код первой части (npm run plan-sequel)
+  chapters?: string[]; // «Разбор» (content/long-plan.json): набросок глав — сценарист может уточнить
 }
 
 export interface ContentPlan {
@@ -47,10 +48,13 @@ export function parsePlan(json: unknown): ContentPlan {
   return plan;
 }
 
-// Код ролика из имени сценария: «scripts/sut-08a-pochemu.json» → «08a».
+// Код ролика из имени сценария: «scripts/sut-08a-pochemu.json» → «08a», «Разбор» по длинному
+// плану «scripts/razbor-L01-….json» → «L01». «Разбор» темы Shorts (razbor-08a-…) — не сценарий
+// темы 08a: null, как раньше.
 export function scriptCode(file: string): string | null {
-  const m = /(?:^|[\\/])sut-(\d{2}[a-z])-[^\\/]*\.json$/i.exec(file);
-  return m ? m[1]!.toLowerCase() : null;
+  const m = /(?:^|[\\/])(?:sut-(\d{2}[a-z])|razbor-(l\d{2}))-[^\\/]*\.json$/i.exec(file);
+  if (!m) return null;
+  return m[1] ? m[1].toLowerCase() : `L${m[2]!.slice(1)}`;
 }
 
 // «Пожелания автора» для LLM: хук, угол и только факты из плана — у каждого есть источник,
