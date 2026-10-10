@@ -5,7 +5,8 @@
 // без ключа тихо пропускается (одно сообщение за запуск); реальные фото
 // (wikimedia, openverse) ключа не требуют. Для сцен про реальные объекты
 // (ctx.realFirst — рубрики VISUALS_REAL_PILLARS, или VISUALS_PREFER=real)
-// реальные фото идут первыми. Файл всегда скачивается в
+// реальные фото идут первыми — кроме сцен media без имени собственного в
+// рубриках: там обещано живое видео, и стоки идут первыми. Файл всегда скачивается в
 // ctx.publicDir/visuals/<id сцены>.<ext> — никаких ссылок на чужие серверы.
 // Для одной сцены функция НИКОГДА не бросает: при неудаче — { type: "none" },
 // и композиция покажет чистую моушен-графику.
@@ -252,7 +253,14 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
     // Разобранный запрос: главные слова, предмет ролика, имена собственные — для проверки «по теме».
     const query = visualQuery(scene, { topicQueries: ctx.topicQueries });
     const prefer = (env.VISUALS_PREFER ?? "").trim().toLowerCase();
-    const realFirst = Boolean(ctx.realFirst) || prefer === "real";
+    // Сцена media обещает живое видео на весь экран, а рубрика «настоящих фото»
+    // ставила Commons первым и здесь: 10a (nature) — 7 фото, 0 видео (прогон CI
+    // 38020777592). Без имени собственного («tiger walking grass») сначала видео
+    // стока; с именем (Greenland shark, Apollo Guidance Computer) — Commons, сток
+    // такой клип без имени всё равно не берёт (stockFit). VISUALS_PREFER=real —
+    // явный выбор пользователя, его не меняем.
+    const liveVideo = scene.kind === "media" && query.proper.length === 0 && query.heads.length === 0;
+    const realFirst = (Boolean(ctx.realFirst) && !liveVideo) || prefer === "real";
     const perScene = { calls: 0 };
     for (const step of buildPlan(ready, ctx.format, prefer === "image", realFirst)) {
       const { provider } = step;

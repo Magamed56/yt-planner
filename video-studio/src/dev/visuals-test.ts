@@ -490,7 +490,8 @@ await test("Реальные фото первыми: realFirst и рубрик�
     return null; // Pexels не должен понадобиться
   });
   const env = { VISUALS: "pexels,wikimedia", PEXELS_API_KEY: "k" };
-  const r = await findVisual(scene({ visualQuery: "viking helmet museum" }), { ...ctxFor(publicDir), realFirst: true }, { fetch: fn, env, log, cacheDir });
+  // Не media: у сцен media без имени собственного сток идёт первым (тест ниже).
+  const r = await findVisual(scene({ kind: "statement", visualQuery: "viking helmet museum" }), { ...ctxFor(publicDir), realFirst: true }, { fetch: fn, env, log, cacheDir });
   assert.equal(r.credit?.provider, "Wikimedia Commons");
   assert.ok(!calls.some((c) => c.url.includes("pexels")), "до стока дело не дошло");
 });
@@ -862,6 +863,55 @@ await test("Стоки: клип по одному общему слову (wate
   assert.ok(fit(q12, "old hospital doctor notebook", "female doctor, hospital, doctor, nurse, clinic, female, medical, healthcare, health, woman, patient"));
   assert.ok(fit(q11, "rocket launch night", "rocket, thrusters, nasa, space shuttle, endeavor, atlantis, discovery, space ship, rocket launch, sp"));
   assert.ok(fit(q11, "old circuit board closeup", "mother board, electronic, computer, electronics, loop, board, components, chips, tech, technology, m"));
+  // Прогон после правки (38022757599): черепаха с тегом «wrinkled» прошла — причастие сочли
+  // главным предметом. Главный — «fingertips»; клип с пальцами по-прежнему берём.
+  assert.equal(fit(q12, "wrinkled fingertips water bath", "tortoise, reptile, grass, winks, to wink, folds, wrinkled, nature, old, eye"), false);
+  assert.ok(fit(q12, "wrinkled fingertips water bath", "wrinkled fingers, skin, water, hands, close up"));
+});
+
+// Сцена media обещает живое видео на весь экран, а в рубриках реальных фото (realFirst) Commons
+// шёл первым и для неё: 10a (nature) в прогоне 38020777592 — 7 фото, 0 видео, в том числе media
+// «tiger walking grass». Имя собственное по-прежнему ведёт в Commons: сток его не покажет.
+await test("realFirst: сцена media без имени — сначала видео стока; с именем и не media — Commons", async ({ publicDir, cacheDir }) => {
+  const tigerClip = { ...pixabayHit(801, 14, { medium: [1080, 1920] }), tags: "tiger, animal, wildlife, grass, walking, big cat, nature" };
+  const sharkClip = { ...pixabayHit(802, 14, { medium: [1080, 1920] }), tags: "shark, fish, underwater, ocean, swimming" };
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://pixabay.com/api/videos/")) return json(200, { total: 2, totalHits: 2, hits: [tigerClip, sharkClip] });
+    if (c.url.startsWith("https://cdn.pixabay.com/video/")) return bytes(900);
+    if (c.url.startsWith("https://commons.wikimedia.org/")) {
+      const page = c.url.includes("shark")
+        ? commonsPage(811, 1, "Somniosus microcephalus (Greenland shark)", { width: 3000, height: 4000 })
+        : commonsPage(812, 1, "Tiger walking through grass", { width: 3000, height: 4000 });
+      return json(200, { query: { pages: [page] } });
+    }
+    if (c.url.startsWith("https://thumb.wikimedia.org/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    return null;
+  });
+  const env = { VISUALS: "pixabay,wikimedia", PIXABAY_API_KEY: "k" };
+  const ctx = { ...ctxFor(publicDir), realFirst: true, topicQueries: Q10A };
+  const asked = (from: number, host: string) => calls.slice(from).some((c) => c.url.startsWith(host));
+
+  let from = calls.length;
+  const media = await findVisual(scene({ id: "s4", kind: "media", visualQuery: "tiger walking grass" }), ctx, { fetch: fn, env, log, cacheDir });
+  assert.equal(media.visual.type, "video");
+  assert.equal(media.credit?.url, "https://pixabay.com/videos/clip-801/");
+  assert.ok(!asked(from, "https://commons.wikimedia.org/"), "до Commons дело не дошло");
+
+  from = calls.length;
+  const named = await findVisual(scene({ id: "s5", kind: "media", visualQuery: "Greenland shark" }), ctx, { fetch: fn, env, log, cacheDir });
+  assert.equal(named.credit?.provider, "Wikimedia Commons");
+  assert.ok(!asked(from, "https://pixabay.com/"), "с именем собственным — сначала Commons");
+
+  from = calls.length;
+  const statement = await findVisual(scene({ id: "s6", kind: "statement", visualQuery: "tiger walking grass" }), ctx, { fetch: fn, env, log, cacheDir });
+  assert.equal(statement.credit?.provider, "Wikimedia Commons");
+  assert.ok(!asked(from, "https://pixabay.com/"), "не media — как раньше, Commons первым");
+
+  // VISUALS_PREFER=real — явный выбор пользователя: реальные фото первыми и в сценах media.
+  from = calls.length;
+  const prefer = await findVisual(scene({ id: "s7", kind: "media", visualQuery: "tiger walking grass" }), { ...ctxFor(publicDir), topicQueries: Q10A }, { fetch: fn, env: { ...env, VISUALS_PREFER: "real" }, log, cacheDir });
+  assert.equal(prefer.credit?.provider, "Wikimedia Commons");
+  assert.ok(!asked(from, "https://pixabay.com/"));
 });
 
 await test("Служебные категории Commons и слова-омонимы не отсекают нормальные фото", () => {
