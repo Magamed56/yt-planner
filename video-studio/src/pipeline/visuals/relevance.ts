@@ -451,14 +451,18 @@ function looseHas(stems: string[], s: string): boolean {
   });
 }
 
-// Стоки (Pexels, Pixabay) ищут по смыслу и отдают в основном то, что надо, а
-// описание у них скупое (адрес страницы, alt, теги). Поэтому проверка мягкая:
-// отсекаем только явный промах — нет ни предмета, ни обстановки запроса
-// (действие «holding», «walking» само по себе не в счёт: «person holding a cup»
-// на «hand holding smartphone»). Предмет ролика (cat в ролике про кошек)
-// обязателен: собака на «person petting cat» — промах. Имя собственное
-// (Apollo, Tenochtitlan) сток не покажет — такой клип берём, только если имя
-// есть в описании, иначе очередь реальных фото.
+// Стоки (Pexels, Pixabay): описание скупое (адрес страницы, alt, теги), а поиск
+// Pixabay отдаёт популярные клипы и по ОДНОМУ слову запроса. Прогон CI 10.10
+// (12a, 11a): водопад на «wrinkled fingertips water bath», дождливая улица на
+// «tire tread wet road», подсолнух в руке на «hand holding smartphone night» —
+// по одному общему слову (water, road, hand) прошли 8 клипов не по теме из 10.
+// Поэтому клип берём, если в описании есть главный предмет сцены — первое
+// конкретное существительное запроса (сценарист ставит его первым) — или хотя
+// бы половина веса слов сюжета (без признаков и действий: «holding» не в счёт;
+// «books» на «old library books» — да, одно «road» на «tire tread wet road» — нет).
+// Предмет ролика (cat в ролике про кошек) обязателен: собака на «person
+// petting cat» — промах. Имя собственное (Apollo, Tenochtitlan) сток не покажет —
+// такой клип берём, только если имя есть в описании, иначе очередь реальных фото.
 export function stockFit(q: VisualQuery, text: string): Fit {
   const stems = words(text).map(stem);
   const base = { score: 0, recall: 0, precision: 0, evidence: 0 };
@@ -471,17 +475,27 @@ export function stockFit(q: VisualQuery, text: string): Fit {
   if (anchor) return { ...base, ok: false, why: `в описании нет предмета ролика «${anchor.word}»` };
   let total = 0;
   let got = 0;
-  let any = false;
   for (const t of q.terms) {
     total += t.weight;
-    if (looseHas(stems, t.stem)) {
-      got += t.weight;
-      if (t.weight >= 0.5 && t.kind !== "action") any = true;
-    }
+    if (looseHas(stems, t.stem)) got += t.weight;
   }
   const recall = total ? got / total : 0;
-  const ok = any || recall >= 0.3;
-  return { ...base, ok, recall, score: recall, why: ok ? `совпадение ${recall.toFixed(2)}` : "в описании нет ни предмета, ни обстановки запроса" };
+  // Слова сюжета: предметы и обстановка; главный — первое конкретное существительное.
+  const plot = q.terms.filter((t) => t.weight >= 0.5 && t.kind !== "action");
+  const found = plot.filter((t) => looseHas(stems, t.stem));
+  const head = plot.find((t) => t.weight >= 1);
+  if (plot.length === 0) {
+    const ok = recall >= 0.3;
+    return { ...base, ok, recall, score: recall, why: ok ? `совпадение ${recall.toFixed(2)}` : "в описании нет слов запроса" };
+  }
+  const weight = (ts: Term[]) => ts.reduce((a, t) => a + t.weight, 0);
+  const ok = (head !== undefined && found.includes(head)) || weight(found) >= 0.5 * weight(plot);
+  const why = ok
+    ? `совпадение ${recall.toFixed(2)}`
+    : found.length
+      ? `в описании нет главного предмета «${head?.word ?? plot[0]!.word}», совпало только «${found[0]!.word}»`
+      : "в описании нет ни предмета, ни обстановки запроса";
+  return { ...base, ok, recall, score: recall, why };
 }
 
 // Описание клипа Pexels — в адресе страницы: /video/a-cat-sniffing-a-cake-855029/.

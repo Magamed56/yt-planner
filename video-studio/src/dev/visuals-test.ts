@@ -837,9 +837,31 @@ await test("Стоки с ключами: синоним-составное сл
   const pet = visualQuery({ visualQuery: "person petting cat" }, { topicQueries: Q10A });
   assert.equal(stockFit(pet, slug("woman-petting-a-dog-on-the-couch")).ok, false);
   assert.ok(stockFit(pet, slug("person-petting-a-ginger-cat")).ok);
-  // Обстановка без главного слова — ещё не промах (сток ищет по смыслу).
-  assert.ok(stockFit(visualQuery({ visualQuery: "blue sky ocean horizon" }), slug("calm-sea-under-blue-sky")).ok);
+  // Одно слово обстановки — ещё не сюжет: Pixabay отдаёт клипы и по одному слову
+  // запроса. Небо и океан — по теме, одно небо — нет (синонимы вроде sea/ocean не сводим).
+  const sky = visualQuery({ visualQuery: "blue sky ocean horizon" });
+  assert.ok(stockFit(sky, slug("blue-sky-over-the-ocean")).ok);
+  assert.equal(stockFit(sky, slug("white-clouds-in-blue-sky")).ok, false);
   assert.ok(stockFit(phone, "").ok, "без описания — доверяем поиску стока");
+});
+
+// Настоящие подборы Pixabay из прогона CI 10.10 (12a, 11a; новый код, ключ Pixabay): теги — как в
+// логе (обрезаны до 100 символов). До правки по одному общему слову брались 8 клипов не по теме из 10.
+await test("Стоки: клип по одному общему слову (water, road, hand) — мимо, главный предмет — берём", () => {
+  const q12 = ["wrinkled fingertips water bath", "hand soaking water bowl", "old hospital doctor notebook", "fingertip blood vessels macro", "tire tread wet road", "wet hands holding stones", "fingers bathtub bubbles"];
+  const q11 = ["rocket launch night", "vintage computer panel buttons", "old circuit board closeup", "hand holding smartphone night", "astronaut spacecraft cockpit", "hands weaving copper wire", "moon surface footprint"];
+  const fit = (topic: string[], query: string, tags: string) => stockFit(visualQuery({ visualQuery: query }, { topicQueries: topic }), tags).ok;
+  // Мимо: совпало одно слово обстановки или не главный предмет.
+  assert.equal(fit(q12, "wrinkled fingertips water bath", "waterfall, rocks, landscape, nature, flowing water, falls, swimming hole, pool, water, scenery, pict"), false);
+  assert.equal(fit(q12, "tire tread wet road", "rainy, rain, night, summer, colorful, reflection, wet, weather, road, puddles, street, couple, live "), false);
+  assert.equal(fit(q11, "vintage computer panel buttons", "stereo, tuner, music, technology, sound, radio, audio, equipment, entertainment, volume, button, dia"), false);
+  assert.equal(fit(q11, "hand holding smartphone night", "sunflower, flower, hand, nature, yellow, summer, field, holding, beauty, floral, plant, bloom, close"), false);
+  assert.equal(fit(q11, "hands weaving copper wire", "sand, hand, beach, dessert, sea, live wallpaper"), false);
+  // По теме — остаются.
+  assert.ok(fit(q12, "hand soaking water bowl", "washing hands, coronavirus, stop the spread, covid 19, water, hands, female, hygiene, cleanliness, t"));
+  assert.ok(fit(q12, "old hospital doctor notebook", "female doctor, hospital, doctor, nurse, clinic, female, medical, healthcare, health, woman, patient"));
+  assert.ok(fit(q11, "rocket launch night", "rocket, thrusters, nasa, space shuttle, endeavor, atlantis, discovery, space ship, rocket launch, sp"));
+  assert.ok(fit(q11, "old circuit board closeup", "mother board, electronic, computer, electronics, loop, board, components, chips, tech, technology, m"));
 });
 
 await test("Служебные категории Commons и слова-омонимы не отсекают нормальные фото", () => {
