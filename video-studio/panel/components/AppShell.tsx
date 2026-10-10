@@ -9,13 +9,16 @@ import { logoutAction } from "@/app/actions";
 import { plural } from "@/lib/stages";
 import { useResumeRefresh } from "@/lib/use-resume-refresh";
 import Freshness from "./Freshness";
+import { useLangNav } from "./LangNav";
 import { LiveRunsContext } from "./LiveRuns";
 
 export type Section = "feed" | "calendar" | "runs";
+type MainItem = Section | "stats";
 // Пункты меню: лента и календарь на главной переключаются без перезагрузки, остальные — ссылки.
-type NavItem = Section | "stats";
+// «lang:en» — канал на другом языке (/lang/en), пункты приходят из LangNav.
+export type NavItem = MainItem | `lang:${string}`;
 // «План» убран: порядок выхода меняется прямо в календаре (одна очередь, без дублей).
-const NAV: NavItem[] = ["feed", "calendar", "runs", "stats"];
+const NAV: MainItem[] = ["feed", "calendar", "runs", "stats"];
 
 // Кольцо-секундомер из знака канала: заполнено на столько дней расписания из недели.
 export function RunwayRing({ days, size = 52 }: { days: number | null; size?: number }) {
@@ -46,7 +49,7 @@ export function RunwayRing({ days, size = 52 }: { days: number | null; size?: nu
   );
 }
 
-const ICONS: Record<NavItem, React.ReactNode> = {
+const ICONS: Record<MainItem, React.ReactNode> = {
   feed: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
   calendar: (
     <>
@@ -57,13 +60,20 @@ const ICONS: Record<NavItem, React.ReactNode> = {
   runs: <path d="m6 4 14 8-14 8z" />,
   stats: <path d="M3 21h18M7 17v-5M12 17V5M17 17V9" />,
 };
-const LABEL: Record<NavItem, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски", stats: "Статистика" };
-const HREF: Record<NavItem, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs", stats: "/stats" };
+// Канал на другом языке — глобус.
+const LANG_ICON = (
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+  </>
+);
+const LABEL: Record<MainItem, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски", stats: "Статистика" };
+const HREF: Record<MainItem, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs", stats: "/stats" };
 
-function Icon({ section }: { section: NavItem }) {
+function Icon({ children }: { children: React.ReactNode }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {ICONS[section]}
+      {children}
     </svg>
   );
 }
@@ -86,8 +96,8 @@ export default function AppShell({
   generatedAt?: string | null; // то же в ISO: «обновлено 3 мин назад» и автообновление
   activeRuns: number;
   activeIds?: number[]; // id идущих запусков на странице — с ними сравнивает опрос /api/runs
-  runwayDays: number | null;
-  runwayLabel: string | null;
+  runwayDays?: number | null; // нет (undefined) — без карточки запаса: страница не про русский канал
+  runwayLabel?: string | null;
   loading?: boolean; // экран ещё грузится (loading.tsx): без цифр, которых пока нет
   children: React.ReactNode;
 }) {
@@ -137,20 +147,27 @@ export default function AppShell({
     };
   }, [activeRuns, waiting, baseSig, loading, router]);
 
-  const link = (s: NavItem, className?: string, withIcon = true) => (
+  // Основные разделы, затем каналы на других языках (обычно один — «English»).
+  const langs = useLangNav();
+  const items: { key: NavItem; href: string; label: string; icon: React.ReactNode }[] = [
+    ...NAV.map((s) => ({ key: s, href: HREF[s], label: LABEL[s], icon: ICONS[s] })),
+    ...langs.map((l) => ({ key: `lang:${l.code}` as const, href: `/lang/${l.code}`, label: l.label, icon: LANG_ICON })),
+  ];
+  const link = (it: (typeof items)[number]) => (
     <Link
-      key={s}
-      href={HREF[s]}
-      className={`${className ?? ""}${active === s ? " active" : ""}`}
+      key={it.key}
+      href={it.href}
+      className={active === it.key ? "active" : ""}
       onClick={(e) => {
+        const s = it.key;
         if (onSection && (s === "feed" || s === "calendar")) {
           e.preventDefault();
           onSection(s);
         }
       }}
     >
-      {withIcon && <Icon section={s} />}
-      {LABEL[s]}
+      <Icon>{it.icon}</Icon>
+      {it.label}
     </Link>
   );
   const refreshIcon = (
@@ -174,16 +191,18 @@ export default function AppShell({
           <span className="tag">СУТЬ</span>ЗА МИНУТУ
         </Link>
         <nav className="side-nav" aria-label="Разделы">
-          {NAV.map((s) => link(s))}
+          {items.map(link)}
         </nav>
         <div className="side-foot">
-          <div className="runway-card">
-            <RunwayRing days={runwayDays} />
-            <div className="small muted">
-              <b style={{ color: "var(--text)", display: "block" }}>запас расписания</b>
-              {loading ? "загружаю…" : runwayLabel ? `без пропусков до ${runwayLabel}` : runwayDays === null ? "YouTube не ответил" : "ближайший слот пуст"}
+          {runwayDays !== undefined && (
+            <div className="runway-card">
+              <RunwayRing days={runwayDays} />
+              <div className="small muted">
+                <b style={{ color: "var(--text)", display: "block" }}>запас расписания</b>
+                {loading ? "загружаю…" : runwayLabel ? `без пропусков до ${runwayLabel}` : runwayDays === null ? "YouTube не ответил" : "ближайший слот пуст"}
+              </div>
             </div>
-          </div>
+          )}
           <div className="small muted">
             <Freshness at={generatedAt} label={updated} pending={pending} loading={loading} onRefresh={refresh} />
             {activeRuns ? ` · в работе: ${activeRuns}` : ""}
@@ -227,7 +246,7 @@ export default function AppShell({
       </div>
 
       <nav className="tabbar" aria-label="Разделы">
-        {NAV.map((s) => link(s))}
+        {items.map(link)}
       </nav>
     </div>
   );
