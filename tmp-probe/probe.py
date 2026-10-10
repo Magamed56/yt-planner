@@ -31,11 +31,18 @@ for ref in [l.strip() for l in open("tmp-probe/channels.txt", encoding="utf-8") 
                 vid = e.find("yt:videoId", ns).text
                 g = e.find("m:group", ns)
                 stt = g.find("m:community/m:statistics", ns); rt = g.find("m:community/m:starRating", ns)
-                desc = (g.find("m:description", ns).text or "")[:160].replace("\n", " ")
+                desc = (g.find("m:description", ns).text or "").strip()
                 hs, _ = get(f"https://www.youtube.com/shorts/{vid}", "HEAD")
                 ch["videos"].append({"id": vid, "published": e.find("a:published", ns).text, "title": e.find("a:title", ns).text,
                     "views": int(stt.get("views")) if stt is not None else None, "likes": int(rt.get("count")) if rt is not None else None,
-                    "short": hs == 200, "desc": desc})
+                    "short": hs == 200, "desc": desc[:600], "descLen": len(desc), "hashtags": re.findall(r"#[\w\d_]+", (e.find("a:title", ns).text or "") + " " + desc)})
+                if len(ch["videos"]) <= 8:
+                    import os; d = f"tmp-probe/thumbs/{ref.strip('@').replace('/', '_')[:40]}"; os.makedirs(d, exist_ok=True)
+                    for kind in ("oardefault", "hqdefault"):
+                        try:
+                            data = urllib.request.urlopen(urllib.request.Request(f"https://i.ytimg.com/vi/{vid}/{kind}.jpg", headers=UA), timeout=20).read()
+                            if len(data) > 3000: open(f"{d}/{vid}-{kind}.jpg", "wb").write(data); break
+                        except Exception: pass
                 time.sleep(0.3)
         except Exception as ex:
             ch["feedError"] = f"{fs} {ex}"
