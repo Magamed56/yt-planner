@@ -18,6 +18,7 @@ import { RenderInternals } from "@remotion/renderer";
 import { FORMAT_SIZE, FPS, type VideoProps } from "../types";
 import { decodeWav, toMono } from "./audio/wav";
 import type { VoiceUsed } from "./contracts";
+import type { EncoderSettings } from "./render";
 
 export type QcSeverity = "error" | "warn";
 
@@ -57,6 +58,9 @@ export interface QcSpan {
   duration: number;
 }
 
+// Чем кодировали (RenderResult.encoder): по одному битрейту не понять, мало ли это.
+export type QcEncoder = Pick<EncoderSettings, "quality" | "crf" | "videoBitrate" | "x264Preset">;
+
 export interface QcReport {
   file: string;
   checkedAt: string;
@@ -68,6 +72,7 @@ export interface QcReport {
   blacks: QcSpan[]; // чёрное > 0,5 с
   issues: QcIssue[];
   voice?: VoiceUsed; // кто озвучил (make дописывает): панель предупреждает о запасном голосе
+  encoder?: QcEncoder; // нет — ролик проверен без данных рендера (старые qc.json)
 }
 
 // Пороги (секунды, дБ, Мбит/с).
@@ -83,6 +88,9 @@ export const QC_LIMITS = {
   lufsHigh: -9,
   truePeakMax: -0.5,
   minBitrateMbps1080: 8, // рекомендация YouTube для 1080p30 SDR
+  // x264 CRF ≤ 18 — визуально без потерь: битрейт сам падает на простой графике,
+  // и низкий средний поток уже не значит низкое качество.
+  transparentCrfMax: 18,
 } as const;
 
 // ---- ffmpeg/ffprobe из Remotion ----
@@ -243,11 +251,22 @@ export function evaluateQc(input: Omit<QcReport, "issues" | "ok" | "checkedAt" |
   if (p.fps !== null && Math.abs(p.fps - e.fps) > 0.05) warn("fps", `частота ${p.fps.toFixed(2)} кадр/с вместо ${e.fps}.`);
   if (p.sampleRate !== null && p.sampleRate < 44100) warn("sample-rate", `частота звука ${p.sampleRate} Гц — YouTube рекомендует 48 кГц.`);
   // Битрейт: для 1080p YouTube советует ≈ 8 Мбит/с; для других размеров — пропорционально площади.
+  // Порог — про кодирование средним потоком. При постоянном качестве (CRF ≤ 18) поток
+  // следует за сложностью кадра: релизы 10a–13b с CRF 15 дали 7,1–9,9 Мбит/с, и
+  // совет «VIDEO_QUALITY=max» лишь удвоил бы файл. Кодировщик неизвестен — как раньше.
+  const crf = input.encoder?.crf ?? null;
+  const constantQuality = crf !== null && crf <= QC_LIMITS.transparentCrfMax;
   const vk = p.videoBitrateKbps ?? (p.bitrateKbps !== null && p.audioBitrateKbps !== null ? p.bitrateKbps - p.audioBitrateKbps : p.bitrateKbps);
-  if (vk !== null && p.width && p.height) {
+  if (!constantQuality && vk !== null && p.width && p.height) {
     const minMbps = QC_LIMITS.minBitrateMbps1080 * Math.min(1, (p.width * p.height) / (1920 * 1080));
     if (vk / 1000 < minMbps) {
-      warn("bitrate", `средний битрейт видео ${(vk / 1000).toFixed(1)} Мбит/с — ниже ~${minMbps.toFixed(0)} Мбит/с, которые YouTube советует для ${Math.min(p.width, p.height)}p; после перекодирования YouTube возможны артефакты. Поднимите качество: VIDEO_QUALITY=max или VIDEO_CRF=14.`);
+      // VIDEO_BITRATE сильнее VIDEO_CRF (render.ts → encoderSettings): совет — под тот режим, что был.
+      const fix = input.encoder?.videoBitrate
+        ? `поднимите VIDEO_BITRATE (например 16M) или уберите его — тогда VIDEO_QUALITY=high (CRF 15)`
+        : crf !== null
+          ? `VIDEO_QUALITY=high (CRF 15) или VIDEO_CRF=14`
+          : `VIDEO_QUALITY=max или VIDEO_CRF=14`;
+      warn("bitrate", `средний битрейт видео ${(vk / 1000).toFixed(1)} Мбит/с — ниже ~${minMbps.toFixed(0)} Мбит/с, которые YouTube советует для ${Math.min(p.width, p.height)}p; после перекодирования YouTube возможны артефакты. Поднимите качество: ${fix}.`);
     }
   }
   if (p.audioCodec) {
@@ -273,7 +292,8 @@ export function qcMode(env: Record<string, string | undefined> = process.env): "
   return "fail";
 }
 
-export async function runQc(videoFile: string, props: Pick<VideoProps, "format" | "durationInFrames">, opts: { mode?: "fail" | "warn" } = {}): Promise<QcReport> {
+// opts.encoder — RenderResult.encoder: при постоянном качестве битрейт не проверяется.
+export async function runQc(videoFile: string, props: Pick<VideoProps, "format" | "durationInFrames">, opts: { mode?: "fail" | "warn"; encoder?: EncoderSettings | null } = {}): Promise<QcReport> {
   const file = path.resolve(videoFile);
   const size = FORMAT_SIZE[props.format] ?? FORMAT_SIZE.shorts;
   const expected = { durationSec: Math.round((props.durationInFrames / FPS) * 1000) / 1000, width: size.width, height: size.height, fps: FPS };
@@ -312,7 +332,9 @@ export async function runQc(videoFile: string, props: Pick<VideoProps, "format" 
     blacks = findBlacks(vf.stdout, W, H, 10);
   }
 
-  const base = { expected, probe, audio, silences, blacks };
+  const enc = opts.encoder;
+  const encoder: QcEncoder | undefined = enc ? { quality: enc.quality, crf: enc.crf, videoBitrate: enc.videoBitrate, x264Preset: enc.x264Preset } : undefined;
+  const base = { expected, probe, audio, silences, blacks, ...(encoder ? { encoder } : {}) };
   const issues = evaluateQc(base, opts.mode ?? "fail");
   return { file, checkedAt: new Date().toISOString(), ok: !issues.some((i) => i.severity === "error"), ...base, issues };
 }

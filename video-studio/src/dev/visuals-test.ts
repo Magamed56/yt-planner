@@ -862,6 +862,33 @@ await test("Стоки: клип по одному общему слову (wate
   assert.ok(fit(q12, "old hospital doctor notebook", "female doctor, hospital, doctor, nurse, clinic, female, medical, healthcare, health, woman, patient"));
   assert.ok(fit(q11, "rocket launch night", "rocket, thrusters, nasa, space shuttle, endeavor, atlantis, discovery, space ship, rocket launch, sp"));
   assert.ok(fit(q11, "old circuit board closeup", "mother board, electronic, computer, electronics, loop, board, components, chips, tech, technology, m"));
+  // Прогон после правки (38022757599): черепаха с тегом «wrinkled» прошла — причастие сочли
+  // главным предметом. Главный — «fingertips»; клип с пальцами по-прежнему берём.
+  assert.equal(fit(q12, "wrinkled fingertips water bath", "tortoise, reptile, grass, winks, to wink, folds, wrinkled, nature, old, eye"), false);
+  assert.ok(fit(q12, "wrinkled fingertips water bath", "wrinkled fingers, skin, water, hands, close up"));
+  // Прогон 38063702244: на «iron helmet artifact» (06a) прошло ущелье Iron Gates — совпал материал.
+  // Материал перед предметом — признак: главный здесь «helmet».
+  const q06 = ["viking helmet museum", "archaeology excavation site", "iron helmet artifact", "old oil painting", "opera stage theater", "film reel projector", "bronze age artifact"];
+  assert.equal(fit(q06, "iron helmet artifact", "iron gates gorge, danube river, romania, dubova, natural scenery, rocky cliffs, lush greenery, windi"), false);
+  assert.ok(fit(q06, "iron helmet artifact", "helmet, viking, iron, armor, museum"));
+  assert.ok(fit(q06, "film reel projector", "movie projector, animation, reel, film, retro, nostalgia, theater, wheel, roll, motion, vintage, cla"));
+  // Материал без предмета следом — сам предмет: «wet hands holding stones» по-прежнему ищет камни.
+  assert.ok(fit(q12, "wet hands holding stones", "stones, hands, water, wet"));
+});
+
+// Сцены media в рубриках «настоящих фото» оставлены с Commons первым: прогон CI 38063702244
+// с видео стока первым дал на 3 таких сцены 2 промаха — человек на поле вместо тигра в траве
+// (совпало «grass»), ущелье Железные Ворота вместо шлема викинга (совпало «iron»).
+await test("realFirst: сцена media тоже сначала ищет реальные фото", async ({ publicDir, cacheDir }) => {
+  const { fn, calls } = mockFetch((c) => {
+    if (c.url.startsWith("https://commons.wikimedia.org/")) return json(200, { query: { pages: [commonsPage(812, 1, "Tiger walking through grass", { width: 3000, height: 4000 })] } });
+    if (c.url.startsWith("https://thumb.wikimedia.org/")) return new Response(JPG, { headers: { "content-type": "image/jpeg" } });
+    return null;
+  });
+  const env = { VISUALS: "pixabay,wikimedia", PIXABAY_API_KEY: "k" };
+  const r = await findVisual(scene({ id: "s4", kind: "media", visualQuery: "tiger walking grass" }), { ...ctxFor(publicDir), realFirst: true, topicQueries: Q10A }, { fetch: fn, env, log, cacheDir });
+  assert.equal(r.credit?.provider, "Wikimedia Commons");
+  assert.ok(!calls.some((c) => c.url.startsWith("https://pixabay.com/")), "до стока дело не дошло");
 });
 
 await test("Служебные категории Commons и слова-омонимы не отсекают нормальные фото", () => {

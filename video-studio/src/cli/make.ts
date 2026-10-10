@@ -620,7 +620,7 @@ async function checkRender(render: RenderResult, props: VideoProps, runDir: stri
   }
   let report: QcReport;
   try {
-    report = await runQc(render.videoFile, props, { mode });
+    report = await runQc(render.videoFile, props, { mode, encoder: render.encoder });
   } catch (e) {
     console.warn(`  ⚠ QC не выполнен: ${errText(e).split("\n")[0]}`);
     return null;
