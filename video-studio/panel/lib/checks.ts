@@ -280,10 +280,10 @@ function visualLines(f: FileFacts<CreditFacts>, ctx: CheckContext): CheckLine[] 
     if (c.ai) return [{ level: "info", text: `Кадры — только картинки ИИ (${c.ai}).` }];
     return [{ level: "warn", text: `В ролике нет ни видео, ни фото — только графика (в описании нет блока «Видео и фото»).${stockHint(ctx.stockKeysMissing)}` }];
   }
-  // Рубрика «настоящих фото»: конвейер так и задуман, пересборка с ключами ничего не изменит —
-  // остаётся проверить глазами, что фото по теме.
+  // Рубрика «настоящих фото»: конвейер так и задуман — остаётся проверить глазами, что фото по
+  // теме. Без ключей стоков сцены media (там сначала видео стока) тоже ушли в фото — подсказка.
   if (ctx.realPhotos && !c.stockVideo && !c.stockOther && !hiddenStock) {
-    return [{ level: "info", text: `Кадры — фото (${list}): в этой рубрике сначала ищутся настоящие фото, а не сток (сток первым — только в сценах media без имени собственного). Проверьте, что они по теме.` }];
+    return [{ level: "info", text: `Кадры — фото (${list}): в этой рубрике сначала ищутся настоящие фото, а не сток (сток первым — только в сценах media без имени собственного). Проверьте, что они по теме.${ctx.stockKeysMissing === true ? stockHint(true) : ""}` }];
   }
   if (!stock) {
     const archive = c.providers.map((p) => p.name).join(", ") || c.hiddenProviders.join(", ") || "архивов";

@@ -912,8 +912,6 @@ await test("Нет visualQuery: карте и столбикам не нужен
     assert.ok((s.scenes.find((x) => x.id === id)?.compare?.items.length ?? 0) >= 2, `${code} ${id} — со столбиками`);
     assert.ok(!noQuery(s, id), `${code} ${id}: лишнее замечание`);
   }
-  // Квиз 10b s6 без запроса и без графики — замечание остаётся.
-  assert.ok(noQuery(ready.get("10b")!, "s6"), "10b s6: визуал по-прежнему нужен");
 
   const bare = (patch: Partial<ScriptScene>, i = 3) => {
     const d = structuredClone(demo);

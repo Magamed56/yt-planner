@@ -130,11 +130,15 @@ interface Step {
 // если фото нашлось у источника, стоящего раньше. Порядок VISUALS при этом
 // сохраняется, а AI-генерация остаётся там, где её поставил пользователь.
 // realFirst — реальные фото (kind "photo") переезжают в начало плана.
+// videoFirst (с realFirst) — сцена media без имени собственного: сначала видео
+// стоков, затем реальные фото, и только потом стоковые фото и генерация —
+// не нашлось клипа, так лучше настоящее фото, чем стоковое.
 export function buildPlan(
   providers: { provider: VisualProvider; key: string }[],
   format: VisualContext["format"],
   preferImages: boolean,
   realFirst = false,
+  videoFirst = false,
 ): Step[] {
   const plan: Step[] = [];
   let group: { provider: VisualProvider; key: string }[] = [];
@@ -153,7 +157,13 @@ export function buildPlan(
     for (const stage of p.provider.stages(format)) plan.push({ ...p, stage });
   }
   flush();
-  const ordered = realFirst ? [...plan.filter((s) => s.provider.kind === "photo"), ...plan.filter((s) => s.provider.kind !== "photo")] : plan;
+  const photo = (s: Step) => s.provider.kind === "photo";
+  const stockVideo = (s: Step) => s.provider.kind === "stock" && s.stage.media === "video";
+  const ordered = !realFirst
+    ? plan
+    : videoFirst
+      ? [...plan.filter(stockVideo), ...plan.filter(photo), ...plan.filter((s) => !photo(s) && !stockVideo(s))]
+      : [...plan.filter(photo), ...plan.filter((s) => !photo(s))];
   return preferImages ? ordered.filter((s) => s.stage.media === "image") : ordered;
 }
 
@@ -256,13 +266,14 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
     // Сцена media обещает живое видео на весь экран, а рубрика «настоящих фото»
     // ставила Commons первым и здесь: 10a (nature) — 7 фото, 0 видео (прогон CI
     // 38020777592). Без имени собственного («tiger walking grass») сначала видео
-    // стока; с именем (Greenland shark, Apollo Guidance Computer) — Commons, сток
-    // такой клип без имени всё равно не берёт (stockFit). VISUALS_PREFER=real —
-    // явный выбор пользователя, его не меняем.
-    const liveVideo = scene.kind === "media" && query.proper.length === 0 && query.heads.length === 0;
-    const realFirst = (Boolean(ctx.realFirst) && !liveVideo) || prefer === "real";
+    // стока, а без клипа — всё равно реальное фото раньше стокового; с именем
+    // (Greenland shark, Apollo Guidance Computer) — Commons, сток такой клип без
+    // имени всё равно не берёт (stockFit). VISUALS_PREFER=real — явный выбор
+    // пользователя, его не меняем.
+    const realFirst = Boolean(ctx.realFirst) || prefer === "real";
+    const videoFirst = scene.kind === "media" && query.proper.length === 0 && prefer !== "real";
     const perScene = { calls: 0 };
-    for (const step of buildPlan(ready, ctx.format, prefer === "image", realFirst)) {
+    for (const step of buildPlan(ready, ctx.format, prefer === "image", realFirst, videoFirst)) {
       const { provider } = step;
       if (disabled.has(provider.name)) continue;
       if (provider.kind !== "ai" && queries.length === 0) continue;

@@ -476,6 +476,11 @@ await test("Реальные фото первыми: realFirst и рубрик�
   assert.deepEqual(plain, ["pexels:video", "pixabay:video", "pexels:image", "pixabay:video", "wikimedia:image", "openverse:image", "cloudflare:image"]);
   const real = buildPlan(all, "shorts", false, true).map((s) => s.provider.name);
   assert.deepEqual(real, ["wikimedia", "openverse", "pexels", "pixabay", "pexels", "pixabay", "cloudflare"]);
+  // Сцена media без имени: сначала видео стоков, без клипа — реальные фото раньше стоковых фото.
+  const live = buildPlan(all, "shorts", false, true, true).map((s) => `${s.provider.name}:${s.stage.media}`);
+  assert.deepEqual(live, ["pexels:video", "pixabay:video", "pixabay:video", "wikimedia:image", "openverse:image", "pexels:image", "cloudflare:image"]);
+  // Без рубрики «настоящих фото» videoFirst ничего не меняет.
+  assert.deepEqual(buildPlan(all, "shorts", false, false, true).map((s) => `${s.provider.name}:${s.stage.media}`), plain);
 
   assert.equal(realFirstForPillar("history", {}), true);
   assert.equal(realFirstForPillar("nature", {}), true);

@@ -260,7 +260,13 @@ export function evaluateQc(input: Omit<QcReport, "issues" | "ok" | "checkedAt" |
   if (!constantQuality && vk !== null && p.width && p.height) {
     const minMbps = QC_LIMITS.minBitrateMbps1080 * Math.min(1, (p.width * p.height) / (1920 * 1080));
     if (vk / 1000 < minMbps) {
-      warn("bitrate", `средний битрейт видео ${(vk / 1000).toFixed(1)} Мбит/с — ниже ~${minMbps.toFixed(0)} Мбит/с, которые YouTube советует для ${Math.min(p.width, p.height)}p; после перекодирования YouTube возможны артефакты. Поднимите качество: VIDEO_QUALITY=max или VIDEO_CRF=14.`);
+      // VIDEO_BITRATE сильнее VIDEO_CRF (render.ts → encoderSettings): совет — под тот режим, что был.
+      const fix = input.encoder?.videoBitrate
+        ? `поднимите VIDEO_BITRATE (например 16M) или уберите его — тогда VIDEO_QUALITY=high (CRF 15)`
+        : crf !== null
+          ? `VIDEO_QUALITY=high (CRF 15) или VIDEO_CRF=14`
+          : `VIDEO_QUALITY=max или VIDEO_CRF=14`;
+      warn("bitrate", `средний битрейт видео ${(vk / 1000).toFixed(1)} Мбит/с — ниже ~${minMbps.toFixed(0)} Мбит/с, которые YouTube советует для ${Math.min(p.width, p.height)}p; после перекодирования YouTube возможны артефакты. Поднимите качество: ${fix}.`);
     }
   }
   if (p.audioCodec) {

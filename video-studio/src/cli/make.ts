@@ -405,7 +405,7 @@ async function main() {
     const next: Record<string, ManifestEntry> = {};
     const minDur = (i: number) => voices[i].durationMs / 1000 + 0.8;
     const realFirst = realFirstForPillar(pillar);
-    if (realFirst) console.log(`  рубрика «${pillar}»: сначала реальные фото (Wikimedia Commons, Openverse)`);
+    if (realFirst) console.log(`  рубрика «${pillar}»: сначала реальные фото (Wikimedia Commons, Openverse); в сценах media без имени собственного — сначала видео стоков`);
     const keys = script.scenes.map((scene) => visualKey(scene, format, process.env, { realFirst }));
     // Запросы всех сцен: слово, которое повторяется во многих («cat»), — предмет ролика (visuals/relevance.ts).
     const topicQueries = script.scenes.map((s) => s.visualQuery ?? "");
