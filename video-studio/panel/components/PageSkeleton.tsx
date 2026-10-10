@@ -1,6 +1,6 @@
 // «Скелет» экрана, пока сервер собирает данные из GitHub и YouTube (loading.tsx): меню и
 // вкладки — сразу, на месте содержимого — серые блоки. Так переход между вкладками мгновенный.
-import AppShell from "./AppShell";
+import AppShell, { type NavItem } from "./AppShell";
 
 type Kind = "feed" | "list" | "stats";
 
@@ -40,9 +40,11 @@ function Blocks({ kind }: { kind: Kind }) {
   );
 }
 
-export default function PageSkeleton({ active, kind }: { active: "feed" | "runs" | "stats"; kind: Kind }) {
+export default function PageSkeleton({ active, kind }: { active: NavItem; kind: Kind }) {
+  // Страница канала на другом языке — без карточки запаса расписания русского канала.
+  const runway = !active.startsWith("lang:");
   return (
-    <AppShell active={active} updated="" activeRuns={0} runwayDays={null} runwayLabel={null} loading>
+    <AppShell active={active} updated="" activeRuns={0} runwayDays={runway ? null : undefined} runwayLabel={null} loading>
       <main className={kind === "feed" ? "skeleton" : "page skeleton"} aria-busy="true" aria-label="Загружаю">
         <Blocks kind={kind} />
       </main>

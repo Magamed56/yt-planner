@@ -120,9 +120,11 @@ export interface GhRelease {
   tag_name: string;
   name: string | null;
   html_url: string;
-  created_at: string;
+  created_at: string; // у релиза это дата коммита, а не публикации
+  published_at?: string | null;
   draft: boolean;
   assets: GhAsset[];
+  body?: string | null; // текст релиза — workflow кладёт туда description.txt
 }
 
 // Ссылка на следующую страницу из заголовка Link: <…?page=2>; rel="next" — путь без адреса API.
