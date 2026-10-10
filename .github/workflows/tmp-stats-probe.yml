@@ -18,24 +18,9 @@ jobs:
         run: |
           echo "HISTORY_BEGIN"; printf '%s\n' "$H"; echo "HISTORY_END"
           echo "COMP_BEGIN"; printf '%s\n' "$C"; echo "COMP_END"
-      - name: Публичная лента канала
+      - name: Названия роликов (oEmbed)
         run: |
-          html=$(curl -sL --max-time 30 -H 'Accept-Language: ru-RU,ru' 'https://www.youtube.com/@sutzaminutu')
-          cid=$(printf '%s' "$html" | grep -o '"externalId":"UC[^"]*"' | head -1 | cut -d'"' -f4)
-          [ -z "$cid" ] && cid=$(printf '%s' "$html" | grep -o 'channel_id=UC[A-Za-z0-9_-]*' | head -1 | cut -d= -f2)
-          echo "CHANNEL_ID $cid"
-          curl -sL --max-time 30 "https://www.youtube.com/feeds/videos.xml?channel_id=$cid" > feed.xml
-          python3 - <<'PY'
-          import xml.etree.ElementTree as ET
-          ns={'a':'http://www.w3.org/2005/Atom','yt':'http://www.youtube.com/xml/schemas/2015','m':'http://search.yahoo.com/mrss/'}
-          try:
-              r=ET.parse('feed.xml').getroot()
-          except Exception as e:
-              print('FEED_ERROR', e); print(open('feed.xml').read()[:500]); raise SystemExit
-          print('FEED_BEGIN')
-          for e in r.findall('a:entry',ns):
-              vid=e.find('yt:videoId',ns).text; t=e.find('a:title',ns).text; p=e.find('a:published',ns).text
-              g=e.find('m:group',ns); st=g.find('m:community/m:statistics',ns); rt=g.find('m:community/m:starRating',ns)
-              print('\t'.join([vid,p,st.get('views') if st is not None else '',rt.get('count') if rt is not None else '',t]))
-          print('FEED_END')
-          PY
+          for id in zXIEtaqBmnY wYQ68wsoNuA lKJtM788uaE JKwX3NHM5Uw gbrWoDJ4Ux0 KIfOfMRkZT4; do
+            t=$(curl -s --max-time 20 "https://www.youtube.com/oembed?url=https://www.youtube.com/shorts/$id&format=json" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("title"))' 2>/dev/null)
+            echo "TITLE $id $t"
+          done
