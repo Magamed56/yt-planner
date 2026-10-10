@@ -457,9 +457,10 @@ function looseHas(stems: string[], s: string): boolean {
 // «tire tread wet road», подсолнух в руке на «hand holding smartphone night» —
 // по одному общему слову (water, road, hand) прошли 8 клипов не по теме из 10.
 // Поэтому клип берём, если в описании есть главный предмет сцены — первое
-// конкретное существительное запроса (сценарист ставит его первым) — или хотя
-// бы половина веса слов сюжета (без признаков и действий: «holding» не в счёт;
-// «books» на «old library books» — да, одно «road» на «tire tread wet road» — нет).
+// конкретное существительное запроса (сценарист ставит его первым; причастие
+// вроде «wrinkled» — не предмет) — или хотя бы половина веса слов сюжета (без
+// признаков и действий: «holding» не в счёт; «books» на «old library books» —
+// да, одно «road» на «tire tread wet road» — нет).
 // Предмет ролика (cat в ролике про кошек) обязателен: собака на «person
 // petting cat» — промах. Имя собственное (Apollo, Tenochtitlan) сток не покажет —
 // такой клип берём, только если имя есть в описании, иначе очередь реальных фото.
@@ -483,7 +484,12 @@ export function stockFit(q: VisualQuery, text: string): Fit {
   // Слова сюжета: предметы и обстановка; главный — первое конкретное существительное.
   const plot = q.terms.filter((t) => t.weight >= 0.5 && t.kind !== "action");
   const found = plot.filter((t) => looseHas(stems, t.stem));
-  const head = plot.find((t) => t.weight >= 1);
+  // Причастие на -ed («wrinkled») — признак, а не предмет: classify() считает его
+  // существительным, и черепаха с тегом «wrinkled» прошла на «wrinkled fingertips
+  // water bath» (прогон CI 38022757599). Главным берём следующее слово; в вес
+  // сюжета причастие по-прежнему идёт. classify() не трогаем — на нём пороги Commons.
+  const participle = (t: Term) => !q.proper.includes(t.stem) && t.word.length > 5 && t.word.endsWith("ed") && !t.word.endsWith("eed");
+  const head = plot.find((t) => t.weight >= 1 && !participle(t));
   if (plot.length === 0) {
     const ok = recall >= 0.3;
     return { ...base, ok, recall, score: recall, why: ok ? `совпадение ${recall.toFixed(2)}` : "в описании нет слов запроса" };

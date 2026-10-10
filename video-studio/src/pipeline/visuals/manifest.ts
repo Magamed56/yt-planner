@@ -30,7 +30,8 @@ const FILE = "manifest.json";
 // проверки «по теме» в них бывали гравюры и случайные совпадения слов)
 // подбираются заново один раз; дальше снова берутся из манифеста.
 // 3 — стоки: главный предмет сцены или половина слов сюжета (stockFit).
-export const PICK_RULES_VERSION = 3;
+// 4 — причастие (wrinkled) не главный предмет; сцены media в рубриках реальных фото — сначала видео.
+export const PICK_RULES_VERSION = 4;
 
 export function visualKey(scene: ScriptScene, format: Format, env: Env, hints: VisualHints = {}): string {
   const judge = (env.VISUALS_JUDGE ?? "").trim().toLowerCase();
