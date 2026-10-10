@@ -226,12 +226,18 @@ jobs:
           restore-keys: |
             remotion-${{ runner.os }}-${{ hashFiles('video-studio/package-lock.json') }}-
 
-      - name: Кэш голосовых моделей Piper
+      # Голоса Piper и модель распознавания речи для таймингов субтитров (GigaAM, ~280 МБ,
+      # voice/align.ts). v2: в записях v1 модели распознавания нет, а при точном попадании
+      # actions/cache кэш не перезаписывает — модель качалась бы каждый запуск. Голос Piper
+      # из v1 подхватывается через restore-keys, новая запись сохраняется уже с обеими моделями.
+      - name: Кэш локальных моделей (Piper, распознавание речи)
         if: env.MODE != 'draft'
         uses: actions/cache@v6
         with:
           path: video-studio/models
-          key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-v1
+          key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-v2
+          restore-keys: |
+            tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-
 
       # Озвученные сцены прошлых запусков (ключ записи — хэш провайдера, голоса, стиля и текста):
       # пересборка и повтор упавшего запуска не тратят суточную квоту Gemini заново.

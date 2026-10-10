@@ -41,7 +41,10 @@
 - `src/pipeline/contracts.ts` — интерфейсы модулей и **полный список переменных окружения**
   (их же документирует `.env.example`). Меняй контракты только аддитивно.
 - `src/pipeline/{script,voice,visuals,audio}/` — модули конвейера (озвучка: общий кэш между запусками —
-  `voice/shared-cache.ts`, `.cache/voice`; запасной голос и поле `voice` в qc.json — `voice/fallback.ts`); `props.ts` (сборка props),
+  `voice/shared-cache.ts`, `.cache/voice`; запасной голос и поле `voice` в qc.json — `voice/fallback.ts`;
+  тайминги слов без провайдера и нарезка общей озвучки Gemini на сцены — по распознанной речи,
+  `voice/align.ts` (GigaAM через sherpa-onnx-node, модель в `models/`, `CAPTION_ALIGN=0` — выкл.;
+  замер на ролике из релиза — `src/dev/align-check.ts`, не тест: нужна модель); `props.ts` (сборка props),
   `render.ts` (bundle → renderMedia/renderStill), `youtube.ts` (resumable-загрузка, publishAt),
   `srt.ts`, `meta.ts` (описание/теги, подвал канала), `slug.ts`, `channel.ts` (channel.json, слоты
   расписания через Intl — DST-безопасно), `instagram.ts` (Reels: контейнер → rupload → статус →

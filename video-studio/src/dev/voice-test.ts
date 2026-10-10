@@ -386,7 +386,7 @@ async function live(args: string[]) {
     const r = await provider.synthesize(scene.narration, path.join(outDir, scene.id));
     const ms = Date.now() - t0;
     const speech = r.words.length ? `${r.words[0]!.startMs}–${r.words.at(-1)!.endMs} мс` : "—";
-    console.log(`\n${scene.id}: ${(r.durationMs / 1000).toFixed(2)} с, слов ${r.words.length} (${r.wordsSource === "provider" ? "тайминги провайдера" : "оценка по звуку"}), речь ${speech}, синтез ${ms} мс${r.cached ? " (из кэша)" : ""}`);
+    console.log(`\n${scene.id}: ${(r.durationMs / 1000).toFixed(2)} с, слов ${r.words.length} (${r.wordsSource === "provider" ? "тайминги провайдера" : r.wordsSource === "aligned" ? "по распознанной речи" : "оценка по звуку"}), речь ${speech}, синтез ${ms} мс${r.cached ? " (из кэша)" : ""}`);
     console.log(`  ${path.relative(process.cwd(), r.file)}`);
     for (const w of r.words.slice(0, 8)) console.log(`  ${String(w.startMs).padStart(6)} → ${String(w.endMs).padStart(6)}  ${w.text}`);
     if (r.words.length > 8) console.log(`  … ещё ${r.words.length - 8}`);
@@ -394,6 +394,9 @@ async function live(args: string[]) {
 }
 
 const argv = process.argv.slice(2);
+// Офлайн-проверкам выравнивание по речи не нужно: без модели оно полезло бы в сеть
+// (оно проверяется в align-test.ts). В --live — как в настоящей сборке.
+if (argv[0] !== "--live") process.env.CAPTION_ALIGN ??= "0";
 const run = argv[0] === "--live" ? live(argv.slice(1)) : offline();
 run
   .then(() => {

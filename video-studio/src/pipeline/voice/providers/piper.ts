@@ -3,17 +3,15 @@
 // нейроголосов Edge/Gemini, зато работает всегда: запасной вариант для CI и
 // для тех, у кого облачные TTS заблокированы.
 
-import { spawn } from "node:child_process";
-import { createWriteStream, existsSync } from "node:fs";
-import { mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { rm } from "node:fs/promises";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import { envPath } from "../../audio/paths";
 import { LANGS } from "../../lang";
-import { TtsError, linkedAbort, warnOnce } from "../http";
+import { TtsError, warnOnce } from "../http";
+import { downloadTarModel, tarModelReady, type TarModel } from "../model-download";
 import type { RawProvider } from "../provider";
 
 export const PIPER_DEFAULT_VOICE = "ru_RU-dmitri-medium";
@@ -81,125 +79,26 @@ export function ensurePiperModel(voice: string): Promise<string> {
   return p;
 }
 
-// Метка «распаковано до конца»: пишется только после того, как tar вышел с
-// кодом 0. Проверять одни .onnx и tokens.txt нельзя — в архиве они идут
-// ПЕРЕД ~390 файлами espeak-ng-data, и прерванная распаковка (Ctrl+C,
-// антивирус, нет места) выглядела бы готовой моделью навсегда.
-const COMPLETE_MARKER = ".complete";
-
 function modelComplete(dir: string, voice: string): boolean {
-  if (existsSync(path.join(dir, COMPLETE_MARKER))) return true;
-  // Папку могли распаковать вручную (так советуют сообщения ниже) — тогда
+  // Папку могли распаковать вручную (так советуют сообщения загрузчика) — тогда
   // проверяем все нужные файлы, включая данные espeak и последний член архива.
   const need = [`${voice}.onnx`, `${voice}.onnx.json`, "tokens.txt", path.join("espeak-ng-data", "phontab"), path.join("espeak-ng-data", "phondata")];
   return need.every((f) => existsSync(path.join(dir, f)));
 }
 
-class TarExitError extends TtsError {}
-
 async function downloadModel(voice: string): Promise<string> {
-  const dir = piperModelDir(voice);
-  if (modelComplete(dir, voice)) return dir;
-  const root = path.dirname(dir);
-  await mkdir(root, { recursive: true });
-  const name = `vits-piper-${voice}.tar.bz2`;
-  const url = `${MODELS_URL}/${name}`;
-  const archive = path.join(root, name);
-  for (let attempt = 1; ; attempt++) {
-    // Архив прошлой попытки уже скачан целиком (.part переименовывается только
-    // после успешной загрузки), а распаковка не дошла до конца — берём его.
-    const leftover = existsSync(archive);
-    if (leftover) console.log(`[озвучка] Распаковываю ранее скачанный ${name}…`);
-    else await fetchArchive(voice, url, archive, root);
-    await rm(dir, { recursive: true, force: true }); // остатки прерванной распаковки
-    try {
-      await extractTarBz2(archive, root);
-      break;
-    } catch (e) {
-      await rm(dir, { recursive: true, force: true });
-      // Старый архив оказался битым — один раз качаем заново.
-      if (leftover && attempt === 1 && e instanceof TarExitError) {
-        await rm(archive, { force: true });
-        continue;
-      }
-      throw e;
-    }
-  }
-  await rm(archive, { force: true });
-  if (!modelComplete(dir, voice)) {
-    throw new TtsError(`Piper: после распаковки в ${dir} нет ${voice}.onnx, tokens.txt или espeak-ng-data. Удалите папку — голос скачается заново.`);
-  }
-  await writeFile(path.join(dir, COMPLETE_MARKER), "");
+  const model: TarModel = {
+    label: "Piper",
+    title: `голос Piper ${voice} (~65 МБ)`,
+    url: `${MODELS_URL}/vits-piper-${voice}.tar.bz2`,
+    dir: piperModelDir(voice),
+    complete: (d) => modelComplete(d, voice),
+    httpHint: "Проверьте имя голоса TTS_VOICE.",
+  };
+  if (tarModelReady(model)) return model.dir;
+  const dir = await downloadTarModel(model);
   console.log(`[озвучка] Голос ${voice} готов.`);
   return dir;
-}
-
-async function fetchArchive(voice: string, url: string, archive: string, root: string): Promise<void> {
-  const part = archive + ".part";
-  console.log(`[озвучка] Скачиваю голос Piper ${voice} (~65 МБ) в ${root}…`);
-
-  // Таймаут «простоя»: если данные не идут 60 с — обрываем, а не ждём вечно.
-  const idleMs = 60_000;
-  const ctrl = new AbortController();
-  let idle = setTimeout(() => ctrl.abort(), idleMs);
-  const bump = () => {
-    clearTimeout(idle);
-    idle = setTimeout(() => ctrl.abort(), idleMs);
-  };
-  try {
-    const { signal, cleanup } = linkedAbort(30 * 60_000, ctrl.signal);
-    try {
-      const res = await fetch(url, { signal });
-      if (!res.ok || !res.body) throw new TtsError(`Piper: не удалось скачать модель (HTTP ${res.status}) ${url}. Проверьте имя голоса TTS_VOICE.`);
-      const total = Number(res.headers.get("content-length")) || 0;
-      let got = 0;
-      let lastPct = -10;
-      const body = Readable.fromWeb(res.body as import("node:stream/web").ReadableStream<Uint8Array>);
-      body.on("data", (chunk: Buffer) => {
-        bump();
-        got += chunk.length;
-        const pct = total ? Math.floor((got / total) * 100) : 0;
-        if (total && pct >= lastPct + 20) {
-          lastPct = pct;
-          console.log(`[озвучка]   ${pct}% (${(got / 1e6).toFixed(0)} МБ)`);
-        }
-      });
-      await pipeline(body, createWriteStream(part));
-    } finally {
-      cleanup();
-    }
-  } catch (e) {
-    await rm(part, { force: true });
-    if (e instanceof TtsError) throw e;
-    throw new TtsError(
-      `Piper: загрузка модели прервалась (${(e as Error).message}). Скачайте вручную ${url} и распакуйте в ${root}.`,
-      { cause: e },
-    );
-  } finally {
-    clearTimeout(idle);
-  }
-  await rename(part, archive);
-}
-
-// В Node нет bzip2, поэтому распаковываем системным tar: он есть в Windows 10+
-// (bsdtar), macOS и Linux. Запускаем из папки моделей с относительным именем
-// архива — так GNU tar из Git Bash не примет «C:» за адрес удалённого хоста.
-function extractTarBz2(archive: string, cwd: string): Promise<void> {
-  const winTar = process.env.SystemRoot ? path.join(process.env.SystemRoot, "System32", "tar.exe") : "";
-  const tar = process.platform === "win32" && winTar && existsSync(winTar) ? winTar : "tar";
-  return new Promise((resolve, reject) => {
-    const p = spawn(tar, ["-xjf", path.basename(archive)], { cwd, stdio: ["ignore", "ignore", "pipe"] });
-    let err = "";
-    p.stderr.on("data", (d: Buffer) => (err += d.toString()));
-    p.on("error", (e) =>
-      reject(new TtsError(`Piper: не найдена утилита tar (${e.message}). Распакуйте ${archive} вручную (например, 7-Zip) в ${cwd}.`, { cause: e })),
-    );
-    p.on("close", (code) =>
-      code === 0
-        ? resolve()
-        : reject(new TarExitError(`Piper: tar не смог распаковать ${archive} (код ${code}): ${err.slice(0, 300)}. Распакуйте вручную в ${cwd}.`)),
-    );
-  });
 }
 
 let sherpa: SherpaModule | null = null;

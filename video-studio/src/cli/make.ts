@@ -223,7 +223,7 @@ async function synthesizeAll(provider: VoiceProvider, script: VideoScript, publi
 }
 
 function logVoice(scene: VideoScript["scenes"][number], result: VoiceResult): void {
-  const src = result.wordsSource === "provider" ? "тайминги от провайдера" : "тайминги оценены по звуку";
+  const src = result.wordsSource === "provider" ? "тайминги от провайдера" : result.wordsSource === "aligned" ? "тайминги по распознанной речи" : "тайминги оценены по звуку";
   console.log(`  ${scene.id} (${scene.kind}): ${(result.durationMs / 1000).toFixed(2)} с, ${result.words.length} слов, ${src}${result.cached ? " (из кэша)" : ""}`);
 }
 

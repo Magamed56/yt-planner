@@ -26,6 +26,7 @@ interface SharedEntry {
   kind: "pcm" | "mp3";
   file: string; // звук рядом с json
   words: WordTiming[] | null;
+  aligned?: WordTiming[] | null; // слова по распознанной речи (voice/align.ts), мс от начала звука; нет — старая запись
   createdAt: string;
   provider: string; // для человека, который заглянет в папку
   voice: string;
@@ -57,7 +58,8 @@ export async function readShared(dir: string, key: string): Promise<RawAudio | n
     const words = Array.isArray(e.words) ? e.words : null;
     if (e.kind === "mp3") return bytes.length ? { kind: "mp3", bytes: new Uint8Array(bytes), words } : null;
     const audio = decodeWav(bytes);
-    return audio.channels[0]?.length ? { kind: "pcm", audio, words } : null;
+    const aligned = Array.isArray(e.aligned) ? e.aligned : null;
+    return audio.channels[0]?.length ? { kind: "pcm", audio, words, ...(aligned ? { aligned } : {}) } : null;
   } catch {
     return null; // нет записи, битый json или звук — озвучим заново
   }
@@ -69,7 +71,8 @@ export async function writeShared(dir: string, key: string, raw: RawAudio, meta:
   if (raw.fallback) return;
   const hash = sharedKey(key);
   const file = `${hash}.${raw.kind === "mp3" ? "mp3" : "wav"}`;
-  const entry: SharedEntry = { v: 1, key: hash, kind: raw.kind, file, words: raw.words ?? null, createdAt: now.toISOString(), ...meta };
+  const aligned = raw.kind === "pcm" && raw.aligned?.length ? raw.aligned : null;
+  const entry: SharedEntry = { v: 1, key: hash, kind: raw.kind, file, words: raw.words ?? null, ...(aligned ? { aligned } : {}), createdAt: now.toISOString(), ...meta };
   const tmp = `.${process.pid}-${Date.now()}`;
   try {
     await mkdir(dir, { recursive: true });
