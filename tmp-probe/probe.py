@@ -1,7 +1,7 @@
 # Временный сбор открытых данных о похожих каналах: страница канала (id, название, подписчики из
 # метаданных), официальная RSS-лента (последние 15 роликов: просмотры, лайки, даты, названия) и
 # признак Shorts (/shorts/ID отдаёт 200, обычное видео — перенаправление). Только чтение.
-import json, re, sys, time, urllib.request, xml.etree.ElementTree as ET
+import json, re, sys, time, urllib.parse, urllib.request, xml.etree.ElementTree as ET
 
 UA = {"User-Agent": "Mozilla/5.0", "Accept-Language": "ru-RU,ru;q=0.9"}
 def get(url, method="GET"):
@@ -17,7 +17,7 @@ def get(url, method="GET"):
 ns = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015", "m": "http://search.yahoo.com/mrss/"}
 out = []
 for ref in [l.strip() for l in open("tmp-probe/channels.txt", encoding="utf-8") if l.strip() and not l.startswith("#")]:
-    url = ref if ref.startswith("http") else f"https://www.youtube.com/{ref if ref.startswith('@') else '@'+ref}"
+    url = ref if ref.startswith("http") else "https://www.youtube.com/" + urllib.parse.quote(ref if ref.startswith("@") else "@" + ref)
     st, html = get(url)
     cid = (re.search(r'"externalId":"(UC[\w-]+)"', html) or re.search(r'channel_id=(UC[\w-]+)', html) or [None, None])[1] if st == 200 else None
     title = (re.search(r'<meta property="og:title" content="([^"]*)"', html) or [None, None])[1] if st == 200 else None
