@@ -15,6 +15,10 @@
 #   5. lang = en (kk, uz) — тот же ролик на другом языке: draft переводит сценарий темы в
 #      scripts/<язык>/, render/batch собирают его с каналом channels/<язык>.json (файл в релизе —
 #      en-08a-….mp4). Загрузка в YouTube/Instagram для других языков выключена (свой канал — свой ключ).
+#   6. plan = L01 — «Разбор» (16:9, ~7 минут) на тему из content/long-plan.json: draft пишет
+#      scripts/razbor-L01-….json, batch собирает его горизонтальным (формат — из сценария) в релиз
+#      L01-….mp4 + thumbnail.png 16:9, тексты — в content/videos.json. Один «Разбор» ≈ 3 запроса
+#      Gemini TTS из ~10 в сутки и 40–60 минут раннера; Telegram и Instagram их не берут.
 # Кнопка «Run workflow» появляется, только когда этот файл лежит в ветке по умолчанию.
 
 name: "video-studio: ролик"
@@ -38,7 +42,7 @@ on:
         type: string
         required: false
       plan:
-        description: "Коды тем из content/plan.json через запятую (08a,08b): draft — сценарии по плану; batch — недостающие сценарии, затем сборка всех"
+        description: "Коды тем через запятую: 08a,08b — Shorts из content/plan.json, L01 — «Разбор» из content/long-plan.json. draft — сценарии по плану; batch — недостающие сценарии, затем сборка всех"
         type: string
         required: false
       format:
@@ -272,6 +276,7 @@ jobs:
           if [ "$VIDEO_LANG" != "ru" ]; then lang=(--lang "$VIDEO_LANG"); fi
           if [ -n "$PLAN" ]; then
             # Темы плана: сценарии scripts/sut-<код>-….json, отметка в plan.json; готовые пропускаются.
+            # Коды L01… — «Разборы» из content/long-plan.json → scripts/razbor-L01-….json.
             # Другой язык — перевод русского сценария темы в scripts/<язык>/ (план не меняется).
             npm run script -- --plan "$PLAN" "${lang[@]}"
           elif [ -n "$TOPIC" ]; then
@@ -289,8 +294,10 @@ jobs:
           name: script-${{ github.run_number }}-${{ github.run_attempt }}
           path: |
             video-studio/${{ steps.draft.outputs.script_path || 'scripts/sut-*.json' }}
+            video-studio/scripts/razbor-L*.json
             video-studio/scripts/*/sut-*.json
             video-studio/content/plan.json
+            video-studio/content/long-plan.json
           retention-days: 7
 
       # ---------- render: видео ----------
@@ -375,6 +382,8 @@ jobs:
           # грузят в Studio руками, по коду его находит youtube-fill (тексты — content/videos.json).
           code=""
           if [[ "$(basename "$SCRIPT_PATH")" =~ ^sut-([0-9]{2}[a-z])- ]]; then code="${BASH_REMATCH[1]}"; fi
+          # «Разбор» по длинному плану: scripts/razbor-L01-….json → L01-….mp4.
+          if [[ "$(basename "$SCRIPT_PATH")" =~ ^razbor-([lL][0-9]{2})- ]]; then code="L${BASH_REMATCH[1]:1}"; fi
           # Другой язык — «en-08a-….mp4»: «08a-….mp4» панель и youtube-fill считают роликом русского канала.
           lp=""
           if [ "$VIDEO_LANG" != "ru" ]; then lp="$VIDEO_LANG-"; fi
@@ -383,8 +392,9 @@ jobs:
           # run_attempt: при «Re-run» номер запуска тот же, и тег уже занят.
           tag="video-$lp${code:+$code-}${SLUG:0:60}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
           files=("$mp4" "$RUN_DIR/captions.srt" "$RUN_DIR/description.txt")
-          # instagram.txt и cover.jpg — для ручной публикации Reels с телефона.
-          for f in thumbnail.png cover.jpg instagram.txt qc.json; do
+          # instagram.txt и cover.jpg — для ручной публикации Reels с телефона; thumbnail.jpg — копия
+          # обложки до 2 МБ (её ставит «Разбору» панель, если PNG для YouTube великоват).
+          for f in thumbnail.png thumbnail.jpg cover.jpg instagram.txt qc.json; do
             [ -f "$RUN_DIR/$f" ] && files+=("$RUN_DIR/$f")
           done
           gh release create "$tag" "${files[@]}" --prerelease --target "$GITHUB_SHA" --title "$TITLE" --notes-file "$RUN_DIR/description.txt"
@@ -504,7 +514,10 @@ jobs:
             for c in "${codes[@]}"; do
               c="${c,,}"
               [ -z "$c" ] && continue
-              f=$(compgen -G "$sdir/sut-$c-*.json" | LC_ALL=C sort | head -n 1 || true)
+              # «Разбор» по длинному плану: L01 → scripts/razbor-L01-*.json (формат 16:9 — из сценария).
+              pfx="sut-"
+              if [[ "$c" =~ ^l[0-9]{2}$ ]]; then c="L${c:1}"; pfx="razbor-"; fi
+              f=$(compgen -G "$sdir/$pfx$c-*.json" | LC_ALL=C sort | head -n 1 || true)
               if [ -n "$f" ]; then
                 files+=("$f")
               else
@@ -537,11 +550,16 @@ jobs:
             echo "::error::Для mode=batch укажите сценарии в поле script (список через запятую или маску video-studio/scripts/sut-01*.json) или коды тем в поле plan."
             exit 1
           fi
-          if [ "$n" -gt 10 ]; then
+          # Квота Gemini TTS: Shorts — 1 запрос, «Разбор» (razbor-*) — ≈ 3 (~7000 символов по 2500).
+          tts=0
+          for f in "${files[@]}"; do
+            if [[ "$(basename "$f")" == razbor-* ]]; then tts=$((tts + 3)); else tts=$((tts + 1)); fi
+          done
+          if [ "$tts" -gt 10 ]; then
             if [ "$TTS_FALLBACK" = "none" ]; then
-              echo "::warning::$n роликов за раз: бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные упадут (voice_fallback = none) и соберутся при повторе. Надёжнее по 8–10 за запуск."
+              echo "::warning::$n роликов за раз (≈ $tts запросов озвучки): бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные упадут (voice_fallback = none) и соберутся при повторе. Надёжнее по 8–10 Shorts (или 1 «Разбор» + 5–7 Shorts) за запуск."
             else
-              echo "::warning::$n роликов за раз: бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные озвучит Edge. Надёжнее по 8–10 за запуск."
+              echo "::warning::$n роликов за раз (≈ $tts запросов озвучки): бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные озвучит Edge. Надёжнее по 8–10 Shorts (или 1 «Разбор» + 5–7 Shorts) за запуск."
             fi
           fi
           # Точка отсчёта слотов фиксируется один раз: пока идёт пакет, номера слотов не сдвигаются.
@@ -591,6 +609,7 @@ jobs:
             vfb=$(sed -n 's/^voice_fallback=//p' "$out" | tail -n 1)
             code=""
             if [[ "$(basename "$f")" =~ ^sut-([0-9]{2}[a-z])- ]]; then code="${BASH_REMATCH[1]}"; fi
+            if [[ "$(basename "$f")" =~ ^razbor-([lL][0-9]{2})- ]]; then code="L${BASH_REMATCH[1]:1}"; fi
             note="$status${verr:+ $verr}${yt:+ $yt}${at:+, выйдет $at}"
             [ -n "$vfb" ] && note="$note, голос: $vname"
             if [ -n "$release" ] && [ -n "$run_dir" ] && [ -f "$run_dir/video.mp4" ]; then
@@ -602,7 +621,7 @@ jobs:
               if [ -n "$code" ]; then mp4="$run_dir/$lp$code-${slug:0:60}.mp4"; cp "$run_dir/video.mp4" "$mp4"; fi
               tag="video-$lp${code:+$code-}${slug:0:50}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}-${slot}"
               rfiles=("$mp4" "$run_dir/captions.srt" "$run_dir/description.txt")
-              for x in thumbnail.png cover.jpg instagram.txt youtube-result.json qc.json; do
+              for x in thumbnail.png thumbnail.jpg cover.jpg instagram.txt youtube-result.json qc.json; do
                 [ -f "$run_dir/$x" ] && rfiles+=("$run_dir/$x")
               done
               # instagram.json в релизе = ролик в очереди Instagram (её разбирает отдельный workflow).
@@ -649,8 +668,9 @@ jobs:
           DRAFT_FORMAT: ${{ steps.draft.outputs.format }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          # content/usage.jsonl — журнал расхода LLM и TTS (дописывают script и make).
-          for p in scripts content/plan.json content/videos.json content/usage.jsonl; do
+          # content/usage.jsonl — журнал расхода LLM и TTS (дописывают script и make);
+          # content/long-plan.json — отметка «сценарий готов» у тем «Разбора».
+          for p in scripts content/plan.json content/long-plan.json content/videos.json content/usage.jsonl; do
             if [ -e "$p" ]; then git add -A -- "$p"; fi
           done
           if git diff --cached --quiet; then
@@ -717,10 +737,12 @@ jobs:
             echo "Уведомления не настроены (секреты PANEL_URL и PANEL_NOTIFY_SECRET) — пропускаю."
             exit 0
           fi
-          # Один ролик — нажатие открывает сразу его карточку в панели (/?v=08a), несколько — ленту.
+          # Один ролик — нажатие открывает сразу его карточку в панели (/?v=08a, /?v=L01), несколько — ленту.
           url="/"
-          if [[ "${PLAN:-}" =~ ^[0-9]{2}[a-z]$ ]]; then url="/?v=$PLAN"; fi
-          body=$(jq -n --arg b "${PLAN:-новый ролик} — загрузите в Studio" --arg u "$url" '{title: "Видео готово", body: $b, url: $u}')
+          what="${PLAN:-новый ролик}"
+          if [[ "${PLAN:-}" =~ ^([0-9]{2}[a-z]|[lL][0-9]{2})$ ]]; then url="/?v=$PLAN"; fi
+          if [[ "${PLAN:-}" =~ ^[lL][0-9]{2}$ ]]; then what="«Разбор» $PLAN"; fi
+          body=$(jq -n --arg b "$what — загрузите в Studio" --arg u "$url" '{title: "Видео готово", body: $b, url: $u}')
           curl -fsS --max-time 30 -X POST "${PANEL_URL%/}/api/notify" \
             -H "Authorization: Bearer $PANEL_NOTIFY_SECRET" -H "Content-Type: application/json" -d "$body" > /dev/null
           echo "Уведомление отправлено."
