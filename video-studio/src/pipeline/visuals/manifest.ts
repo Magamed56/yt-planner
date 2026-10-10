@@ -29,7 +29,8 @@ const FILE = "manifest.json";
 // Версия правил отбора (relevance.ts). Поменялась — старые подборы (до
 // проверки «по теме» в них бывали гравюры и случайные совпадения слов)
 // подбираются заново один раз; дальше снова берутся из манифеста.
-export const PICK_RULES_VERSION = 2;
+// 3 — стоки: главный предмет сцены или половина слов сюжета (stockFit).
+export const PICK_RULES_VERSION = 3;
 
 export function visualKey(scene: ScriptScene, format: Format, env: Env, hints: VisualHints = {}): string {
   const judge = (env.VISUALS_JUDGE ?? "").trim().toLowerCase();
