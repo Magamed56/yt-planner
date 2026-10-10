@@ -107,7 +107,8 @@
         "Случайные числа против эффекта",
         "Что от эффекта осталось"
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/razbor-L01-effekt-danninga-kryugera-prostymi-slovami-pravda-ili.json"
     },
     {
       "id": "L02",
