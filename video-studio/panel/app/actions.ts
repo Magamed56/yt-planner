@@ -3,14 +3,16 @@
 // роликов сверяет с планом, ключи остаются на сервере.
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { channelFromJson, isoNoMs, upcomingSlots } from "../../src/pipeline/channel";
+import { channelFromJson, isoNoMs, longScheduleOf, upcomingSlots } from "../../src/pipeline/channel";
+import { isLongCode, mp4Code, normCode } from "../../src/pipeline/codes";
+import { LONG_BUILD_LABEL, LONG_PLAN_FILE, parseLongPlan } from "../../src/pipeline/long-plan";
 import { parsePlan, PLAN_CODE, scriptCode } from "../../src/pipeline/plan";
-import { applyUpdate, fillItemsOf, matchVideos, planUpdates, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
+import { applyUpdate, fillItemsOf, matchVideos, planUpdates, setThumbnail, THUMBNAIL_MAX_BYTES, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
 import { dispatchOnce } from "@/lib/dispatch";
 import { buildFirstComment, commentBlocker, commentProblem, commentUrl, ctaQuestion, type OwnComment } from "@/lib/first-comment";
-import { assetText, dispatchWorkflow, getVariable, GithubError, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
+import { assetBytes, assetText, dispatchWorkflow, getVariable, GithubError, listReleases, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { canRetry, confirmStale } from "@/lib/ops";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
@@ -18,7 +20,7 @@ import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/li
 import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
 import { SESSION_COOKIE } from "@/lib/session";
 import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, parseQueueOrder, QUEUE_ORDER_VAR, queueSort, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
-import { parseUsage, usageSummary } from "@/lib/stats";
+import { isShorts, parseUsage, usageSummary } from "@/lib/stats";
 import { plural } from "@/lib/stages";
 import { channelVideos, commentCheck, postComment, setPublishAt, videoStatuses, youtubeAuth } from "@/lib/youtube";
 
@@ -53,12 +55,22 @@ async function loadChannel() {
   return channelFromJson((await readJson(`${STUDIO_DIR}/channel.json`)) ?? {});
 }
 
-// Коды из плана в порядке плана; чужие и кривые отбрасываем.
-async function planCodes(codes: string[]): Promise<string[]> {
-  const plan = parsePlan(await readJson(`${STUDIO_DIR}/content/plan.json`));
-  const want = new Set(codes.map((c) => c.trim().toLowerCase()).filter((c) => PLAN_CODE.test(c)));
-  return plan.items.map((i) => i.id).filter((id) => want.has(id));
+// План «Разборов» (content/long-plan.json); нет файла — пустой.
+async function readLongPlan() {
+  return parseLongPlan(await readJson(`${STUDIO_DIR}/${LONG_PLAN_FILE}`));
 }
+
+// Коды из плана в порядке плана; чужие и кривые отбрасываем. «Разборы» (L01…) — из длинного
+// плана, после Shorts.
+async function planCodes(codes: string[]): Promise<string[]> {
+  const want = new Set(codes.map((c) => normCode(c)).filter((c): c is string => Boolean(c)));
+  const wantLong = [...want].some((c) => isLongCode(c));
+  const [plan, longPlan] = await Promise.all([readJson(`${STUDIO_DIR}/content/plan.json`).then(parsePlan), wantLong ? readLongPlan() : { items: [] }]);
+  return [...plan.items.filter((i) => PLAN_CODE.test(i.id)), ...longPlan.items].map((i) => i.id).filter((id) => want.has(id));
+}
+
+// Сколько ждать сборки: Shorts ≈ 8–10 минут, «Разбор» — 40–60.
+const buildTime = (codes: string[]) => (codes.some((c) => isLongCode(c)) ? `${LONG_BUILD_LABEL} на «Разбор», ≈ 8–10 минут на Shorts` : "≈ 8–10 минут на ролик");
 
 function slotLabel(iso: string, tz: string): string {
   return new Intl.DateTimeFormat("ru-RU", { timeZone: tz, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
@@ -73,7 +85,8 @@ export async function draftAction(codes: string[]): Promise<DispatchResult | Act
     const [list, channel] = await Promise.all([planCodes(codes), loadChannel()]);
     if (!list.length) return fail("Отметьте темы из плана.");
     const dispatched = await dispatchOnce("video-studio.yml", { mode: "draft", plan: list.join(",") }, "draft", list, channel.schedule.timezone);
-    return { ...ok(`Запущено: сценарии ${codesLabel(list)}. Обычно 1–3 минуты на тему — следите в «Запусках».`), dispatched };
+    const longNote = list.some((c) => isLongCode(c)) ? ", «Разбор» — 3–6 минут" : "";
+    return { ...ok(`Запущено: сценарии ${codesLabel(list)}. Обычно 1–3 минуты на тему${longNote} — следите в «Запусках».`), dispatched };
   });
 }
 
@@ -82,7 +95,7 @@ export async function videosAction(codes: string[]): Promise<DispatchResult | Ac
     const [list, channel] = await Promise.all([planCodes(codes), loadChannel()]);
     if (!list.length) return fail("Отметьте ролики из плана.");
     const dispatched = await dispatchOnce("video-studio.yml", { mode: "batch", plan: list.join(","), upload: "release" }, "batch", list, channel.schedule.timezone);
-    return { ...ok(`Запущено: ${codesLabel(list)} — недостающие сценарии, затем сборка (≈ 8–10 минут на ролик). Видео появится в карточке ролика.`), dispatched };
+    return { ...ok(`Запущено: ${codesLabel(list)} — недостающие сценарии, затем сборка (${buildTime(list)}). Видео появится в карточке ролика.`), dispatched };
   });
 }
 
@@ -124,25 +137,34 @@ export async function retryRunAction(runId: number): Promise<ActionResult> {
 // ---- новые темы в план ----
 
 const PLAN_EXTEND_MAX = 30;
-const planCount = (n: unknown) => Math.min(PLAN_EXTEND_MAX, Math.max(1, Math.floor(Number(n) || 10)));
+const LONG_EXTEND_MAX = 12;
+// long — темы «Разбора» (content/long-plan.json, workflow с long = true): их до 12 за раз.
+const planCount = (n: unknown, long = false) => Math.min(long ? LONG_EXTEND_MAX : PLAN_EXTEND_MAX, Math.max(1, Math.floor(Number(n) || (long ? 6 : 10))));
 
 // Цена — по переменной LLM_PROVIDER (как в workflow «video-studio: план тем»): Claude ищет
 // источники веб-поиском (платно), Gemini — бесплатно, ссылки проверяются запросом по сети.
-export async function planExtendPreviewAction(count: number): Promise<(ActionResult & { confirmLabel: string }) | ActionResult> {
+export async function planExtendPreviewAction(count: number, long = false): Promise<(ActionResult & { confirmLabel: string }) | ActionResult> {
   return guarded(async () => {
-    const n = planCount(count);
+    const isLong = long === true;
+    const n = planCount(count, isLong);
     const provider = ((await getVariable("LLM_PROVIDER").catch(() => null)) ?? "").trim().toLowerCase();
     const cost = provider === "claude" ? "платно: Claude + веб-поиск источников" : "бесплатно (Gemini), ссылки на источники проверяются";
-    return { ok: true, message: `Добавить в план ${n} ${plural(n, "тему", "темы", "тем")} — ${cost}. Около 3–5 минут.`, confirmLabel: `Добавить ${n}` };
+    const what = isLong ? `${n} ${plural(n, "тему", "темы", "тем")} «Разбора» (8–12 фактов с источниками и главы)` : `${n} ${plural(n, "тему", "темы", "тем")}`;
+    return { ok: true, message: `Добавить в план ${what} — ${cost}. Около ${isLong ? "10–20" : "3–5"} минут.`, confirmLabel: `Добавить ${n}` };
   });
 }
 
-export async function planExtendAction(count: number): Promise<DispatchResult | ActionResult> {
+export async function planExtendAction(count: number, long = false): Promise<DispatchResult | ActionResult> {
   return guarded(async () => {
-    const n = planCount(count);
+    const isLong = long === true;
+    const n = planCount(count, isLong);
     const channel = await loadChannel();
-    await dispatchOnce("video-studio-plan.yml", { count: String(n) }, "plan", [], channel.schedule.timezone);
-    return ok(`Запущено: +${n} ${plural(n, "тема", "темы", "тем")} в план. Через 3–5 минут они появятся в ленте как «Тема».`);
+    await dispatchOnce("video-studio-plan.yml", isLong ? { count: String(n), long: "true" } : { count: String(n) }, "plan", [], channel.schedule.timezone);
+    return ok(
+      isLong
+        ? `Запущено: +${n} ${plural(n, "тема", "темы", "тем")} «Разбора». Через 10–20 минут они появятся в ленте и календаре (вт/чт/сб 21:00) как «Тема».`
+        : `Запущено: +${n} ${plural(n, "тема", "темы", "тем")} в план. Через 3–5 минут они появятся в ленте как «Тема».`,
+    );
   });
 }
 
@@ -199,13 +221,14 @@ function textChanges(v: ChannelVideo, i: FillItem): string[] {
 // search — искать ролики ещё и поиском YouTube (≈ 100 единиц квоты): плейлист «Загрузки»
 // (≈ 5 единиц) показывает свежую загрузку не сразу. Без поиска — когда хватает плейлиста.
 async function computeFill(search = true) {
-  const [channel, week1, later, planJson, videos, orderRaw] = await Promise.all([
+  const [channel, week1, later, planJson, videos, orderRaw, longPlan] = await Promise.all([
     loadChannel(),
     readJson(`${STUDIO_DIR}/content/week1-videos.json`),
     readJson(`${STUDIO_DIR}/content/videos.json`),
     readJson(`${STUDIO_DIR}/content/plan.json`),
     channelVideos({ search }),
     getVariable(QUEUE_ORDER_VAR).catch(() => null),
+    readLongPlan().catch(() => ({ items: [] })),
   ]);
   const items: FillItem[] = [];
   for (const it of [...fillItemsOf(week1), ...fillItemsOf(later)]) if (!items.some((x) => x.id === it.id)) items.push(it);
@@ -216,11 +239,12 @@ async function computeFill(search = true) {
   const report = { ...found, matches: byCode.map((x) => x.m) };
   const now = new Date();
   const taken = videos.filter((v) => v.privacyStatus === "private" && v.publishAt && Date.parse(v.publishAt) > now.getTime()).map((v) => v.publishAt!);
-  const updates = planUpdates(report, { schedule: channel.schedule, mode: "slots", now, taken });
+  // «Разборы» (L01…) — в свои слоты вт/чт/сб 21:00, Shorts — в свои.
+  const updates = planUpdates(report, { schedule: channel.schedule, longSchedule: longScheduleOf(channel), mode: "slots", now, taken });
   // Ролик из плана загружен, а текстов для него нет ни в одном списке — заполнить нечем.
   const known = new Set(items.map((i) => i.id));
-  const bare: FillItem[] = parsePlan(planJson)
-    .items.filter((i) => !known.has(i.id))
+  const bare: FillItem[] = [...parsePlan(planJson).items, ...longPlan.items]
+    .filter((i) => !known.has(i.id))
     .map((i) => ({ id: i.id, file: i.id, durationSec: Number.NaN, title: i.title, description: "", tags: [], categoryId: "27", defaultLanguage: "ru", containsSyntheticMedia: true }));
   const withoutTexts = matchVideos(bare, videos)
     .matches.filter((m) => m.video.privacyStatus === "private" && !m.video.publishAt)
@@ -306,7 +330,7 @@ export async function findNewUploadsAction(): Promise<NewUploads | ActionResult>
 // confirmed — что показали владельцу («08a → чт 12:00»): если с тех пор слот заняли или ролик
 // уже заполнен, эту строку не трогаем и говорим почему — ничего не ставится дважды.
 async function applyFill(codes: string[], onlyNew: boolean, confirmed: Map<string, { videoId: string; publishAt: string | null }> = new Map()): Promise<ActionResult> {
-  const want = new Set(codes.map((c) => c.trim().toLowerCase()).filter((c) => PLAN_CODE.test(c)));
+  const want = new Set(codes.map((c) => normCode(c)).filter((c): c is string => Boolean(c)));
   if (!want.size) return fail("Отметьте ролики, которым ставить тексты и время.");
   // Без поиска, если плейлист «Загрузки» уже показывает все нужные ролики (≈ 5 единиц квоты).
   let fill = await computeFill(false);
@@ -327,6 +351,8 @@ async function applyFill(codes: string[], onlyNew: boolean, confirmed: Map<strin
   if (!todo.length) return fail(problems.length ? `Не вышло — ${problems.join("; ")}` : "Заполнять нечего: ролики уже заполнены или YouTube их пока не показывает — обновите страницу.");
   const done: string[] = [];
   const filled: { code: string; videoId: string }[] = [];
+  const thumbs: string[] = [];
+  let releases: Awaited<ReturnType<typeof listReleases>> | null = null;
   for (const p of todo) {
     try {
       const r = await applyUpdate({ auth: youtubeAuth }, p);
@@ -337,19 +363,54 @@ async function applyFill(codes: string[], onlyNew: boolean, confirmed: Map<strin
       problems.push(`${p.match.item.id}: ${errorText(e)}`);
       // Без прав, ключа или квоты остальные тоже не пройдут — не тратим квоту.
       if (/не хватает прав|недействителен|неверные YT_CLIENT|квота/.test(errorText(e))) break;
+      continue;
+    }
+    // «Разбор» впервые получил тексты и время — своя обложка 16:9 из релиза (thumbnails.set,
+    // 50 единиц квоты). Shorts — как раньше: обложка у них — кадр из ролика.
+    if (isLongCode(p.match.item.id) && isNewUpload(p)) {
+      try {
+        releases ??= await listReleases();
+        await setThumbnail({ auth: youtubeAuth }, p.match.video.videoId, ...(await releaseThumbnail(releases, p.match.item.id)));
+        thumbs.push(p.match.item.id);
+      } catch (e) {
+        problems.push(`${p.match.item.id}: обложка не поставлена — ${errorText(e).replace(/^YouTube:\s*/, "")}`);
+      }
     }
   }
   // Свежие загрузки — в плейлисты рубрик, если это включено на «Статистике» (ошибки — только текстом).
   const playlists = onlyNew ? await autoAddToPlaylists(filled) : null;
-  const message = [done.length ? `Готово: ${done.join(", ")}.` : "", playlists ?? "", problems.length ? `Не вышло — ${problems.join("; ")}` : ""].filter(Boolean).join(" ");
+  const message = [
+    done.length ? `Готово: ${done.join(", ")}.` : "",
+    thumbs.length ? `Обложка из релиза поставлена: ${thumbs.join(", ")}.` : "",
+    playlists ?? "",
+    problems.length ? `Не вышло — ${problems.join("; ")}` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return { ok: done.length > 0, message };
+}
+
+// Обложка «Разбора» из самого свежего релиза с его видео: thumbnail.jpg (если PNG был больше
+// 2 МБ, рендер делает и его), иначе thumbnail.png.
+async function releaseThumbnail(releases: Awaited<ReturnType<typeof listReleases>>, code: string): Promise<[Uint8Array, "image/png" | "image/jpeg"]> {
+  const rel = releases
+    .filter((r) => !r.draft && r.assets.some((a) => mp4Code(a.name) === code))
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+  if (!rel) throw new Error(`релиза с ${code}-….mp4 нет — поставьте обложку в Studio вручную`);
+  const jpg = rel.assets.find((a) => a.name === "thumbnail.jpg");
+  const png = rel.assets.find((a) => a.name === "thumbnail.png");
+  const pick = jpg ?? (png && png.size <= THUMBNAIL_MAX_BYTES ? png : null);
+  if (!pick) throw new Error(png ? "thumbnail.png в релизе больше 2 МБ, а thumbnail.jpg нет — поставьте обложку в Studio вручную" : "в релизе нет thumbnail.png — поставьте обложку в Studio вручную");
+  return [await assetBytes(pick.id, THUMBNAIL_MAX_BYTES), pick === jpg ? "image/jpeg" : "image/png"];
 }
 
 // Коды (карточка ролика) или строки, показанные в «Найти новые загрузки», — с проверкой слота.
 export async function fillNewUploadsAction(items: (string | { code: string; videoId: string; publishAt: string | null })[]): Promise<ActionResult> {
   return guarded(() => {
     const list = Array.isArray(items) ? items : [];
-    const confirmed = new Map(list.flatMap((x) => (typeof x === "object" && x && typeof x.code === "string" && typeof x.videoId === "string" ? [[x.code.toLowerCase(), { videoId: x.videoId, publishAt: typeof x.publishAt === "string" ? x.publishAt : null }] as const] : [])));
+    const confirmed = new Map(
+      list.flatMap((x) => (typeof x === "object" && x && typeof x.code === "string" && typeof x.videoId === "string" && normCode(x.code) ? [[normCode(x.code)!, { videoId: x.videoId, publishAt: typeof x.publishAt === "string" ? x.publishAt : null }] as const] : [])),
+    );
     const codes = list.map((x) => (typeof x === "string" ? x : String(x?.code ?? "")));
     return applyFill(codes, true, confirmed);
   });
@@ -367,12 +428,18 @@ export async function moveVideoAction(videoId: string, targetIso: string): Promi
     if (!/^[\w-]{6,20}$/.test(videoId) || !Number.isFinite(target)) return fail("Неверный запрос — обновите страницу.");
     const [channel, videos] = await Promise.all([loadChannel(), channelVideos()]);
     const now = Date.now();
-    const perDay = Math.max(1, channel.schedule.publishTimesLocal.length);
-    const slots = upcomingSlots(channel.schedule, 60 * perDay, { from: new Date(now) });
-    if (!slots.some((d) => d.getTime() === target)) return fail("Это время — не слот расписания канала или уже слишком близко.");
     const me = videos.find((v) => v.videoId === videoId);
     if (!me || me.privacyStatus !== "private" || !me.publishAt || Date.parse(me.publishAt) <= now) {
       return fail("Переносить можно только приватный ролик с будущим временем выхода — обновите страницу.");
+    }
+    // Длинное видео («Разбор») — только в слоты «Разборов» (вт/чт/сб 21:00), Shorts — в свои.
+    const long = !isShorts(me.durationSec);
+    const schedule = long ? longScheduleOf(channel) : channel.schedule;
+    // Те же 60 дней вперёд, что в календаре: у «Разборов» в неделе только их дни.
+    const days = long ? Math.ceil((60 / 7) * (schedule.weekdays?.length || 7)) : 60;
+    const slots = upcomingSlots(schedule, days * Math.max(1, schedule.publishTimesLocal.length), { from: new Date(now) });
+    if (!slots.some((d) => d.getTime() === target)) {
+      return fail(long ? "Это время — не слот «Разборов» (вт/чт/сб 21:00) или уже слишком близко." : "Это время — не слот расписания канала или уже слишком близко.");
     }
     if (Date.parse(me.publishAt) === target) return fail("Ролик уже стоит на это время.");
     const sameMinute = (iso: string) => Math.floor(Date.parse(iso) / 60_000) === Math.floor(target / 60_000);
@@ -426,11 +493,15 @@ export interface QueueResult extends ActionResult {
 export async function swapQueueAction(a: string, b: string): Promise<QueueResult | ActionResult> {
   return guarded(async () => {
     const { state, row: first } = await rowFor(a);
-    const second = state.rows.find((r) => r.code === String(b ?? "").trim().toLowerCase());
+    const second = state.rows.find((r) => r.code === normCode(b));
     const waiting = state.rows.filter((r) => !r.whenExact && r.when);
     const codes = waiting.map((r) => r.code);
     if (!second || first.code === second.code || !codes.includes(first.code) || !codes.includes(second.code)) {
       return fail("Меняться местами могут только ролики без времени на YouTube — обновите страницу.");
+    }
+    // У «Разборов» свои слоты (вт/чт/сб 21:00): местами меняются только ролики одного потока.
+    if (Boolean(first.long) !== Boolean(second.long)) {
+      return fail("«Разбор» меняется местами только с другим «Разбором», Shorts — с Shorts: у них разные слоты.");
     }
     const next = codes.map((c) => (c === first.code ? second.code : c === second.code ? first.code : c));
     await setVariable(QUEUE_ORDER_VAR, JSON.stringify(next));
@@ -444,7 +515,7 @@ export async function swapQueueAction(a: string, b: string): Promise<QueueResult
 
 export async function restoreQueueAction(order: string[]): Promise<ActionResult> {
   return guarded(async () => {
-    const list = Array.isArray(order) ? order.filter((c) => typeof c === "string" && PLAN_CODE.test(c)).slice(0, 300) : [];
+    const list = Array.isArray(order) ? order.filter((c) => typeof c === "string" && normCode(c) === c).slice(0, 300) : [];
     if (!list.length) return fail("Нечего возвращать — обновите страницу.");
     await setVariable(QUEUE_ORDER_VAR, JSON.stringify(list));
     return ok("Вернули прежний порядок.");
@@ -462,10 +533,12 @@ export async function saveAutopilotAction(settings: AutopilotSettings): Promise<
     if (!(Number.isInteger(keep) && keep >= 0 && keep <= KEEP_RELEASE_MAX)) return fail(`Хранить видео — от 0 до ${KEEP_RELEASE_MAX} дней.`);
     const reserve = Number(settings.scriptReserve ?? 0);
     if (!(Number.isInteger(reserve) && reserve >= 0 && reserve <= SCRIPT_RESERVE_MAX)) return fail(`Запас сценариев — от 0 до ${SCRIPT_RESERVE_MAX}.`);
-    const value: AutopilotSettings = { enabled: settings.enabled === true, days, retryFailed: settings.retryFailed !== false, keepReleaseDays: keep, scriptReserve: reserve };
+    // «Разборы» — по умолчанию включены (старая вкладка поле не пришлёт).
+    const value: AutopilotSettings = { enabled: settings.enabled === true, days, retryFailed: settings.retryFailed !== false, keepReleaseDays: keep, scriptReserve: reserve, long: settings.long !== false };
     await setVariable(AUTOPILOT_VAR, JSON.stringify(value));
     const parts = [
       value.enabled ? `автопилот включён: ролики готовятся за ${days} дн. до выхода${reserve ? `, запас сценариев — ${reserve}` : ""}` : "автопилот выключен",
+      value.long ? "«Разборы» готовятся тоже (по одному за раз)" : "«Разборы» автопилот не трогает",
       value.retryFailed ? "упавшая сборка повторяется один раз" : "упавшие сборки не повторяются",
       keep ? `видео из релизов удаляются через ${keep} дн. после выхода` : "видео из релизов не удаляются",
     ];
@@ -524,13 +597,14 @@ const POST_GUARD_MS = 10 * 60_000;
 // Черновик: ≈ 3 единицы квоты (канал, ролик, страница комментариев) + план и сценарий из GitHub.
 export async function firstCommentPreviewAction(code: string, videoId: string, scriptPath: string | null): Promise<FirstCommentPreview | ActionResult> {
   return guarded(async () => {
-    const c = String(code ?? "").trim().toLowerCase();
-    if (!PLAN_CODE.test(c) || !VIDEO_ID.test(String(videoId ?? ""))) return fail("Неверный запрос — обновите страницу.");
-    const [planJson, check] = await Promise.all([readJson(`${STUDIO_DIR}/content/plan.json`), commentCheck(videoId)]);
+    const c = normCode(code) ?? "";
+    if (!c || !VIDEO_ID.test(String(videoId ?? ""))) return fail("Неверный запрос — обновите страницу.");
+    // «Разбор» (L01) — тема из длинного плана.
+    const [planJson, check] = await Promise.all([isLongCode(c) ? readJson(`${STUDIO_DIR}/${LONG_PLAN_FILE}`) : readJson(`${STUDIO_DIR}/content/plan.json`), commentCheck(videoId)]);
     if (check.existing) return { ok: true, message: "", text: "", existing: check.existing };
     const blocked = commentBlocker(check);
     if (blocked) return fail(blocked);
-    const item = parsePlan(planJson).items.find((i) => i.id === c);
+    const item = (isLongCode(c) ? parseLongPlan(planJson) : parsePlan(planJson)).items.find((i) => i.id === c);
     if (!item) return fail(`Ролика ${c} нет в плане — обновите страницу.`);
     // Сценарий — из карточки (путь сверяем с кодом) или из плана; нет — вопрос по названию.
     const path = [scriptPath, item.script].find((p): p is string => typeof p === "string" && /^scripts\/[\w.-]+\.json$/.test(p) && scriptCode(p) === c);
@@ -571,8 +645,8 @@ export async function postFirstCommentAction(videoId: string, text: string): Pro
 
 // Строка очереди по коду — с той же проверкой YouTube и запусков, что видит панель.
 async function rowFor(code: string) {
-  const c = String(code ?? "").trim().toLowerCase();
-  if (!PLAN_CODE.test(c)) throw new Error("Неверный код ролика — обновите страницу.");
+  const c = normCode(code);
+  if (!c) throw new Error("Неверный код ролика — обновите страницу.");
   const state = await loadState();
   const row = state.rows.find((r) => r.code === c);
   if (!row) throw new Error(`Ролика ${c} нет в плане — обновите страницу.`);
@@ -638,7 +712,8 @@ export async function rebuildAction(code: string, opts: RebuildOptions): Promise
       throw e;
     }
     const what = row.release || row.localVideo ? "пересборка" : "сборка";
-    return { ...ok(`Запущена ${what} ${row.code}: ${rebuildLabel(o)}. ≈ 8–10 минут в GitHub Actions — новое видео появится в карточке ролика.`), dispatched };
+    const time = row.long ? LONG_BUILD_LABEL : "≈ 8–10 минут";
+    return { ...ok(`Запущена ${what} ${row.code}: ${rebuildLabel(o)}. ${time} в GitHub Actions — новое видео появится в карточке ролика.`), dispatched };
   });
 }
 

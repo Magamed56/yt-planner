@@ -12,6 +12,8 @@ export interface ChannelSchedule {
   perDay: number;
   publishTimesLocal: string[]; // "HH:MM", по возрастанию
   timezone: string; // IANA, например Europe/Moscow
+  // Только эти дни недели по местному времени канала (0 — вс … 6 — сб); нет поля — каждый день.
+  weekdays?: number[];
 }
 
 export interface ChannelConfig {
@@ -34,6 +36,9 @@ export interface ChannelConfig {
   // Заготовка канала другого языка (channels/en.json → "placeholder": true): имя и ссылки
   // заменить после создания канала — make предупреждает при каждой сборке.
   placeholder?: boolean;
+  // Слоты «Разборов» (channel.json → longSlots): свои дни и время, со слотами Shorts не смешиваются.
+  // Нет в файле — вт/чт/сб 21:00 в поясе канала. Читать через longScheduleOf.
+  longSchedule?: ChannelSchedule;
 }
 
 export interface PillarVoice {
@@ -44,6 +49,36 @@ export interface PillarVoice {
 }
 
 export const DEFAULT_SCHEDULE: ChannelSchedule = { perDay: 2, publishTimesLocal: ["12:00", "19:00"], timezone: "Europe/Moscow" };
+export const DEFAULT_LONG_SLOTS = { weekdays: [2, 4, 6], times: ["21:00"] }; // вт, чт, сб в 21:00
+
+// Дни недели: «tue», «вт», «2» (0 — воскресенье, как у Date.getUTCDay).
+const WEEKDAY_NAMES: Record<string, number> = {
+  sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+  вс: 0, пн: 1, вт: 2, ср: 3, чт: 4, пт: 5, сб: 6,
+};
+export function parseWeekdays(raw: unknown): number[] {
+  const list = Array.isArray(raw) ? raw : typeof raw === "string" ? raw.split(/[,;\s]+/) : [];
+  const out = new Set<number>();
+  for (const v of list) {
+    const s = String(v).trim().toLowerCase();
+    const n = /^[0-6]$/.test(s) ? Number(s) : WEEKDAY_NAMES[s.slice(0, s.length >= 3 && /^[a-z]/.test(s) ? 3 : 2)];
+    if (n !== undefined) out.add(n);
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
+// Расписание «Разборов» канала: из channel.json или по умолчанию — в поясе канала.
+export function longScheduleOf(ch: Pick<ChannelConfig, "schedule" | "longSchedule">): ChannelSchedule {
+  return ch.longSchedule ?? { perDay: DEFAULT_LONG_SLOTS.times.length, publishTimesLocal: [...DEFAULT_LONG_SLOTS.times], timezone: ch.schedule.timezone, weekdays: [...DEFAULT_LONG_SLOTS.weekdays] };
+}
+
+function parseLongSlots(raw: unknown, timezone: string): ChannelSchedule {
+  const o = obj(raw);
+  const timesRaw = strList(o.times).length ? strList(o.times) : strList([o.time]);
+  const times = parseTimes(timesRaw).length ? parseTimes(timesRaw) : DEFAULT_LONG_SLOTS.times;
+  const days = parseWeekdays(o.days);
+  return { perDay: times.length, publishTimesLocal: times, timezone, weekdays: days.length ? days : [...DEFAULT_LONG_SLOTS.weekdays] };
+}
 
 const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map(str).filter((s): s is string => Boolean(s)) : []);
@@ -122,6 +157,7 @@ export function channelFromJson(json: unknown, env: Readonly<Record<string, stri
     voiceByPillar: parseVoiceByPillar(raw.voiceByPillar),
     brandIntro: raw.brandIntro !== false,
     ...(raw.placeholder === true ? { placeholder: true } : {}),
+    longSchedule: parseLongSlots(raw.longSlots, tz),
   };
 }
 
@@ -272,8 +308,11 @@ export function upcomingSlots(schedule: ChannelSchedule, count: number, opts: Sl
   const out: Date[] = [];
   // Начинаем с ВЧЕРАШНЕЙ местной даты: у поясов западнее UTC «сегодня» по UTC ещё не наступило.
   const start = localDate(from - 86_400_000, schedule.timezone);
+  const weekdays = schedule.weekdays?.length ? new Set(schedule.weekdays) : null;
   for (let day = 0; out.length < count && day < 3700; day++) {
     const base = new Date(Date.UTC(start.y, start.m - 1, start.d + day));
+    // День недели — у местной даты (base — её полночь по UTC), поэтому переход на летнее время не сдвигает его.
+    if (weekdays && !weekdays.has(base.getUTCDay())) continue;
     for (const t of times) {
       const [hh, mm] = t.split(":").map(Number) as [number, number];
       const at = zonedTimeToUtc(base.getUTCFullYear(), base.getUTCMonth() + 1, base.getUTCDate(), hh, mm, schedule.timezone);
@@ -291,7 +330,7 @@ export function nthSlot(schedule: ChannelSchedule, n: number, opts: Omit<SlotOpt
   if (!Number.isInteger(n) || n < 1) throw new Error(`Номер слота должен быть целым числом от 1, а не «${n}».`);
   const slots = upcomingSlots(schedule, n, opts);
   const last = slots.at(-1);
-  if (!last || slots.length < n) throw new Error("Не удалось рассчитать слот публикации — проверьте publishTimesLocal в channel.json.");
+  if (!last || slots.length < n) throw new Error("Не удалось рассчитать слот публикации — проверьте publishTimesLocal (или longSlots) в channel.json.");
   return last;
 }
 

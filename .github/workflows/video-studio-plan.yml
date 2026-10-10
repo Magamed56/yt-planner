@@ -7,17 +7,24 @@
 # запросом по сети. Факт без ссылки или с битой ссылкой выбрасывается.
 # Нужен секрет GEMINI_API_KEY (бесплатно) или ANTHROPIC_API_KEY. Потом сценарии — workflow
 # «video-studio: ролик» с plan = <коды> (или кнопка в панели).
+# long = true — темы «Разборов» (16:9, ~7 минут) в content/long-plan.json: коды L01, L02…,
+# 8–12 фактов с источниками и набросок глав, без повторов тем и фактов Shorts (npm run plan-extend
+# -- --long). Панель запускает так сама, когда тем «Разбора» без сценария меньше трёх.
 
 name: "video-studio: план тем"
-run-name: "${{ format('plan: +{0} тем', inputs.count || '10') }}"
+run-name: "${{ format('plan: +{0} тем{1}', inputs.count || '10', inputs.long && ' «Разбор»' || '') }}"
 
 on:
   workflow_dispatch:
     inputs:
       count:
-        description: "Сколько новых тем добавить (1–30)"
+        description: "Сколько новых тем добавить (1–30; «Разборов» — 1–12)"
         type: string
         default: "10"
+      long:
+        description: "Темы «Разбора» (content/long-plan.json, коды L01…) вместо Shorts"
+        type: boolean
+        default: false
 
 permissions:
   contents: write # коммит content/plan.json
@@ -33,7 +40,8 @@ jobs:
   plan:
     name: Новые темы плана
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # «Разборы» идут пачками по 3 темы (у каждой 8–12 фактов, ссылки проверяются) — дольше.
+    timeout-minutes: ${{ inputs.long && 60 || 30 }}
     defaults:
       run:
         working-directory: video-studio
@@ -74,20 +82,26 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           # Ввод пользователя — только через env, не подставляем в текст команды.
           COUNT: ${{ inputs.count || '10' }}
+          LONG: ${{ inputs.long && 'true' || '' }}
         run: |
           if ! [[ "$COUNT" =~ ^[0-9]+$ ]]; then
             echo "::error::count — целое число от 1 до 30, а не «$COUNT»."
             exit 1
           fi
-          npm run plan-extend -- --count "$COUNT"
+          if [ -n "$LONG" ]; then
+            npm run plan-extend -- --long --count "$COUNT"
+          else
+            npm run plan-extend -- --count "$COUNT"
+          fi
 
       - name: Закоммитить план
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           CODES: ${{ steps.extend.outputs.codes }}
+          LONG: ${{ inputs.long && 'true' || '' }}
         run: |
-          for p in content/plan.json content/usage.jsonl; do
+          for p in content/plan.json content/long-plan.json content/usage.jsonl; do
             if [ -e "$p" ]; then git add -A -- "$p"; fi
           done
           if git diff --cached --quiet; then
@@ -95,7 +109,8 @@ jobs:
             exit 0
           fi
           msg="video-studio: новые темы плана${CODES:+ ($CODES)}"
-          git diff --cached --quiet -- content/plan.json && msg="video-studio: расход"
+          [ -n "$LONG" ] && msg="video-studio: новые темы «Разбора»${CODES:+ ($CODES)}"
+          git diff --cached --quiet -- content/plan.json content/long-plan.json && msg="video-studio: расход"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # Токен — только в этом шаге (checkout его не сохраняет).
@@ -132,4 +147,6 @@ jobs:
           name: plan-${{ github.run_number }}-${{ github.run_attempt }}
           retention-days: 7
           if-no-files-found: ignore
-          path: video-studio/content/plan.json
+          path: |
+            video-studio/content/plan.json
+            video-studio/content/long-plan.json

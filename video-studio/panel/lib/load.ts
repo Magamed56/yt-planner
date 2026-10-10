@@ -1,6 +1,7 @@
 // Данные для очереди — всё параллельно: GitHub (план, канал, сценарии, тексты, релизы, запуски,
 // секреты, настройки автопилота) и YouTube. YouTube недоступен — очередь всё равно видна.
 import { branchName, getVariable, GithubError, listDir, listReleases, listRuns, listSecretNames, readJson, repoName, runSteps, type GhRun, type GhStep } from "./github";
+import { LONG_PLAN_FILE } from "../../src/pipeline/long-plan";
 import type { ChannelVideo } from "../../src/pipeline/youtube-fill";
 import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, buildState, parseAutopilot, parseAutopilotLast, parseQueueOrder, QUEUE_ORDER_VAR, type PanelState } from "./state";
 import { readHistory } from "./history-store";
@@ -27,7 +28,7 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     (videos) => ({ videos, error: null as string | null }),
     (e: unknown) => ({ videos: null, error: errorText(e) }),
   );
-  const [planJson, channelJson, scriptFiles, week1, later, releases, runInfo, secretNames, autopilotRaw, lastRaw, orderRaw, history, yt] = await Promise.all([
+  const [planJson, channelJson, scriptFiles, week1, later, releases, runInfo, secretNames, autopilotRaw, lastRaw, orderRaw, history, yt, longPlanJson] = await Promise.all([
     readJson(`${STUDIO_DIR}/content/plan.json`),
     readJson(`${STUDIO_DIR}/channel.json`),
     listDir(`${STUDIO_DIR}/scripts`),
@@ -41,6 +42,8 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     getVariable(QUEUE_ORDER_VAR).catch(() => null),
     readHistory(),
     youtube,
+    // «Разборы» (L01…): нет файла или GitHub не отдал — очередь Shorts всё равно видна.
+    readJson(`${STUDIO_DIR}/${LONG_PLAN_FILE}`).catch(() => null),
   ]);
   if (planJson === null) {
     throw new GithubError(`В ветке ${branchName()} нет video-studio/content/plan.json — слейте PR с video-studio в эту ветку или поменяйте GITHUB_BRANCH.`, 404);
@@ -63,5 +66,6 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     branch: branchName(),
     queueOrder: parseQueueOrder(orderRaw),
     history,
+    longPlanJson,
   });
 }

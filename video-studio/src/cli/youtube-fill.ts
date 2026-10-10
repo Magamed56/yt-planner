@@ -5,8 +5,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { formatLocal, parseScheduleStart } from "../pipeline/channel";
+import { formatLocal, longScheduleOf, parseScheduleStart } from "../pipeline/channel";
 import { loadChannel } from "../pipeline/channel-file";
+import { isLongCode, normCode } from "../pipeline/codes";
 import { applyUpdate, listChannelVideos, matchVideos, planUpdates, type FillItem, type ScheduleMode } from "../pipeline/youtube-fill";
 import { missingYoutubeEnv, youtubeAuth, youtubeEnvHelp } from "../pipeline/youtube";
 import { UserError, argsError, escapeMd, fail, ghSummary, loadEnv, rel, resolveInputPath } from "./common";
@@ -33,7 +34,7 @@ function readItems(file: string): FillItem[] {
   const seen = new Set<string>();
   for (const [i, v] of list.entries()) {
     const where = `${rel(file)}, ролик ${i + 1}`;
-    if (!/^\d{2}[a-z]$/i.test(v.id ?? "")) throw new UserError(`${where}: id должен быть вида «01a», а не «${v.id}».`);
+    if (!normCode(v.id)) throw new UserError(`${where}: id должен быть вида «01a» (Shorts) или «L01» («Разбор»), а не «${v.id}».`);
     if (seen.has(v.id.toLowerCase())) throw new UserError(`${where}: id «${v.id}» повторяется.`);
     seen.add(v.id.toLowerCase());
     if (!v.title?.trim() || v.title.length > 100) throw new UserError(`${where}: название пустое или длиннее 100 символов.`);
@@ -49,6 +50,7 @@ function readItems(file: string): FillItem[] {
 }
 
 const studio = (id: string) => `https://studio.youtube.com/video/${id}/edit`;
+const WEEKDAY_RU = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 
 const DEFAULT_ITEMS = "content/week1-videos.json,content/videos.json";
 
@@ -129,7 +131,8 @@ async function main() {
   // Занятые слоты — все запланированные ролики канала, не только из этого списка.
   const now = Date.now();
   const taken = videos.filter((v) => v.privacyStatus === "private" && v.publishAt && Date.parse(v.publishAt) > now).map((v) => v.publishAt!);
-  const plan = planUpdates(report, { schedule: channel.schedule, mode, start, taken });
+  // «Разборы» (L01…) — в свои слоты (channel.json → longSlots), Shorts — в свои.
+  const plan = planUpdates(report, { schedule: channel.schedule, longSchedule: longScheduleOf(channel), mode, start, taken });
 
   const rows: string[] = [];
   const warnings: string[] = [];
@@ -189,6 +192,10 @@ async function main() {
         "Только что загруженное видео YouTube иногда показывает через несколько минут — запустите ещё раз.",
     );
   if (mode === "slots") hints.push(`Время — по слотам channel.json (${channel.schedule.publishTimesLocal.join(", ")}, ${tz}); до выхода ролик приватный.`);
+  if (mode === "slots" && plan.some((p) => isLongCode(p.match.item.id))) {
+    const ls = longScheduleOf(channel);
+    hints.push(`«Разборы» (L01…) — в свои слоты: ${(ls.weekdays ?? []).map((d) => WEEKDAY_RU[d]).join(", ")} в ${ls.publishTimesLocal.join(", ")}. Обложку «Разбору» ставит панель («Найти новые загрузки»); отсюда — поставьте thumbnail.png из релиза в Studio.`);
+  }
   ghSummary(
     `### 📺 YouTube: тексты и расписание${dry ? " (пробный запуск)" : ""}\n\n` +
       `| № | Ролик | Нашли по | Выход | Итог |\n|---|---|---|---|---|\n${rows.join("\n")}\n\n` +

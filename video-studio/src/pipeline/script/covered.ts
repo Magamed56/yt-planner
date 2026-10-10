@@ -9,6 +9,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { CODE_SRC, normCode } from "../codes";
 import type { ContentPlan } from "../plan";
 import type { ScriptScene } from "../../types";
 
@@ -19,10 +20,11 @@ export interface CoveredEntry {
   cta?: string; // финал ролика: не факт, но по нему видно одинаковые концовки
 }
 
-// Код ролика из имени сценария: sut-08a-… (Shorts) и razbor-08a-… («Разбор»).
+// Код ролика из имени сценария: sut-08a-… (Shorts), razbor-08a-… («Разбор» темы Shorts) и
+// razbor-L01-… («Разбор» по длинному плану).
 export function coveredCode(file: string): string | null {
-  const m = /(?:^|[\\/])(?:sut|razbor)-(\d{2}[a-z])-[^\\/]*\.json$/i.exec(file);
-  return m ? m[1]!.toLowerCase() : null;
+  const m = new RegExp(`(?:^|[\\\\/])(?:sut|razbor)-(${CODE_SRC})-[^\\\\/]*\\.json$`, "i").exec(file);
+  return m ? normCode(m[1]) : null;
 }
 
 // ---- Нормализация ----
@@ -116,7 +118,7 @@ export function ctaRepeat(cta: string, recent: RecentCta[], minShare = 0.5): Rec
 // Сценарии из scripts/ + факты тем плана, у которых ролик уже есть.
 // exclude — коды текущей темы: её собственные факты повтором не считаются.
 export function loadCovered(root: string, opts: { plan?: ContentPlan | null; exclude?: string[] } = {}): CoveredEntry[] {
-  const exclude = new Set((opts.exclude ?? []).map((c) => c.toLowerCase()));
+  const exclude = new Set((opts.exclude ?? []).map((c) => normCode(c) ?? c.toLowerCase()));
   const dir = path.join(root, "scripts");
   const entries: CoveredEntry[] = [];
   const done = new Set<string>();

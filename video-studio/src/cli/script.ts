@@ -7,11 +7,14 @@
 //   npm run script -- --plan 08a --quiz   — Shorts-викторина «Правда или миф?»
 //   npm run script -- --plan 08a --long   — «Разбор» 5–8 мин, 16:9, с главами
 //   npm run script -- --plan 08a --lang en — тот же ролик на другом языке (scripts/en/…)
+//   npm run script -- --long-plan L01   — «Разбор» на тему из content/long-plan.json (razbor-L01-…)
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import type { Format, VideoScript } from "../types";
 import { parsePlan, planNotes, PLAN_CODE, scriptCode, type ContentPlan, type PlanItem } from "../pipeline/plan";
+import { isLongCode, normCode } from "../pipeline/codes";
+import { LONG_PLAN_FILE, longPlanNotes, parseLongPlan } from "../pipeline/long-plan";
 import { generateScript, lintScript, loadCovered, LONG_DEFAULT_SECONDS, ScriptGenerationError, searchPhrases, WORDS_PER_SECOND, type ScriptGenRequest } from "../pipeline/script/index";
 import { collectLlmUsage } from "../pipeline/script/usage-log";
 import { slugify } from "../pipeline/slug";
@@ -27,6 +30,7 @@ const HELP = `Черновик сценария для проверки пере
   npm run script -- --plan 08a --quiz     викторина «Правда или миф?» (Shorts)
   npm run script -- --plan 08a --long     «Разбор» 5–8 минут, 16:9, с главами (и с --topic)
   npm run script -- --plan 08a --lang en  ролик на другом языке (en, kk, uz…) → scripts/en/
+  npm run script -- --long-plan L01       «Разбор» на тему из content/long-plan.json (коды L01… можно и в --plan)
 
 Файл появится в scripts/<имя>.json. Проверьте факты и текст, затем:
   npm run make -- --script scripts/<имя>.json
@@ -44,6 +48,10 @@ const HELP = `Черновик сценария для проверки пере
   (затем Piper, офлайн): голос будет другим. Надёжнее собирать «Разбор» с --voice edge,
   если в этот день уже делали несколько роликов.
 
+--long-plan — третий поток канала: «Разборы» на свои темы (их нет среди Shorts), вт/чт/сб 21:00.
+  Темы — content/long-plan.json (npm run plan-extend -- --long), файл — scripts/razbor-L01-<имя>.json,
+  в длинном плане тема получает status script-ready. Видео — L01-<имя>.mp4 (пакет с plan = L01).
+
 --lang — язык ролика: с --plan русский сценарий темы переводится (те же сцены, факты и числа;
   хук и призыв — как у носителя), а если его нет — пишется сразу на этом языке по плану;
   с --topic — сразу на этом языке. Файлы — scripts/<язык>/, канал — channels/<язык>.json.
@@ -55,6 +63,7 @@ const HELP = `Черновик сценария для проверки пере
 `;
 
 const PLAN_FILE = path.join(ROOT, "content", "plan.json");
+const LONG_PLAN_PATH = path.join(ROOT, ...LONG_PLAN_FILE.split("/"));
 
 function uniquePath(dir: string, slug: string): string {
   let file = path.join(dir, `${slug}.json`);
@@ -84,31 +93,46 @@ const usageCollector = (code: string | null) => collectLlmUsage(ROOT, code);
 // (панель и пакетная сборка ищут scripts/sut-<код>-*.json).
 const longPrefix = (code: string) => `razbor-${code}-`;
 
+function readPlanFile(file: string, parse: (json: unknown) => ContentPlan): ContentPlan {
+  try {
+    return parse(fs.existsSync(file) || file === PLAN_FILE ? JSON.parse(fs.readFileSync(file, "utf8").replace(/^﻿/, "")) : null);
+  } catch (e) {
+    throw new UserError(`Не прочитать ${rel(file)}: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
 // Сценарии по темам плана: по одной, план сохраняется после каждой — сбой на следующей
-// теме не теряет готовые (в Actions их закоммитит следующий шаг).
+// теме не теряет готовые (в Actions их закоммитит следующий шаг). Коды «L01» — темы
+// «Разбора» из content/long-plan.json: их можно передать и в --plan (так зовёт workflow).
 async function draftFromPlan(codesArg: string, seconds: number | undefined, mode: Mode): Promise<void> {
   const outDir = path.join(ROOT, "scripts");
-  let plan: ContentPlan;
-  try {
-    plan = parsePlan(JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
-  } catch (e) {
-    throw new UserError(`Не прочитать ${rel(PLAN_FILE)}: ${e instanceof Error ? e.message : String(e)}`);
-  }
-  const codes = [...new Set(codesArg.split(/[\s,]+/).map((c) => c.trim().toLowerCase()).filter(Boolean))];
-  if (!codes.length) throw new UserError(`--plan: укажите коды тем через запятую, например 08a,08b.\n\n${HELP}`);
-  const unknown = codes.filter((c) => !PLAN_CODE.test(c) || !plan.items.some((i) => i.id === c));
-  if (unknown.length) throw new UserError(`--plan: нет таких тем в ${rel(PLAN_FILE)}: ${unknown.join(", ")}`);
+  const raw = [...new Set(codesArg.split(/[\s,]+/).map((c) => c.trim()).filter(Boolean))];
+  if (!raw.length) throw new UserError(`--plan: укажите коды тем через запятую, например 08a,08b (или L01 — «Разбор»).\n\n${HELP}`);
+  const codes = raw.map((c) => normCode(c) ?? c.toLowerCase());
+  const longCodes = codes.filter((c) => isLongCode(c));
+  const plan = readPlanFile(PLAN_FILE, parsePlan);
+  const longPlan = longCodes.length ? readPlanFile(LONG_PLAN_PATH, parseLongPlan) : { items: [] };
+  const unknown = codes.filter((c) => (isLongCode(c) ? !longPlan.items.some((i) => i.id === c) : !PLAN_CODE.test(c) || !plan.items.some((i) => i.id === c)));
+  if (unknown.length) throw new UserError(`--plan: нет таких тем в ${rel(PLAN_FILE)}${longCodes.length ? ` и ${rel(LONG_PLAN_PATH)}` : ""}: ${unknown.join(", ")}`);
+  if (longCodes.length && mode.quiz) throw new UserError(`--quiz — только Shorts, а ${longCodes.join(", ")} — «Разборы».`);
   const existing = fs.existsSync(outDir) ? fs.readdirSync(outDir).filter((f) => f.endsWith(".json")) : [];
-  const format: Format = mode.long ? "landscape" : "shorts";
-  const kindLabel = mode.long ? "«Разбор»" : mode.quiz ? "викторина" : "Shorts";
+  const anyLong = mode.long || longCodes.length === codes.length;
+  const format: Format = anyLong ? "landscape" : "shorts";
+  const kindLabel = anyLong ? "«Разбор»" : mode.quiz ? "викторина" : longCodes.length ? "Shorts и «Разборы»" : "Shorts";
+  // «Уже было» для «Разбора» по длинному плану — ещё и темы этого плана.
+  const coveredPlan: ContentPlan = { ...plan, items: [...plan.items, ...longPlan.items] };
 
   console.log(`video-studio · сценарии по плану (${kindLabel}): ${codes.join(", ")}`);
   const results: PlanDraft[] = [];
   for (const code of codes) {
-    const item = plan.items.find((i) => i.id === code)!;
-    const have = mode.long
-      ? existing.find((f) => f.startsWith(longPrefix(code)))
-      : existing.find((f) => scriptCode(f) === code) ?? (item.script && fs.existsSync(path.join(ROOT, item.script)) ? path.basename(item.script) : undefined);
+    const fromLong = isLongCode(code);
+    const long = mode.long || fromLong;
+    const item = (fromLong ? longPlan : plan).items.find((i) => i.id === code)!;
+    const have = fromLong
+      ? existing.find((f) => scriptCode(f) === code) ?? (item.script && fs.existsSync(path.join(ROOT, item.script)) ? path.basename(item.script) : undefined)
+      : mode.long
+        ? existing.find((f) => f.startsWith(longPrefix(code)))
+        : existing.find((f) => scriptCode(f) === code) ?? (item.script && fs.existsSync(path.join(ROOT, item.script)) ? path.basename(item.script) : undefined);
     if (have) {
       console.log(`  ${code}: сценарий уже есть — scripts/${have}, пропускаю`);
       results.push({ item, file: `scripts/${have}`, cost: 0, warnings: [], skipped: true });
@@ -120,21 +144,26 @@ async function draftFromPlan(codesArg: string, seconds: number | undefined, mode
       const sequel = item.sequelOf ? plan.items.find((i) => i.id === item.sequelOf) ?? null : null;
       const req: ScriptGenRequest = {
         topic: item.title,
-        format,
+        format: long ? "landscape" : "shorts",
         language: "ru",
-        notes: planNotes(item, { strict: !mode.long, sequel }),
+        notes: fromLong ? longPlanNotes(item) : planNotes(item, { strict: !long, sequel }),
         targetSeconds: seconds,
-        long: mode.long,
+        long,
         quiz: mode.quiz,
         // Своя тема (и её «Разбор»/Shorts) повтором не считается.
-        covered: loadCovered(ROOT, { plan, exclude: [code] }),
+        covered: loadCovered(ROOT, { plan: coveredPlan, exclude: [code] }),
         searchPhrases: searchPhrases(item.title),
       };
       const { script, usage: spent, warnings: genWarnings } = await generateScript(req, { onLlmCall: usage.onLlmCall });
       const warnings = [...new Set([...genWarnings, ...lintScript(script)])];
-      const file = uniquePath(outDir, `${mode.long ? longPrefix(code).slice(0, -1) : `sut-${code}`}-${slugify(script.title)}`);
+      // «Разбор» по длинному плану — razbor-L01-…: по этому префиксу его находят пакет, панель и make.
+      const file = uniquePath(outDir, `${long ? longPrefix(code).slice(0, -1) : `sut-${code}`}-${slugify(script.title)}`);
       writeJson(file, script);
-      if (!mode.long) {
+      if (fromLong) {
+        item.status = "script-ready";
+        item.script = rel(file);
+        writeJson(LONG_PLAN_PATH, longPlan);
+      } else if (!mode.long) {
         item.status = "script-ready";
         item.script = rel(file);
         writeJson(PLAN_FILE, plan);
@@ -189,6 +218,7 @@ async function main() {
       options: {
         topic: { type: "string" },
         plan: { type: "string" },
+        "long-plan": { type: "string" },
         format: { type: "string" },
         notes: { type: "string" },
         seconds: { type: "string" },
@@ -208,7 +238,13 @@ async function main() {
     process.exit(0);
   }
   const topic = typeof values.topic === "string" ? values.topic.trim() : "";
-  const planCodes = typeof values.plan === "string" ? values.plan.trim() : "";
+  const longPlanCodes = typeof values["long-plan"] === "string" ? values["long-plan"].trim() : "";
+  if (longPlanCodes) {
+    if (values.plan) throw new UserError("--plan и --long-plan вместе не нужны: коды L01 можно передать и в --plan.");
+    const bad = longPlanCodes.split(/[\s,]+/).filter((c) => c && !isLongCode(c));
+    if (bad.length) throw new UserError(`--long-plan: коды «Разборов» вида L01, а не ${bad.join(", ")} (темы Shorts — --plan).`);
+  }
+  const planCodes = longPlanCodes || (typeof values.plan === "string" ? values.plan.trim() : "");
   const seconds = values.seconds ? Number(values.seconds) : undefined;
   if (seconds !== undefined && !(seconds > 0)) throw new UserError("--seconds: нужно положительное число.");
   const mode: Mode = { long: Boolean(values.long), quiz: Boolean(values.quiz) };
@@ -219,6 +255,7 @@ async function main() {
   if (mode.quiz && formatArg && formatArg !== "shorts") throw new UserError("--quiz — только Shorts: уберите --format или укажите --format shorts.");
   if (planCodes) {
     if (topic || values.notes || values.out || formatArg) throw new UserError("--plan берёт тему, пожелания, формат и папку из плана — без --topic, --notes, --format и --out.");
+    if (lang !== "ru" && planCodes.split(/[\s,]+/).some((c) => isLongCode(c))) throw new UserError("«Разборы» по длинному плану (L01…) пока только по-русски — уберите --lang.");
     if (lang !== "ru") await draftPlanInLanguage(planCodes, lang, seconds, mode, PLAN_FILE);
     else await draftFromPlan(planCodes, seconds, mode);
     return;

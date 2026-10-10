@@ -44,7 +44,7 @@ export function runLabel(kind: string, title: string, codes: string[]): string {
     case "draft":
       return codes.length ? `${codes.length > 1 ? "Сценарии" : "Сценарий"}${list}` : "Сценарии по расписанию";
     case "plan":
-      return `План ${/\+\d+/.exec(title)?.[0] ?? "+"} тем`;
+      return `План ${/\+\d+/.exec(title)?.[0] ?? "+"} тем${/Разбор/.test(title) ? " «Разбора»" : ""}`;
     case "titles":
       return `Названия${list}`;
     case "captions":

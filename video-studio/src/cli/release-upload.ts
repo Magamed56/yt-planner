@@ -12,6 +12,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import { normCode } from "../pipeline/codes";
 import { MP4_WITH_CODE, codesWithRelease, matchLocal, releaseTag, type LocalVideo, type UploadPlan } from "../pipeline/release-files";
 import { fillItemsOf, type FillItem } from "../pipeline/youtube-fill";
 import { ROOT, UserError, argsError, fail, loadEnv, rel } from "./common";
@@ -165,7 +166,7 @@ async function main(): Promise<void> {
   for (const item of items) {
     const p = plans.get(item.id);
     const label = `${item.id}  ${item.title.slice(0, 50)}`;
-    if (done.has(item.id.toLowerCase())) console.log(`  ✓ ${label} — уже в релизе`);
+    if (done.has(normCode(item.id) ?? item.id.toLowerCase())) console.log(`  ✓ ${label} — уже в релизе`);
     else if (!p) console.log(`  · ${label} — файла на этом компьютере нет`);
     else {
       todo.push(p);

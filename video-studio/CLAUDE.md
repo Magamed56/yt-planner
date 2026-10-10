@@ -54,7 +54,14 @@
   --plan 08a,08b` пишет сценарии по плану. `google-api.ts` — access token и разбор ошибок API без
   googleapis. `src/cli/videos-list.ts` — после рендера в релиз дописывает тексты ролика в
   `content/videos.json` (youtube-fill читает его вместе с `week1-videos.json`).
-- **Общий код с панелью** (`youtube-fill.ts`, `channel.ts`, `plan.ts`, `google-api.ts`, `types.ts`):
+- **«Разборы»** — третий поток: 16:9, ~7 мин, вт/чт/сб 21:00 (`channel.json` → `longSlots`,
+  `longScheduleOf` в `channel.ts`), свои темы в `content/long-plan.json` (`src/pipeline/long-plan.ts`,
+  коды `L01`…, `npm run plan-extend -- --long`, `npm run script -- --long-plan L01` →
+  `scripts/razbor-L01-….json`, видео `L01-….mp4`). Коды обоих видов — **только через**
+  `src/pipeline/codes.ts` (`normCode`, `codesIn`, `mp4Code`, `CODE_SRC`): «L01» с заглавной, «08a»
+  строчными; новых регулярок `\d{2}[a-z]` не заводи. youtube-fill даёт «Разборам» только их слоты и
+  ставит обложку (`setThumbnail`) — это делает панель после «Найти новые загрузки».
+- **Общий код с панелью** (`youtube-fill.ts`, `channel.ts`, `plan.ts`, `long-plan.ts`, `codes.ts`, `google-api.ts`, `types.ts`):
   только встроенные модули Node и относительные импорты — без npm-пакетов и без чтения файлов
   (иначе Next.js потащит в функцию Vercel всю папку).
 - `panel/` — веб-панель на Vercel (Next.js 16, вход по паролю): очередь, перенос `publishAt`, запуск
@@ -98,6 +105,7 @@ npm run make -- --script scripts/x.json --no-render      # всё, кроме р
 npm run script -- --topic "тема"            # черновик сценария → scripts/<slug>.json
 npx tsx src/dev/stills.ts                   # кадры композиции → out/dev/stills
 npx tsx src/dev/script-test.ts && npx tsx src/dev/visuals-test.ts && npx tsx src/dev/publish-test.ts && npx tsx src/dev/telegram-test.ts   # тесты без сети
+npx tsx src/dev/long-test.ts && npx tsx panel/scripts/long-test.ts   # «Разборы»: коды L01, слоты, обложка, панель — без сети
 npx tsx src/dev/voice-test.ts               # озвучка без сети: кэш, запасной голос (--live — настоящий синтез)
 npx tsx panel/scripts/state-test.ts         # очередь панели без сети; сборка панели: cd panel && npm run build
 npm run upload -- out/<slug> --to youtube,instagram --schedule      # публикация готового ролика
