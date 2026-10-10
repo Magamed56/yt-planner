@@ -97,6 +97,9 @@ export function sameStem(a: string, b: string): boolean {
 
 const hasStem = (stems: string[], s: string) => stems.some((x) => sameStem(x, s));
 
+// Материалы: перед другим существительным («iron helmet») — признак, а не предмет (stockFit).
+const MATERIAL = new Set("iron steel stone glass wood copper bronze brass tin paper leather marble brick clay concrete rubber cotton wool silk ceramic porcelain".split(" "));
+
 // ---- Запрос ----
 
 export type TermKind = "subject" | "noun" | "setting" | "action" | "modifier";
@@ -458,9 +461,9 @@ function looseHas(stems: string[], s: string): boolean {
 // по одному общему слову (water, road, hand) прошли 8 клипов не по теме из 10.
 // Поэтому клип берём, если в описании есть главный предмет сцены — первое
 // конкретное существительное запроса (сценарист ставит его первым; причастие
-// вроде «wrinkled» — не предмет) — или хотя бы половина веса слов сюжета (без
-// признаков и действий: «holding» не в счёт; «books» на «old library books» —
-// да, одно «road» на «tire tread wet road» — нет).
+// «wrinkled» и материал в «iron helmet» — не предмет) — или хотя бы половина
+// веса слов сюжета (без признаков и действий: «holding» не в счёт; «books» на
+// «old library books» — да, одно «road» на «tire tread wet road» — нет).
 // Предмет ролика (cat в ролике про кошек) обязателен: собака на «person
 // petting cat» — промах. Имя собственное (Apollo, Tenochtitlan) сток не покажет —
 // такой клип берём, только если имя есть в описании, иначе очередь реальных фото.
@@ -489,7 +492,10 @@ export function stockFit(q: VisualQuery, text: string): Fit {
   // water bath» (прогон CI 38022757599). Главным берём следующее слово; в вес
   // сюжета причастие по-прежнему идёт. classify() не трогаем — на нём пороги Commons.
   const participle = (t: Term) => !q.proper.includes(t.stem) && t.word.length > 5 && t.word.endsWith("ed") && !t.word.endsWith("eed");
-  const head = plot.find((t) => t.weight >= 1 && !participle(t));
+  // Материал прямо перед предметом («iron helmet», «copper wire») — тоже признак: на «iron
+  // helmet artifact» (06a) прошло ущелье Iron Gates (прогон CI 38063702244).
+  const material = (t: Term) => MATERIAL.has(t.word) && plot.some((n) => n.pos === t.pos + 1 && n.weight >= 1);
+  const head = plot.find((t) => t.weight >= 1 && !participle(t) && !material(t));
   if (plot.length === 0) {
     const ok = recall >= 0.3;
     return { ...base, ok, recall, score: recall, why: ok ? `совпадение ${recall.toFixed(2)}` : "в описании нет слов запроса" };

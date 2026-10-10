@@ -8,8 +8,7 @@ export const STOCK_SECRETS = ["PEXELS_API_KEY", "PIXABAY_API_KEY"];
 export const STOCK_SECRETS_LABEL = STOCK_SECRETS.join(", ");
 
 // Рубрики, где конвейер сначала ищет настоящие фото (Wikimedia, Openverse), а сток — только если
-// их нет (кроме сцен media без имени собственного — там сначала видео стока):
-// DEFAULT_REAL_PILLARS в src/pipeline/visuals (импортировать нельзя — там fs). В Actions
+// их нет: DEFAULT_REAL_PILLARS в src/pipeline/visuals (импортировать нельзя — там fs). В Actions
 // VISUALS_REAL_PILLARS не передаётся, так что действует именно этот список; совпадение
 // проверяет scripts/checks-test.ts. У таких роликов «только Wikimedia» — норма, а не сбой ключей.
 export const REAL_PHOTO_PILLARS = ["history", "nature", "space"];
@@ -280,10 +279,10 @@ function visualLines(f: FileFacts<CreditFacts>, ctx: CheckContext): CheckLine[] 
     if (c.ai) return [{ level: "info", text: `Кадры — только картинки ИИ (${c.ai}).` }];
     return [{ level: "warn", text: `В ролике нет ни видео, ни фото — только графика (в описании нет блока «Видео и фото»).${stockHint(ctx.stockKeysMissing)}` }];
   }
-  // Рубрика «настоящих фото»: конвейер так и задуман — остаётся проверить глазами, что фото по
-  // теме. Без ключей стоков сцены media (там сначала видео стока) тоже ушли в фото — подсказка.
+  // Рубрика «настоящих фото»: конвейер так и задуман, пересборка с ключами ничего не изменит —
+  // остаётся проверить глазами, что фото по теме.
   if (ctx.realPhotos && !c.stockVideo && !c.stockOther && !hiddenStock) {
-    return [{ level: "info", text: `Кадры — фото (${list}): в этой рубрике сначала ищутся настоящие фото, а не сток (сток первым — только в сценах media без имени собственного). Проверьте, что они по теме.${ctx.stockKeysMissing === true ? stockHint(true) : ""}` }];
+    return [{ level: "info", text: `Кадры — фото (${list}): в этой рубрике сначала ищутся настоящие фото, а не сток. Проверьте, что они по теме.` }];
   }
   if (!stock) {
     const archive = c.providers.map((p) => p.name).join(", ") || c.hiddenProviders.join(", ") || "архивов";
