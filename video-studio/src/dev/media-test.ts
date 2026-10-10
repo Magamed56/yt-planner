@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { synthImpact, synthPop, synthRise, synthSting } from "../pipeline/audio/sfx";
 import { levelStats } from "../pipeline/audio/dsp";
 import { applyPillarVoice, brandIntroEnabled, channelFromJson } from "../pipeline/channel";
-import { analyzePcm, evaluateQc, findBlacks, parseLoudnorm, parseProbe, type QcProbe } from "../pipeline/qc";
+import { analyzePcm, evaluateQc, findBlacks, parseLoudnorm, parseProbe, type QcEncoder, type QcProbe } from "../pipeline/qc";
 import { encoderOptions, encoderSettings } from "../pipeline/render";
 import { KEEP_LEAD_MS, KEEP_TAIL_MS, postprocessVoice } from "../pipeline/voice/provider";
 import { captionPages } from "../remotion/lib/caption-pages";
@@ -161,6 +161,28 @@ await test("QC: что валит запуск, а что — предупреж
   assert.deepEqual(short.map((i) => `${i.id}:${i.severity}`), ["duration:error"]);
   assert.deepEqual(evaluateQc({ ...base, probe: { ...probe, videoBitrateKbps: 12000, durationSec: 30 } }, "warn").map((i) => i.severity), ["warn"], "QC=warn");
   assert.deepEqual(evaluateQc({ ...base, probe: { ...probe, videoBitrateKbps: 12000, audioCodec: null } }).map((i) => i.id), ["no-audio"]);
+});
+
+await test("QC: при постоянном качестве (CRF ≤ 18) низкий средний битрейт — не замечание", () => {
+  // qc.json релиза 13b: CRF 15, preset slow (SEI x264 в mp4), 7,1 Мбит/с — QC ругался ложно.
+  const probe: QcProbe = { durationSec: 63.616, sizeBytes: 58474712, bitrateKbps: 7353, videoBitrateKbps: 7064, width: 1080, height: 1920, videoCodec: "h264", pixFmt: "yuv420p", fps: 30, audioCodec: "aac", sampleRate: 48000, channels: 2, audioBitrateKbps: 283 };
+  const base = {
+    expected: { durationSec: 63.6, width: 1080, height: 1920, fps: 30 },
+    probe,
+    audio: { meanVolumeDb: -19.6, maxVolumeDb: -1.5, integratedLufs: -16.25, truePeakDbtp: -1.47, loudnessRangeLu: 4.2 },
+    silences: [],
+    blacks: [],
+  };
+  const ids = (encoder?: QcEncoder) => evaluateQc(encoder ? { ...base, encoder } : base).map((i) => i.id);
+  const pick = (s: ReturnType<typeof encoderSettings>): QcEncoder => ({ quality: s.quality, crf: s.crf, videoBitrate: s.videoBitrate, x264Preset: s.x264Preset });
+  assert.deepEqual(ids(), ["bitrate"], "кодировщик неизвестен (старый вызов) — как раньше");
+  assert.deepEqual(ids(pick(encoderSettings({}))), [], "high = CRF 15");
+  assert.deepEqual(ids(pick(encoderSettings({ VIDEO_CRF: "18" }))), [], "граница CRF 18");
+  assert.deepEqual(ids(pick(encoderSettings({ VIDEO_QUALITY: "standard" }))), ["bitrate"], "CRF 21 — уже с потерями");
+  assert.deepEqual(ids(pick(encoderSettings({ VIDEO_BITRATE: "6M" }))), ["bitrate"], "средний поток ниже порога — замечание по делу");
+  // При CRF битрейт не проверяется вовсе; битый ролик ловят другие проверки — их CRF не глушит.
+  const broken = evaluateQc({ ...base, encoder: pick(encoderSettings({})), probe: { ...probe, videoBitrateKbps: 300, durationSec: 30 } });
+  assert.deepEqual(broken.map((i) => `${i.id}:${i.severity}`), ["duration:error"]);
 });
 
 await test("Голос по рубрике и бренд-заставка из channel.json", () => {
