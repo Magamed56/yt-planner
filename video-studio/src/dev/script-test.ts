@@ -902,6 +902,34 @@ await test("Сцены media (2–3 в Shorts) и заголовок (до 50 с
   assert.ok(!lintScript({ ...long, format: "landscape" }).some((w) => w.includes("лучше до 50")), "у длинного ролика — до 70");
 });
 
+await test("Нет visualQuery: карте и столбикам не нужен (как findVisual), прочим сценам — замечание", () => {
+  const noQuery = (s: VideoScript, id: string) => lintScript(s).some((w) => w.startsWith(`сцена ${id}: нет visualQuery`));
+  // Ложные замечания из логов CI: 13a s2 (столбики «Вода/Сатурн»), 12b s7 (три столбика).
+  const ready = new Map(channelScripts().map((c) => [c.code, c.script]));
+  for (const [code, id] of [["13a", "s2"], ["12b", "s7"]] as const) {
+    const s = ready.get(code);
+    assert.ok(s, `нет сценария ${code} в scripts/`);
+    assert.ok((s.scenes.find((x) => x.id === id)?.compare?.items.length ?? 0) >= 2, `${code} ${id} — со столбиками`);
+    assert.ok(!noQuery(s, id), `${code} ${id}: лишнее замечание`);
+  }
+  // Квиз 10b s6 без запроса и без графики — замечание остаётся.
+  assert.ok(noQuery(ready.get("10b")!, "s6"), "10b s6: визуал по-прежнему нужен");
+
+  const bare = (patch: Partial<ScriptScene>, i = 3) => {
+    const d = structuredClone(demo);
+    Object.assign(d.scenes[i], { visualQuery: undefined, ...patch });
+    return d;
+  };
+  const map = { lat: 29.98, lon: 31.13, label: "Гиза" };
+  const two = { items: [{ label: "Вода", value: 1000 }, { label: "Сатурн", value: 687 }] };
+  assert.ok(noQuery(bare({}), "s4"), "без графики — замечание");
+  assert.ok(!noQuery(bare({ map }), "s4"), "карта");
+  assert.ok(!noQuery(bare({ compare: two }), "s4"), "два столбика");
+  assert.ok(noQuery(bare({ compare: { items: two.items.slice(0, 1) } }), "s4"), "один столбик композиция не рисует");
+  // Хук findVisual подбирает и с картой — запрос ему нужен.
+  assert.ok(noQuery(bare({ map }, 0), "s1"), "хук с картой");
+});
+
 await test("Финал: «подписал»/«подпиши» — не призыв; вопрос чуть длиннее 8 слов после ремонта — замечание, не другая модель", async () => {
   // Глагол «подписать» (договор, указ) — частая тема истории, призывом не считается.
   for (const q of ["А ты бы подписал такой указ?", "Кто подписывал Декларацию первым?", "Подпиши открытку маме сегодня?", "Чья подпись на купюре?"]) {

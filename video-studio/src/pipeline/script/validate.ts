@@ -319,7 +319,11 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
       });
     }
     const q = str(raw.visualQuery).trim().toLowerCase();
-    if (!q && kind !== "cta") out.push(`${label}: нет visualQuery — визуал придётся подбирать наугад`);
+    // Карту и столбики рисует композиция — findVisual (visuals/index.ts) при том же
+    // условии фото не ищет, и запрос им не нужен.
+    const compareItems = isObj(raw.compare) && Array.isArray(raw.compare.items) ? raw.compare.items.length : 0;
+    const drawn = kind !== "hook" && kind !== "cta" && (Boolean(raw.map) || compareItems >= 2);
+    if (!q && kind !== "cta" && !drawn) out.push(`${label}: нет visualQuery — визуал придётся подбирать наугад`);
     if (q) {
       if (queries.has(q)) out.push(`${label}: visualQuery «${q}» повторяет сцену ${queries.get(q)} — визуал будет однообразным`);
       else queries.set(q, str(raw.id));
