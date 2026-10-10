@@ -858,11 +858,15 @@ await test("Финал: длиннее 8 слов или с «подпишись
 await test("Финал повторяет прошлые ролики — замечание; старые сценарии проходят validateScript, правило для них — замечание", async () => {
   const scripts = channelScripts();
   assert.ok(scripts.length >= 22);
-  // Находка разбора: финал «…и подпишись» у всех готовых роликов — для них это замечание, не ошибка.
+  // Находка разбора: финал «…и подпишись» у готовых роликов 01a–13b — для них это замечание, не
+  // ошибка. Сценарии по новым правилам (razbor-L01…) без призыва — без замечания.
+  const asksToSubscribe = (s: VideoScript) => /подпи[шс]\p{L}*?(?:ся|сь)(?!\p{L})/iu.test(s.scenes.at(-1)?.narration ?? "");
   for (const { code, script } of scripts) {
     assert.doesNotThrow(() => validateScript(script), `сценарий ${code} больше не проходит validateScript`);
-    assert.ok(lintScript(script).some((w) => w.includes("не проси подписаться")), `${code}: нет замечания о «подпишись»`);
+    const warned = lintScript(script).some((w) => w.includes("не проси подписаться"));
+    assert.equal(warned, asksToSubscribe(script), `${code}: замечание о «подпишись» ${warned ? "есть, а призыва нет" : "нет, а призыв есть"}`);
   }
+  assert.ok(scripts.filter((s) => asksToSubscribe(s.script)).length >= 22, "старые финалы с «подпишись» — на месте");
   const covered = loadCovered(root);
   const recent = recentCtas(covered);
   assert.equal(recent.length, 10, "последние 10 финалов");
