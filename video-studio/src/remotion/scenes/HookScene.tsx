@@ -5,17 +5,16 @@ import { DrawnIcon, IconBadge } from "../components/Icon";
 import { FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
 import { withAlpha } from "../theme";
-import { ContentBox, SceneFrame, clamp, useVoice, type SceneProps } from "./common";
+import { ContentBox, SceneFrame, clamp, type SceneProps } from "./common";
 
-// Хук: первые секунды решают, досмотрят ли ролик. Кадр 0 уже не пустой
-// (значок и первое слово), дальше огромные слова «впечатываются» ровно в
-// момент произнесения — каждое слегка толкает блок, акцент — маркером.
-// Позади — гигантская иконка, которая прорисовывается штрихом: читается как
-// задуманная иллюстрация, а не как «призрак».
+// Хук: в ленте Shorts «смотреть или листать» решают за 1–2 с, поэтому весь
+// заголовок стоит на экране целиком уже на кадре 0 — по одному слову он
+// дочитывался только к 2–4 с. Движение даёт акцент: маркер прорисовывается,
+// когда диктор произносит это слово. Позади — гигантская иконка, которая
+// прорисовывается штрихом: читается как задуманная иллюстрация, а не как «призрак».
 export const HookScene: React.FC<SceneProps> = (p) => {
   const frame = useCurrentFrame();
   const layout = useLayout();
-  const voice = useVoice(p.scene);
   const { content, unit } = layout;
   const shorts = layout.format === "shorts";
   const badge = Math.round((shorts ? 150 : 130) * unit);
@@ -50,13 +49,13 @@ export const HookScene: React.FC<SceneProps> = (p) => {
           maxLines={shorts ? 6 : 4}
           align="center"
           scene={p.scene}
-          mode="speech"
-          start={voice.start - 2}
-          step={4}
-          firstAt={-2}
-          deadline={voice.start + Math.round((voice.end - voice.start) * 0.7)}
+          // Все слова «появились» до начала сцены: к кадру 0 закончились и
+          // pop (6 кадров), и докрутка чисел (до 28 кадров) — на первом кадре
+          // нет ни прозрачных слов, ни недокрученного «16» вместо «24».
+          mode="stagger"
+          start={-30}
+          step={0}
           entrance="pop"
-          impact={1}
           highlight="marker"
         />
       </ContentBox>

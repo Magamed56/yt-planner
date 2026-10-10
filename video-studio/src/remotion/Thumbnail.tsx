@@ -7,7 +7,7 @@ import { KineticText } from "./components/KineticText";
 import { FONT_DISPLAY, FONT_NUMBER, FontGate } from "./fonts";
 import { fitTokens, stripMarkup, type FontSpec } from "./lib/text";
 import { formatNumber } from "./scenes/StatScene";
-import { getTheme, withAlpha } from "./theme";
+import { getTheme, withAlpha, type Theme } from "./theme";
 
 const BADGE_FONT: FontSpec = { fontFamily: FONT_NUMBER, fontWeight: 800, lineHeight: 1.1, letterSpacingEm: -0.04 };
 
@@ -46,11 +46,6 @@ export const Thumbnail: React.FC<VideoProps & Record<string, unknown>> = (props)
   const stat = statScene?.stat;
   const statText = stat ? `${stat.prefix ?? ""}${formatNumber(stat.value, Number.isInteger(stat.value) ? 0 : 1, props.language)}${stat.suffix ?? ""}` : null;
   const text = autoAccent(hookText && stripMarkup(hookText).length <= 48 ? hookText : props.title, stat ? String(stat.value) : null);
-  // Плашка с цифрой не шире ~1.3 иконки — иначе длинное «≈1 250 000 млн» наедет на заголовок.
-  const badgeFit = useMemo(
-    () => (statText ? fitTokens([{ text: statText }], BADGE_FONT, { w: 320 * u * 1.3 - 48 * u, h: 120 * u }, { maxFontSize: Math.round(78 * u), maxLines: 1 }) : null),
-    [statText, u],
-  );
   const icon = hook?.icon ?? statScene?.icon;
   const textW = width * 0.57;
   const iconSize = Math.round(320 * u);
@@ -104,31 +99,39 @@ export const Thumbnail: React.FC<VideoProps & Record<string, unknown>> = (props)
             <IconGradientDefs id="thumb-icon" from={theme.text} to={theme.accent} />
             <Icon name={icon} size={iconSize * 0.56} color="url(#thumb-icon)" strokeWidth={2} />
           </div>
-          {statText ? (
-            <div
-              style={{
-                position: "absolute",
-                right: -iconSize * 0.16,
-                bottom: -iconSize * 0.14,
-                padding: `${8 * u}px ${24 * u}px`,
-                borderRadius: 22 * u,
-                background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent2})`,
-                color: theme.accentInk,
-                fontFamily: FONT_NUMBER,
-                fontWeight: 800,
-                fontSize: badgeFit?.fontSize ?? Math.round(78 * u),
-                lineHeight: 1.1,
-                letterSpacing: "-0.04em",
-                transform: "rotate(-7deg)",
-                boxShadow: `0 ${16 * u}px ${40 * u}px rgba(0,0,0,0.45)`,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {statText}
-            </div>
-          ) : null}
+          {statText ? <StatBadge text={statText} theme={theme} u={u} iconSize={iconSize} /> : null}
         </div>
       </FontGate>
     </AbsoluteFill>
+  );
+};
+
+// Плашка с цифрой не шире ~1.3 иконки — иначе длинное «≈1 250 000 млн» наедет на заголовок.
+// Отдельный компонент внутри FontGate: замер в родителе шёл до загрузки шрифтов
+// системным (Unbounded шире) — плашка 01b «>3 800 лет» налезала на заголовок.
+const StatBadge: React.FC<{ text: string; theme: Theme; u: number; iconSize: number }> = ({ text, theme, u, iconSize }) => {
+  const fit = useMemo(() => fitTokens([{ text }], BADGE_FONT, { w: 320 * u * 1.3 - 48 * u, h: 120 * u }, { maxFontSize: Math.round(78 * u), maxLines: 1 }), [text, u]);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        right: -iconSize * 0.16,
+        bottom: -iconSize * 0.14,
+        padding: `${8 * u}px ${24 * u}px`,
+        borderRadius: 22 * u,
+        background: `linear-gradient(135deg, ${theme.accent}, ${theme.accent2})`,
+        color: theme.accentInk,
+        fontFamily: FONT_NUMBER,
+        fontWeight: 800,
+        fontSize: fit.fontSize,
+        lineHeight: 1.1,
+        letterSpacing: "-0.04em",
+        transform: "rotate(-7deg)",
+        boxShadow: `0 ${16 * u}px ${40 * u}px rgba(0,0,0,0.45)`,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {text}
+    </div>
   );
 };
