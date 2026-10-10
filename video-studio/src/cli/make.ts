@@ -33,6 +33,8 @@ import { applyLanguageVoice } from "../pipeline/lang";
 import { slugify } from "../pipeline/slug";
 import { captionsToSrt } from "../pipeline/srt";
 import { parsePlan, scriptCode } from "../pipeline/plan";
+import { isLongCode } from "../pipeline/codes";
+import { LONG_PLAN_FILE, parseLongPlan } from "../pipeline/long-plan";
 import { findVisual, realFirstForPillar, visualsJudgeStats } from "../pipeline/visuals/index";
 import { readVisualsManifest, reusableEntry, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { getVoiceProvider, resolvePiperVoice } from "../pipeline/voice/index";
@@ -639,13 +641,16 @@ async function checkRender(render: RenderResult, props: VideoProps, runDir: stri
 
 // ---- Рубрика ролика ----
 
-// Сценарий из плана (scripts/sut-08a-….json) → рубрика темы в content/plan.json.
+// Сценарий из плана (scripts/sut-08a-….json) → рубрика темы в content/plan.json; «Разбор» по
+// длинному плану (scripts/razbor-L01-….json) — в content/long-plan.json.
 // Нет кода, плана или темы — null, всё по умолчанию (битый план не валит сборку).
 function planPillar(scriptFile: string | undefined): string | null {
   const code = scriptFile ? scriptCode(scriptFile) : null;
   if (!code) return null;
   try {
-    const plan = parsePlan(JSON.parse(fs.readFileSync(path.join(ROOT, "content", "plan.json"), "utf8").replace(/^﻿/, "")));
+    const long = isLongCode(code);
+    const raw = JSON.parse(fs.readFileSync(path.join(ROOT, ...(long ? LONG_PLAN_FILE.split("/") : ["content", "plan.json"])), "utf8").replace(/^﻿/, ""));
+    const plan = long ? parseLongPlan(raw) : parsePlan(raw);
     return plan.items.find((it) => it.id === code)?.pillar?.trim() || null;
   } catch {
     return null;
