@@ -1,0 +1,96 @@
+{
+  "title": "Why can't you tickle yourself? The brain science explained",
+  "description": "Why does tickling only work when someone else does it? Learn how your cerebellum predicts the feeling of your own movements, and what British neuroscientists discovered with a robot.\n#shorts #brain #psychology #neuroscience",
+  "tags": [
+    "why can't you tickle yourself",
+    "tickling",
+    "brain",
+    "cerebellum",
+    "neuroscience",
+    "psychology",
+    "science facts",
+    "brain facts",
+    "science",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Try tickling yourself. You can't, and your brain is why.",
+      "onScreen": "You *can't* tickle yourself",
+      "icon": "hand",
+      "visualQuery": "hand fingers close",
+      "imagePrompt": "cinematic close-up of fingers about to touch an open palm, dark background, soft rim light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Every time you move, your brain calculates in advance what you're going to feel. Think of it as a weather forecast for your skin.",
+      "onScreen": "Your brain *predicts* sensations",
+      "icon": "brain",
+      "visualQuery": "brain anatomy model",
+      "imagePrompt": "translucent glowing human brain with light pulses running ahead along its pathways, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "The key player here is the cerebellum. It compares the forecast with reality and turns down whatever was expected.",
+      "onScreen": "The cerebellum *mutes* the expected",
+      "icon": "gauge",
+      "visualQuery": "glowing neurons network",
+      "imagePrompt": "close-up of the cerebellum region of a glowing brain model, fine branching neurons, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Tickling happens when a touch can't be predicted precisely. Your brain knows your own moves ahead of time, so there's almost no tickle.",
+      "onScreen": "Predicted means *not* ticklish",
+      "icon": "zap",
+      "visualQuery": "feather touching skin",
+      "imagePrompt": "a white feather lightly touching the sole of a foot, macro, soft light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "British neuroscientists tested this with a robot. People moved a handle themselves, and the robot copied the movement, touching their palm.",
+      "onScreen": "The *robot* experiment",
+      "icon": "bot",
+      "visualQuery": "robotic arm laboratory",
+      "imagePrompt": "small robotic arm gently touching a human palm in a dark laboratory, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "When the robot touched right away, the feeling was weak. But with a delay of just two tenths of a second, it got stronger.",
+      "onScreen": "Add a delay, it *tickles*",
+      "stat": {
+        "value": 0.2,
+        "suffix": " s",
+        "label": "of delay makes it more ticklish"
+      },
+      "icon": "timer",
+      "visualQuery": "stopwatch close up",
+      "imagePrompt": "macro of a stopwatch hand frozen in motion, glowing blue dial, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "The takeaway: your brain is constantly telling your actions apart from someone else's. That's why real tickling only comes from another person.",
+      "onScreen": "Only *others* can tickle you",
+      "icon": "users",
+      "visualQuery": "friends laughing together",
+      "imagePrompt": "two friends laughing on a sofa at night, one tickling the other, warm lamp light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "So how ticklish are you? Confess in the comments.",
+      "onScreen": "Are you *ticklish*?",
+      "icon": "message-circle"
+    }
+  ]
+}

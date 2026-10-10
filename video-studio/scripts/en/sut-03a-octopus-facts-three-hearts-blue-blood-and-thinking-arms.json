@@ -1,0 +1,103 @@
+{
+  "title": "Octopus facts: three hearts, blue blood and thinking arms",
+  "description": "An octopus has three hearts, copper-based blood and about 500 million neurons, most of them in its arms. A quick look at why people say an octopus thinks with its arms.\n#shorts #octopus #nature #animalfacts",
+  "tags": [
+    "octopus",
+    "octopus facts",
+    "animals",
+    "nature",
+    "ocean",
+    "biology",
+    "marine animals",
+    "science",
+    "animal facts",
+    "three hearts",
+    "blue blood",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "An octopus has three hearts. And that's not even the weirdest part.",
+      "onScreen": "An octopus has *three* hearts",
+      "icon": "heart",
+      "visualQuery": "octopus coral reef",
+      "imagePrompt": "underwater shot of an octopus spreading its arms over a coral reef, light rays from above, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "list",
+      "narration": "Two hearts pump blood through the gills. The third, the main one, sends it around the whole body.",
+      "onScreen": "Why *three* hearts?",
+      "items": [
+        "Two for the gills",
+        "One for the whole body"
+      ],
+      "icon": "heart-pulse",
+      "visualQuery": "octopus tentacles closeup",
+      "imagePrompt": "close-up of an octopus mantle and tentacles in dark water, bioluminescent glow, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "And its blood is blue. Oxygen isn't carried by iron, like ours. It's carried by a copper protein called hemocyanin.",
+      "onScreen": "*Blue* blood, thanks to copper",
+      "icon": "droplet",
+      "visualQuery": "blue liquid drop",
+      "imagePrompt": "a single glowing blue drop falling into dark water, macro, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "When an octopus swims, its main heart stops. That might be why it crawls along the bottom more often than it swims.",
+      "onScreen": "Swimming makes its heart *stop*",
+      "icon": "waves",
+      "visualQuery": "octopus crawling seabed",
+      "imagePrompt": "octopus crawling across a sandy sea floor, soft caustic light patterns, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "But the most amazing part is the nervous system. An octopus has about five hundred million neurons. That's one of the most complex nervous systems among invertebrates.",
+      "onScreen": "≈500 M *neurons*",
+      "stat": {
+        "value": 500,
+        "prefix": "≈",
+        "suffix": " M",
+        "label": "neurons in an octopus"
+      },
+      "icon": "brain",
+      "visualQuery": "neurons microscope glow",
+      "imagePrompt": "glowing neural network shaped like octopus arms, dark background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "And about two thirds of them aren't in the head. They're right in the arms.",
+      "onScreen": "2/3 of neurons in the *arms*",
+      "icon": "network",
+      "visualQuery": "octopus swimming ocean",
+      "imagePrompt": "octopus arms with faint glowing nerve lines inside them, deep blue water, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Each arm largely feels and grabs things on its own, and even tastes them with its suckers. In a way, an octopus thinks with its arms.",
+      "onScreen": "It \"thinks\" with its *arms*",
+      "icon": "hand",
+      "visualQuery": "octopus suckers macro",
+      "imagePrompt": "macro of octopus suckers gripping a seashell, crisp detail, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Which animal do you think is the weirdest? Tell me in the comments.",
+      "onScreen": "Who's the *weirdest* animal?",
+      "icon": "message-circle"
+    }
+  ]
+}

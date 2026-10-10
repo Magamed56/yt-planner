@@ -1,0 +1,102 @@
+{
+  "title": "Cleopatra lived closer to us than to the pyramid builders",
+  "description": "The Great Pyramid was built around 2560 BC, Cleopatra died in 30 BC, and humans landed on the Moon in 1969. We do the math and see just how long Egypt's history really is.\n#history #ancientegypt #cleopatra #shorts",
+  "tags": [
+    "history",
+    "cleopatra",
+    "pyramids",
+    "ancient egypt",
+    "great pyramid of giza",
+    "pyramid of khufu",
+    "egypt",
+    "history facts",
+    "fun facts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Cleopatra lived closer to you than to the pyramid builders.",
+      "onScreen": "Cleopatra is closer to *you*",
+      "icon": "crown",
+      "visualQuery": "egyptian queen statue",
+      "imagePrompt": "cinematic portrait of an ancient egyptian queen statue in golden light, pyramid silhouettes in the far background at dusk, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "The Great Pyramid of Pharaoh Khufu at Giza was built around twenty-five sixty BC.",
+      "onScreen": "Great Pyramid: *~2560* BC",
+      "icon": "pyramid",
+      "visualQuery": "giza pyramid desert",
+      "imagePrompt": "great pyramid of giza at dawn, low sun, long shadows, fine sand haze, epic wide shot, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "For more than thirty-eight hundred years, it stayed the tallest structure humans had ever built.",
+      "onScreen": "Height record: *3800* years",
+      "stat": {
+        "value": 3800,
+        "prefix": ">",
+        "suffix": " years",
+        "label": "world's tallest structure"
+      },
+      "icon": "building-2",
+      "visualQuery": "pyramid stone blocks",
+      "imagePrompt": "close-up of massive weathered limestone blocks of an ancient pyramid, dramatic side light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Cleopatra died in thirty BC. That's roughly twenty-five hundred years after the pyramid went up.",
+      "onScreen": "Cleopatra: *30* BC",
+      "icon": "hourglass",
+      "visualQuery": "ancient papyrus scroll",
+      "imagePrompt": "ancient papyrus scroll and an hourglass on a stone table, candle light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "But from Cleopatra to the Moon landing in nineteen sixty-nine? Less than two thousand years.",
+      "onScreen": "To the Moon: *under* 2000 years",
+      "stat": {
+        "value": 1998,
+        "suffix": " years",
+        "label": "from Cleopatra to the first Moon steps"
+      },
+      "icon": "moon",
+      "visualQuery": "moon surface footprint",
+      "imagePrompt": "astronaut boot print on grey lunar dust, earth glowing on the black horizon, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "To Cleopatra herself, the pyramids were already ancient. Herodotus wrote about them four centuries before her time.",
+      "onScreen": "To her, pyramids were *ancient*",
+      "icon": "scroll-text",
+      "visualQuery": "ancient ruins sunset",
+      "imagePrompt": "ancient greek traveler in a cloak looking up at the pyramids, sunset, dust in the air, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "So Egypt's history is so long that Cleopatra is more our contemporary than the pyramid builders'.",
+      "onScreen": "Cleopatra: almost *our* contemporary",
+      "icon": "landmark",
+      "visualQuery": "egyptian hieroglyphs wall",
+      "imagePrompt": "carved egyptian hieroglyphs on a temple wall lit by a moving beam of light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Which history fact surprised you the most? Tell me in the comments.",
+      "onScreen": "Which fact *surprised* you?",
+      "icon": "message-circle"
+    }
+  ]
+}
