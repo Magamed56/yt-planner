@@ -1,0 +1,26 @@
+# Временный: дописать в релизы 01a–07b описание, подпись Instagram и обложки (сгенерированы кодом
+# конвейера из week1-videos.json и сценариев). Только добавляет файлы в существующие релизы.
+name: "tmp: файлы для релизов 01a–07b"
+on:
+  push:
+    branches: [claude/stats-probe]
+    paths: [tmp-backfill/**]
+permissions:
+  contents: write
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          tags=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name')
+          for dir in tmp-backfill/*/; do
+            code=$(basename "$dir")
+            tag=$(printf '%s\n' "$tags" | grep "^video-$code-" | head -1)
+            if [ -z "$tag" ]; then echo "::warning::нет релиза для $code"; continue; fi
+            echo "$code → $tag: $(ls "$dir" | tr '\n' ' ')"
+            gh release upload "$tag" "$dir"* --clobber
+          done
