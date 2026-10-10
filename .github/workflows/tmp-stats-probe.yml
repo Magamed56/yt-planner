@@ -1,0 +1,15 @@
+# Временный: открытые данные похожих каналов для разбора (только чтение). Удалить после разбора.
+name: "tmp: similar channels probe"
+on:
+  push:
+    branches: [claude/stats-probe]
+    paths: [tmp-probe/channels.txt]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 tmp-probe/probe.py
