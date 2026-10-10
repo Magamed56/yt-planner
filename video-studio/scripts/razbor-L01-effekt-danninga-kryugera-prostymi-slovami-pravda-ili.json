@@ -1,0 +1,418 @@
+{
+  "title": "Эффект Даннинга — Крюгера простыми словами: правда или артефакт",
+  "description": "Разбираем эффект Даннинга — Крюгера кратко и честно: от ограбления с лимонным соком в Питтсбурге до эксперимента 1999 года с его знаменитыми цифрами. А потом смотрим, почему статистики спорят, не рисует ли часть эффекта сам способ подсчёта, и что на самом деле говорит этот эффект о самооценке.\n#эффектданнингакрюгера #психология #когнитивныеискажения #критическоемышление",
+  "tags": [
+    "эффект даннинга-крюгера",
+    "эффект даннинга-крюгера кратко",
+    "эффект даннинга-крюгера простыми словами",
+    "даннинг крюгер",
+    "когнитивные искажения",
+    "самооценка",
+    "психология",
+    "критическое мышление",
+    "статистика",
+    "шнобелевская премия",
+    "лимонный сок ограбление",
+    "dunning-kruger effect",
+    "метакогниция"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Грабитель намазал лицо лимонным соком и пошёл грабить банк.",
+      "onScreen": "Лимонный сок вместо *маски*",
+      "icon": "eye",
+      "visualQuery": "lemon juice squeezed hand",
+      "imagePrompt": "cinematic close-up of a hand squeezing a fresh lemon, juice droplets frozen in the air, grainy 1990s surveillance monitor glow in the background, amber and teal palette",
+      "chapter": "Лимонный сок и камеры"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это не анекдот. Шестого января тысяча девятьсот девяносто пятого года Макартур Уилер и Клифтон Эрл Джонсон вышли на дело в районе Питтсбурга. Без масок. С открытыми лицами.",
+      "onScreen": "Питтсбург, 6 января 1995",
+      "icon": "calendar-check",
+      "visualQuery": "Pittsburgh skyline 1990s",
+      "imagePrompt": "wide cinematic shot of a winter American city skyline with bridges over a river, cold morning haze, muted amber and teal palette",
+      "map": {
+        "lat": 40.44,
+        "lon": -79.99,
+        "label": "Питтсбург",
+        "zoom": "city"
+      }
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "За один день они ограбили два банка. И всё это время камеры наблюдения спокойно записывали их лица.",
+      "onScreen": "Два банка. *Ноль* масок",
+      "stat": {
+        "value": 2,
+        "label": "банка ограблено за день"
+      },
+      "icon": "camera",
+      "visualQuery": "bank security camera ceiling",
+      "imagePrompt": "cinematic low angle of a vintage security camera mounted on a bank ceiling, red recording light, grainy atmosphere, amber and teal palette"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Секрет их уверенности был в лимоне. Они искренне верили: если намазать лицо соком, камера его не увидит. Логика такая: лимонным соком ведь пишут невидимые чернила.",
+      "onScreen": "Лимон = *невидимость*?",
+      "icon": "lightbulb",
+      "visualQuery": "lemon invisible ink paper",
+      "imagePrompt": "macro shot of a brush writing with lemon juice on blank paper, soft warm side light, shallow depth of field, amber and teal palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Только невидимые чернила проявляются от нагрева. А камере лимонный сок не мешает вообще никак. Лица грабителей остались на записях во всех подробностях.",
+      "onScreen": "Камере лимон *не помеха*",
+      "icon": "circle-x",
+      "visualQuery": "surveillance footage monitor screen",
+      "imagePrompt": "grainy black and white CCTV monitor showing a blurred figure in a bank lobby, dim control room, amber and teal palette"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "В апреле того же года Уилера задержали. Его опознали по тем самым записям камер, от которых он так надеялся спрятаться.",
+      "onScreen": "Апрель 1995: *опознан* по записям",
+      "icon": "lock",
+      "visualQuery": "police handcuffs arrest",
+      "imagePrompt": "cinematic close-up of handcuffs on wrists under harsh police station light, dark background, amber and teal palette"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Смешно? Но психологов эта история зацепила всерьёз. Человек был не просто неправ. Он даже не подозревал, что неправ. Этот случай и подтолкнул учёных изучать, как люди оценивают свои знания.",
+      "onScreen": "Неправ — и *не знает* об этом",
+      "icon": "brain",
+      "visualQuery": "psychologist reading newspaper office",
+      "imagePrompt": "1990s university office, a scientist reading a newspaper at a wooden desk, warm desk lamp light, cinematic, amber and teal palette"
+    },
+    {
+      "id": "s8",
+      "kind": "quiz",
+      "narration": "Так появился эффект Даннинга — Крюгера. В интернете его пересказывают одной фразой: глупые считают себя умными. Как думаешь, это правда?",
+      "onScreen": "Глупые считают себя *умными*?",
+      "icon": "triangle-alert",
+      "visualQuery": "confused man thinking",
+      "imagePrompt": "cinematic portrait of a man with a puzzled expression, half of his face in shadow, soft rim light, amber and teal palette",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Фраза неточна. Почему — разберём к концу ролика",
+        "question": "Глупые правда считают себя умными?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Спойлер: фраза неточна. Более того, сама сила эффекта до сих пор под вопросом. Статистики спорят, не рисует ли часть знаменитого графика сам способ подсчёта. Но всё по порядку.",
+      "onScreen": "Сам эффект *под вопросом*",
+      "icon": "flask-conical",
+      "visualQuery": "statistics graph paper desk",
+      "imagePrompt": "top-down view of a desk with a printed chart and a pencil, a question mark of shadows across the paper, moody light, amber and teal palette"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Перенесёмся в конец девяностых. Дэвид Даннинг работает в Корнелльском университете, Джастин Крюгер — в Университете Иллинойса. Вместе они решают проверить идею, которую подсказал лимонный грабитель.",
+      "onScreen": "Даннинг и Крюгер: *проверка* идеи",
+      "icon": "graduation-cap",
+      "visualQuery": "Cornell University campus",
+      "imagePrompt": "cinematic view of an old university campus with stone buildings in autumn, golden hour light, amber and teal palette",
+      "chapter": "Эксперимент в Корнелле"
+    },
+    {
+      "id": "s11",
+      "kind": "list",
+      "narration": "Людей проверяли в трёх областях. Логические рассуждения. Грамматика. И социальные навыки.",
+      "onScreen": "Три *навыка* под проверкой",
+      "items": [
+        "Логические рассуждения",
+        "Грамматика",
+        "Социальные навыки"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "students taking exam classroom",
+      "imagePrompt": "rows of students writing a test in a lecture hall, warm window light, shallow depth of field, amber and teal palette"
+    },
+    {
+      "id": "s12",
+      "kind": "media",
+      "narration": "Схема простая. Сначала человек проходит тест. Потом отвечает на вопрос: а как ты справился по сравнению с остальными? Лучше большинства? Хуже?",
+      "onScreen": "Тест, потом *самооценка*",
+      "icon": "target",
+      "visualQuery": "student filling test paper",
+      "imagePrompt": "close-up of a hand filling out a paper questionnaire with a pencil, soft warm light, cinematic, amber and teal palette"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Обрати внимание: интеллект в целом никто не измерял. Измеряли конкретный навык. И то, насколько точно человек видит свой уровень именно в нём.",
+      "onScreen": "Не интеллект, а *конкретный* навык",
+      "icon": "compass",
+      "visualQuery": "magnifying glass notebook",
+      "imagePrompt": "magnifying glass resting on an open notebook with handwritten notes, focused pool of warm light, dark surroundings, amber and teal palette"
+    },
+    {
+      "id": "s14",
+      "kind": "statement",
+      "narration": "В тысяча девятьсот девяносто девятом году вышла их статья. По-английски Unskilled and Unaware of It. В переводе — неумелые и не подозревающие об этом.",
+      "onScreen": "1999: «Неумелые и *не подозревающие*»",
+      "icon": "book-open",
+      "visualQuery": "scientific journal pages",
+      "imagePrompt": "an academic journal lying open on a library table, pages slightly curled, warm lamp light, cinematic, amber and teal palette"
+    },
+    {
+      "id": "s15",
+      "kind": "media",
+      "narration": "А потом учёные положили рядом две цифры: реальный балл и самооценку. Разрыв оказался таким, что эти числа цитируют уже четверть века. Сейчас ты их увидишь.",
+      "onScreen": "Реальность против *самооценки*",
+      "icon": "trending-up",
+      "visualQuery": "scale balance weights",
+      "imagePrompt": "cinematic close-up of an old brass balance scale tipped heavily to one side, dramatic side light, dark background, amber and teal palette"
+    },
+    {
+      "id": "s16",
+      "kind": "stat",
+      "narration": "Нижняя четверть участников во всех четырёх исследованиях набрала баллы на уровне двенадцатого процентиля. То есть почти девяносто процентов людей решили тест лучше них.",
+      "onScreen": "Реальный уровень: *12-й* процентиль",
+      "stat": {
+        "value": 12,
+        "suffix": "-й",
+        "label": "процентиль: реальный результат слабейших"
+      },
+      "icon": "trending-down",
+      "visualQuery": "exam paper red marks",
+      "imagePrompt": "cinematic close-up of a graded exam paper covered in red correction marks on a wooden desk, moody teal shadows with warm amber lamp light, shallow depth of field",
+      "chapter": "Цифры, которые все цитируют"
+    },
+    {
+      "id": "s17",
+      "kind": "stat",
+      "narration": "А сами они ставили себя примерно на шестьдесят второй процентиль. Выше середины. Думали, что обогнали большинство, а отстали почти от всех.",
+      "onScreen": "Самооценка: *62-й* процентиль",
+      "stat": {
+        "value": 62,
+        "suffix": "-й",
+        "label": "процентиль: как они оценили себя"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Реальный балл",
+            "value": 12
+          },
+          {
+            "label": "Самооценка",
+            "value": 62
+          }
+        ],
+        "suffix": "-й"
+      }
+    },
+    {
+      "id": "s18",
+      "kind": "statement",
+      "narration": "Разрыв — пятьдесят пунктов. Это как прибежать почти последним и уверенно рассказывать, что финишировал в первой половине.",
+      "onScreen": "Почти последний, но *уверен* в успехе",
+      "icon": "target",
+      "visualQuery": "runner finish line race",
+      "imagePrompt": "cinematic wide shot of a lone exhausted runner crossing an empty finish line long after others, teal dusk sky with amber stadium lights, melancholic mood"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Даннинг объяснял это двойным ударом. Чтобы заметить ошибку в логике или грамматике, нужен тот же навык, что и чтобы её не совершить. Нет навыка — нет и радара.",
+      "onScreen": "Нет навыка — нет *радара*",
+      "icon": "eye",
+      "visualQuery": "radar screen dark",
+      "imagePrompt": "cinematic close-up of a blank radar screen glowing faintly in a dark room, teal glow with amber reflections, mysterious atmosphere"
+    },
+    {
+      "id": "s20",
+      "kind": "media",
+      "narration": "И вот проверка этой идеи. Участников подтягивали коротким обучением. Навык рос — и разрыв между самооценкой и реальностью сокращался. Люди начинали видеть свои промахи и оценивали себя трезвее.",
+      "onScreen": "Учишься — и *видишь* свои ошибки",
+      "icon": "graduation-cap",
+      "visualQuery": "students classroom lesson",
+      "imagePrompt": "cinematic shot of students in a university seminar room leaning over notebooks while an instructor points at a whiteboard, warm amber window light, teal shadows"
+    },
+    {
+      "id": "s21",
+      "kind": "media",
+      "narration": "В двухтысячном году авторы получили за это Шнобелевскую премию по психологии. Шуточная награда за исследования, которые сначала смешат, а потом заставляют думать. И эффект узнал весь мир.",
+      "onScreen": "2000: *Шнобелевская* премия",
+      "icon": "trophy",
+      "visualQuery": "Ig Nobel Prize ceremony",
+      "imagePrompt": "cinematic view of a theatrical award ceremony stage with paper airplanes flying over the audience, warm amber spotlights and teal haze, playful mood"
+    },
+    {
+      "id": "s22",
+      "kind": "statement",
+      "narration": "Дальше эффект зажил своей жизнью и стал мемом про самоуверенных глупцов. В сети гуляет кривая с пиком глупости, но в статье тысяча девятьсот девяносто девятого года её нет.",
+      "onScreen": "Кривой «пика глупости» в статье *нет*",
+      "icon": "smartphone",
+      "visualQuery": "smartphone social media scrolling",
+      "imagePrompt": "cinematic close-up of a hand scrolling a glowing smartphone in a dark room, abstract curved graph reflected in the screen without any text, teal and amber palette"
+    },
+    {
+      "id": "s23",
+      "kind": "statement",
+      "narration": "Но тут к истории подключились статистики. И задали неудобный вопрос. Что, если похожую картинку можно получить вообще без людей? Просто из случайных чисел?",
+      "onScreen": "А если *без людей*?",
+      "icon": "atom",
+      "visualQuery": "dice random numbers table",
+      "imagePrompt": "cinematic macro shot of scattered dice and glowing data points floating above a dark table, teal light with amber highlights, suspenseful mood"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Дальше эффект зажил своей жизнью и стал мемом про самоуверенных глупцов. В сети гуляет кривая с пиком глупости, но в статье тысяча девятьсот девяносто девятого года её нет.",
+      "onScreen": "Мем есть, а кривой в *статье* нет",
+      "icon": "trending-down",
+      "visualQuery": "internet meme computer screen",
+      "imagePrompt": "cinematic medium shot of a vintage computer screen glowing in a dark room showing a data chart",
+      "chapter": "Случайные числа против эффекта"
+    },
+    {
+      "id": "s25",
+      "kind": "statement",
+      "narration": "Но тут к истории подключились статистики. И задали неудобный вопрос. Что, если похожую картинку можно получить вообще без людей? Просто из случайных чисел?",
+      "onScreen": "Статистический *вопрос* к эффекту",
+      "icon": "calculator",
+      "visualQuery": "mathematician writing formulas blackboard",
+      "imagePrompt": "cinematic close-up of chalk formulas on a dark blackboard, moody lighting"
+    },
+    {
+      "id": "s26",
+      "kind": "stat",
+      "narration": "В две тысячи шестнадцатом и семнадцатом годах в математическом журнале Numeracy вышли две статьи Эда Нафера и коллег.",
+      "onScreen": "Статьи Нафера, две тысячи шестнадцатый год",
+      "stat": {
+        "value": 2016,
+        "label": "публикации с критикой данных"
+      },
+      "icon": "file-text",
+      "visualQuery": "scientific journals stack desk",
+      "imagePrompt": "stack of academic journals on a wooden desk with soft dramatic side light"
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "Они показали, что картину эффекта можно воспроизвести на случайных данных.",
+      "onScreen": "Эффект из *случайных* чисел",
+      "icon": "shuffle",
+      "visualQuery": "dice rolling casino table",
+      "imagePrompt": "cinematic macro shot of white dice rolling on a dark surface, shallow depth of field"
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "Наглядная идея проста. Если самооценка человека шумная и неточная, у тех, кто внизу теста, она в среднем окажется выше их реального результата. А у тех, кто наверху — ниже.",
+      "onScreen": "Шум в данных рождает *паттерн*",
+      "icon": "activity",
+      "visualQuery": "statistical scatter plot chart",
+      "imagePrompt": "glowing data scatter plot on a dark monitor, cinematic blue and orange tones"
+    },
+    {
+      "id": "s29",
+      "kind": "stat",
+      "narration": "В двадцатом году Жиль Жиньяк и Марцин Заенковский в журнале Intelligence пришли к выводу, что эффект может быть в основном статистическим артефактом. Позже их работа сама стала предметом полемики.",
+      "onScreen": "Спор в журнале Intelligence",
+      "stat": {
+        "value": 2020,
+        "label": "статья Жиньяка и Заенковского"
+      },
+      "icon": "message-square",
+      "visualQuery": "scientists arguing conference room",
+      "imagePrompt": "cinematic wide shot of two researchers discussing data in a modern office, moody light"
+    },
+    {
+      "id": "s30",
+      "kind": "media",
+      "narration": "В двадцать втором году статья в Frontiers in Psychology объяснила эффект как статистический артефакт, который вовсе не требует сложного психологического объяснения.",
+      "onScreen": "Статья в Frontiers, двадцать *второй* год",
+      "icon": "microscope",
+      "visualQuery": "scientific laboratory microscope",
+      "imagePrompt": "cinematic shot of a modern laboratory microscope with blue and warm rim light"
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Так что же, эффект Даннинга — Крюгера это просто математическая иллюзия? Или за ним стоит реальная психология?",
+      "onScreen": "Так эффект — пустышка или *нет*?",
+      "icon": "help-circle",
+      "visualQuery": "person looking out window thinking",
+      "imagePrompt": "cinematic silhouette of a person looking through a rainy window at night, thoughtful mood",
+      "chapter": "Что от эффекта осталось"
+    },
+    {
+      "id": "s32",
+      "kind": "stat",
+      "narration": "В двадцать первом году Джансен и коллеги повторили два исследования Даннинга и Крюгера на огромной выборке около четырёх тысяч участников. Проверка продолжается.",
+      "onScreen": "Проверка на четырёх *тысячах* человек",
+      "stat": {
+        "value": 4000,
+        "label": "участников в повторном тесте"
+      },
+      "icon": "users",
+      "visualQuery": "large group auditorium seats",
+      "imagePrompt": "cinematic wide shot of a large lecture hall filled with attentive people, soft warm light"
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Давайте закроем главное заблуждение. Эффект никогда не описывал общую самоуверенность людей с низким интеллектом.",
+      "onScreen": "Это не про общий *интеллект*",
+      "icon": "shield-alert",
+      "visualQuery": "brain anatomy diagram book",
+      "imagePrompt": "old anatomical book page with a detailed brain drawing, vintage warm lighting"
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "На деле речь идёт о завышенной самооценке в абсолютно конкретной узкой области, где у человека просто мало навыков.",
+      "onScreen": "Завышена оценка в *одном* навыке",
+      "icon": "target",
+      "visualQuery": "dartboard bullseye close up",
+      "imagePrompt": "cinematic close-up of a dart hitting the center of a dartboard, sharp focus, dark background"
+    },
+    {
+      "id": "s35",
+      "kind": "media",
+      "narration": "И даже история с грабителем и лимонным соком — это на самом деле не про глупость вообще, а про полное незнание того, как именно работают камеры наблюдения.",
+      "onScreen": "Грабитель не глуп. Он не знал *камер*",
+      "icon": "video",
+      "visualQuery": "vintage security camera hallway",
+      "imagePrompt": "cinematic low angle shot of an old security camera mounted on a brick wall, moody light"
+    },
+    {
+      "id": "s36",
+      "kind": "list",
+      "narration": "Практический вывод прост. Прежде чем уверенно судить о чём-то новом, проверь себя тремя вещами: тестом, мнением эксперта или реальным результатом.",
+      "onScreen": "Как проверить *себя*",
+      "items": [
+        "Пройди тест",
+        "Спроси эксперта",
+        "Оцени результат"
+      ],
+      "icon": "check-circle",
+      "visualQuery": "checklist clipboard pen desk",
+      "imagePrompt": "top-down cinematic view of a checklist on a wooden table with a pen, soft morning light"
+    },
+    {
+      "id": "s37",
+      "kind": "cta",
+      "narration": "В чём ты сам себя переоценивал?",
+      "onScreen": "В чём ты переоценивал *себя*?",
+      "icon": "message-circle"
+    }
+  ]
+}
