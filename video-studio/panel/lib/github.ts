@@ -256,6 +256,15 @@ export async function assetInfo(assetId: number): Promise<{ name: string; size: 
   return { name: j.name || `file-${assetId}`, size: Number(j.size) || 0, contentType: j.content_type || null };
 }
 
+// Небольшой двоичный файл релиза целиком (обложка «Разбора» для thumbnails.set, до maxBytes).
+export async function assetBytes(assetId: number, maxBytes: number): Promise<Uint8Array> {
+  const res = await gh(`/repos/${repoName()}/releases/assets/${assetId}`, { accept: "application/octet-stream" });
+  if (!res.ok) throw await failure(res, "файл релиза");
+  const buf = new Uint8Array(await res.arrayBuffer());
+  if (buf.byteLength > maxBytes) throw new GithubError(`файл релиза больше ${Math.round(maxBytes / 1024)} КБ`, 413);
+  return buf;
+}
+
 // Небольшой текстовый файл релиза (подпись Reels).
 export async function assetText(assetId: number): Promise<string> {
   const res = await gh(`/repos/${repoName()}/releases/assets/${assetId}`, { accept: "application/octet-stream" });

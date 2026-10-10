@@ -26,7 +26,13 @@ import RunProgressBar from "./RunProgressBar";
 
 const KEEP_OPTIONS = [0, 3, 7, 14, 30, 60, 90, 180];
 const sameSettings = (a: AutopilotSettings, b: AutopilotSettings) =>
-  a.enabled === b.enabled && a.days === b.days && a.retryFailed === b.retryFailed && a.keepReleaseDays === b.keepReleaseDays && a.scriptReserve === b.scriptReserve;
+  a.enabled === b.enabled &&
+  a.days === b.days &&
+  a.retryFailed === b.retryFailed &&
+  a.keepReleaseDays === b.keepReleaseDays &&
+  a.scriptReserve === b.scriptReserve &&
+  (a.long !== false) === (b.long !== false);
+const WEEKDAY_RU = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 const mbText = (bytes: number) => `${Math.max(1, Math.round(bytes / 1_048_576))} МБ`;
 
 // Цвет точки — итог запуска: идёт, успех, ошибка, отменён.
@@ -47,9 +53,15 @@ export default function RunsView({ state }: { state: PanelState }) {
   const attention = badgeCount(buildTodo(state, new Date(state.generatedAt)));
   useEffect(() => setBadge(attention), [attention, state.generatedAt]);
 
-  const upcoming = state.rows.filter((r) => r.stage === "topic" || r.stage === "script").slice(0, 12);
+  const upcoming = state.rows.filter((r) => !r.long && (r.stage === "topic" || r.stage === "script")).slice(0, 12);
   const [picked, setPicked] = useState<string[]>(() => upcoming.filter((r) => !r.running).slice(0, 2).map((r) => r.code));
   const pickedTopics = picked.filter((c) => upcoming.find((r) => r.code === c)?.stage === "topic");
+  // «Разборы» — отдельным списком: свой план (content/long-plan.json), свои слоты, ≈ 40–60 мин сборки.
+  const longRows = state.rows.filter((r) => r.long && r.stage !== "published");
+  const longUpcoming = longRows.filter((r) => r.stage === "topic" || r.stage === "script").slice(0, 8);
+  const [longPicked, setLongPicked] = useState<string[]>(() => longUpcoming.filter((r) => !r.running).slice(0, 1).map((r) => r.code));
+  const longPickedTopics = longPicked.filter((c) => longUpcoming.find((r) => r.code === c)?.stage === "topic");
+  const longSlotsLabel = `${(state.longWeekdays ?? []).map((d) => WEEKDAY_RU[d]).join(", ")} в ${(state.longSlotTimes ?? []).join(", ")}`;
 
   const [preview, setPreview] = useState<FillPreview | null>(null);
   const [fillPicked, setFillPicked] = useState<string[]>([]);
@@ -69,6 +81,8 @@ export default function RunsView({ state }: { state: PanelState }) {
     next.reserve.length ? `запас сценариев: ${next.reserve.join(", ")}` : "",
     next.retries.length ? `повторит: ${next.retries.join(", ")}` : "",
     next.cleanup.files ? `уборка: ${next.cleanup.files} видео (${mbText(next.cleanup.bytes)})` : "",
+    next.long?.code ? `«Разбор» ${next.long.code}${rowOf.get(next.long.code)?.dateLabel ? ` (выход ${rowOf.get(next.long.code)!.dateLabel} ${rowOf.get(next.long.code)!.timeLabel})` : ""}` : "",
+    next.long?.orderTopics ? "закажет темы «Разбора»" : "",
   ].filter(Boolean);
   const previewText = `Следующий запуск (${nextWhen}): ${previewParts.join("; ")}${autoChanged ? " — если сохранить эти настройки." : " — если ничего не изменится."}`;
   const keepOptions = KEEP_OPTIONS.includes(auto.keepReleaseDays) ? KEEP_OPTIONS : [...KEEP_OPTIONS, auto.keepReleaseDays].sort((a, b) => a - b);
@@ -82,6 +96,7 @@ export default function RunsView({ state }: { state: PanelState }) {
   // Только что запущенные — «в очереди», пока GitHub не покажет запуск: второе нажатие не нужно.
   const pending = usePending();
   const queuedNow = picked.some((c) => pending.has(c)) || pickedTopics.some((c) => pending.has(c));
+  const longQueuedNow = longPicked.some((c) => pending.has(c));
   const toggle = (list: string[], code: string) => (list.includes(code) ? list.filter((c) => c !== code) : [...list, code]);
 
   async function run(key: string, action: () => Promise<ActionResult>, confirmText?: string) {
@@ -182,6 +197,56 @@ export default function RunsView({ state }: { state: PanelState }) {
           )}
         </section>
 
+        <section className="card" id="long">
+          <h2>«Разборы» — 16:9, ~7 минут</h2>
+          <p className="muted small">
+            Свои темы (их нет среди Shorts) из content/long-plan.json, выход — {longSlotsLabel}. Сборка {"≈ 40–60"} минут в GitHub Actions и ≈ 3 из ~10 бесплатных
+            озвучек Gemini в сутки — поэтому по одному. После «Найти новые загрузки» панель ставит «Разбору» его обложку 16:9 из релиза. Порядок выхода — в
+            календаре (строка 21:00), как у Shorts.
+          </p>
+          <div className="btn-row">
+            <button
+              className="btn primary"
+              disabled={!longPicked.length || busy !== null || longQueuedNow}
+              onClick={() => run("long", () => videosAction(longPicked), `Сделать «Разбор»: ${codesLabel(longPicked)}? Сценарий пишет Claude (платно), сборка ≈ 40–60 минут на ролик.`)}
+            >
+              {longQueuedNow ? "Запускаю… ждём GitHub" : `Сделать видео (${longPicked.length})`}
+            </button>
+            <button
+              className="btn"
+              disabled={!longPickedTopics.length || busy !== null || longQueuedNow}
+              onClick={() => run("long", () => draftAction(longPickedTopics), `Только сценарии «Разбора»: ${codesLabel(longPickedTopics)}? Это платно (Claude).`)}
+            >
+              Только сценарии ({longPickedTopics.length})
+            </button>
+          </div>
+          <p className="small plan-runway">
+            {state.longPlanError
+              ? `План не читается: ${state.longPlanError}`
+              : `Тем без сценария: ${state.longTopicsLeft ?? 0}${(state.longTopicsLeft ?? 0) < 3 ? " — автопилот закажет новые" : ""}.`}{" "}
+            <button className="btn small" disabled={extend.busy || busy !== null || state.runs.some((r) => r.active && r.kind === "plan")} onClick={() => void extend.start(6, true)}>
+              + 6 тем «Разбора»
+            </button>
+          </p>
+          {longUpcoming.length === 0 ? (
+            <p className="muted">{longRows.length ? "У всех тем «Разбора» уже есть видео." : "В плане «Разборов» пока нет тем."}</p>
+          ) : (
+            <div className="pick">
+              {longUpcoming.map((r) => (
+                <label key={r.code}>
+                  <input type="checkbox" checked={longPicked.includes(r.code)} disabled={Boolean(r.running)} onChange={() => setLongPicked(toggle(longPicked, r.code))} />
+                  <b>{r.code}</b>
+                  <span>{r.title}</span>
+                  <span className="sub">
+                    {r.dateLabel} {r.timeLabel} · {STAGE_LABEL[r.stage]} · {r.pillar}
+                    {r.running ? ` · ⚙ ${r.running}` : ""}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </section>
+
         <section className="card" id="fill">
           <h2>YouTube: тексты и время выхода</h2>
           <p className="muted small">
@@ -241,7 +306,8 @@ export default function RunsView({ state }: { state: PanelState }) {
           <h2>Автопилот</h2>
           <p className="muted small">
             Раз в день (около 06:00 МСК) смотрит ролики, которые выходят в ближайшие дни: недостающим пишет сценарии и собирает видео. В Studio не грузит — напоминает
-            в очереди. За раз — не больше 6 роликов (бесплатный Gemini TTS ~10 озвучек в сутки).
+            в очереди. За раз — не больше 6 роликов (бесплатный Gemini TTS ~10 озвучек в сутки); «Разбор» — один за раз и считается за 3 (тогда Shorts — до 3), а
+            когда тем «Разбора» без сценария меньше трёх, автопилот заказывает 6 новых.
           </p>
           <div className="field">
             <label>
@@ -257,6 +323,9 @@ export default function RunsView({ state }: { state: PanelState }) {
                 ))}
               </select>{" "}
               дн. до выхода
+            </label>
+            <label>
+              <input type="checkbox" checked={auto.long !== false} onChange={(e) => setAuto({ ...auto, long: e.target.checked })} /> «Разборы» тоже (по одному)
             </label>
             <label>
               Запас сценариев{" "}

@@ -18,9 +18,12 @@ export const queued = (r: Row) => !r.whenExact && r.when !== null && r.stage !==
 export const draggable = (r: Row) => movable(r) || queued(r);
 
 // Куда можно бросить ролик: запланированный — в слот ближайших 60 дней (занятый — обмен),
-// ролик-ориентир — на место другого ориентира (обмен в очереди).
+// ролик-ориентир — на место другого ориентира (обмен в очереди). «Разбор» — только в слоты и на
+// места «Разборов» (вт/чт/сб 21:00), Shorts — только в свои: потоки не смешиваются.
 export function canDrop(dragged: Row, cell: BoardCell): boolean {
   if (cell.row?.code === dragged.code) return false;
+  const sameKind = cell.row ? Boolean(cell.row.long) === Boolean(dragged.long) : Boolean(cell.long) === Boolean(dragged.long);
+  if (!sameKind) return false;
   if (movable(dragged)) return Boolean(cell.iso) && (!cell.row || cell.row.stage !== "published");
   return Boolean(cell.row && queued(cell.row));
 }
@@ -30,6 +33,7 @@ export interface BoardCell {
   time: string;
   row: Row | null;
   iso: string | null; // слот, на который можно перенести (ближайшие 60 дней), иначе null
+  long?: boolean; // слот «Разборов» (вт/чт/сб 21:00)
 }
 
 // Доска недели. Перетаскивание — общий хук usePressDrag: мышью сразу, пальцем — после короткого
@@ -64,6 +68,10 @@ export default function BoardView({
   const byDay = new Map<string, Row[]>();
   for (const r of dated) byDay.set(r.dateKey!, [...(byDay.get(r.dateKey!) ?? []), r]);
   const grid = new Map(state.slotGrid.map((c) => [`${c.dateKey} ${c.time}`, c]));
+  // Слоты «Разборов» — строка 21:00 во вт/чт/сб (дни и время — channel.json → longSlots).
+  const longGrid = new Map((state.longSlotGrid ?? []).map((c) => [`${c.dateKey} ${c.time}`, c]));
+  // Пустые 21:00 — только когда «Разборы» уже в плане, иначе это шум.
+  const longDays = new Set(state.rows.some((r) => r.long) ? (state.longWeekdays ?? []) : []);
   const weeks: string[][] = [];
   for (let k = start; k <= end; k = shiftDateKey(k, 1)) {
     if (!weeks.length || weeks.at(-1)!.length === 7) weeks.push([]);
@@ -83,7 +91,8 @@ export default function BoardView({
             // Прошлое — только то, что вышло (во сколько вышло), без пустых слотов; сегодня —
             // без уже прошедших.
             const open = past ? [] : state.slotTimes.filter((t) => key !== state.todayKey || grid.has(`${key} ${t}`));
-            const times = [...new Set([...open, ...rows.map((r) => r.timeLabel)])].sort();
+            const openLong = past || !longDays.has(weekday(key)) ? [] : (state.longSlotTimes ?? []).filter((t) => key !== state.todayKey || longGrid.has(`${key} ${t}`));
+            const times = [...new Set([...open, ...openLong, ...rows.map((r) => r.timeLabel)])].sort();
             return (
               <div key={key} className={`bday${past ? " past" : ""}${key === state.todayKey ? " today" : ""}`}>
                 <div className="bday-head">
@@ -92,9 +101,11 @@ export default function BoardView({
                 </div>
                 <div className="bday-slots">
                   {times.map((t) => {
-                    const g = grid.get(`${key} ${t}`);
+                    const lg = longGrid.get(`${key} ${t}`);
+                    const g = grid.get(`${key} ${t}`) ?? lg;
                     const row = rows.find((r) => r.timeLabel === t) ?? null;
-                    const cell: BoardCell = { key: `${key} ${t}`, time: t, row, iso: g?.iso ?? null };
+                    const isLongSlot = row ? Boolean(row.long) : Boolean(lg) || (openLong.includes(t) && !open.includes(t));
+                    const cell: BoardCell = { key: `${key} ${t}`, time: t, row, iso: g?.iso ?? null, long: isLongSlot };
                     cells.current.set(cell.key, cell);
                     const isTarget = Boolean(moving && canDrop(moving, cell));
                     const over = hover === cell.key && isTarget;
@@ -107,7 +118,7 @@ export default function BoardView({
                       ) : (
                         <div key={t} data-drop={cell.key} className={`bslot free${isTarget ? " target" : ""}${over ? " over" : ""}`}>
                           <span className="t">{t}</span>
-                          {g?.occupant === "другое видео" ? "другое видео" : past ? "" : isTarget ? "сюда" : "свободно"}
+                          {g?.occupant === "другое видео" ? "другое видео" : past ? "" : isTarget ? "сюда" : isLongSlot ? "«Разбор»: свободно" : "свободно"}
                         </div>
                       );
                     }
@@ -117,7 +128,7 @@ export default function BoardView({
                         <span className="t">{t}</span>
                         <button
                           type="button"
-                          className={`btile${picked === row.code ? " picked" : ""}${dragging === row.code ? " dragging" : ""}${canMove ? " can-drag" : ""}`}
+                          className={`btile${row.long ? " long" : ""}${picked === row.code ? " picked" : ""}${dragging === row.code ? " dragging" : ""}${canMove ? " can-drag" : ""}`}
                           disabled={busy}
                           onPointerDown={canMove ? (e) => drag.start(e, row.code) : undefined}
                           onContextMenu={canMove ? (e) => e.preventDefault() : undefined}
@@ -129,6 +140,7 @@ export default function BoardView({
                           <TileImg row={row} />
                           <span className="info">
                             <span className="code">{row.code}</span>
+                            {row.long && <span className="long-badge">Разбор</span>}
                             <span className="title">{row.title}</span>
                             {!movable(row) && <span className="mark">{row.whenExact ? STAGE_LABEL[row.stage] : `${STAGE_LABEL[row.stage]} · ориентир`}</span>}
                             {row.stage === "published" && row.stats?.ratioLabel && (

@@ -1,4 +1,5 @@
 import { after, connection } from "next/server";
+import { normCode } from "../../src/pipeline/codes";
 import ErrorScreen from "@/components/ErrorScreen";
 import QueueView from "@/components/QueueView";
 import { saveSnapshotQuietly } from "@/lib/history-store";
@@ -9,8 +10,8 @@ import { channelOverview } from "@/lib/youtube";
 export default async function QueuePage({ searchParams }: { searchParams: Promise<{ view?: string; v?: string }> }) {
   await connection(); // всегда свежие данные GitHub и YouTube
   const { view, v } = await searchParams;
-  // ?v=08a — сразу открыть карточку ролика (ссылка из уведомления или «Статистики»).
-  const code = typeof v === "string" && /^\d{2}[a-z]$/i.test(v) ? v.toLowerCase() : null;
+  // ?v=08a (?v=L01 — «Разбор») — сразу открыть карточку ролика (ссылка из уведомления или «Статистики»).
+  const code = normCode(v);
   let state: PanelState;
   // Тот же проход по YouTube, что и раньше: part=statistics у channels.list квоту не добавляет,
   // а подписчики нужны для истории.

@@ -2721,3 +2721,38 @@ a.code-chip {
   height: 20px;
   accent-color: var(--accent);
 }
+
+/* ---- «Разборы» (L01…, 16:9): значок и обложка целиком ---- */
+.long-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-2);
+  color: var(--accent-ink);
+  font: 800 11px var(--body);
+  letter-spacing: 0.02em;
+}
+.vcard.long .cover img,
+.vcard.long .cover video {
+  object-fit: contain;
+  background: #000;
+}
+.vcard.long.free .cover.empty {
+  border-color: var(--accent-2);
+}
+.btile .long-badge {
+  position: static;
+  align-self: flex-start;
+  padding: 2px 8px;
+  font-size: 10px;
+}
+.btile.long img,
+.btile.long video {
+  object-fit: contain;
+  background: #000;
+}
+.badge.long {
+  background: var(--accent-2);
+}

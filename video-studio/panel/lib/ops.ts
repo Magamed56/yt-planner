@@ -1,12 +1,12 @@
 // Обслуживание по расписанию (Vercel Cron, после автопилота): запас сценариев, повтор упавших
 // сборок, уборка видео из релизов. Только чистые функции и импорты типов: их проверяет
 // scripts/ops-test.ts без сети, а превью уборки считает и браузер (карточка автопилота).
+import { isLongCode, mp4Code } from "../../src/pipeline/codes";
+import { LONG_TTS_REQUESTS } from "../../src/pipeline/long-plan";
 import type { GhRelease } from "./github";
 import type { PanelState, Row, RunInfo } from "./state";
 
 export const DAY_MS = 86_400_000;
-// Как в state.ts: файл ролика в релизе — «08a-….mp4».
-const MP4_WITH_CODE = /^(\d{2}[a-z])-.+\.mp4$/i;
 
 // ---- запас сценариев (идея 23) ----
 
@@ -22,7 +22,8 @@ export function decideReserve(
   if (!(n > 0)) return { codes: [], skip: null };
   const busy = new Set([...building, ...state.runs.filter((r) => r.active && (r.kind === "batch" || r.kind === "render")).flatMap((r) => r.codes)]);
   // Строки этапов «тема»/«сценарий» идут по ориентирам слотов — это порядок плана (state.ts).
-  const window = state.rows.filter((r) => (r.stage === "topic" || r.stage === "script") && !busy.has(r.code)).slice(0, n);
+  // Запас — только у Shorts: сценарий «Разбора» пишет его сборка.
+  const window = state.rows.filter((r) => !r.long && (r.stage === "topic" || r.stage === "script") && !busy.has(r.code)).slice(0, n);
   const need = window.filter((r) => r.stage === "topic" && !r.running);
   if (!need.length) return { codes: [], skip: window.length ? `запас сценариев (${n}) уже есть или пишется` : "в плане не осталось тем без видео" };
   if ((state.missingSecrets ?? []).includes("ANTHROPIC_API_KEY")) return { codes: [], skip: "запас сценариев: в секретах GitHub нет ANTHROPIC_API_KEY" };
@@ -46,8 +47,9 @@ const RETRY_CONCLUSIONS = new Set(["failure", "timed_out"]);
 export const RETRY_MAX = 3;
 
 // Сколько озвучек потратит повтор: rerun-failed-jobs пересобирает весь запуск, и пакет
-// озвучивает все свои ролики заново (черновик — ни одного).
-export const retryCost = (r: RunInfo) => (r.kind === "draft" ? 0 : Math.max(1, r.codes.length));
+// озвучивает все свои ролики заново (черновик — ни одного). «Разбор» — ≈ 3 запроса.
+export const retryCost = (r: RunInfo) =>
+  r.kind === "draft" ? 0 : Math.max(1, r.codes.reduce((n, c) => n + (isLongCode(c) ? LONG_TTS_REQUESTS : 1), 0));
 
 // Упавшие (failure/timed_out) за последние сутки запуски «video-studio: ролик» с первой
 // попытки — перезапустить один раз. Не трогаем то, что уже готово или запущено заново (в том
@@ -143,7 +145,8 @@ export function releaseVideosOf(releases: GhRelease[], publishedAt: Map<string, 
   for (const r of releases) {
     if (r.draft) continue;
     for (const a of r.assets) {
-      const code = MP4_WITH_CODE.exec(a.name)?.[1]?.toLowerCase();
+      // Как в state.ts: файл ролика в релизе — «08a-….mp4» или «L01-….mp4».
+      const code = mp4Code(a.name);
       const at = code ? publishedAt.get(code) : undefined;
       if (code && at) out.push({ code, tag: r.tag_name, assetId: a.id, name: a.name, size: a.size, publishedAt: at });
     }
