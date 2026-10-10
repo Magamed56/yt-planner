@@ -95,8 +95,24 @@ function savedKinds(): FileKind[] | null {
   }
 }
 
-export default function FilesSaver({ items }: { items: SaveItem[] }) {
-  const [kinds, setKinds] = useState<FileKind[]>(FILE_KINDS);
+// fixed — один набор файлов без галочек и без запоминания (кнопки «Видео», «Обложка» на странице
+// канала другого языка), label — их название на кнопке, compact — одна кнопка: без подсказки про
+// меню телефона (она там одна на страницу) и без второй «Поделиться» на Android, subtle — кнопка
+// второго плана (маленькая, не жёлтая). Без них — как в карточке ролика.
+export default function FilesSaver({
+  items,
+  fixed,
+  label,
+  compact = false,
+  subtle = false,
+}: {
+  items: SaveItem[];
+  fixed?: FileKind[];
+  label?: string;
+  compact?: boolean;
+  subtle?: boolean;
+}) {
+  const [kinds, setKinds] = useState<FileKind[]>(fixed ?? FILE_KINDS);
   const [platform, setPlatform] = useState<Platform>("desktop");
   const [share, setShare] = useState<Share>({ phase: "idle" });
   const [saving, setSaving] = useState<{ done: number; total: number } | null>(null);
@@ -106,7 +122,7 @@ export default function FilesSaver({ items }: { items: SaveItem[] }) {
 
   // Только в браузере: на сервере нет navigator и localStorage, разметка не должна расходиться.
   useEffect(() => {
-    const saved = savedKinds();
+    const saved = fixed ? null : savedKinds();
     if (saved) setKinds(saved);
     setPlatform(platformOf());
     return () => abort.current?.abort();
@@ -218,9 +234,10 @@ export default function FilesSaver({ items }: { items: SaveItem[] }) {
 
   const pct = share.phase === "loading" && share.total ? Math.min(100, Math.round((share.done / share.total) * 100)) : 0;
   const shareLabel = platform === "ios" ? "📱 Сохранить в Фото" : "📤 Поделиться";
+  const main = subtle ? "btn small" : "btn primary";
   const downloadButton = (
-    <button className="btn primary" disabled={!files.length || busy} onClick={downloadAll}>
-      {saving ? `Скачиваю ${saving.done + 1} из ${saving.total}…` : `⬇ Скачать ${filesLabel(files.length)} · ${mb(bytes)}`}
+    <button className={main} disabled={!files.length || busy} onClick={downloadAll}>
+      {saving ? `Скачиваю ${saving.done + 1} из ${saving.total}…` : label ? `⬇ ${label} · ${mb(bytes)}` : `⬇ Скачать ${filesLabel(files.length)} · ${mb(bytes)}`}
     </button>
   );
   const parts = groups.current.length;
@@ -228,40 +245,42 @@ export default function FilesSaver({ items }: { items: SaveItem[] }) {
 
   return (
     <div className="files-saver">
-      <div className="kinds" role="group" aria-label="Что скачать">
-        {FILE_KINDS.map((k) => {
-          const t = totals[k];
-          if (!t.count) return null;
-          const count = many ? ` · ${t.count === items.length ? `${t.count} шт.` : `у ${t.count} из ${items.length}`}` : "";
-          return (
-            <label key={k} className="kind">
-              <input type="checkbox" checked={kinds.includes(k)} disabled={locked} onChange={() => toggle(k)} />
-              <span>
-                {KIND_LABEL[k]}
-                <span className="muted small">
-                  {count} · {mb(t.size)}
+      {!fixed && (
+        <div className="kinds" role="group" aria-label="Что скачать">
+          {FILE_KINDS.map((k) => {
+            const t = totals[k];
+            if (!t.count) return null;
+            const count = many ? ` · ${t.count === items.length ? `${t.count} шт.` : `у ${t.count} из ${items.length}`}` : "";
+            return (
+              <label key={k} className="kind">
+                <input type="checkbox" checked={kinds.includes(k)} disabled={locked} onChange={() => toggle(k)} />
+                <span>
+                  {KIND_LABEL[k]}
+                  <span className="muted small">
+                    {count} · {mb(t.size)}
+                  </span>
                 </span>
-              </span>
-            </label>
-          );
-        })}
-      </div>
+              </label>
+            );
+          })}
+        </div>
+      )}
 
       <div className="btn-row">
         {platform === "desktop" ? (
           downloadButton
         ) : share.phase === "ready" ? (
-          <button className="btn primary" onClick={shareReady}>
+          <button className={main} onClick={shareReady}>
             {shareLabel}
             {partLabel(share.part)}
           </button>
         ) : share.phase === "loading" ? (
-          <button className="btn" disabled>
+          <button className={subtle ? "btn small" : "btn"} disabled>
             Готовлю{partLabel(share.part)}… {pct}%
           </button>
         ) : platform === "ios" ? (
-          <button className="btn primary" disabled={!files.length || busy} onClick={startShare}>
-            {shareLabel} · {filesLabel(files.length)}, {mb(bytes)}
+          <button className={main} disabled={!files.length || busy} onClick={startShare}>
+            {label ? `📱 ${label} · ${mb(bytes)}` : `${shareLabel} · ${filesLabel(files.length)}, ${mb(bytes)}`}
           </button>
         ) : (
           downloadButton
@@ -277,13 +296,13 @@ export default function FilesSaver({ items }: { items: SaveItem[] }) {
             >
               Отмена
             </button>
-          ) : platform === "android" ? (
+          ) : platform === "android" && !compact ? (
             <button className="btn small ghost" disabled={!files.length || busy} onClick={startShare}>
               {shareLabel}
             </button>
           ) : null)}
       </div>
-      {platform === "ios" && share.phase === "idle" && files.length > 0 && (
+      {!compact && platform === "ios" && share.phase === "idle" && files.length > 0 && (
         <p className="small muted">Откроется меню телефона: «Сохранить видео» — в «Фото», «Сохранить в Файлы» — в «Файлы». Ничего не пережимается.</p>
       )}
 
@@ -331,7 +350,7 @@ export default function FilesSaver({ items }: { items: SaveItem[] }) {
           </button>
         </p>
       )}
-      {!files.length && <p className="small muted">Отметьте, что скачать.</p>}
+      {!files.length && !fixed && <p className="small muted">Отметьте, что скачать.</p>}
       <div role="status" aria-live="polite">
         {note && <p className={`small ${note.ok ? "muted" : "flag"}`}>{note.text}</p>}
       </div>

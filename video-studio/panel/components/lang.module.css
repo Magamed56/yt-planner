@@ -1,0 +1,123 @@
+/* Канал на другом языке (components/LangView.tsx): карточки роликов для ручной загрузки с телефона. */
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+@media (min-width: 760px) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+.video {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+/* Обложка 9:16 — крупнее, чем в списках: по ней узнают ролик. */
+.head .cover {
+  width: 84px;
+  height: 149px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.info {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.title {
+  font: 800 16px/1.25 var(--display);
+  overflow-wrap: anywhere;
+}
+/* Видео в «Фото» — главная кнопка на всю ширину; под ней своё «готовлю…». */
+.main :global(.files-saver) {
+  margin-top: 0;
+}
+.main :global(.btn-row .btn) {
+  flex: 1;
+}
+/* Второй план: тексты YouTube — три кнопки в ряд, обложка и подпись Reels — две. */
+.group {
+  display: grid;
+  gap: 6px;
+}
+.groupLabel {
+  color: var(--dim);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 8px;
+}
+.grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.grid :global(.files-saver) {
+  margin-top: 0;
+}
+.grid :global(.btn) {
+  width: 100%;
+}
+.manual {
+  display: grid;
+  gap: 6px;
+}
+.manual p {
+  margin: 0;
+}
+.more summary,
+.howto summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.more summary {
+  color: var(--muted);
+  font-size: 13px;
+}
+.more[open] summary {
+  margin-bottom: 8px;
+}
+.texts {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 4px;
+}
+.texts dt {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.texts dd {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.howto summary {
+  font-size: 14px;
+}
+.howto p {
+  margin: 10px 0 0;
+}
+.langs a {
+  text-decoration: none;
+}
