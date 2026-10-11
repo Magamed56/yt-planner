@@ -891,6 +891,10 @@ await test("Сцены media (2–3 в Shorts) и заголовок (до 50 с
   for (const i of [1, 3]) Object.assign(four.scenes[i], { kind: "media", stat: undefined, items: undefined });
   assert.ok(lintScript(four).some((w) => w.startsWith('сцен kind "media" — 4')));
   assert.ok(!lintScript(quizScript()).some((w) => w.includes('kind "media"')), "у викторины своя структура");
+  // Один раунд в обычном ролике (как 10a, 13b) — не викторина: правило media действует.
+  const oneRound = quizScript();
+  oneRound.scenes.splice(3, 2);
+  assert.ok(lintScript(oneRound).some((w) => w.startsWith('сцен kind "media" — 0, в Shorts нужно 2–3')), lintScript(oneRound).join("\n"));
   assert.ok(!lintScript({ ...demo, format: "landscape" }).some((w) => w.includes('kind "media"')));
 
   // Пары из готовых роликов: 06b и 03b пересказывают хук, 05a — дополняет.

@@ -1,8 +1,6 @@
 {
-  "_todo": "ЗАГОТОВКА — заменить после создания канала: name, handle, links (и проверить тексты). Пока \"placeholder\": true, make предупреждает при каждой сборке; после замены удалите эту строку и placeholder.",
-  "placeholder": true,
   "name": "Gist in a Minute",
-  "handle": null,
+  "handle": "GistinaMinute",
   "tagline": "Complex made simple. Every day",
   "niche": "Educational channel about everything: science, space, the human body, psychology, history, tech, money and everyday “why” questions. One video — one clear gist in a minute, only verifiable facts.",
   "audience": "English-speaking viewers 14–45 who love learning something new from Shorts and Reels.",
@@ -31,7 +29,7 @@
     "perDay": 2,
     "publishTimesLocal": ["12:00", "19:00"],
     "timezone": "America/New_York",
-    "note": "Заготовка: время под аудиторию США. Загрузка в этот канал — отдельным ключом (см. README, «Ролики на других языках»)."
+    "note": "Время под аудиторию США. Загрузка в этот канал — отдельным ключом (см. README, «Ролики на других языках»)."
   },
   "hashtags": {
     "brand": ["#gistinaminute"],
@@ -46,7 +44,7 @@
     "rule": "At the end: a question for the viewer (answer in the comments), then “subscribe”."
   },
   "links": {
-    "youtube": null,
+    "youtube": "https://www.youtube.com/@GistinaMinute",
     "instagram": null
   },
   "disclaimer": "Videos are for general education and are not a substitute for professional advice (medical, legal or financial)."

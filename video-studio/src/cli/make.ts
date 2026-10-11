@@ -15,7 +15,7 @@ import { FPS, THEME_NAMES, layoutScenes, type Format, type ThemeName, type Video
 import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult, VoiceUsed } from "../pipeline/contracts";
 import { makeSfx, prepareMusic } from "../pipeline/audio/index";
 import { applyChannelDefaults, applyPillarVoice, brandIntroEnabled, type ChannelConfig } from "../pipeline/channel";
-import { loadChannel } from "../pipeline/channel-file";
+import { brandChannelOf, loadChannel } from "../pipeline/channel-file";
 import { coverFrame, frameToMs, renderCover } from "../pipeline/cover";
 import { buildInstagramCaption, instagramEnvHelp, missingInstagramEnv, publishRunDir, writeInstagramAssets, type InstagramMeta, type RunDirPublishResult } from "../pipeline/instagram";
 import { publishTelegramRunDir, telegramAlreadySent, telegramConfig, type TelegramRunDirResult } from "../pipeline/telegram";
@@ -223,7 +223,7 @@ async function synthesizeAll(provider: VoiceProvider, script: VideoScript, publi
 }
 
 function logVoice(scene: VideoScript["scenes"][number], result: VoiceResult): void {
-  const src = result.wordsSource === "provider" ? "тайминги от провайдера" : "тайминги оценены по звуку";
+  const src = result.wordsSource === "provider" ? "тайминги от провайдера" : result.wordsSource === "aligned" ? "тайминги по распознанной речи" : "тайминги оценены по звуку";
   console.log(`  ${scene.id} (${scene.kind}): ${(result.durationMs / 1000).toFixed(2)} с, ${result.words.length} слов, ${src}${result.cached ? " (из кэша)" : ""}`);
 }
 
@@ -458,7 +458,9 @@ async function main() {
 
   // 5. Props композиции
   const props = await steps.run("Сборка таймлинии (props.json)", async () => {
-    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, sfx, brandIntro, format, theme: script.theme, channelName: channel.name });
+    // Канал языка (channels/en.json) — в props: заставка покажет его название, а не вшитое «Суть за минуту».
+    const brandChannel = brandChannelOf(channel);
+    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, sfx, brandIntro, brandChannel, format, theme: script.theme, channelName: channel.name });
     writeJson(path.join(runDir, "props.json"), p);
     console.log(`  длительность ${(p.durationInFrames / FPS).toFixed(1)} с (${p.durationInFrames} кадров), голос ${(voiceDurationMs / 1000).toFixed(1)} с, слов в субтитрах: ${p.captions.length}`);
     return p;

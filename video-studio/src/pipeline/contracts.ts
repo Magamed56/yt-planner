@@ -18,6 +18,7 @@
 //   OPENAI_TTS_BASE_URL, OPENAI_TTS_MODEL, OPENAI_TTS_VOICE, OPENAI_TTS_API_KEY   (локальный Qwen3-TTS/Chatterbox)
 //   FISH_TTS_BASE_URL, FISH_TTS_REFERENCE_ID
 //   MODELS_DIR        куда скачивать локальные модели (по умолчанию ./models)
+//   CAPTION_ALIGN     0 (или false/no/off/none) — не выравнивать тайминги слов по распознанной речи (voice/align.ts), только оценка по звуку
 //   LLM_PROVIDER      gemini | claude | groq | openrouter | ollama | custom   (по умолчанию gemini)
 //   LLM_MODEL, LLM_BASE_URL, LLM_API_KEY
 //   ANTHROPIC_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY
@@ -44,7 +45,8 @@ export interface VoiceResult {
   file: string; // абсолютный путь к записанному файлу (.mp3 или .wav)
   durationMs: number;
   words: WordTiming[]; // никогда не пустой при непустом тексте
-  wordsSource: "provider" | "estimated";
+  // aligned — по распознанной речи (voice/align.ts), estimated — оценка по энергии звука
+  wordsSource: "provider" | "estimated" | "aligned";
   voice?: string; // каким голосом озвучено (Charon, ru-RU-DmitryNeural, ru_RU-dmitri-medium)
   fallbackModel?: string; // запасная модель того же провайдера (Gemini после суточной квоты основной)
   cached?: boolean; // взято из кэша (папки ролика или общего) — запроса к сервису не было

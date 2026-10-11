@@ -14,6 +14,12 @@ import { clamp, type SceneProps } from "./common";
 // на длину карточки. У первой сцены ролика карточки нет (хук не задерживаем).
 const FADE_FRAMES = 10; // карточка растворяется поверх начала сцены
 
+// Текст сцены после карточки главы стартует, когда карточка растаяла:
+// иначе новый заголовок встаёт поверх ещё читаемого названия главы.
+// Без карточки — сразу (start сцены).
+export const textStartAfterChapter = (p: SceneProps, start: number): number =>
+  chapterCardFrames(p.scene, p.index) ? Math.max(start, FADE_FRAMES) : start;
+
 export const ChapterWrap: React.FC<SceneProps & { Comp: React.FC<SceneProps> }> = ({ Comp, ...p }) => {
   const card = chapterCardFrames(p.scene, p.index);
   if (!card || !p.scene.chapter) return <Comp {...p} />;

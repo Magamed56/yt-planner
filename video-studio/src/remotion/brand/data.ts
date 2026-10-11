@@ -1,8 +1,13 @@
-// Данные бренда для статичных картинок (аватар, баннер, обложки). Источник
-// правды — channel.json: webpack вшивает его в бандл при сборке, поэтому
-// после правки названия/слогана/расписания достаточно перезапустить `npm run brand`.
-import channel from "../../../channel.json";
+// Данные бренда для статичных картинок (аватар, баннер, обложки) и заставки роликов.
+// Источник правды — файл канала: `npm run brand` читает его с диска (channel.json или
+// channels/<язык>.json с --channel) и передаёт в inputProps; ролик другого языка несёт
+// свой канал в props.json (make → brandChannelOf). В Studio и в русском ролике ключа
+// нет — тогда channel.json, который webpack вшивает в бандл.
+import { getInputProps } from "remotion";
+import channelJson from "../../../channel.json";
 import { THEMES } from "../theme";
+import { BRAND_CHANNEL_PROP } from "./jobs";
+import { brandTexts } from "./texts";
 
 interface PillarRaw {
   id: string;
@@ -14,47 +19,55 @@ export interface Pillar extends PillarRaw {
   short: string; // подпись на обложке «Актуального» — одно короткое слово
 }
 
-// Короткие подписи для обложек: в кружке «Актуального» влезает одно слово.
-// Неизвестную рубрику (добавили в channel.json) подписываем первым словом названия.
-const SHORT: Record<string, string> = {
-  mind: "Мозг",
-  body: "Тело",
-  space: "Космос",
-  nature: "Природа",
-  history: "История",
-  tech: "Техно",
-  money: "Деньги",
-  why: "Почему?",
-};
-
-const raw = channel as unknown as {
+// Поля, кроме name, необязательны: в ролик может прийти свой CHANNEL_FILE без рубрик и
+// расписания — заставке нужно только название, а падение здесь уронило бы весь рендер.
+interface ChannelRaw {
   name: string;
-  handle: string;
-  tagline: string;
-  pillars: PillarRaw[];
+  handle?: string | null;
+  tagline?: string;
+  language?: string;
+  pillars?: PillarRaw[];
   // publishTimeLocal — старый формат (один ролик в день), оставлен для совместимости.
-  schedule: { perDay?: number; publishTimesLocal?: string[]; publishTimeLocal?: string; timezone: string };
-  cta: { subscribe: string };
-  links: { youtube: string; instagram: string };
-};
+  schedule?: { perDay?: number; publishTimesLocal?: string[]; publishTimeLocal?: string; timezone?: string };
+  cta?: { subscribe?: string };
+  links?: { youtube: string | null; instagram: string | null };
+}
+
+// Remotion кладёт inputProps в страницу до загрузки бандла (evaluateOnNewDocument),
+// поэтому на уровне модуля канал уже виден — и для renderStill, и для selectComposition.
+function inputChannel(): ChannelRaw | null {
+  // В Node getInputProps() не работает и только предупреждает в консоль.
+  if (typeof window === "undefined") return null;
+  try {
+    const value = (getInputProps() as Record<string, unknown>)[BRAND_CHANNEL_PROP];
+    return value && typeof value === "object" ? (value as ChannelRaw) : null;
+  } catch {
+    // <Player> или страница без inputProps — канал по умолчанию.
+    return null;
+  }
+}
+
+const raw: ChannelRaw = inputChannel() ?? (channelJson as unknown as ChannelRaw);
+const text = brandTexts(raw.language);
 
 // Время выхода и часовой пояс на картинки не пишем: зрители живут в разных поясах,
 // а расписание может меняться. Из расписания берём только число роликов в день.
-const times = (raw.schedule.publishTimesLocal?.length ? raw.schedule.publishTimesLocal : [raw.schedule.publishTimeLocal ?? ""]).filter(Boolean);
-const perDay = Math.max(1, raw.schedule.perDay ?? times.length);
-const rolik = perDay < 5 ? "ролика" : "роликов";
-const perDayText = perDay === 1 ? "1 ролик" : `${perDay} ${rolik}`;
+const schedule = raw.schedule ?? {};
+const times = (schedule.publishTimesLocal?.length ? schedule.publishTimesLocal : [schedule.publishTimeLocal ?? ""]).filter(Boolean);
+const perDay = Math.max(1, schedule.perDay ?? times.length);
+const handle = raw.handle?.trim().replace(/^@/, "") ?? "";
 
 export const BRAND = {
   name: raw.name,
-  handle: `@${raw.handle}`,
-  tagline: raw.tagline,
+  language: raw.language ?? "ru",
+  handle: handle ? `@${handle}` : "",
+  tagline: raw.tagline ?? "",
   perDay,
-  perDayText: `${perDayText} в день`, // «2 ролика в день» — для поста
-  // Плашка баннера; «каждый день» уже есть в слогане рядом, поэтому — число в день.
-  schedule: perDay > 1 ? `${perDay} новых ${rolik} в день` : "Новый ролик каждый день",
-  cta: raw.cta.subscribe,
-  pillars: raw.pillars.map((p): Pillar => ({ ...p, short: SHORT[p.id] ?? p.title.split(/\s+/)[0] ?? p.title })),
+  perDayText: text.perDay(perDay), // «2 ролика в день» — для поста
+  schedule: text.schedule(perDay), // плашка баннера
+  text,
+  cta: raw.cta?.subscribe ?? "",
+  pillars: (raw.pillars ?? []).map((p): Pillar => ({ ...p, short: text.short[p.id] ?? p.title.split(/\s+/)[0] ?? p.title })),
   theme: THEMES.midnight,
 };
 
@@ -67,5 +80,5 @@ export function splitName(name: string): [string, string] {
 }
 
 export function pillarById(id: string | undefined): Pillar {
-  return BRAND.pillars.find((p) => p.id === id) ?? BRAND.pillars[0] ?? { id: "why", title: "Почему так?", icon: "lightbulb", short: "Почему?" };
+  return BRAND.pillars.find((p) => p.id === id) ?? BRAND.pillars[0] ?? text.fallbackPillar;
 }

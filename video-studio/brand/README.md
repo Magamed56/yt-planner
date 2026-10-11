@@ -89,12 +89,14 @@ npm run brand                                   # всё → brand/ (≈30 с)
 npm run brand -- --only=avatar,banner           # только часть: avatar, banner, watermark, highlights, post, preview
 npm run brand -- --out=out/brand-test           # в другую папку, brand/ не трогать
 npm run brand -- --raw                          # без сжатия PNG (файлы в 3–6 раз тяжелее)
+npm run brand -- --channel=en                   # английский канал: channels/en.json → brand/en/
 npm run studio                                  # посмотреть и подвигать вживую: папка «Brand»
 ```
 
 - Тексты, рубрики и число роликов в день правятся в `channel.json`, после правки снова
-  `npm run brand`. Короткие подписи для обложек «Актуального» лежат в
-  `src/remotion/brand/data.ts` (`SHORT`). Для новой рубрики без подписи берётся первое слово
+  `npm run brand`. Короткие подписи для обложек «Актуального» и остальные надписи, которых нет
+  в `channel.json` («2 ролика в день», «Знакомство», абзац поста), лежат в
+  `src/remotion/brand/texts.ts` — там же английские для `brand/en/` ([brand/en/README.md](en/README.md)). Для новой рубрики без подписи берётся первое слово
   её названия, а иконка — по имени из [lucide.dev](https://lucide.dev/icons) (поле `icon`).
 - Дизайн лежит в `src/remotion/brand/`: знак в `BrandMark.tsx`, остальное в файлах с
   говорящими именами.

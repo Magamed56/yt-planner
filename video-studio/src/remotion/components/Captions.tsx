@@ -4,7 +4,7 @@ import type { TikTokPage } from "@remotion/captions";
 import { measureText } from "@remotion/layout-utils";
 import type { RenderScene, TimelineCaption } from "../../types";
 import { FONT_DISPLAY } from "../fonts";
-import { captionPages } from "../lib/caption-pages";
+import { captionPages, sceneBreaksMs } from "../lib/caption-pages";
 import { useLayout } from "../lib/layout";
 import { fitTokens, type FontSpec } from "../lib/text";
 import { type Theme } from "../theme";
@@ -34,18 +34,32 @@ function outline(px: number, color: string): string {
 export const Captions: React.FC<{ captions: TimelineCaption[]; scenes?: RenderScene[]; theme: Theme }> = ({ captions, scenes, theme }) => {
   const { fps } = useVideoConfig();
   const pages = useMemo(() => captionPages(captions, scenes), [captions, scenes]);
+  const spans = useMemo(() => {
+    const breaks = sceneBreaksMs(scenes ?? []);
+    const sceneOf = (ms: number) => breaks.filter((b) => ms >= b).length;
+    const out = pages.map((page, i) => {
+      const from = Math.round((page.startMs / 1000) * fps);
+      const lastTo = page.tokens.length ? page.tokens[page.tokens.length - 1].toMs : page.startMs + page.durationMs;
+      const nextStart = i + 1 < pages.length ? pages[i + 1].startMs : Number.POSITIVE_INFINITY;
+      const endMs = Math.min(nextStart, lastTo + HOLD_AFTER_MS);
+      const dur = Math.max(1, Math.round((endMs / 1000) * fps) - from);
+      // Следующая страница той же сцены сразу за этой (пауза ≤ HOLD_AFTER_MS) —
+      // смена без затухания: иначе посреди фразы пустой кадр и 4 полупрозрачных.
+      // На склейке сцен затухание остаётся — страница не переходит через склейку.
+      const joinedNext = endMs === nextStart && sceneOf(page.startMs) === sceneOf(nextStart);
+      return { from, dur, joinedNext, joinedPrev: false };
+    });
+    out.forEach((s, i) => (s.joinedPrev = i > 0 && out[i - 1].joinedNext));
+    return out;
+  }, [pages, scenes, fps]);
 
   return (
     <>
       {pages.map((page, i) => {
-        const from = Math.round((page.startMs / 1000) * fps);
-        const lastTo = page.tokens.length ? page.tokens[page.tokens.length - 1].toMs : page.startMs + page.durationMs;
-        const nextStart = i + 1 < pages.length ? pages[i + 1].startMs : Number.POSITIVE_INFINITY;
-        const endMs = Math.min(nextStart, lastTo + HOLD_AFTER_MS);
-        const dur = Math.max(1, Math.round((endMs / 1000) * fps) - from);
+        const { from, dur, joinedPrev, joinedNext } = spans[i];
         return (
           <Sequence key={i} from={from} durationInFrames={dur} layout="none" name={`Субтитры ${i + 1}`}>
-            <CaptionPage page={page} theme={theme} durationInFrames={dur} />
+            <CaptionPage page={page} theme={theme} durationInFrames={dur} joinedPrev={joinedPrev} joinedNext={joinedNext} />
           </Sequence>
         );
       })}
@@ -53,7 +67,13 @@ export const Captions: React.FC<{ captions: TimelineCaption[]; scenes?: RenderSc
   );
 };
 
-const CaptionPage: React.FC<{ page: TikTokPage; theme: Theme; durationInFrames: number }> = ({ page, theme, durationInFrames }) => {
+const CaptionPage: React.FC<{ page: TikTokPage; theme: Theme; durationInFrames: number; joinedPrev: boolean; joinedNext: boolean }> = ({
+  page,
+  theme,
+  durationInFrames,
+  joinedPrev,
+  joinedNext,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const layout = useLayout();
@@ -74,8 +94,10 @@ const CaptionPage: React.FC<{ page: TikTokPage; theme: Theme; durationInFrames: 
     const gap = Math.max(1, m("a a") - m("aa")) + 2 * WORD_PAD_EM * fs;
     return tokens.map((t) => Math.min(0.1, (0.9 * gap) / Math.max(1, m(t.text))));
   }, [tokens, fs]);
+  // Пружина «поп» остаётся и на стыке: смена страницы видна, но без провала.
   const enter = spring({ frame, fps, config: { damping: 16, stiffness: 260, mass: 0.5 } });
-  const exit = interpolate(frame, [durationInFrames - 3, durationInFrames], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const fadeIn = joinedPrev ? 1 : interpolate(frame, [0, 3], [0, 1], { extrapolateRight: "clamp" });
+  const exit = joinedNext ? 1 : interpolate(frame, [durationInFrames - 3, durationInFrames], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const ol = outline(Math.max(3, fs * 0.065), "rgba(0,0,0,0.92)");
 
   return (
@@ -87,7 +109,7 @@ const CaptionPage: React.FC<{ page: TikTokPage; theme: Theme; durationInFrames: 
           width: c.maxWidth,
           top: c.centerY,
           transform: `translateY(-50%) translateY(${interpolate(enter, [0, 1], [fs * 0.25, 0])}px) scale(${interpolate(enter, [0, 1], [0.94, 1])})`,
-          opacity: Math.min(interpolate(frame, [0, 3], [0, 1], { extrapolateRight: "clamp" }), exit),
+          opacity: Math.min(fadeIn, exit),
           fontFamily: CAPTION_FONT.fontFamily,
           fontWeight: CAPTION_FONT.fontWeight,
           fontSize: fs,

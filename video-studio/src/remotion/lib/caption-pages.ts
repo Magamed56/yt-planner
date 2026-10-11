@@ -9,14 +9,18 @@ const BREAK_ON_SILENCE_MS = 300; // пауза между предложения
 
 type SceneVoice = { startFrame: number; audioStartFrame: number; audioDurationMs: number };
 
+// Границы сцен для субтитров (мс) — середина паузы между голосами соседних
+// сцен (голоса не перекрываются, их раскладывает layoutScenes).
+export function sceneBreaksMs(scenes: SceneVoice[]): number[] {
+  const voiceStart = (s: SceneVoice) => ((s.startFrame + s.audioStartFrame) / FPS) * 1000;
+  return scenes.slice(1).map((s, i) => (voiceStart(scenes[i]!) + scenes[i]!.audioDurationMs + voiceStart(s)) / 2);
+}
+
 // Страницы режем отдельно по сценам: пауза между репликами соседних сцен
 // (≈ 0,2 с, types.ts) короче BREAK_ON_SILENCE_MS, и иначе конец одной сцены
 // и начало следующей попадали бы на одну страницу, висящую через склейку.
 export function captionPages(captions: TimelineCaption[], scenes: SceneVoice[] = []): TikTokPage[] {
-  // Граница — середина паузы между голосами соседних сцен (голоса не
-  // перекрываются, их раскладывает layoutScenes).
-  const voiceStart = (s: SceneVoice) => ((s.startFrame + s.audioStartFrame) / FPS) * 1000;
-  const breaks = scenes.slice(1).map((s, i) => (voiceStart(scenes[i]!) + scenes[i]!.audioDurationMs + voiceStart(s)) / 2);
+  const breaks = sceneBreaksMs(scenes);
   const groups: TimelineCaption[][] = [[]];
   let b = 0;
   for (const c of captions) {

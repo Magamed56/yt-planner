@@ -46,6 +46,7 @@ export interface BuildPropsInput {
   showProgressBar?: boolean;
   channelName?: string | null; // undefined → CHANNEL_NAME из окружения
   musicVolume?: number; // undefined → MUSIC_VOLUME из окружения или по умолчанию
+  brandChannel?: Record<string, unknown> | null; // файл канала для заставки (brandChannelOf); нет — channel.json из бандла
 }
 
 // Абсолютный путь внутри publicDir → "voice/s1.wav" (всегда с «/», даже на
@@ -145,6 +146,8 @@ export function buildVideoProps(input: BuildPropsInput): VideoProps {
     ctaComment: ctaCommentFromEnv(),
     // Язык — только у роликов не на русском: подписи композиции (lib/ui-text.ts) и запись чисел.
     ...(script.language && script.language !== "ru" ? { language: script.language } : {}),
+    // Канал языка — только когда он не channel.json: русские props.json не меняются.
+    ...(input.brandChannel ? { brandChannel: input.brandChannel } : {}),
   };
 }
 

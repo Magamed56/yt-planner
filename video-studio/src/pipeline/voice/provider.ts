@@ -2,6 +2,8 @@
 // повтор при сбое, запись файла, постобработка WAV (обрезка тишины,
 // выравнивание громкости), длительность и тайминги слов. Провайдеру остаётся
 // только получить звук — поэтому все шесть ведут себя одинаково.
+// Тайминги без провайдера (Piper, Gemini…) — по распознанной речи (align.ts),
+// а если распознавание недоступно — оценка по звуку (timing.ts).
 
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
@@ -10,7 +12,8 @@ import path from "node:path";
 import type { WordTiming } from "../../types";
 import type { VoiceOptions, VoiceProvider, VoiceResult } from "../contracts";
 import { applyFades, normalizeLoudness, removeDc } from "../audio/dsp";
-import { encodeWav16, toMono, type PcmAudio } from "../audio/wav";
+import { decodeWav, encodeWav16, toMono, type PcmAudio } from "../audio/wav";
+import { alignByAsr, alignedSplitPoints, alignEnabled } from "./align";
 import { audioFileDurationMs } from "./duration";
 import { TtsError, sleep } from "./http";
 import { pruneSharedOnce, readShared, sharedCacheDir, writeShared } from "./shared-cache";
@@ -21,8 +24,10 @@ import { alignToTokens, analyzeSpeech, estimateWordTimings, estimateWordsUniform
 // fallback — звук дала запасная модель (у Gemini — после 429/404 основной):
 // такой результат в кэше не переиспользуем, чтобы при следующей сборке сцены
 // переозвучились основной моделью и в ролике остался один голос.
+// aligned — слова, уже выровненные по распознанной речи (мс от начала audio):
+// нарезка общего звука или общий кэш; тогда распознавать сцену заново не нужно.
 export type RawAudio =
-  | { kind: "pcm"; audio: PcmAudio; words?: WordTiming[] | null; fallback?: string }
+  | { kind: "pcm"; audio: PcmAudio; words?: WordTiming[] | null; fallback?: string; aligned?: WordTiming[] | null }
   | { kind: "mp3"; bytes: Uint8Array; words?: WordTiming[] | null; fallback?: string };
 
 export interface RawContext {
@@ -60,8 +65,9 @@ interface CacheEntry {
   file: string; // имя файла рядом с json
   durationMs: number;
   words: WordTiming[];
-  wordsSource: "provider" | "estimated";
+  wordsSource: VoiceResult["wordsSource"];
   fallback?: string; // см. RawAudio.fallback
+  alignTried?: boolean; // выравнивание по речи пробовали и не вышло — при чтении не повторяем
 }
 
 export function wrapProvider(raw: RawProvider): VoiceProvider {
@@ -85,7 +91,7 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
   // Сначала кэш в папке ролика (готовый файл), затем общий (shared-cache.ts): из сырого
   // звука сцена собирается заново той же постобработкой, без запроса к сервису.
   async function fromCaches(clean: string, outFileBase: string, key: string, voice: string): Promise<VoiceResult | null> {
-    const local = await readCache(outFileBase, key);
+    const local = await readCache(outFileBase, key, clean);
     if (local) return { ...local, voice, cached: true };
     // TTS_CACHE=0 — нужен новый дубль: общий кэш не читаем (запишет его finish).
     const dir = process.env.TTS_CACHE === "0" ? null : sharedCacheDir();
@@ -131,27 +137,46 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       // Абзацы — подсказка модели сделать паузу между сценами.
       const ctx: RawContext = { voice, rate: rateMultiplier(process.env.TTS_RATE), signal: opts.signal };
       const result = await withRetry(raw, () => raw.synthesizeRaw(texts.join("\n\n"), ctx), opts.signal);
-      const cuts = result.kind === "pcm" ? findSplitPoints(result.audio, texts) : null;
+      const sceneNames = g.map((i) => i + 1);
+      const cuts = result.kind === "pcm" ? await splitPoints(result.audio, texts, sceneNames) : null;
       if (result.kind !== "pcm" || !cuts) {
         console.warn(`[озвучка] ${raw.name}: не удалось разрезать общий звук сцен ${g.map((i) => i + 1).join(", ")} по паузам — озвучиваю их по одной.`);
         for (const i of g) out[i] = await synthesize(items[i]!.text, items[i]!.outFileBase, opts);
         continue;
       }
-      const parts = splitAudio(result.audio, cuts);
+      const parts = splitAudio(result.audio, cuts.cuts);
       for (const [k, i] of g.entries()) {
         const p = prepared[i]!;
-        out[i] = await finish({ kind: "pcm", audio: parts[k]!, fallback: result.fallback }, p.clean, p.outFileBase, keyOf(voice, p.clean), voice);
+        out[i] = await finish({ kind: "pcm", audio: parts[k]!, fallback: result.fallback, aligned: cuts.words?.[k] ?? null }, p.clean, p.outFileBase, keyOf(voice, p.clean), voice);
       }
     }
     return out as VoiceResult[];
   }
 
-  // store = false — звук уже из общего кэша, класть его туда снова незачем.
+  // Границы сцен в общем звуке: по распознанным словам (точно), иначе по паузам
+  // (split.ts). words — слова сцен от начала их кусков, если выравнивание удалось.
+  async function splitPoints(audio: PcmAudio, texts: string[], scenes: number[]): Promise<{ cuts: number[]; words?: WordTiming[][] } | null> {
+    const byPauses = findSplitPoints(audio, texts);
+    const byAsr = await alignedSplitPoints(toMono(audio), audio.sampleRate, texts);
+    if (!byAsr) return byPauses ? { cuts: byPauses } : null;
+    const moved = byAsr.cuts
+      .map((c, k) => ({ k, d: byPauses ? (c - byPauses[k]!) / 1000 : NaN }))
+      .filter((x) => !byPauses || Math.abs(x.d) >= 0.3);
+    if (byPauses && moved.length) {
+      console.log(`[озвучка] ${raw.name}: границы сцен поправлены по распознанной речи — ${moved.map((x) => `${scenes[x.k]}|${scenes[x.k + 1]} на ${x.d > 0 ? "+" : ""}${x.d.toFixed(1)} с`).join(", ")}.`);
+    }
+    return { cuts: byAsr.cuts, words: byAsr.words };
+  }
+
+  // store = false — звук уже из общего кэша, класть его туда снова незачем (кроме
+  // случая, когда запись старая и тайминги по речи посчитаны только сейчас).
   async function finish(result: RawAudio, clean: string, outFileBase: string, key: string, voice: string, store = true): Promise<VoiceResult> {
       let file: string;
       let durationMs: number;
       let words: WordTiming[] | null = null;
       let wordsSource: VoiceResult["wordsSource"] = "provider";
+      let alignTried = false;
+      let alignedRaw: WordTiming[] | null = null; // для общего кэша: мс от начала сырого звука
       if (result.kind === "pcm") {
         const { audio, shiftMs } = postprocessVoice(result.audio);
         file = outFileBase + ".wav";
@@ -160,9 +185,21 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
         if (result.words?.length) {
           const shifted = result.words.map((w) => ({ text: w.text, startMs: w.startMs - shiftMs, endMs: w.endMs - shiftMs }));
           words = alignToTokens(shifted, clean) ?? shifted;
+        } else if (result.aligned?.length) {
+          words = result.aligned.map((w) => ({ text: w.text, startMs: w.startMs - shiftMs, endMs: w.endMs - shiftMs }));
+          wordsSource = "aligned";
+          alignedRaw = result.aligned;
         } else {
-          words = estimateWordTimings(clean, analyzeSpeech(audio.channels[0]!, audio.sampleRate));
-          wordsSource = "estimated";
+          const aligned = await alignByAsr(clean, audio.channels[0]!, audio.sampleRate, durationMs, path.basename(outFileBase));
+          alignTried = aligned === "mismatch";
+          if (aligned && aligned !== "mismatch") {
+            words = aligned.words;
+            wordsSource = "aligned";
+            alignedRaw = words.map((w) => ({ text: w.text, startMs: w.startMs + shiftMs, endMs: w.endMs + shiftMs }));
+          } else {
+            words = estimateWordTimings(clean, analyzeSpeech(audio.channels[0]!, audio.sampleRate));
+            wordsSource = "estimated";
+          }
         }
       } else {
         // Расширение — по фактическому формату: OpenAI-совместимый сервер мог вернуть MP3 вместо WAV.
@@ -183,9 +220,12 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       }
       durationMs = Math.round(Math.max(durationMs, words.at(-1)?.endMs ?? 0));
       const out: VoiceResult = { file, durationMs, words, wordsSource };
-      await writeCache(outFileBase, key, out, result.fallback);
-      const shared = store && !result.fallback ? sharedCacheDir() : null;
-      if (shared) await writeShared(shared, key, result, { provider: raw.name, voice, chars: clean.length });
+      await writeCache(outFileBase, key, out, result.fallback, alignTried);
+      // Старая запись общего кэша без таймингов по речи — дописываем их, чтобы
+      // следующая сборка не распознавала сцену заново.
+      const refresh = !store && alignedRaw && !(result.kind === "pcm" && result.aligned?.length);
+      const shared = (store || refresh) && !result.fallback ? sharedCacheDir() : null;
+      if (shared) await writeShared(shared, key, result.kind === "pcm" ? { ...result, aligned: alignedRaw } : result, { provider: raw.name, voice, chars: clean.length });
       return { ...out, voice, ...(result.fallback ? { fallbackModel: result.fallback } : {}) };
   }
 
@@ -251,21 +291,37 @@ function cachePath(outFileBase: string) {
   return outFileBase + ".voice.json";
 }
 
-async function readCache(outFileBase: string, key: string): Promise<VoiceResult | null> {
+async function readCache(outFileBase: string, key: string, clean: string): Promise<VoiceResult | null> {
   if (process.env.TTS_CACHE === "0") return null;
   const p = cachePath(outFileBase);
   if (!existsSync(p)) return null;
+  let c: CacheEntry;
+  let file: string;
   try {
-    const c = JSON.parse(await readFile(p, "utf8")) as CacheEntry;
-    const file = path.join(path.dirname(outFileBase), c.file);
+    c = JSON.parse(await readFile(p, "utf8")) as CacheEntry;
+    file = path.join(path.dirname(outFileBase), c.file);
     if (c.key !== cacheKey(key) || !existsSync(file) || c.fallback) return null;
-    return { file, durationMs: c.durationMs, words: c.words, wordsSource: c.wordsSource };
   } catch {
     return null;
   }
+  const r: VoiceResult = { file, durationMs: c.durationMs, words: c.words, wordsSource: c.wordsSource };
+  // Запись до выравнивания по речи (оценка по звуку) — доуточняем один раз: звук
+  // уже на диске, распознать сцену — доли секунды, а квоту озвучки это не тратит.
+  if (c.wordsSource !== "estimated" || c.alignTried || !file.endsWith(".wav") || !alignEnabled()) return r;
+  try {
+    const audio = decodeWav(await readFile(file));
+    const aligned = await alignByAsr(clean, toMono(audio), audio.sampleRate, c.durationMs, path.basename(outFileBase));
+    // Модель недоступна — запись не трогаем: попробуем при следующей сборке.
+    if (!aligned) return r;
+    const next: VoiceResult = aligned === "mismatch" ? r : { ...r, words: finalize(aligned.words, c.durationMs), wordsSource: "aligned" };
+    await writeCache(outFileBase, key, next, undefined, aligned === "mismatch");
+    return next;
+  } catch {
+    return r; // не вышло — прежние тайминги, сборка идёт дальше
+  }
 }
 
-async function writeCache(outFileBase: string, key: string, r: VoiceResult, fallback?: string): Promise<void> {
+async function writeCache(outFileBase: string, key: string, r: VoiceResult, fallback?: string, alignTried = false): Promise<void> {
   if (process.env.TTS_CACHE === "0") return;
   const entry: CacheEntry = {
     key: cacheKey(key),
@@ -274,6 +330,7 @@ async function writeCache(outFileBase: string, key: string, r: VoiceResult, fall
     words: r.words,
     wordsSource: r.wordsSource,
     ...(fallback ? { fallback } : {}),
+    ...(alignTried ? { alignTried } : {}),
   };
   await writeFile(cachePath(outFileBase), JSON.stringify(entry, null, 1));
 }

@@ -182,6 +182,8 @@ jobs:
       IG_API_VERSION: ${{ vars.IG_API_VERSION }}
       IG_AI_GENERATED: ${{ vars.IG_AI_GENERATED }}
       MODELS_DIR: ${{ github.workspace }}/video-studio/models
+      # Тайминги субтитров по распознанной речи; 0 — выключить (оценка по звуку).
+      CAPTION_ALIGN: ${{ vars.CAPTION_ALIGN }}
       # На 2 vCPU (приватный репозиторий) 2 потока быстрее авто-значения (1) на ~12 %.
       RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
       NO_COLOR: "1"
@@ -226,12 +228,40 @@ jobs:
           restore-keys: |
             remotion-${{ runner.os }}-${{ hashFiles('video-studio/package-lock.json') }}-
 
-      - name: Кэш голосовых моделей Piper
+      # Голоса Piper (~60 МБ) — ключ по голосу. Берётся самая свежая запись этого голоса,
+      # сохраняется отдельным шагом в конце с ключом по набору скачанных голосов (tokens.txt
+      # есть в папке каждого): запуск без Piper (Gemini, Edge) записи не создаёт, а запись по
+      # точному ключу actions/cache не перезаписывает — постоянный ключ был бы ловушкой.
+      - name: Кэш голосов Piper — восстановить
+        id: piper-cache
         if: env.MODE != 'draft'
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
-          path: video-studio/models
-          key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-v1
+          path: video-studio/models/vits-piper-*
+          key: piper-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}
+          restore-keys: |
+            piper-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-
+
+      # Модель распознавания речи для таймингов субтитров (GigaAM v2, ~240 МБ, voice/align.ts) —
+      # своей записью с именем модели в ключе: от голоса не зависит (одна копия на все голоса
+      # Gemini/Piper, а не по 240 МБ на каждый при лимите кэша 10 ГБ), а новая версия модели —
+      # новый ключ, и старая папка не восстанавливается и не сохраняется снова.
+      - name: Модель распознавания — имя
+        id: asr-model
+        if: env.MODE != 'draft'
+        run: |
+          name=$(npx tsx -e 'import("./src/pipeline/voice/align.ts").then((m) => console.log(m.ASR_MODEL_NAME))' | tail -n 1)
+          # Пустое имя — кэш модели не используется, и она скачивается при каждом запуске: сборка не падает, но пусть это будет видно.
+          [ -n "$name" ] || echo "::warning::Не удалось узнать имя модели распознавания — кэш GigaAM пропущен, модель скачается заново."
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Кэш модели распознавания — восстановить
+        id: asr-cache
+        if: env.MODE != 'draft' && steps.asr-model.outputs.name != ''
+        uses: actions/cache/restore@v6
+        with:
+          path: video-studio/models/${{ steps.asr-model.outputs.name }}
+          key: asr-model-${{ runner.os }}-${{ steps.asr-model.outputs.name }}
 
       # Озвученные сцены прошлых запусков (ключ записи — хэш провайдера, голоса, стиля и текста):
       # пересборка и повтор упавшего запуска не тратят суточную квоту Gemini заново.
@@ -657,6 +687,26 @@ jobs:
         with:
           path: video-studio/.cache/voice
           key: tts-voice-${{ runner.os }}-${{ hashFiles('video-studio/.cache/voice/*.json') }}
+
+      # Набор голосов не изменился (ничего не скачано) — не сохраняем; добавился голос (основной
+      # или запасной) — новая запись с ним, и следующий запуск восстановит уже её (самую свежую).
+      - name: Кэш голосов Piper — сохранить
+        if: always() && env.MODE != 'draft' && hashFiles('video-studio/models/vits-piper-*/tokens.txt') != '' && steps.piper-cache.outputs.cache-matched-key != format('piper-{0}-{1}-{2}', runner.os, inputs.voice_name || vars.TTS_VOICE || 'default', hashFiles('video-studio/models/vits-piper-*/tokens.txt'))
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: video-studio/models/vits-piper-*
+          key: piper-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-${{ hashFiles('video-studio/models/vits-piper-*/tokens.txt') }}
+
+      # Модель скачана в этом запуске (точной записи не было). tokens.txt в архиве идёт после
+      # model.int8.onnx — прерванная распаковка без него не сохранится.
+      - name: Кэш модели распознавания — сохранить
+        if: always() && env.MODE != 'draft' && steps.asr-model.outputs.name != '' && steps.asr-cache.outputs.cache-hit != 'true' && hashFiles(format('video-studio/models/{0}/tokens.txt', steps.asr-model.outputs.name)) != ''
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: video-studio/models/${{ steps.asr-model.outputs.name }}
+          key: asr-model-${{ runner.os }}-${{ steps.asr-model.outputs.name }}
 
       # Сценарии (draft и пакет по плану), отметки в плане и тексты собранных роликов для
       # youtube-fill — в ветку. always(): уже готовое не теряется, даже если дальше что-то упало.
