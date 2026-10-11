@@ -145,8 +145,9 @@ jobs:
       TTS_PROVIDER: ${{ inputs.voice || vars.TTS_PROVIDER || 'auto' }}
       TTS_VOICE: ${{ inputs.voice_name || vars.TTS_VOICE }}
       TTS_RATE: ${{ vars.TTS_RATE }}
-      LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
-      LLM_MODEL: ${{ vars.LLM_MODEL }}
+      # Сравнение моделей сценария (ветка только для черновиков 14a/14b, в master не вливается).
+      LLM_PROVIDER: gemini
+      LLM_MODEL: gemini-3.8-flash
       VISUALS: ${{ vars.VISUALS }}
       # Кнопка «Пересобрать» в панели может выключить музыку (music = none) для одного запуска.
       MUSIC: ${{ inputs.music == 'none' && 'none' || vars.MUSIC }}
@@ -165,7 +166,7 @@ jobs:
       GEMINI_TTS_STYLE: ${{ vars.GEMINI_TTS_STYLE }}
       ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID }}
       ELEVENLABS_MODEL: ${{ vars.ELEVENLABS_MODEL }}
-      LLM_FALLBACKS: ${{ vars.LLM_FALLBACKS }}
+      LLM_FALLBACKS: none
       LLM_EFFORT: ${{ vars.LLM_EFFORT }}
       VISUALS_PREFER: ${{ vars.VISUALS_PREFER }}
       # Судья Claude для кадров (платно, по умолчанию выключен): VISUALS_JUDGE=claude + секрет ANTHROPIC_API_KEY.
