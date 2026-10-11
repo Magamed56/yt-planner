@@ -181,6 +181,20 @@ async function main() {
     assert.ok(Math.abs(s.words[1]![0]!.startMs - (4180 - s.cuts[0]!)) <= 1, "слова сцены — от начала её куска");
   });
 
+  await test("пауза между сценами (0,3 с) короче паузы между предложениями (0,55 с) — граница всё равно по словам", () => {
+    const texts = ["Это почти на треть меньше. Значит, Сатурн бы всплыл.", "Но есть подвох."];
+    const words = ["это", "почти", "на", "треть", "меньше", "значит", "сатурн", "бы", "всплыл", "но", "есть", "подвох"];
+    const asr = asrOf(words, 200, 300, 100);
+    asr.slice(5).forEach((w) => ((w.startMs += 550), (w.endMs += 550))); // после «меньше.» — 0,55 с
+    asr.slice(9).forEach((w) => ((w.startMs += 300), (w.endMs += 300))); // между сценами — 0,3 с
+    const pauses = [
+      { startMs: asr[4]!.endMs, endMs: asr[5]!.startMs },
+      { startMs: asr[8]!.endMs, endMs: asr[9]!.startMs },
+    ];
+    const s = splitByAsr(texts, asr, profileOf(asr.at(-1)!.endMs + 300, pauses))!;
+    assert.ok(s.cuts[0]! > asr[8]!.endMs && s.cuts[0]! < asr[9]!.startMs, `разрез ${s.cuts[0]} — после «всплыл»`);
+  });
+
   await test("сцена не нашлась в речи — null (нарезка по паузам)", () => {
     const texts = ["Сатурн менее плотный, чем вода.", "Совершенно другой текст про погоду завтра."];
     const asr = asrOf(["сатурн", "менее", "плотный", "чем", "вода", "солнце", "светит"]);

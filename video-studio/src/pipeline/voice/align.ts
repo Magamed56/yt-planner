@@ -10,10 +10,9 @@
 // интерполяцию между соседями. Совпало меньше MIN_MATCH слов, нет модели или
 // распознавание упало — вызывающий код оставляет прежнюю оценку.
 //
-// Модель ≈ 200 МБ (архив; распакованная int8 — 275 МБ) скачивается один раз в
-// MODELS_DIR, как голоса Piper. Выключить: CAPTION_ALIGN=0. Лицензия весов
-// GigaAM — некоммерческая (см. README модели и docs в README проекта): модель
-// только размечает время слов, в ролик ничего из неё не попадает.
+// Модель ≈ 170 МБ (архив; распакованная int8 — 240 МБ) скачивается один раз в
+// MODELS_DIR, как голоса Piper. Выключить: CAPTION_ALIGN=0. Лицензия — GigaAM v2,
+// MIT (файл LICENSE в архиве); выгрузка 2024-10-24 (v1) была некоммерческой.
 
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -26,7 +25,7 @@ import { downloadTarModel, tarModelReady, type TarModel } from "./model-download
 import { normWord, tokenize, type Token } from "./text";
 import { analyzeSpeech, finalize, type SpeechProfile } from "./timing";
 
-export const ASR_MODEL_NAME = "sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24";
+export const ASR_MODEL_NAME = "sherpa-onnx-nemo-ctc-giga-am-v2-russian-2025-04-19";
 const ASR_MODEL_URL = `https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${ASR_MODEL_NAME}.tar.bz2`;
 export const MIN_MATCH = 0.6; // доля слов сценария, найденных в речи, ниже — не верим выравниванию
 
@@ -292,7 +291,7 @@ export function asrModelDir(): string {
 function asrModel(): TarModel {
   return {
     label: "Распознавание речи",
-    title: "модель распознавания речи GigaAM для таймингов субтитров (~200 МБ, один раз)",
+    title: "модель распознавания речи GigaAM для таймингов субтитров (~170 МБ, один раз)",
     url: ASR_MODEL_URL,
     dir: asrModelDir(),
     complete: (d) => existsSync(path.join(d, "model.int8.onnx")) && existsSync(path.join(d, "tokens.txt")),
