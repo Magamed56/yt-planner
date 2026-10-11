@@ -1,0 +1,98 @@
+{
+  "title": "Greenland shark: the vertebrate that may outlive Saint Petersburg",
+  "description": "The Greenland shark is the longest-living vertebrate known to science: a large female was estimated at about 392 ± 120 years using radiocarbon in her eye lens. Here's how scientists measured it.\n#greenlandshark #shorts #nature #ocean",
+  "tags": [
+    "greenland shark",
+    "sharks",
+    "longest living animals",
+    "animals",
+    "ocean",
+    "nature",
+    "biology",
+    "science",
+    "facts",
+    "arctic",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "This shark might be older than Saint Petersburg. Seriously.",
+      "onScreen": "Older than *Saint Petersburg*?",
+      "icon": "fish",
+      "visualQuery": "shark deep ocean",
+      "imagePrompt": "huge slow greenland shark gliding through dark icy arctic water, faint light beams, floating particles, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Meet the Greenland shark. It cruises slowly through the icy waters of the Arctic and the North Atlantic.",
+      "onScreen": "The *Greenland* shark",
+      "icon": "snowflake",
+      "visualQuery": "arctic ice ocean",
+      "imagePrompt": "underside of arctic sea ice seen from below, cold blue light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "It grows painfully slowly, less than a centimeter a year. Yet it can reach over five meters long.",
+      "onScreen": "Grows *under* 1 cm a year",
+      "icon": "ruler",
+      "visualQuery": "measuring tape ruler",
+      "imagePrompt": "long shark silhouette next to a glowing measuring scale in dark water, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Its age was read from the lens of its eye. The core forms before birth and barely changes after that.",
+      "onScreen": "Age hidden in the *eye* lens",
+      "icon": "eye",
+      "visualQuery": "fish eye close",
+      "imagePrompt": "extreme close-up of a shark eye in dark water, reflective lens, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Scientists measured the radiocarbon inside it. And the time stamp? Traces left by nuclear tests in the fifties.",
+      "onScreen": "Time stamp: *nuclear* tests",
+      "icon": "radiation",
+      "visualQuery": "laboratory test tubes",
+      "imagePrompt": "laboratory with sample vials and a mass spectrometer, cool blue light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "The largest female came out at around three hundred ninety-two years old. Even with the margin of error, most likely at least two hundred seventy-two.",
+      "onScreen": "Age: *≈392* years",
+      "stat": {
+        "value": 392,
+        "prefix": "≈",
+        "suffix": " years",
+        "label": "age of the largest female, ±120 years"
+      },
+      "icon": "hourglass",
+      "visualQuery": "old shipwreck underwater",
+      "imagePrompt": "old wooden shipwreck on a dark sea floor with a large shark passing by, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "This shark only reaches adulthood at around a hundred and fifty. It's the longest-living vertebrate known to science.",
+      "onScreen": "An adult at *150*",
+      "icon": "award",
+      "visualQuery": "shark silhouette dark water",
+      "imagePrompt": "silhouette of a large shark against a faint surface light, deep arctic water, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Which animal blew your mind with its age? Tell me in the comments.",
+      "onScreen": "Whose *age* amazed you?",
+      "icon": "message-circle"
+    }
+  ]
+}

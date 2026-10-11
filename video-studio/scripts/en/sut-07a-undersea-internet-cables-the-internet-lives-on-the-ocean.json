@@ -1,0 +1,98 @@
+{
+  "title": "Undersea internet cables: the internet lives on the ocean floor",
+  "description": "Over 99% of intercontinental internet traffic doesn't go through satellites. It runs through undersea cables almost 1.5 million km long in total. Find out how thick these cables are, what threatens them, and when the first one was laid.\n#shorts #tech #internet #oceanfacts",
+  "tags": [
+    "internet",
+    "undersea cables",
+    "submarine cables",
+    "technology",
+    "fiber optics",
+    "satellites",
+    "ocean",
+    "telecommunications",
+    "fun facts",
+    "internet facts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "The internet between continents sits on the ocean floor. Literally.",
+      "onScreen": "The internet's on the ocean *floor*",
+      "icon": "cable",
+      "visualQuery": "ocean floor underwater",
+      "imagePrompt": "thick fiber optic cable lying on the dark ocean floor, faint light pulses inside it, deep blue haze, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "You'd think data flies through satellites. But satellites carry only a tiny slice of the world's traffic.",
+      "onScreen": "Satellites are *not* the backbone",
+      "icon": "satellite",
+      "visualQuery": "satellite dish sky",
+      "imagePrompt": "communication satellite orbiting earth at night, small and distant, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "More than ninety-nine percent of data between continents travels through undersea cables. And there are hundreds of them.",
+      "onScreen": "Almost all of it via *cables*",
+      "stat": {
+        "value": 99,
+        "prefix": ">",
+        "suffix": "%",
+        "label": "of intercontinental traffic goes by cable"
+      },
+      "icon": "network",
+      "visualQuery": "fiber optic cables light",
+      "imagePrompt": "glowing world map with bright lines of cables crossing the oceans, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Together they stretch almost one and a half million kilometers. That's enough to reach the Moon more than three times.",
+      "onScreen": "Cables: *3.5* trips to the Moon",
+      "icon": "moon",
+      "visualQuery": "moon night sky",
+      "imagePrompt": "a thin glowing line stretching from earth toward the moon in space, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Yet a deep-sea cable is about as thick as a garden hose. Inside are thin glass fibers carrying pulses of light.",
+      "onScreen": "As thick as a *garden* hose",
+      "icon": "waves",
+      "visualQuery": "fiber optic strands",
+      "imagePrompt": "cross-section of a submarine cable with glowing glass fibers in the center, macro, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Their biggest threat isn't sharks. It's ship anchors and fishing trawlers. Special ships go out to repair them.",
+      "onScreen": "A cable's enemy: the *anchor*",
+      "icon": "anchor",
+      "visualQuery": "ship anchor chain",
+      "imagePrompt": "heavy ship anchor and chain sinking through murky water, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "The first cable across the Atlantic was laid way back in eighteen fifty-eight. It carried telegrams and lasted less than a month.",
+      "onScreen": "1858: the first ocean *cable*",
+      "icon": "history",
+      "visualQuery": "old telegraph machine",
+      "imagePrompt": "antique telegraph key and coiled cable on a wooden desk, 19th century atmosphere, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Did you know the internet lies on the ocean floor? Tell me in the comments.",
+      "onScreen": "Did you *know* this?",
+      "icon": "message-circle"
+    }
+  ]
+}

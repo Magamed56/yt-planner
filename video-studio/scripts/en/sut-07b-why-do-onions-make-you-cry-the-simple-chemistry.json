@@ -1,0 +1,95 @@
+{
+  "title": "Why do onions make you cry? The simple chemistry",
+  "description": "When you cut an onion, its cells burst and enzymes turn their contents into a volatile gas that stings your eyes. Learn why onions evolved this defense, what won an Ig Nobel Prize, and how to cry less.\n#shorts #chemistry #onions #science",
+  "tags": [
+    "onion",
+    "why do onions make you cry",
+    "onion tears",
+    "chemistry",
+    "kitchen science",
+    "ig nobel prize",
+    "science facts",
+    "cooking tips",
+    "fun facts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Your onion is fighting back. With gas.",
+      "onScreen": "Onions fire *gas*",
+      "icon": "flask-conical",
+      "visualQuery": "onion cutting board",
+      "imagePrompt": "half-cut onion on a dark cutting board with faint glowing vapor rising, macro, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "While an onion is whole, the chemicals in its cells are kept apart. A knife rips the cells open, and they mix.",
+      "onScreen": "The knife *mixes* chemicals",
+      "icon": "utensils-crossed",
+      "visualQuery": "knife slicing onion",
+      "imagePrompt": "knife slicing an onion in slow motion, tiny droplets in the air, backlight, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "The result is a volatile gas with a mouthful of a name: syn-propanethial-S-oxide. It evaporates easily and drifts through the air.",
+      "onScreen": "A volatile *tear* gas",
+      "icon": "wind",
+      "visualQuery": "steam vapor dark",
+      "imagePrompt": "thin wisps of vapor rising and curling in a dark kitchen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "It reaches your eyes and irritates the nerve endings in your cornea. Your brain kicks in a defense right away. Tears wash the irritant out.",
+      "onScreen": "Tears *flush* the gas",
+      "icon": "droplet",
+      "visualQuery": "eye tear close",
+      "imagePrompt": "extreme close-up of an eye with a single tear, soft light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "So why does the onion do this? It scares off animals and insects that try to eat it. It's chemical self-defense.",
+      "onScreen": "A *defense* against eaters",
+      "icon": "leaf",
+      "visualQuery": "onion field farm",
+      "imagePrompt": "onions growing in a field at dusk, low sun through the leaves, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Japanese scientists discovered the enzyme that makes this gas in two thousand two. Later, it won them an Ig Nobel Prize.",
+      "onScreen": "An *Ig Nobel* for tears",
+      "icon": "award",
+      "visualQuery": "scientist microscope lab",
+      "imagePrompt": "scientist looking into a microscope next to onion samples, lab at night, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "Want to cry less? Chill the onion before chopping, and use a sharp knife. It crushes fewer cells.",
+      "onScreen": "How to cry *less*",
+      "items": [
+        "Chill the onion",
+        "Use a sharp knife"
+      ],
+      "icon": "snowflake",
+      "visualQuery": "sharp kitchen knife",
+      "imagePrompt": "sharp chef knife next to a chilled onion with frost, dark kitchen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "So how do you stop the tears when you cut onions? Tell me in the comments.",
+      "onScreen": "How do you cut *onions*?",
+      "icon": "message-circle"
+    }
+  ]
+}

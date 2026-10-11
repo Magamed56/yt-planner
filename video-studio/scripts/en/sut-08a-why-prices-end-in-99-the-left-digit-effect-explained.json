@@ -1,0 +1,102 @@
+{
+  "title": "Why prices end in 99: the left-digit effect explained",
+  "description": "Why 99 rubles feels so much cheaper than 100, and how the left-digit effect shapes what you buy. We look at research by Thomas and Morwitz, and by Anderson and Simester. At the end, three simple tricks to stop falling for it.\n#shorts #psychology #marketing #money #shopping",
+  "tags": [
+    "prices ending in 99",
+    "left-digit effect",
+    "price psychology",
+    "marketing",
+    "money",
+    "shopping",
+    "behavioral economics",
+    "financial literacy",
+    "store pricing tricks",
+    "pricing strategy",
+    "charm pricing",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Ninety-nine rubles feels cheaper than a hundred. Your brain just got played.",
+      "onScreen": "99 ₽ feels *cheaper* than 100",
+      "icon": "brain",
+      "visualQuery": "price tag supermarket shelf",
+      "imagePrompt": "cinematic close-up of a paper price tag on a supermarket shelf, soft green ambient light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "The difference is just one ruble. But your brain reads prices left to right and locks onto the first digit. Stick around, I'll show you how not to fall for it.",
+      "onScreen": "Your brain sees the *first* digit",
+      "icon": "eye",
+      "visualQuery": "woman reading price tag",
+      "imagePrompt": "cinematic macro shot of a human eye reflecting a glowing price display, emerald and warm tones, dramatic side light"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "It's called the left-digit effect. In two thousand five, Manoj Thomas and Vicki Morwitz showed that two ninety-nine feels noticeably cheaper than three.",
+      "onScreen": "The *left-digit* effect, 2005",
+      "stat": {
+        "value": 2.99,
+        "label": "feels noticeably cheaper than 3.00"
+      },
+      "icon": "trending-down",
+      "visualQuery": "coins receipt table",
+      "imagePrompt": "cinematic still life of coins and a crumpled receipt on a wooden table, soft green rim light, shallow depth of field"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "You see the two, and you've already decided it's about two. The nines at the end barely register.",
+      "onScreen": "Trailing nines *don't count*",
+      "icon": "lightbulb",
+      "visualQuery": "shopper looking at products",
+      "imagePrompt": "cinematic over-the-shoulder shot of a shopper scanning store shelves, blurred price tags, warm and emerald palette"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "But does this work at the checkout, not just in a lab? Researchers tested it on real shoppers.",
+      "onScreen": "The lab or the *checkout*?",
+      "icon": "shopping-cart",
+      "visualQuery": "checkout counter cashier",
+      "imagePrompt": "cinematic wide shot of a store checkout counter at evening, soft neon green glow, moody atmosphere"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "In two thousand three, Eric Anderson and Duncan Simester described field experiments. Prices ending in nine boosted demand.",
+      "onScreen": "Ending in 9 *boosts* sales",
+      "icon": "trending-up",
+      "visualQuery": "shopping bags store",
+      "imagePrompt": "cinematic shot of hands carrying shopping bags out of a bright store, emerald and golden light, shallow depth of field"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "So how do you stay sharp? Round prices up. Compare whole numbers. And read the price tag all the way through.",
+      "onScreen": "How to *beat* the trick",
+      "items": [
+        "Round prices up",
+        "Compare whole numbers",
+        "Read the whole price tag"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "wallet hand cash",
+      "imagePrompt": "cinematic top-down view of an open wallet and a smartphone calculator on a table, soft green morning light"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Have you ever caught yourself doing this? Tell me in the comments.",
+      "onScreen": "Ever *caught* yourself?",
+      "icon": "bell-ring"
+    }
+  ]
+}

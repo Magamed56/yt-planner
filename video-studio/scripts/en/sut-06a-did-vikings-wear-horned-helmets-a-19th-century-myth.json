@@ -1,0 +1,92 @@
+{
+  "title": "Did Vikings wear horned helmets? A 19th-century myth",
+  "description": "Archaeologists have never found a single horned helmet from the Viking Age, and the most famous nearly complete one is a plain iron dome. Learn how 19th-century artists and opera put horns on the Vikings.\n#shorts #history #vikings #myths",
+  "tags": [
+    "vikings",
+    "viking helmet",
+    "horned helmets",
+    "history",
+    "myths",
+    "history myths",
+    "scandinavia",
+    "wagner",
+    "middle ages",
+    "facts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Vikings never wore horns. Nineteenth-century artists stuck them on.",
+      "onScreen": "Viking horns are a *myth*",
+      "icon": "shield",
+      "visualQuery": "viking helmet museum",
+      "imagePrompt": "simple rounded iron viking age helmet on a museum stand, dramatic spotlight, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Archaeologists have dug up plenty of Viking Age swords, axes and shields. But not one horned helmet.",
+      "onScreen": "Horned helmets found: *zero*",
+      "icon": "pickaxe",
+      "visualQuery": "archaeology excavation site",
+      "imagePrompt": "archaeologists brushing soil off a rusted sword at an excavation site, overcast light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "A nearly complete Viking helmet turned up in Norway in nineteen forty-three. Just a plain iron dome with a guard for the eyes. No horns at all.",
+      "onScreen": "The real helmet: *no* horns",
+      "icon": "hard-hat",
+      "visualQuery": "iron helmet artifact",
+      "imagePrompt": "close-up of a corroded iron helmet with a spectacle-shaped eye guard, dark museum, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "The horns showed up in the Romantic era, when painters and writers started glorifying the Vikings.",
+      "onScreen": "*Romantics* invented the horns",
+      "icon": "palette",
+      "visualQuery": "old oil painting",
+      "imagePrompt": "romantic 19th century style oil painting of a stormy fjord with a longship, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Then opera sealed the deal. In eighteen seventy-six, artist Carl Emil Doepler dressed the heroes of Wagner's Ring of the Nibelung in horned helmets.",
+      "onScreen": "1876: horns from the *opera*",
+      "icon": "drama",
+      "visualQuery": "opera stage theater",
+      "imagePrompt": "grand opera stage with dramatic red curtains and a performer in a horned helmet, theatrical lighting, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Audiences loved it. Illustrators, comics and movies ran with the horns, and the myth stuck.",
+      "onScreen": "*Movies* spread the myth",
+      "icon": "clapperboard",
+      "visualQuery": "film reel projector",
+      "imagePrompt": "old film projector beam in a dark cinema, dust floating in the light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Horned helmets have been found in Scandinavia. But they're from the Bronze Age, more than fifteen hundred years older than the Vikings. And likely made for rituals.",
+      "onScreen": "Horns existed, in the *Bronze* Age",
+      "icon": "hourglass",
+      "visualQuery": "bronze age artifact",
+      "imagePrompt": "ancient bronze ceremonial helmet with curved horns in a dim museum vitrine, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Which history myth should we bust next? Tell us in the comments.",
+      "onScreen": "Which *myth* should we bust next?",
+      "icon": "message-circle"
+    }
+  ]
+}

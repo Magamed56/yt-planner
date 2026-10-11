@@ -1,0 +1,102 @@
+{
+  "title": "The invisible gorilla: why you miss what's right in front of you",
+  "description": "Simons and Chabris's famous 1999 experiment: about half of viewers never noticed a person in a gorilla suit. Here's how inattentional blindness works and why even expert experience doesn't protect you.\n#psychology #attention #invisiblegorilla #shorts",
+  "tags": [
+    "psychology",
+    "attention",
+    "invisible gorilla",
+    "inattentional blindness",
+    "selective attention",
+    "brain",
+    "experiment",
+    "science",
+    "facts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "A gorilla walks right past, and half of people miss it.",
+      "onScreen": "Half missed the *gorilla*",
+      "icon": "eye-off",
+      "visualQuery": "gorilla face close",
+      "imagePrompt": "close-up of a gorilla face emerging from deep shadow, intense eyes, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "In nineteen ninety-nine, psychologists showed people a short video. Players in white and black shirts pass balls around.",
+      "onScreen": "1999. A video with a *ball*",
+      "icon": "eye",
+      "visualQuery": "basketball players passing",
+      "imagePrompt": "young people passing a basketball in a hallway, motion blur, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "The task is simple: carefully count how many passes the players in white make.",
+      "onScreen": "Count the *white* team's passes",
+      "icon": "target",
+      "visualQuery": "white t-shirts team",
+      "imagePrompt": "players in white t-shirts passing a ball, focus on the ball, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Then a person in a gorilla suit walks into the middle of the court. Stops, beats its chest, and walks off.",
+      "onScreen": "A *gorilla* walks through",
+      "icon": "footprints",
+      "visualQuery": "gorilla costume person",
+      "imagePrompt": "person in a gorilla costume walking between ball players, beating its chest, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "About half the viewers simply didn't see it. They were too busy counting passes.",
+      "onScreen": "They missed the *gorilla*",
+      "stat": {
+        "value": 50,
+        "prefix": "≈",
+        "suffix": "%",
+        "label": "of viewers missed the gorilla"
+      },
+      "icon": "eye-off",
+      "visualQuery": "audience watching screen",
+      "imagePrompt": "silhouettes of an audience staring at a bright screen in a dark room, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Expertise doesn't help. In twenty thirteen, a gorilla was inserted into lung scans, and eighty-three percent of radiologists missed it.",
+      "onScreen": "Even *doctors* miss it",
+      "stat": {
+        "value": 83,
+        "suffix": "%",
+        "label": "of radiologists missed the gorilla on the scan"
+      },
+      "icon": "scan-eye",
+      "visualQuery": "doctor xray screen",
+      "imagePrompt": "radiologist examining lung scans on monitors in a dark reading room, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "It's called inattentional blindness. Attention works like a spotlight: anything outside the beam, your brain may just not show you.",
+      "onScreen": "Attention is a *spotlight*",
+      "icon": "flashlight",
+      "visualQuery": "spotlight dark stage",
+      "imagePrompt": "single spotlight beam on an empty dark stage, everything else in darkness, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Would you have spotted the gorilla? Be honest and tell me in the comments.",
+      "onScreen": "Would you *spot* the gorilla?",
+      "icon": "message-circle"
+    }
+  ]
+}

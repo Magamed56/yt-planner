@@ -1,0 +1,117 @@
+{
+  "title": "Why you're taller in the morning than at night, by almost 1 cm",
+  "description": "Why your height changes during the day: under load, your spinal discs lose fluid and compress, then recover overnight. Find out when to measure your height so the numbers are honest.\n#shorts #height #spine #humanbody #science",
+  "tags": [
+    "height",
+    "spine",
+    "spinal discs",
+    "taller in the morning",
+    "height morning vs night",
+    "how to measure height",
+    "human body",
+    "science",
+    "facts",
+    "astronauts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "You're taller in the morning. And you can prove it.",
+      "onScreen": "You're *taller* in the morning",
+      "icon": "sun",
+      "visualQuery": "height measuring wall morning",
+      "imagePrompt": "cinematic shot of a person standing against a wall height chart in soft blue morning light, shallow depth of field, dark teal palette"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Over a day, you get shorter by about a centimeter on average. Some people lose more, some less.",
+      "onScreen": "Minus one *centimeter* a day",
+      "stat": {
+        "value": 1,
+        "prefix": "≈",
+        "suffix": " cm",
+        "label": "height lost per day"
+      },
+      "icon": "trending-down",
+      "visualQuery": "tape measure close up",
+      "imagePrompt": "macro close-up of a measuring tape glowing under cold blue light, dark background, cinematic rim light"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Your tape measure isn't lying. Your spinal discs, the soft cushions between your vertebrae, are getting squeezed.",
+      "onScreen": "Your spinal *discs* compress",
+      "icon": "microscope",
+      "visualQuery": "spine model anatomy",
+      "imagePrompt": "glowing translucent human spine model floating in darkness, soft cyan light between vertebrae, cinematic macro"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "All day you stand, walk, carry bags. Under that load, the discs lose fluid and get thinner.",
+      "onScreen": "Load squeezes out *fluid*",
+      "icon": "droplet",
+      "visualQuery": "people walking street bags",
+      "imagePrompt": "crowd of commuters walking with heavy bags on a city street at dusk, motion blur, cool blue and amber tones, cinematic"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "At night you lie down, and the load is gone. The discs soak up fluid again, and by morning your height is back.",
+      "onScreen": "Discs *recover* overnight",
+      "icon": "moon",
+      "visualQuery": "person sleeping bed night",
+      "imagePrompt": "person sleeping peacefully in a dark bedroom lit by soft moonlight from a window, calm teal palette, cinematic wide shot"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Researchers Reilly, Tyrrell and Troup measured this back in the eighties. The difference can reach about one percent of your height.",
+      "onScreen": "Up to *1%* of height daily",
+      "stat": {
+        "value": 1,
+        "prefix": "up to ",
+        "suffix": "%",
+        "label": "of height lost by evening"
+      },
+      "icon": "flask-conical",
+      "visualQuery": "scientist laboratory notebook",
+      "imagePrompt": "1980s research lab with a scientist writing measurements in a notebook, warm desk lamp against blue shadows, cinematic"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "So here's the takeaway. Measure your height in the morning. Compare measurements taken at the same time of day.",
+      "onScreen": "How to measure height *honestly*",
+      "items": [
+        "Measure in the morning",
+        "Compare at the same time"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "child height marks door",
+      "imagePrompt": "pencil height marks on a wooden door frame in early morning light, soft blue shadows, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Astronauts in space get taller too. It's the same mechanism, just without gravity.",
+      "onScreen": "Same thing happens in *space*",
+      "icon": "rocket",
+      "visualQuery": "astronaut space station",
+      "imagePrompt": "astronaut floating inside a space station module, Earth glowing through the window, cool blue cinematic lighting"
+    },
+    {
+      "id": "s9",
+      "kind": "cta",
+      "narration": "Have you ever noticed you're shorter at night? Tell me in the comments.",
+      "onScreen": "Ever *noticed* it?",
+      "icon": "bell-ring"
+    }
+  ]
+}

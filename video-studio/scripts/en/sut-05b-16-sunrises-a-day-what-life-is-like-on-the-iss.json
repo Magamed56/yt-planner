@@ -1,0 +1,98 @@
+{
+  "title": "16 sunrises a day: what life is like on the ISS",
+  "description": "The ISS circles Earth in about 90 minutes at roughly 28,000 km/h, so the crew sees about 16 sunrises and sunsets every day. Here's how astronauts sleep and what time zone they live by up there.\n#shorts #space #iss #explainedinaminute",
+  "tags": [
+    "iss",
+    "international space station",
+    "space",
+    "astronauts",
+    "orbit",
+    "earth from space",
+    "science",
+    "space facts",
+    "sunrise in space",
+    "explainedinaminute",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "On the ISS, the sun rises sixteen times a day.",
+      "onScreen": "*16* sunrises a day",
+      "icon": "sunrise",
+      "visualQuery": "earth from space sunrise",
+      "imagePrompt": "orbital sunrise over the curved earth seen from a space station window, thin blue atmosphere line, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "The station circles Earth in about an hour and a half. One orbit means one day and one night.",
+      "onScreen": "One orbit in *1.5* hours",
+      "stat": {
+        "value": 90,
+        "prefix": "≈",
+        "suffix": " min",
+        "label": "one orbit around Earth"
+      },
+      "icon": "orbit",
+      "visualQuery": "space station orbit",
+      "imagePrompt": "space station silhouette crossing the terminator line between day and night on earth, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "It's moving at about twenty-eight thousand kilometers an hour, roughly four hundred kilometers up.",
+      "onScreen": "≈28,000 *km/h*",
+      "icon": "gauge",
+      "visualQuery": "rocket launch night",
+      "imagePrompt": "streak of light of a fast spacecraft against stars, long exposure, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "At that speed, you could get from Moscow to Saint Petersburg in under a minute and a half.",
+      "onScreen": "Moscow to St. Petersburg: *under* 1.5 min",
+      "icon": "plane",
+      "visualQuery": "city lights night aerial",
+      "imagePrompt": "aerial night view of city lights from orbit, a glowing line connecting two cities, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "So about every forty-five minutes, light turns to darkness. That's sixteen sunrises and sixteen sunsets a day.",
+      "onScreen": "Light and dark every *45* minutes",
+      "icon": "sun",
+      "visualQuery": "earth night city lights",
+      "imagePrompt": "half-lit earth from orbit, sunlit side and night side with city lights, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "So how do you sleep up there? The crew runs on Greenwich time and sleeps in tiny cabins, in sleeping bags strapped to the wall.",
+      "onScreen": "Sleeping on a *schedule*",
+      "icon": "bed",
+      "visualQuery": "sleeping bag tent",
+      "imagePrompt": "astronaut asleep in a sleeping bag strapped to a wall inside a tiny cabin, floating hair, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Morning on the station doesn't come with sunrise. It comes with an alarm. Otherwise they'd wake up sixteen times a day.",
+      "onScreen": "Morning starts with an *alarm*",
+      "icon": "alarm-clock",
+      "visualQuery": "alarm clock bedside",
+      "imagePrompt": "alarm clock floating in zero gravity inside a space station module, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Could you live on the ISS for six months? Tell me in the comments.",
+      "onScreen": "Would you fly to the *ISS*?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "title": "Monopoly was invented to show how harmful monopolies are",
+  "description": "In 1904, Elizabeth Magie patented The Landlord's Game, a board game about how land rent makes some people rich and ruins others. Here's how a game against monopolies became the most famous game about monopoly.\n#monopoly #boardgames #economics #money #shorts",
+  "tags": [
+    "monopoly",
+    "monopoly history",
+    "board games",
+    "economics",
+    "money",
+    "history",
+    "elizabeth magie",
+    "lizzie magie",
+    "the landlord's game",
+    "parker brothers",
+    "fun facts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Monopoly was invented to warn us about monopolies.",
+      "onScreen": "A game *against* monopolies",
+      "icon": "dice-5",
+      "visualQuery": "board game dice",
+      "imagePrompt": "two dice rolling across a vintage board game, dramatic low light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Nineteen oh four. An American woman, Elizabeth Magie, gets a patent for a new board game.",
+      "onScreen": "1904: a game gets *patented*",
+      "icon": "file-text",
+      "visualQuery": "vintage patent document",
+      "imagePrompt": "early 1900s patent drawing of a square board game on aged paper, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "It was called The Landlord's Game. It showed how landowners get rich off rent, while tenants go broke.",
+      "onScreen": "The *Landlord's* Game",
+      "icon": "house",
+      "visualQuery": "old town houses",
+      "imagePrompt": "row of small old houses on a street at dusk, one lit window, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "Magie wrote two sets of rules. In one, everyone won as wealth grew. In the other, one player took it all.",
+      "onScreen": "Two sets of *rules*",
+      "items": [
+        "Everyone gets rich together",
+        "One player takes it all"
+      ],
+      "icon": "split",
+      "visualQuery": "board game pieces",
+      "imagePrompt": "board game pieces split into two groups on a table, contrasting light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "People liked the second version better. The game kept getting reworked, and in thirty-five it was sold to Parker Brothers as Monopoly.",
+      "onScreen": "1935: *Monopoly* is born",
+      "icon": "package",
+      "visualQuery": "toy store shelves",
+      "imagePrompt": "1930s toy shop shelves stacked with board game boxes, warm nostalgic light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "The company bought Magie's patent for just five hundred dollars. No royalties on sales.",
+      "onScreen": "Just *$500* for the patent",
+      "stat": {
+        "value": 500,
+        "prefix": "$",
+        "label": "for the inventor's patent"
+      },
+      "icon": "banknote",
+      "visualQuery": "old dollar bills",
+      "imagePrompt": "a few old paper dollar bills on a wooden desk next to a fountain pen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "The irony? A game against greed became one of the best-selling board games in the world. And now you win by bankrupting everyone else.",
+      "onScreen": "Anti-*greed* game, now about greed",
+      "icon": "trophy",
+      "visualQuery": "money pile coins",
+      "imagePrompt": "a single game token standing on a pile of coins, everyone else knocked over, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "So, do you usually win at Monopoly? Tell me in the comments.",
+      "onScreen": "Do you win at *Monopoly*?",
+      "icon": "message-circle"
+    }
+  ]
+}
