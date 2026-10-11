@@ -1,16 +1,14 @@
-// Офлайн-проверка «Доски» (/board): статусы по зонам, «загрузил» в Instagram и TikTok (PANEL_BOARD),
-// запас «до ДД.ММ (N дней)» и раскладка полотна. Сеть и ключи не нужны.
+// Офлайн-проверка «Доски» (/board) на фикстуре lib/board-fixture.ts (её же показывает демо-страница
+// app/board/demo): статусы по зонам, YouTube не ответил, английские названия, «загрузил» в Instagram
+// и TikTok (PANEL_BOARD), запас и первая дыра, раскладка полотна, вид и время отметки. Свой
+// channels/en.json — из фикстуры: тест не зависит от настоящих файлов канала. Сеть и ключи не нужны.
 // Запуск из папки video-studio: npx tsx panel/scripts/board-test.ts
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { channelFromJson, upcomingSlots } from "../../src/pipeline/channel";
-import { BOARD_VAR, buildBoard, CARD_W, GAP, layoutBoard, parseBoardMarks, withBoardMark, type BoardInput } from "../lib/board";
+import { BOARD_FIRST_DAY, BOARD_VAR, boardData, buildBoard, CARD_W, COLS, GAP, layoutBoard, parseBoardMarks, ROW, withBoardMark, type BoardZone } from "../lib/board";
+import { boardFixture, FIXTURE_EN_JSON, FIXTURE_NOW } from "../lib/board-fixture";
+import { cardVisible, markTime, parseSelected, READABLE_K, restoreView, storeView, wheelAction } from "../lib/board-view";
 import { studioMarksText } from "../lib/lang-plan";
-
-const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const readJson = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
+import { langVideosOf } from "../lib/lang-videos";
 
 let passed = 0;
 function test(name: string, fn: () => void) {
@@ -24,92 +22,106 @@ function test(name: string, fn: () => void) {
   }
 }
 
-// 11.10.2026, 13:00 по Москве: ближайшие слоты — 11.10 19:00, 12.10 12:00, 12.10 19:00.
-const now = new Date("2026-10-11T10:00:00Z");
-const schedule = channelFromJson(readJson("channel.json")).schedule;
-const slots = upcomingSlots(schedule, 6, { from: now }).map((d) => d.toISOString());
-const slotGrid = slots.map((iso) => ({ iso, dateKey: "", dateLabel: "", time: "", occupant: null as string | null }));
-const row = (code: string, stage: BoardInput["ru"]["rows"][number]["stage"], when: string | null, extra: Partial<BoardInput["ru"]["rows"][number]> = {}) => ({
-  code,
-  title: `Тема ${code}`,
-  stage,
-  when,
-  whenExact: stage === "published" || stage === "scheduled",
-  release: stage === "video" || stage === "published" || stage === "scheduled" ? {} : null,
-  ...extra,
-});
-const input = (marks: BoardInput["marks"]): BoardInput => ({
-  now,
-  ru: {
-    channelName: "Суть за минуту",
-    timezone: "Europe/Moscow",
-    slotGrid,
-    coverage: [{ level: "scheduled", untilIso: slots[1]!, untilLabel: "", slots: 2 }],
-    runwayDays: 1,
-    youtubeError: null,
-    rows: [
-      row("07a", "published", "2026-10-10T09:00:00Z"),
-      row("08a", "scheduled", slots[0]!),
-      row("08b", "video", slots[1]!),
-      row("09a", "script", slots[2]!),
-      row("09b", "topic", slots[3]!),
-      row("10a", "video", slots[4]!, { hold: { reason: "", since: "", sinceLabel: "", rebuilding: false } }),
-      row("L01", "video", "2026-10-13T18:00:00Z", { long: true }),
-    ],
-  },
-  en: { name: "Gist in a Minute", json: readJson("channels/en.json"), released: ["01a", "01b", "02a"], marks: { "01a": Date.parse("2026-10-12T16:00:00Z") } },
-  marks,
-});
-const zone = (zones: ReturnType<typeof buildBoard>, key: string) => zones.find((z) => z.key === key)!;
-const card = (zones: ReturnType<typeof buildBoard>, key: string, code: string) => zone(zones, key).items.find((i) => i.code === code);
+const dataOf = (fx = boardFixture()) =>
+  boardData({ now: fx.now, state: fx.state, enName: "Gist in a Minute", enJson: fx.enJson, enVideos: langVideosOf(fx.releases, "en"), enMarks: fx.enMarks, boardMarks: fx.boardMarks });
+const zonesOf = (fx = boardFixture()) =>
+  buildBoard({
+    now: fx.now,
+    ru: fx.state,
+    en: { name: "Gist in a Minute", json: fx.enJson, released: langVideosOf(fx.releases, "en").map((v) => ({ code: v.code, title: v.texts?.title ?? "", cover: null })), marks: fx.enMarks },
+    marks: fx.boardMarks,
+  });
+const zone = (zones: BoardZone[], key: string) => zones.find((z) => z.key === key)!;
+const card = (zones: BoardZone[], key: string, code: string) => zone(zones, key).items.find((i) => i.code === code);
 
-const marks = { instagram: { "07a": Date.parse("2026-10-10T12:00:00Z"), "08a": Date.parse(slots[0]!) } };
-const zones = buildBoard(input(marks));
+const zones = zonesOf();
 
-test("зоны — RU, EN, Instagram, TikTok; темы без сценария на доске нет", () => {
+test("зоны — RU, EN, Instagram, TikTok; тема без сценария (12b) на доске не стоит", () => {
   assert.deepEqual(
     zones.map((z) => z.key),
     ["ru", "en", "instagram", "tiktok"],
   );
-  assert.equal(card(zones, "ru", "09b"), undefined);
+  assert.equal(card(zones, "ru", "12b"), undefined);
 });
 
-test("RU: статусы цветом по этапу очереди, запас — из coverage() очереди", () => {
-  assert.equal(card(zones, "ru", "07a")?.status, "published");
-  assert.equal(card(zones, "ru", "08a")?.status, "scheduled");
-  assert.equal(card(zones, "ru", "08b")?.status, "ready");
-  assert.equal(card(zones, "ru", "09a")?.status, "script");
+test("RU: статус по этапу очереди, время с YouTube — точное, остальное — ориентир", () => {
+  assert.equal(card(zones, "ru", "01a")?.status, "published");
+  assert.equal(card(zones, "ru", "06b")?.status, "scheduled");
+  assert.equal(card(zones, "ru", "06b")?.exact, true);
+  assert.equal(card(zones, "ru", "08b")?.status, "studio");
+  assert.equal(card(zones, "ru", "09b")?.status, "ready");
+  assert.equal(card(zones, "ru", "09b")?.exact, false);
+  assert.equal(card(zones, "ru", "11a")?.status, "script");
+  assert.equal(card(zones, "ru", "10a")?.note, "ждёт пересборки");
   assert.equal(card(zones, "ru", "L01")?.long, true);
-  assert.equal(card(zones, "ru", "08a")?.dateLabel, "11.10");
-  assert.equal(card(zones, "ru", "08a")?.time, "19:00");
-  assert.equal(zone(zones, "ru").runway.text, "запас до 12.10 (1 день)");
+  assert.equal(card(zones, "ru", "06b")?.dateLabel, "11.10");
+  assert.equal(card(zones, "ru", "06b")?.time, "19:00");
+  assert.ok(card(zones, "ru", "01a")?.cover?.startsWith("data:image/svg+xml"), "обложка с YouTube");
 });
 
-test("EN: план от schedule.start, отмеченный в Studio — запланирован; запас по отметкам", () => {
-  assert.equal(card(zones, "en", "01a")?.status, "scheduled");
-  assert.equal(card(zones, "en", "01b")?.status, "ready");
-  assert.equal(card(zones, "en", "01a")?.time, "12:00"); // по Нью-Йорку
-  assert.equal(card(zones, "en", "01a")?.marked, undefined); // кнопки на доске у EN нет
-  assert.equal(zone(zones, "en").runway.text, "запас до 12.10 (1 день)");
+test("RU: запас и первая дыра — из coverage() очереди, как у кольца", () => {
+  const ru = zone(zones, "ru");
+  assert.equal(ru.runway.text, "запас до 13.10 (2 дня)");
+  assert.deepEqual(ru.runway.gap, { at: "2026-10-13T16:00:00Z", label: "13.10 19:00" });
+  // На дыре 13.10 19:00 стоит ориентир 08b (загружен в Studio без времени).
+  assert.equal(card(zones, "ru", "08b")?.at, "2026-10-13T16:00:00Z");
 });
 
-test("Instagram и TikTok: Shorts из релизов, «загрузил» — запланирован / вышел, кнопка", () => {
-  assert.equal(card(zones, "instagram", "07a")?.status, "published");
-  assert.equal(card(zones, "instagram", "08a")?.status, "scheduled");
-  assert.equal(card(zones, "instagram", "08a")?.marked, true);
-  assert.equal(card(zones, "instagram", "08b")?.status, "ready");
-  assert.equal(card(zones, "instagram", "08b")?.marked, false);
-  assert.equal(card(zones, "instagram", "09a"), undefined, "без видео в релизе — нечего грузить");
-  assert.equal(card(zones, "instagram", "L01"), undefined, "«Разборы» 16:9 — не для Reels");
+test("EN: план от schedule.start своего en.json, английское название, точное — только отмеченное", () => {
+  assert.equal(FIXTURE_EN_JSON.schedule.start, "2026-10-09");
+  assert.equal(card(zones, "en", "01a")?.title, "Why your voice sounds weird on recordings");
+  assert.equal(card(zones, "en", "01a")?.status, "published");
+  assert.equal(card(zones, "en", "03a")?.status, "scheduled");
+  assert.equal(card(zones, "en", "03a")?.exact, true);
+  assert.equal(card(zones, "en", "03b")?.status, "ready");
+  assert.equal(card(zones, "en", "03b")?.exact, false, "время по плану — ориентир (≈)");
+  assert.equal(card(zones, "en", "03a")?.time, "12:00", "по Нью-Йорку");
+  assert.equal(card(zones, "en", "01a")?.marked, undefined, "кнопки «загрузил» у EN на карточке нет");
+  assert.equal(zone(zones, "en").runway.text, "запас до 11.10 (0 дней)");
+  assert.equal(zone(zones, "en").runway.gap?.label, "11.10 19:00");
+});
+
+test("EN: нет английского названия — русское", () => {
+  const fx = boardFixture();
+  const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [{ code: "01a", title: "", cover: null }], marks: {} }, marks: fx.boardMarks });
+  assert.equal(card(z, "en", "01a")?.title, "Почему свой голос на записи звучит чужим");
+});
+
+test("Instagram и TikTok: Shorts из релизов, отметка — вышел/запланирован, точное время — только у отмеченных", () => {
+  assert.equal(card(zones, "instagram", "01a")?.status, "published");
+  assert.equal(card(zones, "instagram", "01a")?.exact, true);
+  assert.equal(card(zones, "instagram", "06b")?.status, "scheduled");
+  assert.equal(card(zones, "instagram", "06b")?.marked, true);
+  assert.equal(card(zones, "instagram", "05a")?.status, "ready");
+  assert.equal(card(zones, "instagram", "05a")?.exact, false);
+  assert.equal(card(zones, "instagram", "05a")?.note, "не выложен");
+  assert.equal(card(zones, "instagram", "09b")?.marked, false);
   assert.equal(card(zones, "instagram", "10a")?.marked, undefined, "ждёт пересборки — кнопки нет");
-  assert.equal(card(zones, "tiktok", "08a")?.status, "ready");
+  assert.equal(card(zones, "instagram", "11a"), undefined, "без видео в релизе — нечего грузить");
+  assert.equal(card(zones, "instagram", "L01"), undefined, "«Разборы» 16:9 — не для Reels");
   assert.equal(zone(zones, "instagram").runway.text, "запас до 11.10 (0 дней)");
+  assert.equal(zone(zones, "instagram").runway.gap?.label, "12.10 12:00");
   assert.equal(zone(zones, "tiktok").runway.text, "запаса нет — ближайший слот пуст");
+  assert.equal(zone(zones, "tiktok").runway.gap?.label, "11.10 19:00");
+});
+
+test("YouTube не ответил: запас неизвестен, у неотмеченных нет «загрузил» и «не выложен», полоса над полотном", () => {
+  const fx = boardFixture({ youtubeError: "квота" });
+  const z = zonesOf(fx);
+  assert.match(zone(z, "ru").runway.text, /неизвестен — YouTube не ответил/);
+  assert.equal(zone(z, "ru").empty.length, 0, "без YouTube пустых слотов не показываем");
+  assert.equal(card(z, "ru", "01a")?.exact, false);
+  const ig = zone(z, "instagram");
+  assert.ok(ig.items.filter((i) => i.marked === false).length === 0, "у неотмеченных кнопки нет");
+  assert.ok(ig.items.every((i) => i.note !== "не выложен"));
+  assert.equal(card(z, "instagram", "01a")?.marked, true, "отмеченные снять можно");
+  assert.equal(dataOf(fx).youtubeError, "квота");
 });
 
 test("PANEL_BOARD не прочиталась — кнопок нет, запас неизвестен", () => {
-  const z = buildBoard(input(null));
-  assert.equal(card(z, "instagram", "08b")?.marked, undefined);
+  const fx = { ...boardFixture(), boardMarks: null };
+  const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [], marks: {} }, marks: null });
+  assert.equal(card(z, "instagram", "09b")?.marked, undefined);
   assert.match(zone(z, "tiktok").runway.text, new RegExp(`неизвестен.*${BOARD_VAR}`));
 });
 
@@ -121,20 +133,98 @@ test("отметки PANEL_BOARD: только instagram и tiktok, снятие
   assert.deepEqual(withBoardMark(m, "youtube", "08a", 1), m);
 });
 
-test("раскладка: зоны рядом без нахлёста, один день — на одной высоте, ролики дня — слева направо", () => {
+test("время отметки: прошло или ориентир — «сейчас»; впереди и точное — выбор", () => {
+  const now = FIXTURE_NOW.getTime();
+  assert.deepEqual(markTime({ at: "2026-10-10T09:00:00Z", exact: true }, now), { kind: "now" });
+  assert.deepEqual(markTime({ at: "2026-10-14T16:00:00Z", exact: false }, now), { kind: "now" });
+  assert.deepEqual(markTime({ at: "2026-10-14T16:00:00Z", exact: true }, now), { kind: "choose", at: "2026-10-14T16:00:00Z" });
+  // Instagram: без отметки время — ориентир (≈), но слот точный — русский 07a стоит на 12.10 12:00.
+  const ig07a = card(zones, "instagram", "07a")!;
+  assert.equal(ig07a.exact, false);
+  assert.equal(ig07a.fixedSlot, true);
+  assert.deepEqual(markTime(ig07a, now), { kind: "choose", at: "2026-10-12T09:00:00Z" });
+  // 09b — ориентир и в русской очереди: «загрузил» — сейчас.
+  assert.deepEqual(markTime(card(zones, "instagram", "09b")!, now), { kind: "now" });
+});
+
+test("раскладка: зоны рядом без нахлёста, строки — от первого дня канала, день — на одной высоте во всех зонах", () => {
   const plan = layoutBoard(zones, "2026-10-11");
   for (let i = 1; i < plan.zones.length; i++) assert.ok(plan.zones[i]!.x >= plan.zones[i - 1]!.x + plan.zones[i - 1]!.w);
-  const y = (key: string, code: string) => plan.zones.find((z) => z.key === key)!.cards.find((c) => c.code === code)!.y;
-  assert.equal(y("ru", "08a"), y("instagram", "08a"));
-  assert.equal(y("ru", "08a"), plan.todayY);
-  const ru = plan.zones[0]!.cards;
-  const [b, s] = [ru.find((c) => c.code === "08b")!, ru.find((c) => c.code === "09a")!]; // 12.10: 12:00 и 19:00
-  assert.equal(b.y, s.y);
-  assert.equal(s.x - b.x, CARD_W + GAP);
-  // Дни подряд, без пропусков: от самого раннего ролика (10.10) и не меньше недели вперёд.
-  assert.equal(plan.days[0]!.key, "2026-10-09");
-  assert.equal(plan.days.at(-1)!.key, "2026-10-18");
-  assert.ok(plan.days.every((d, i) => i === 0 || d.y > plan.days[i - 1]!.y));
+  assert.equal(plan.days[0]!.key, BOARD_FIRST_DAY);
+  const at = (key: string, code: string) => plan.zones.find((z) => z.key === key)!.cards.find((c) => c.code === code)!;
+  assert.equal(at("ru", "06a").y, at("instagram", "06a").y);
+  assert.equal(at("ru", "06a").y, plan.todayY);
+  // 12:00 и 19:00 одного дня — рядом, слева направо.
+  assert.equal(at("ru", "07b").y, at("ru", "07a").y);
+  assert.equal(at("ru", "07b").x - at("ru", "07a").x, CARD_W + GAP);
+  // Строки — от постоянной даты: убрали ролик из обычного дня (два слота) — «сегодня» на месте.
+  // Выше становится только день, где роликов больше слотов («Разбор» третьим), — вид всё равно
+  // хранится от строки «сегодня» (lib/board-view.ts).
+  const fewer = zones.map((z) => ({ ...z, items: z.items.filter((i) => i.code !== "01a") }));
+  assert.equal(layoutBoard(fewer, "2026-10-11").days[0]!.key, BOARD_FIRST_DAY);
+  assert.equal(layoutBoard(fewer, "2026-10-11").todayY, plan.todayY);
+});
+
+test("раскладка: «Разбор» третьим в дне — вторая строка этого дня во всех зонах, зона не шире двух карточек", () => {
+  const plan = layoutBoard(zones, "2026-10-11");
+  const ru = plan.zones[0]!;
+  const day = plan.days.find((d) => d.key === "2026-10-13")!; // вт: 08a 12:00, 08b 19:00, L02 21:00
+  assert.equal(day.h, 2 * ROW);
+  const l02 = ru.cards.find((c) => c.code === "L02")!;
+  assert.equal(l02.y, day.y + ROW);
+  assert.equal(ru.w, 2 * 14 + COLS * CARD_W + (COLS - 1) * GAP);
+  assert.equal(plan.days.find((d) => d.key === "2026-10-12")!.h, ROW);
+});
+
+test("пустые слоты и первая дыра: рамка «пусто», дыра — красным на ролике или пустом слоте", () => {
+  const plan = layoutBoard(zones, "2026-10-11");
+  const ru = plan.zones[0]!;
+  assert.equal(ru.cards.find((c) => c.code === "08b")?.gap, true, "ориентир 08b стоит на первой дыре");
+  assert.equal(ru.empty.filter((e) => e.dateKey === "2026-10-18").length, 2, "18.10: 12:00 и 19:00 пусты");
+  const tt = plan.zones.find((z) => z.key === "tiktok")!;
+  // В TikTok 11.10 19:00 — ролик 06b без отметки: дыра — на нём.
+  assert.equal(tt.cards.find((c) => c.code === "06b")?.gap, true);
+  assert.deepEqual(ru.counts, { published: 12, scheduled: 5, ready: 3 }); // готовы 09b, 10a (ждёт пересборки), 10b
+});
+
+test("вид полотна: сдвиг по высоте — от строки «сегодня», другой день — как «Сегодня»", () => {
+  const base = (k: number) => 48 - 500 * k;
+  const stored = storeView({ x: -120, y: base(1) - 300, k: 1 }, "2026-10-11", base);
+  assert.deepEqual(stored, { k: 1, x: -120, dy: -300, day: "2026-10-11" });
+  assert.deepEqual(restoreView(JSON.stringify(stored), "2026-10-11", base), { k: 1, x: -120, y: base(1) - 300 });
+  assert.deepEqual(restoreView(JSON.stringify(stored), "2026-10-12", base), { k: 1, x: -120, y: base(1) });
+  assert.equal(restoreView("мусор", "2026-10-11", base), null);
+  assert.equal(restoreView(JSON.stringify({ ...stored, k: 9 }), "2026-10-11", base), null);
+  assert.ok(READABLE_K === 0.8);
+});
+
+test("колесо: шаг ограничен ±60, щипок тачпада и мышь — масштаб, два пальца — сдвиг", () => {
+  const big = wheelAction({ deltaX: 0, deltaY: 1000, deltaMode: 0, ctrlKey: true, metaKey: false });
+  const max = wheelAction({ deltaX: 0, deltaY: 60, deltaMode: 0, ctrlKey: true, metaKey: false });
+  assert.deepEqual(big, max);
+  assert.ok("zoom" in big && big.zoom < 1 && big.zoom > 0.4);
+  assert.ok("zoom" in wheelAction({ deltaX: 0, deltaY: 120, deltaMode: 0, ctrlKey: false, metaKey: false, wheelDeltaY: -120 }));
+  assert.deepEqual(wheelAction({ deltaX: 4, deltaY: 7, deltaMode: 0, ctrlKey: false, metaKey: false, wheelDeltaY: -21 }), { pan: [-4, -7] });
+});
+
+test("фильтры и адрес листа", () => {
+  const f = { notUploaded: true, week: false };
+  assert.equal(cardVisible({ status: "ready", dateKey: "2026-10-12" }, f, "2026-10-11", "2026-10-17"), true);
+  assert.equal(cardVisible({ status: "published", dateKey: "2026-10-12" }, f, "2026-10-11", "2026-10-17"), false);
+  assert.equal(cardVisible({ status: "ready", dateKey: "2026-10-30" }, { notUploaded: false, week: true }, "2026-10-11", "2026-10-17"), false);
+  assert.deepEqual(parseSelected("instagram:08A", ["ru", "instagram"]), { zone: "instagram", code: "08a" });
+  assert.deepEqual(parseSelected("ru:l01", ["ru"]), { zone: "ru", code: "L01" });
+  assert.equal(parseSelected("youtube:08a", ["ru"]), null);
+  assert.equal(parseSelected("ru:08a:x", ["ru"]), null);
+});
+
+test("данные страницы: английские ролики с текстами, пояс канала, отметки EN читаются", () => {
+  const d = dataOf();
+  assert.equal(d.en.timezone, "America/New_York");
+  assert.equal(d.en.canMark, true);
+  assert.equal(d.en.videos.find((v) => v.code === "01a")?.texts?.title, "Why your voice sounds weird on recordings");
+  assert.equal(d.plan.card.w, CARD_W);
+  assert.equal(d.todayKey, "2026-10-11");
 });
 
 console.log(`\nboard-test: ${passed} проверок прошло`);

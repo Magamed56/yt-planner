@@ -1,95 +1,187 @@
-/* «Доска» (/board): полотно с зонами площадок. Цвета — токены из app/globals.css. */
+/* «Доска» (/board): полотно с зонами площадок. Цвета и шрифты — токены из app/globals.css;
+   фирменные цвета площадок — только в полосе зоны, значках и метках IG/TT. */
+
+/* ---- площадки: цвет полосы зоны ---- */
+.zone_ru,
+.zone_en {
+  --zg: #ff0033;
+}
+.zone_instagram {
+  --zg: linear-gradient(90deg, #feda75, #fa7e1e 30%, #d62976 60%, #962fbf 80%, #4f5bd5);
+}
+.zone_tiktok {
+  --zg: linear-gradient(90deg, #25f4ee, #fe2c55);
+}
+
+/* ---- статус — цветом: полоска и пилюля карточки, легенда ---- */
+.card[data-status="published"],
+.pill[data-status="published"],
+.legendItem[data-status="published"] {
+  --st: var(--published);
+}
+.card[data-status="scheduled"],
+.pill[data-status="scheduled"],
+.legendItem[data-status="scheduled"] {
+  --st: var(--scheduled);
+}
+.card[data-status="studio"],
+.pill[data-status="studio"],
+.legendItem[data-status="studio"] {
+  --st: var(--studio);
+}
+.card[data-status="ready"],
+.pill[data-status="ready"],
+.legendItem[data-status="ready"] {
+  --st: var(--video);
+}
+.card[data-status="script"],
+.pill[data-status="script"],
+.legendItem[data-status="script"] {
+  --st: var(--script);
+}
+
+/* ---- шапка страницы ---- */
 .page {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
+/* Полотно — до нижних вкладок: у страницы доски нет нижнего отступа (его заменяет высота полотна). */
+:global(.content):has(.page) {
+  padding-bottom: 0;
+}
+@media (min-width: 1000px) {
+  :global(.content):has(.page) {
+    padding-bottom: 22px;
+  }
+}
 .head {
   display: grid;
   gap: 8px;
+  min-width: 0;
+}
+.headRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 .title {
-  font: 900 22px var(--display);
+  margin-right: 6px;
+  font: 900 24px var(--display);
 }
-.runways,
-.legend {
+.runways {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  min-width: 0;
 }
-.runwayChip {
-  padding: 5px 10px;
+.runwayChip,
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--card);
   color: var(--muted);
-  font: 600 12px var(--body);
+  font: 600 13px var(--body);
+  white-space: nowrap;
   cursor: pointer;
 }
 .runwayChip b {
   color: var(--text);
+  font-weight: 800;
 }
 .runwayChip.warn {
   border-color: var(--warn);
 }
+.runwayChip.warn span {
+  color: var(--warn);
+}
+.toggle.on {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+}
+.help {
+  justify-content: center;
+  width: 34px;
+  padding: 0;
+  font-weight: 900;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 .legendItem {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .legendItem::before {
   content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
   background: var(--st);
 }
-
-/* статус — цветом: полоска карточки, точка легенды */
-.card[data-status="published"],
-.legendItem[data-status="published"] {
-  --st: var(--published);
+.legendPop {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
 }
-.card[data-status="scheduled"],
-.legendItem[data-status="scheduled"] {
-  --st: var(--scheduled);
-}
-.card[data-status="studio"],
-.legendItem[data-status="studio"] {
-  --st: var(--studio);
-}
-.card[data-status="ready"],
-.legendItem[data-status="ready"] {
-  --st: var(--video);
-}
-.card[data-status="script"],
-.legendItem[data-status="script"] {
-  --st: var(--script);
+.ytError {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--error);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--error) 16%, var(--card));
+  color: var(--text);
+  font: 700 13px var(--body);
 }
 
 /* ---- полотно ---- */
 .stage {
+  --datecol: 48px;
+  --titles: 40px;
+  --dock: 64px;
   position: relative;
-  min-height: 300px;
+  min-height: 240px;
   border: 1px solid var(--line);
   border-radius: 22px;
-  overflow: hidden;
-  background: var(--panel);
+  overflow: clip;
+  background: var(--bg);
+}
+@media (min-width: 1000px) {
+  .stage {
+    --datecol: 66px;
+  }
 }
 .viewport {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow: clip;
   /* жесты ведёт сама доска: браузер не прокручивает и не приближает страницу */
   touch-action: none;
   cursor: grab;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
-  background-color: var(--panel);
-  background-image: radial-gradient(circle, var(--line) 1.2px, transparent 1.4px);
+  /* сетка точек: шаг и сдвиг — от масштаба и сдвига полотна (apply в BoardCanvas) */
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--line) 85%, var(--muted)) 1.1px, transparent 1.5px);
   background-size: 24px 24px;
 }
 .viewport:active {
@@ -100,142 +192,240 @@
   left: 0;
   top: 0;
   transform-origin: 0 0;
-  will-change: transform;
 }
 
+/* Зона — «стеклянная» панель с полосой цвета площадки сверху. */
 .zone {
   position: absolute;
-  left: 0;
-  top: 0;
   border: 1px solid var(--line);
-  border-radius: 24px;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+  box-shadow: 0 24px 60px rgba(4, 2, 16, 0.45);
+}
+.zone::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  border-radius: 20px 20px 0 0;
+  background: var(--zg);
 }
 .zoneHead {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  top: 12px;
+  left: 16px;
+  right: 16px;
+  top: 14px;
+  display: grid;
+  gap: 4px;
 }
-.zoneTitle {
+.zoneName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.zoneName h2 {
   overflow: hidden;
-  font: 900 20px var(--display);
+  font: 900 21px var(--display);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 .zoneSub {
-  color: var(--dim);
+  flex: none;
+  color: var(--muted);
   font: 600 12px var(--body);
 }
 .runway {
-  margin: 4px 0 0;
+  margin: 0;
   color: var(--accent);
   font: 800 15px var(--body);
 }
 .runway.warn {
   color: var(--warn);
 }
-.todayBand {
-  position: absolute;
-  left: 6px;
-  right: 6px;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--accent) 9%, transparent);
-}
-.dayLabel {
-  position: absolute;
-  left: 14px;
-  width: 50px;
-  padding-top: 8px;
-  color: var(--dim);
-  font: 600 12px var(--body);
-  line-height: 1.3;
-}
-.dayLabel b {
-  display: block;
+.zoneMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
   color: var(--muted);
-  font: 800 14px var(--display);
+  font: 600 12px var(--body);
 }
-.dayLabel.today,
-.dayLabel.today b {
-  color: var(--accent);
+.gapChip {
+  padding: 1px 8px;
+  border: 1px solid var(--error);
+  border-radius: 999px;
+  color: var(--error);
+  font-weight: 800;
+}
+.dayLine {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 1px;
+  background: var(--line-soft);
 }
 
-/* размеры — как CARD_W и CARD_H в lib/board.ts */
+/* ---- карточка: миниатюра 9:16, полоска и пилюля статуса, код, название, время ---- */
 .card {
   position: absolute;
-  left: 0;
-  top: 0;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 2px;
-  width: 172px;
-  height: 96px;
-  padding: 7px 9px 7px 12px;
+  display: flex;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-left: 5px solid var(--st);
-  border-radius: 12px;
+  border-left: 4px solid var(--st);
+  border-radius: 14px;
   background: var(--card);
+  color: var(--text);
   cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  }
+}
+.card:active {
+  transform: scale(0.98);
 }
 .card:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
 }
-.cardTop {
+.card.past {
+  opacity: 0.55;
+}
+.card.past:hover,
+.card.past:focus-visible,
+.card.past.selected {
+  opacity: 1;
+}
+.card.gapCard {
+  box-shadow: 0 0 0 2px var(--error);
+}
+.card.selected {
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 14px 34px rgba(0, 0, 0, 0.5);
+}
+.hidden {
+  display: none !important;
+}
+.thumb {
+  flex: none;
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 100%;
+  background: var(--card-2);
+  color: var(--muted);
+  font: 900 12px var(--display);
+}
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
   min-width: 0;
-  font-size: 12px;
+  padding: 7px 9px 7px 10px;
+}
+.top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11.5px;
   white-space: nowrap;
 }
 .code {
-  font: 900 14px var(--display);
+  font: 800 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: -0.02em;
+}
+.tag {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--card-2);
+  color: var(--text);
+  font: 800 9.5px var(--body);
+}
+.tag_instagram {
+  background: linear-gradient(90deg, #d62976, #962fbf);
+  color: #ffffff;
+}
+.tag_tiktok {
+  background: #000000;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px #25f4ee;
 }
 .when {
-  color: var(--muted);
-}
-.longTag {
   margin-left: auto;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--card-2);
+  overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
 }
 .cardTitle {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.3;
+  font: 650 12.5px/1.3 var(--body);
 }
-.cardFoot {
+/* Заметка — в потоке, под названием: не наезжает на время. */
+.cardNote {
+  overflow: hidden;
+  color: var(--warn);
+  font: 800 10.5px var(--body);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  min-height: 22px;
+  margin-top: auto;
+  min-width: 0;
 }
-.status {
+.pill {
   overflow: hidden;
-  color: var(--st);
-  font-size: 11.5px;
-  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--st);
+  color: var(--accent-ink);
+  font: 800 10.5px var(--body);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 .markBtn,
 .unmark {
+  position: relative;
   flex: none;
-  padding: 2px 9px;
+  padding: 3px 10px;
   border-radius: 999px;
   font: 800 11px var(--body);
   cursor: pointer;
+}
+/* Область нажатия больше самой кнопки — не меньше 40 точек по высоте. */
+.markBtn::after,
+.unmark::after {
+  content: "";
+  position: absolute;
+  inset: -10px -6px;
 }
 .markBtn {
   border: 1px solid var(--accent);
@@ -245,69 +435,554 @@
 .unmark {
   border: 1px solid var(--line);
   background: transparent;
-  color: var(--dim);
+  color: var(--muted);
+}
+.markBtn:focus-visible,
+.unmark:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
 }
 .markBtn:disabled,
 .unmark:disabled {
-  opacity: 0.5;
-}
-.cardNote {
-  position: absolute;
-  right: 8px;
-  top: 7px;
-  color: var(--warn);
-  font-size: 10px;
-  font-weight: 700;
+  opacity: 0.6;
+  cursor: default;
 }
 
-/* ---- инструменты поверх полотна ---- */
-.toolbar {
+/* Пустой слот 12:00/19:00 — пунктир; первая дыра запаса — красным. */
+.empty {
   position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 2px;
+  border: 1.5px dashed var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  font: 700 13px var(--body);
+}
+.empty small {
+  font-variant-numeric: tabular-nums;
+}
+.empty.gapEmpty {
+  border-color: var(--error);
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+  color: var(--error);
+}
+
+/* ---- поверх полотна: линия «Сегодня», колонка дат, названия зон ---- */
+.overlay {
+  --vx: 0px;
+  --vy: 0px;
+  --k: 1;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
 }
-.tool,
-.zoom {
-  pointer-events: auto;
+.dateCol {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: var(--datecol);
+  background: linear-gradient(90deg, var(--bg) 78%, transparent);
+  clip-path: inset(var(--titles) 0 0 0);
 }
-.tool {
-  min-height: 36px;
-  padding: 4px 14px;
+.date {
+  position: absolute;
+  left: 0;
+  right: 4px;
+  top: calc(var(--vy) + var(--y) * var(--k));
+  height: calc(var(--h) * var(--k));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  color: var(--muted);
+  font: 600 11px/1.2 var(--body);
+  text-align: center;
+}
+.date b {
+  color: var(--text);
+  font: 800 12px var(--display);
+  white-space: nowrap;
+}
+.date.pastDate {
+  opacity: 0.55;
+}
+.date.today span,
+.date.today b {
+  color: var(--accent);
+}
+.overlay[data-dense="1"] .date:not([data-monday]) {
+  display: none;
+}
+.overlay[data-dense="1"] .date {
+  padding-top: 0;
+}
+.overlay[data-dense="1"] .date span {
+  display: none;
+}
+/* Линия «Сегодня» — только ниже названий зон. */
+.lineLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  clip-path: inset(var(--titles) 0 0 0);
+}
+.todayLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--vy) + var(--y) * var(--k));
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.todayLine span {
+  position: absolute;
+  left: 4px;
+  top: -8px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 800 10px var(--body);
+}
+.titles {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 3;
+  height: var(--titles);
+  background: linear-gradient(var(--bg) 72%, transparent);
+}
+.ztitle {
+  --tw: 176px;
+  position: absolute;
+  top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: var(--tw);
+  height: 28px;
+  padding: 0 10px 0 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font: 800 13px var(--display);
+  white-space: nowrap;
+  /* у левого края зоны; уходит зона влево — прилипает к краю, пока зона на экране */
+  left: min(max(calc(var(--vx) + var(--zx) * var(--k)), calc(var(--datecol) + 6px)), calc(var(--vx) + (var(--zx) + var(--zw)) * var(--k) - var(--tw)));
+}
+.ztitle::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--zg);
+}
+.ztitle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.overlay[data-narrow="1"] .ztitle {
+  --tw: 30px;
+  padding: 0 6px;
+}
+.overlay[data-narrow="1"] .ztitle span {
+  display: none;
+}
+
+/* ---- мини-карта ---- */
+.mini {
+  position: absolute;
+  right: 10px;
+  bottom: calc(var(--dock) + 10px);
+  z-index: 4;
+  width: 120px;
+  height: 80px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
+  cursor: pointer;
+  touch-action: none;
+}
+@media (min-width: 1000px) {
+  .mini {
+    bottom: 12px;
+    right: 12px;
+  }
+  .withSheet .mini {
+    right: calc(380px + 12px);
+  }
+}
+.miniZone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--zg);
+  opacity: 0.35;
+}
+.miniToday {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--accent);
+}
+.miniView {
+  position: absolute;
+  border: 1.5px solid var(--text);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- панель вида: внизу, над меню панели ---- */
+.dock {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+@media (min-width: 1000px) {
+  .dock {
+    left: 12px;
+    right: auto;
+    bottom: 12px;
+  }
+}
+.tool,
+.zoneChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 14px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--card);
   color: var(--text);
   font: 700 14px var(--body);
+  white-space: nowrap;
   cursor: pointer;
 }
-.tool:hover {
+.zoneChip {
+  padding: 0;
+}
+.tool:hover,
+.zoneChip:hover,
+.runwayChip:hover,
+.toggle:hover {
   border-color: var(--accent);
 }
+.tool:focus-visible,
+.zoneChip:focus-visible,
+.runwayChip:focus-visible,
+.toggle:focus-visible,
+.sheetClose:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .zoom {
-  min-width: 46px;
+  min-width: 44px;
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
+  font: 800 12px var(--body);
+  font-variant-numeric: tabular-nums;
   text-align: center;
 }
-.toast {
-  position: absolute;
+.zoneChips {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* ---- «загрузил»: сейчас или по расписанию ---- */
+.choose {
+  position: fixed;
+  z-index: 45;
   left: 50%;
-  top: 12px;
-  max-width: calc(100% - 24px);
-  padding: 8px 14px;
-  border: 1px solid var(--ok);
-  border-radius: 14px;
-  background: var(--card-2);
-  font-size: 13px;
+  bottom: calc(150px + env(safe-area-inset-bottom));
+  width: min(440px, calc(100% - 24px));
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
   transform: translateX(-50%);
 }
-.toast.warn {
-  border-color: var(--error);
+.choose p {
+  margin: 0 0 10px;
+}
+.chooseBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* Тост — над панелью вида. */
+.toast:global(.toast) {
+  bottom: calc(150px + env(safe-area-inset-bottom));
+}
+@media (min-width: 1000px) {
+  .choose,
+  .toast:global(.toast) {
+    bottom: 24px;
+  }
+}
+
+/* ---- лист ролика: снизу на телефоне, справа на компьютере ---- */
+.sheetBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(5, 3, 18, 0.45);
+}
+.sheet {
+  position: fixed;
+  z-index: 31;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  height: 70vh;
+  height: 70dvh;
+  max-height: calc(100dvh - env(safe-area-inset-top) - 8px);
+  border-top: 1px solid var(--line);
+  border-radius: 22px 22px 0 0;
+  background: var(--panel);
+  box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.5);
+  outline: none;
+  transition:
+    height 0.22s ease,
+    transform 0.22s ease;
+}
+.sheetFull {
+  height: calc(100dvh - env(safe-area-inset-top) - 8px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .card {
+    transition: none;
+  }
+}
+@media (min-width: 1000px) {
+  .sheet {
+    position: absolute;
+    z-index: 6;
+    left: auto;
+    top: 0;
+    width: 380px;
+    height: auto;
+    max-height: none;
+    border-top: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: -18px 0 48px rgba(0, 0, 0, 0.35);
+    transition: none;
+  }
+}
+.sheetHead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 10px 10px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  touch-action: none;
+  cursor: grab;
+}
+@media (min-width: 1000px) {
+  .sheetHead {
+    padding-top: 10px;
+    cursor: default;
+  }
+}
+.grab {
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 42px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  transform: translateX(-50%);
+}
+.sheetTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font: 800 15px var(--display);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sheetBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+/* Карточка очереди (VideoSheet) внутри листа: без своей «плавающей» рамки и своей кнопки ✕. */
+.sheetBody :global(.sheet) {
+  position: static;
+  z-index: auto;
+  top: auto;
+  max-height: none;
+  overflow: visible;
+  padding: 14px 16px 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sheetBody :global(.sheet-head) > :global(.btn.ghost) {
+  display: none;
+}
+.social {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.socialRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.socialNote {
+  margin: 0;
+  color: var(--warn);
+}
+.social :global(.btn-row) {
+  margin-top: 0;
+}
+.en {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.enHead {
+  display: flex;
+  gap: 12px;
+}
+.enHead h3 {
+  margin: 6px 0 4px;
+  font: 800 17px/1.25 var(--display);
+}
+.enHead p {
+  margin: 2px 0;
+}
+.enCover {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 128px;
+  border-radius: 12px;
+  background: var(--card-2);
+  color: var(--muted);
+  font: 900 14px var(--display);
+  object-fit: cover;
+}
+.enLabel {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font: 800 11px var(--body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.enTexts dl {
+  margin: 8px 0 0;
+}
+.enTexts dt {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.enTexts dd {
+  margin: 2px 0 0;
+}
+
+.short {
+  display: none;
+}
+
+/* ---- телефон ---- */
+@media (max-width: 999px) {
+  .long {
+    display: none;
+  }
+  .short {
+    display: inline;
+  }
+  .dock {
+    gap: 4px;
+    padding: 4px;
+  }
+  .tool {
+    min-height: 38px;
+    padding: 0 9px;
+    font-size: 13px;
+  }
+  .zoneChip {
+    min-width: 32px;
+    min-height: 38px;
+  }
+  .zoom {
+    min-width: 38px;
+  }
+  .mini {
+    opacity: 0.9;
+  }
+  .title {
+    display: none;
+  }
+  .head {
+    gap: 6px;
+  }
+  /* Чипы запаса — одной строкой с прокруткой, до краёв экрана. */
+  .headRow:first-child {
+    flex-wrap: nowrap;
+    margin: 0 -16px;
+  }
+  .runways {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0 16px;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+  .runways::-webkit-scrollbar {
+    display: none;
+  }
+  .runwayChip {
+    scroll-snap-align: start;
+  }
+  .stage {
+    border-radius: 18px;
+  }
 }
