@@ -13,10 +13,11 @@ import { Dial } from "./Dial";
 // превью до 3:4 — по ~34 px с боков, поэтому поля не меньше 72 px.
 // Сверху вниз: кто мы → обещание (слоган) → о чём (рубрики) → когда.
 
-// Слоган крупно, с маркером на «просто» (или на последнем слове первой фразы):
-// «Сложное — / [просто]. / Каждый день».
-function splitTagline(tagline: string): { before: string; mark: string; after: string } {
-  const m = tagline.match(/^(.*?)(просто)([.!…]?)\s*(.*)$/i);
+// Слоган крупно, с маркером на слове языка канала («просто», «simple») или на
+// последнем слове первой фразы: «Сложное — / [просто]. / Каждый день».
+function splitTagline(tagline: string, word: string): { before: string; mark: string; after: string } {
+  const esc = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = tagline.match(new RegExp(`^(.*?)(${esc})([.!…]?)\\s*(.*)$`, "i"));
   if (m) return { before: m[1].trim(), mark: m[2] + m[3], after: m[4].trim() };
   const dot = tagline.search(/[.!?…]\s/);
   const first = dot > 0 ? tagline.slice(0, dot + 1) : tagline;
@@ -27,7 +28,7 @@ function splitTagline(tagline: string): { before: string; mark: string; after: s
 
 const Headline: React.FC<{ fontSize: number }> = ({ fontSize }) => {
   const t = BRAND.theme;
-  const { before, mark, after } = splitTagline(BRAND.tagline);
+  const { before, mark, after } = splitTagline(BRAND.tagline, BRAND.text.markWord);
   return (
     <div
       style={{
@@ -72,7 +73,7 @@ export const IntroPost: React.FC = () => {
             <BrandMark size={96 * u} theme={t} id="intro" glow={0.8} />
             <Wordmark fontSize={46 * u} />
             <div style={{ flex: 1 }} />
-            <Pill fontSize={24 * u}>Знакомство</Pill>
+            <Pill fontSize={24 * u}>{BRAND.text.hello}</Pill>
           </div>
 
           <div style={{ marginTop: 62 * u }}>
@@ -80,11 +81,12 @@ export const IntroPost: React.FC = () => {
           </div>
 
           <div style={{ marginTop: 30 * u, fontFamily: FONT_BODY, fontWeight: 600, fontSize: 35 * u, lineHeight: 1.34, color: t.textDim, maxWidth: 900 * u }}>
-            Короткие ролики обо всём: одна тема —{" "}
-            <span style={{ color: t.text, fontWeight: 800 }}>одна понятная суть за&nbsp;минуту</span>. Только проверяемые факты, без эзотерики и&nbsp;кликбейта.
+            {BRAND.text.about.lead}
+            <span style={{ color: t.text, fontWeight: 800 }}>{BRAND.text.about.gist}</span>
+            {BRAND.text.about.tail}
           </div>
 
-          {/* Рубрики канала — все из channel.json */}
+          {/* Рубрики канала — все из файла канала */}
           <div style={{ marginTop: 40 * u, display: "grid", gridTemplateColumns: "1fr 1fr", gap: chipGap }}>
             {BRAND.pillars.map((p) => (
               <div

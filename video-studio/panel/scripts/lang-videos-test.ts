@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { mp4Code } from "../../src/pipeline/codes";
 import { descriptionTxt } from "../../src/pipeline/meta";
 import type { GhRelease } from "../lib/github";
-import { LANG_CHANNELS, langChannelOf, NAV_LANGS, navLangs } from "../lib/lang-channels";
+import { LANG_CHANNELS, langChannel, langChannelOf, NAV_LANGS, navLangs } from "../lib/lang-channels";
 import { emptyText, langMp4, langRunsOf, langVideosOf, parseStudioTexts, releaseLangs, withFileTexts } from "../lib/lang-videos";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -180,12 +180,17 @@ test("запуски языка: идущие и упавший последни
   assert.deepEqual(langRunsOf(runs, "uz", now), { active: [], failed: null });
 });
 
-test("канал языка: заготовка channels/en.json, настроенный канал, нет файла, битый файл", () => {
+test("канал языка: настоящий channels/en.json, заготовка kk, нет файла, битый файл", () => {
+  // Канал создан — плашки «Канал ещё не создан…» на /lang/en нет (LangView смотрит на placeholder).
   const en = langChannelOf("en", readJson("channels/en.json"));
-  assert.equal(en.placeholder, true, "в en.json «placeholder»: true");
+  assert.equal(en.placeholder, false, "в en.json нет «placeholder» — канал создан");
   assert.equal(en.name, "Gist in a Minute");
+  assert.equal(en.handle, "GistinaMinute");
+  assert.equal(en.youtube, "https://www.youtube.com/@GistinaMinute");
   assert.equal(en.label, "English");
   assert.equal(en.file, "channels/en.json");
+  assert.equal(langChannel("en").placeholder, false, "вшитый в панель en.json — тоже не заготовка");
+  assert.equal(langChannelOf("kk", readJson("channels/kk.json")).placeholder, true, "kk — пока заготовка");
 
   const ready = langChannelOf("en", { name: "Gist in a Minute", handle: "@gistinaminute", links: { youtube: "https://youtube.com/@gistinaminute" } });
   assert.equal(ready.placeholder, false, "нет «placeholder» — канал настроен");

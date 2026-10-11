@@ -28,7 +28,8 @@
 - [docs/youtube-setup.md](docs/youtube-setup.md) — оформить канал в YouTube Studio и публиковать по расписанию;
 - [docs/instagram-setup.md](docs/instagram-setup.md) — Reels через официальный API или вручную;
 - [docs/telegram-setup.md](docs/telegram-setup.md) — ролики в канал Telegram через своего бота;
-- [brand/README.md](brand/README.md) — аватар, баннер, водяной знак, обложки «Актуального».
+- [brand/README.md](brand/README.md) — аватар, баннер, водяной знак, обложки «Актуального»;
+  английский канал «Gist in a Minute» — [brand/en/README.md](brand/en/README.md) (картинки и тексты описания).
 
 ---
 
@@ -374,7 +375,8 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 - `npm run make -- --script scripts/en/sut-08a-<имя>.json` — язык берётся из сценария: канал
   `channels/en.json` (та же схема, что `channel.json`: имя, хэштеги, призывы, подвал, дисклеймер),
   голос языка (Gemini — тот же Charon; для kk и uz Gemini TTS нет — Edge `kk-KZ-DauletNeural`,
-  `uz-UZ-SardorNeural`), подписи в кадре («Subscribe», «FACT OR MYTH?»). Свой файл канала —
+  `uz-UZ-SardorNeural`), подписи в кадре («Subscribe», «FACT OR MYTH?») и название канала в
+  полусекундной заставке (файл канала уходит в `props.json` → `brandChannel`). Свой файл канала —
   `CHANNEL_FILE`.
 - В GitHub Actions: workflow «video-studio: ролик», поле **lang** (draft / render / batch). В релизе
   файл называется `en-08a-<имя>.mp4` — панель и youtube-fill его не трогают (их ролики — `08a-….mp4`).
@@ -384,6 +386,8 @@ instagram для других языков выключены. Что сдела
 
 1. Создать канал (лучше — отдельный бренд-аккаунт), заполнить `channels/<язык>.json`: `name`,
    `handle`, `links`, проверить тексты (kk, uz — носителю языка), удалить `_todo` и `placeholder`.
+   Картинки канала — `npm run brand -- --channel=<язык>` → `brand/<язык>/` (надписи языка — в
+   `src/remotion/brand/texts.ts`). Английский канал уже создан: @GistinaMinute, кит — `brand/en/`.
 2. Пока — собирать с upload = release и загружать `en-08a-….mp4` в Studio нового канала руками,
    тексты — из `description.txt` релиза. В панели это страница «English» (`/lang/en`): видео в «Фото»,
    название, описание, теги и подпись Reels — одним нажатием.

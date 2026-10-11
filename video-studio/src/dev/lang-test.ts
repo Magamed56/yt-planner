@@ -1,6 +1,6 @@
 // Офлайн-проверка роликов на других языках: коды и имена файлов, выбор канала
 // channels/<язык>.json, голос под язык, перевод сценария (проверка + ремонтный запрос на
-// подменённом fetch), описание и подписи композиции на языке ролика. Сеть и ключи не нужны.
+// подменённом fetch), описание, подписи композиции и бренд-заставка на языке ролика. Сеть и ключи не нужны.
 // Запуск: npx tsx src/dev/lang-test.ts
 
 import assert from "node:assert/strict";
@@ -9,15 +9,18 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyChannelDefaults } from "../pipeline/channel";
-import { loadChannel, useLanguageChannel } from "../pipeline/channel-file";
+import { brandChannelOf, loadChannel, useLanguageChannel } from "../pipeline/channel-file";
 import { applyLanguageVoice, captionFileName, channelFileForLang, langInfo, langScriptDir, langVideoName, normalizeLang, parseLangs, voiceLang } from "../pipeline/lang";
 import { buildYoutubeMeta, metaText } from "../pipeline/meta";
+import { buildVideoProps } from "../pipeline/props";
 import { checkScriptTranslation, scriptTextOf, translateScript } from "../pipeline/script/translate";
 import { coerceScriptCandidate } from "../pipeline/script/validate";
 import { edgeDefaultVoice } from "../pipeline/voice/providers/edge";
 import { resolvePiperVoice } from "../pipeline/voice/providers/piper";
 import { parseLangArg, prepareLanguage, runLanguage, scriptLanguage } from "../cli/lang-run";
 import { factsNote, langScriptName } from "../cli/script-lang";
+import { BRAND_CHANNEL_PROP } from "../remotion/brand/jobs";
+import { BRAND_TEXTS, brandTexts } from "../remotion/brand/texts";
 import { uiText } from "../remotion/lib/ui-text";
 import type { VideoScript } from "../types";
 
@@ -122,18 +125,33 @@ await test("Edge и Piper: голос по умолчанию — языка р�
 
 // ---- канал языка ----
 
-await test("channels/en|kk|uz.json: та же схема, заготовка помечена; выбор файла по языку", () => {
+await test("channels/en|kk|uz.json: та же схема; en — настоящий канал, kk/uz — заготовки; выбор файла по языку", () => {
   for (const lang of ["en", "kk", "uz"]) {
     const ch = loadChannel({ file: path.join(root, channelFileForLang(lang)), env: {} });
     assert.equal(ch.language, lang);
-    assert.equal(ch.placeholder, true, `${lang}: «placeholder»: true — заменить после создания канала`);
     assert.ok(ch.name && ch.cta.subscribe && ch.cta.comment && ch.cta.onScreenComment && ch.disclaimer);
     assert.ok(ch.hashtags.brand.length && ch.hashtags.core.length);
     assert.deepEqual(ch.hashtags.youtubeShorts, ["#shorts"]);
-    assert.equal(ch.links.youtube, null);
     const raw = fs.readFileSync(path.join(root, channelFileForLang(lang)), "utf8");
+    if (lang === "en") {
+      // Канал создан: заготовочных пометок нет, иначе make и панель продолжат звать «заменить».
+      assert.equal(ch.placeholder, undefined, "en: «placeholder» удалён — канал создан");
+      assert.doesNotMatch(raw, /"_todo"|"placeholder"/);
+      continue;
+    }
+    assert.equal(ch.placeholder, true, `${lang}: «placeholder»: true — заменить после создания канала`);
+    assert.equal(ch.links.youtube, null);
     assert.match(raw, /заменить после создания канала/);
   }
+  // Ник — как в channel.json: без «@» (его добавляют картинки и подвал), ссылка — на этот ник.
+  const en = loadChannel({ file: path.join(root, "channels", "en.json"), env: {} });
+  assert.equal(en.name, "Gist in a Minute");
+  assert.equal(en.handle, "GistinaMinute");
+  assert.equal(en.links.youtube, "https://www.youtube.com/@GistinaMinute");
+  assert.equal(en.links.instagram, null);
+  const rawEn = JSON.parse(fs.readFileSync(path.join(root, "channels", "en.json"), "utf8")) as { handle?: unknown };
+  const rawRu = JSON.parse(fs.readFileSync(path.join(root, "channel.json"), "utf8")) as { handle?: unknown };
+  assert.equal(String(rawRu.handle).startsWith("@"), String(rawEn.handle).startsWith("@"), "handle хранится так же, как в channel.json");
   assert.equal(loadChannel({ file: path.join(root, "channel.json"), env: {} }).placeholder, undefined);
   const kk = loadChannel({ file: path.join(root, "channels", "kk.json"), env: {} });
   const env: NodeJS.ProcessEnv = {};
@@ -279,6 +297,65 @@ await test("подписи композиции: язык ролика, стар
   assert.equal(uiText("kk").chapter(3), "3-ТАРАУ");
   assert.equal(uiText("uz").truth, "HAQIQAT");
   assert.equal(uiText("de").subscribe, "Subscribe");
+});
+
+await test("надписи бренд-кита: русские как были, английские для channels/en.json, у созданного канала язык есть", () => {
+  const ru = brandTexts("ru");
+  assert.equal(ru.perDay(2), "2 ролика в день");
+  assert.equal(ru.perDay(1), "1 ролик в день");
+  assert.equal(ru.schedule(2), "2 новых ролика в день");
+  assert.equal(ru.schedule(1), "Новый ролик каждый день");
+  assert.equal(ru.hello, "Знакомство");
+  assert.equal(ru.markWord, "просто");
+  assert.equal(brandTexts(undefined), ru, "старый channel.json без language — русский");
+  const en = brandTexts("en");
+  assert.equal(en.perDay(2), "2 videos a day");
+  assert.equal(en.schedule(2), "2 new videos a day");
+  assert.equal(en.schedule(1), "New video every day");
+  assert.match("Complex made simple. Every day", new RegExp(en.markWord));
+  assert.doesNotMatch(Object.values(en.short).join(" ") + en.hello + Object.values(en.about).join(""), /[А-Яа-яЁё]/);
+  assert.equal(brandTexts("de"), en, "языка нет — английский, а не русский");
+  // Каждая рубрика созданного канала подписана на его языке; заготовкам (kk, uz) кит не рисуется.
+  for (const lang of ["ru", "en", "kk", "uz"]) {
+    const ch = JSON.parse(fs.readFileSync(path.join(root, channelFileForLang(lang)), "utf8")) as { placeholder?: boolean; language?: string; pillars: { id: string }[] };
+    if (ch.placeholder) continue;
+    const texts = BRAND_TEXTS[ch.language ?? "ru"];
+    assert.ok(texts, `${lang}: нет надписей бренд-кита в src/remotion/brand/texts.ts`);
+    for (const p of ch.pillars) assert.ok(texts.short[p.id], `${lang}: нет короткой подписи рубрики ${p.id}`);
+  }
+});
+
+await test("заставка ролика: канал языка (channels/en.json) — в props и в название бренда; русский ролик — без ключа", async () => {
+  const voices = demo.scenes.map(() => ({ file: "", durationMs: 1500, words: [], wordsSource: "estimated" as const }));
+  const props = (script: VideoScript, brandChannel: Record<string, unknown> | null) =>
+    buildVideoProps({ script, publicDir: os.tmpdir(), voices, music: null, whooshSrc: null, brandIntro: true, brandChannel, channelName: null }) as unknown as Record<string, unknown>;
+
+  // Как в make: --lang en → CHANNEL_FILE=channels/en.json → loadChannel → props.
+  const env: NodeJS.ProcessEnv = {};
+  useLanguageChannel("en", env);
+  const en = props({ ...demo, language: "en" }, brandChannelOf(loadChannel({ env })));
+  const brand = en[BRAND_CHANNEL_PROP] as { name?: string; language?: string } | undefined;
+  assert.equal(brand?.name, "Gist in a Minute");
+  assert.equal(brand?.language, "en");
+
+  // Русский ролик (channel.json) и ролик без файла канала — ключа нет, props.json как раньше.
+  const ru = props(demo, brandChannelOf(loadChannel({ env: {} })));
+  assert.equal(BRAND_CHANNEL_PROP in ru, false);
+  assert.equal(brandChannelOf({ file: null }), null);
+  assert.equal(brandChannelOf({ file: path.join(root, ".", "channel.json") }), null);
+
+  // data.ts в браузере рендера читает inputProps через getInputProps() (window.remotion_inputProps):
+  // с props английского ролика название бренда — английское (без ключа — channel.json из бандла).
+  const g = globalThis as { window?: unknown };
+  g.window = { remotion_inputProps: JSON.stringify(en), location: { origin: "http://localhost" } };
+  try {
+    const { BRAND, splitName } = await import("../remotion/brand/data");
+    assert.equal(BRAND.name, "Gist in a Minute");
+    assert.deepEqual(splitName(BRAND.name), ["GIST", "IN A MINUTE"]);
+    assert.equal(BRAND.language, "en");
+  } finally {
+    delete g.window;
+  }
 });
 
 console.log(`\nlang-test: ${passed} проверок пройдено`);
