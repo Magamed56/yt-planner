@@ -1,0 +1,26 @@
+# Временный: свободная музыка для видео-приглашения (Openverse). Удалить после.
+name: "tmp: музыка приглашения"
+on:
+  push:
+    branches: [claude/stats-probe]
+    paths: [tmp-music/queries.txt, tmp-music/music.mjs]
+permissions:
+  contents: write
+jobs:
+  music:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: node tmp-music/music.mjs
+        env:
+          OUT_DIR: ${{ github.workspace }}/tmp-music/out
+      - name: Музыка — в ветку
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull -q --rebase origin claude/stats-probe || true
+          git add tmp-music/out && git commit -qm "tmp: музыка приглашения" && git push -q origin HEAD:claude/stats-probe || true
