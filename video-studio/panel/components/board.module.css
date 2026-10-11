@@ -4,7 +4,7 @@
 /* ---- площадки: цвет полосы зоны ---- */
 .zone_ru,
 .zone_en {
-  --zg: #ff0033;
+  --zg: linear-gradient(#ff0033, #ff0033);
 }
 .zone_instagram {
   --zg: linear-gradient(90deg, #feda75, #fa7e1e 30%, #d62976 60%, #962fbf 80%, #4f5bd5);
@@ -202,15 +202,14 @@
   background: color-mix(in srgb, var(--panel) 80%, transparent);
   box-shadow: 0 24px 60px rgba(4, 2, 16, 0.45);
 }
+/* Полоса — фоном слоя во всю зону: скругление зоны обрезает её по дуге углов. */
 .zone::before {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 4px;
-  border-radius: 20px 20px 0 0;
-  background: var(--zg);
+  inset: 0;
+  border-radius: inherit;
+  background: var(--zg) top / 100% 4px no-repeat;
+  pointer-events: none;
 }
 .zoneHead {
   position: absolute;
@@ -293,9 +292,27 @@
 .card:active {
   transform: scale(0.98);
 }
-.card:focus-visible {
+.open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+.open:focus-visible {
   outline: 3px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: -3px;
+}
+.card:has(.open:focus-visible) {
+  opacity: 1;
+}
+/* Подвал Instagram/TikTok с «загрузил» — над кнопкой открытия: касание рядом с ней лист не открывает. */
+.foot[data-nodrag] {
+  position: relative;
+  z-index: 2;
 }
 .card.past {
   opacity: 0.55;
@@ -321,8 +338,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
   height: 100%;
+  aspect-ratio: 9 / 16;
   background: var(--card-2);
   color: var(--muted);
   font: 900 12px var(--display);
@@ -385,6 +402,10 @@
   -webkit-line-clamp: 2;
   font: 650 12.5px/1.3 var(--body);
 }
+/* С заметкой название — в одну строку: иначе обе не помещаются в карточку и режутся по буквам. */
+.body:has(.cardNote) .cardTitle {
+  -webkit-line-clamp: 1;
+}
 /* Заметка — в потоке, под названием: не наезжает на время. */
 .cardNote {
   overflow: hidden;
@@ -414,6 +435,7 @@
 .markBtn,
 .unmark {
   position: relative;
+  z-index: 2;
   flex: none;
   padding: 3px 10px;
   border-radius: 999px;
@@ -745,9 +767,10 @@
   bottom: calc(150px + env(safe-area-inset-bottom));
 }
 @media (min-width: 1000px) {
+  /* Над панелью вида (она внизу слева, ≈ 64 px), а не поверх «Сегодня» и «Вписать». */
   .choose,
   .toast:global(.toast) {
-    bottom: 24px;
+    bottom: 96px;
   }
 }
 
@@ -808,7 +831,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 18px 10px 10px 16px;
+  padding: 18px max(10px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--line-soft);
   touch-action: none;
   cursor: grab;
@@ -842,7 +865,7 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  padding: 0 env(safe-area-inset-right) calc(20px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
 }
 /* Карточка очереди (VideoSheet) внутри листа: без своей «плавающей» рамки и своей кнопки ✕. */
 .sheetBody :global(.sheet) {
@@ -958,8 +981,14 @@
   .mini {
     opacity: 0.9;
   }
+  /* Заголовок на телефоне не показываем, но экранный диктор его читает. */
   .title {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .head {
     gap: 6px;

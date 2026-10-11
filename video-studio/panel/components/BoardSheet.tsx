@@ -40,8 +40,12 @@ export default function BoardSheet(p: Props) {
   const [drag, setDrag] = useState(0); // сдвиг пальцем: + вниз, − вверх
   const start = useRef<{ y: number; t: number; id: number } | null>(null);
   const box = useRef<HTMLElement>(null);
+  // Лист открывается по отпусканию пальца: «щелчок», который телефон шлёт следом, попал бы в фон
+  // под пальцем и тут же закрыл лист — первые 350 мс фон не закрывает.
+  const openedAt = useRef(0);
   // Открылся — фокус в лист: клавиатура и экранный диктор сразу в нём.
   useEffect(() => {
+    openedAt.current = performance.now();
     box.current?.focus({ preventScroll: true });
   }, []);
 
@@ -74,7 +78,7 @@ export default function BoardSheet(p: Props) {
 
   return (
     <>
-      {!p.desktop && <div className={s.sheetBackdrop} onClick={p.onClose} aria-hidden="true" />}
+      {!p.desktop && <div className={s.sheetBackdrop} onClick={() => performance.now() - openedAt.current > 350 && p.onClose()} aria-hidden="true" />}
       <section
         ref={box}
         tabIndex={-1}

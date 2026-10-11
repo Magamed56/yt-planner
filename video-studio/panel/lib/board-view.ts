@@ -19,6 +19,7 @@ export const STATUS_LABEL: Record<"published" | "scheduled" | "studio" | "ready"
 export interface MarkState {
   on: boolean;
   at: string | null;
+  t?: number; // когда нажали (мс): отметка «сейчас» позже момента данных — она уже «вышел»
 }
 
 export const MIN_K = 0.05;

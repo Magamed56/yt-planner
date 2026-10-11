@@ -109,12 +109,17 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   const [zoom, setZoom] = useState(100);
   const [ready, setReady] = useState(false);
   const [seen, setSeen] = useState(data.shell.generatedAt);
+  const wantRefresh = useRef(false);
   if (seen !== data.shell.generatedAt) {
     // Свежие данные с сервера — отметки в них уже есть.
     setSeen(data.shell.generatedAt);
     setMarks({});
   }
+  useEffect(() => {
+    wantRefresh.current = false;
+  }, [data.shell.generatedAt]);
 
+  const headRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const vpRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -171,7 +176,9 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
       if (worldRef.current) worldRef.current.style.willChange = "";
     }, 300);
     // Сетка точек едет и масштабируется вместе с полотном — как в Miro.
-    const g = 24 * k;
+    // Сильно отдалили — шаг сетки удваиваем, чтобы точки не слились в сплошную заливку.
+    let g = 24 * k;
+    while (g < 12) g *= 2;
     vp.style.backgroundSize = `${g}px ${g}px`;
     vp.style.backgroundPosition = `${x}px ${y}px`;
     const o = overlayRef.current;
@@ -313,6 +320,8 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
 
   // Высота полотна — до нижних вкладок (на компьютере — до низа окна); затем вид.
   useLayoutEffect(() => {
+    // При гидратации useDesktop ещё отдаёт серверное «телефон» — для первого расчёта берём экран сами.
+    desktopRef.current = window.matchMedia(desktopQuery).matches;
     const fit = () => {
       const el = stageRef.current;
       if (!el) return;
@@ -340,7 +349,15 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
       showCard(p.zone as ZoneKey, p.code);
     }
     window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
+    // Шапка стала выше или ниже (раскрыли легенду «?», полоса «YouTube не ответил», перенос чипов) —
+    // полотно снова до нижних вкладок, панель вида не уходит под них.
+    const head = headRef.current;
+    const ro = typeof ResizeObserver !== "undefined" && head ? new ResizeObserver(() => fit()) : null;
+    if (ro && head) ro.observe(head);
+    return () => {
+      window.removeEventListener("resize", fit);
+      ro?.disconnect();
+    };
     // Один раз при открытии: дальше вид меняет только человек.
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -366,6 +383,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     let gk = 1;
     const onGestureStart = (e: Event) => {
       e.preventDefault();
+      stopFly();
       gk = view.current.k;
     };
     const onGestureChange = (e: Event) => {
@@ -399,25 +417,51 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     if (key === selected) return;
     setSelected(key);
     if (ourSheet()) window.history.replaceState({ ...window.history.state, boardSheet: key }, "", sheetUrl(key));
+    // Лист открыт по ссылке — только меняем адрес: иначе ✕ вернул бы «Назад» к первому листу.
+    else if (selected) window.history.replaceState(window.history.state, "", sheetUrl(key));
     else window.history.pushState({ boardSheet: key }, "", sheetUrl(key));
+    refreshAgainIfLost();
   }
   function closeSheet() {
     if (!selected) return;
+    const key = selected;
     setSelected(null);
     if (ourSheet()) window.history.back();
     else window.history.replaceState(window.history.state, "", sheetUrl(null));
+    refreshAgainIfLost();
+    // Фокус — обратно на карточку, с которой открыли лист (клавиатура и экранный диктор).
+    requestAnimationFrame(() => vpRef.current?.querySelector<HTMLElement>(`[data-card="${key}"] [data-open]`)?.focus({ preventScroll: true }));
+  }
+  // Карточка, на которую пришёл фокус с клавиатуры, — на экран, если она за краем или под слоями.
+  function ensureVisible(el: HTMLElement, zone: ZoneKey, code: string) {
+    const vp = vpRef.current;
+    if (!vp) return;
+    const r = el.getBoundingClientRect();
+    const v = vp.getBoundingClientRect();
+    const ins = insets();
+    const { w, h } = size();
+    if (r.left >= v.left + ins.left && r.right <= v.left + w && r.top >= v.top + ins.top && r.bottom <= v.top + h - ins.bottom) return;
+    showCard(zone, code);
   }
   const close = useRef(closeSheet);
+  const refresh = useRef(refreshAgainIfLost);
+  const chooseOpen = useRef(false);
+  chooseOpen.current = choose !== null;
   useEffect(() => {
     close.current = closeSheet;
+    refresh.current = refreshAgainIfLost;
   });
   useEffect(() => {
     const onPop = () => {
       const p = parseSelected(new URLSearchParams(window.location.search).get("v"), ZONES);
       setSelected(p && findCard(p.zone, p.code) ? keyOf(p.zone as ZoneKey, p.code) : null);
+      refresh.current();
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close.current();
+      if (e.key !== "Escape") return;
+      // Сначала — окно «когда выложили», потом лист.
+      if (chooseOpen.current) setChoose(null);
+      else close.current();
     };
     window.addEventListener("popstate", onPop);
     window.addEventListener("keydown", onKey);
@@ -439,7 +483,8 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     const m = marks[keyOf(zone, c.code)];
     if (!m) return c.status;
     if (!m.on) return "ready";
-    return Date.parse(m.at ?? c.at) <= nowMs ? "published" : "scheduled";
+    // «Сейчас» — позже момента данных страницы: сравниваем со временем нажатия.
+    return Date.parse(m.at ?? c.at) <= Math.max(nowMs, m.t ?? 0) ? "published" : "scheduled";
   }
   const markedOf = (zone: ZoneKey, c: PlacedCard) => marks[keyOf(zone, c.code)]?.on ?? c.marked;
   // Время отметки на сервере сейчас: только что нажатая — её, иначе — у отмеченной карточки её время.
@@ -449,8 +494,14 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   };
 
   function scheduleRefresh() {
+    wantRefresh.current = true;
     if (timers.current.refresh) clearTimeout(timers.current.refresh);
     timers.current.refresh = setTimeout(() => startTransition(() => router.refresh()), REFRESH_MS);
+  }
+  // Смена адреса (лист открыли/закрыли, «Назад») отменяет идущее обновление в роутере Next —
+  // пока свежие данные не пришли, просим их снова.
+  function refreshAgainIfLost() {
+    if (wantRefresh.current) scheduleRefresh();
   }
   // Отметка в PANEL_BOARD; nextAt — момент («загрузил») или null («снять»). Каждая карточка ждёт
   // только свой ответ: соседние кнопки нажимаются сразу.
@@ -466,7 +517,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
       return n;
     });
     if (!r.ok) return showToast(r.message, false);
-    setMarks((m) => ({ ...m, [key]: { on: nextAt !== null, at: nextAt } }));
+    setMarks((m) => ({ ...m, [key]: { on: nextAt !== null, at: nextAt, t: Date.now() } }));
     scheduleRefresh();
     if (isUndo) return showToast("Отменено.", true);
     showToast(nextAt ? `${SHORT[zone]} · ${c.code}: отмечено` : `${SHORT[zone]} · ${c.code}: отметка снята`, true, () => void setMark(zone, c, prevAt, true));
@@ -480,7 +531,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   }
   // Английский ролик — отметка «запланирован в Studio» из листа: держим её на карточке до обновления.
   function noteEnMark(code: string, on: boolean, at: string | null) {
-    setMarks((m) => ({ ...m, [keyOf("en", code)]: { on, at } }));
+    setMarks((m) => ({ ...m, [keyOf("en", code)]: { on, at, t: Date.now() } }));
     scheduleRefresh();
   }
 
@@ -547,7 +598,9 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     }
     if (e.pointerId !== g.id) return;
     gesture.current = null;
-    if (g.moved) return rememberView();
+    // Касание могло остановить перелёт — запоминаем вид, на котором он встал.
+    rememberView();
+    if (g.moved) return;
     // Касание без сдвига по карточке — её лист прямо на доске.
     if (e.type !== "pointerup") return;
     if (g.tap) openSheet(g.tap);
@@ -598,21 +651,21 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     return (
       <article
         key={c.code}
-        role="button"
-        tabIndex={0}
-        aria-label={`${c.code} · ${z.title} · ${STATUS_LABEL[status]} · ${c.dateLabel} ${c.time}${c.exact ? "" : " (ориентир)"}`}
         className={[s.card, past ? s.past : "", c.gap ? s.gapCard : "", selected === key ? s.selected : "", visible({ ...c, status }) ? "" : s.hidden].join(" ")}
         data-status={status}
         data-card={key}
         style={{ left: c.x, top: c.y, width: plan.card.w, height: plan.card.h }}
-        onKeyDown={(e) => {
-          if (e.target !== e.currentTarget) return; // Enter на кнопке «загрузил» — это её нажатие
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            openSheet(key);
-          }
-        }}
       >
+        {/* Открыть лист — своя кнопка на всю карточку (не кнопка в кнопке: «загрузил» лежит поверх неё).
+            Enter и пробел — её собственные: на «загрузил» они нажимают только «загрузил». */}
+        <button
+          type="button"
+          className={s.open}
+          data-open=""
+          aria-label={`${c.code} · ${z.title} · ${STATUS_LABEL[status]} · ${c.dateLabel} ${c.time}${c.exact ? "" : " (ориентир)"} — открыть`}
+          onClick={() => openSheet(key)}
+          onFocus={(e) => ensureVisible(e.currentTarget.parentElement!, z.key, c.code)}
+        />
         <CardThumb src={c.cover} code={c.code} />
         <div className={s.body}>
           <div className={s.top}>
@@ -634,7 +687,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
                 type="button"
                 className={on ? s.unmark : s.markBtn}
                 disabled={busy.has(key)}
-                aria-label={on ? `Снять отметку «загрузил» у ${c.code} в ${z.title}` : `Отметить: ${c.code} загружен в ${z.title}`}
+                aria-label={on ? `Снять отметку «загрузил»: ${c.code}, ${z.title}` : `Загрузил ${c.code} в ${z.title}`}
                 onClick={() => requestMark(z.key as Social, c, !on)}
               >
                 {busy.has(key) ? "…" : on ? "снять" : "загрузил"}
@@ -690,7 +743,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
       runwayLabel={data.shell.runwayLabel}
     >
       <main className={s.page}>
-        <div className={s.head}>
+        <div className={s.head} ref={headRef}>
           <div className={s.headRow}>
             <h1 className={s.title}>Доска</h1>
             {runwayChips}
@@ -865,6 +918,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
               <button
                 type="button"
                 className="btn small primary"
+                autoFocus
                 onClick={() => {
                   const c = choose;
                   setChoose(null);
