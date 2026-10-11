@@ -1,0 +1,36 @@
+# Временный: голос для видео-приглашения (Gemini TTS, один запрос). Удалить после.
+name: "tmp: голос приглашения"
+on:
+  push:
+    branches: [claude/stats-probe]
+    paths: [tmp-voice/text.txt]
+permissions:
+  contents: write
+jobs:
+  voice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+          path: main
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+        working-directory: main/video-studio
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      - run: npx tsx "$GITHUB_WORKSPACE/tmp-voice/voice.ts"
+        working-directory: main/video-studio
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          GEMINI_TTS_STYLE: "Говори на кыргызском языке, текст кыргызский. Торжественно, тепло и радушно, как ведущий тоя, который приглашает гостей. Неторопливо, чёткая дикция, без пауз в начале"
+          TEXT_FILE: ${{ github.workspace }}/tmp-voice/text.txt
+          OUT_DIR: ${{ github.workspace }}/tmp-voice/out
+      - name: Голос — в ветку
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tmp-voice/out && git commit -qm "tmp: голос приглашения" && git push -q origin HEAD:claude/stats-probe
