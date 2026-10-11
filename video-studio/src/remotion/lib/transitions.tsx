@@ -1,7 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import type { TransitionPresentation, TransitionPresentationComponentProps } from "@remotion/transitions";
-import { fade } from "@remotion/transitions/fade";
 import { slide } from "@remotion/transitions/slide";
 import { wipe } from "@remotion/transitions/wipe";
 import { iris } from "@remotion/transitions/iris";
@@ -46,6 +45,11 @@ export const zoomThrough = (strength = 1): TransitionPresentation<ZoomProps> => 
   props: { strength },
 });
 
+// Смена «через затухание»: окна ZoomThrough без масштаба. Перекрёстный fade()
+// здесь не годится — текст новой сцены выезжает с первого кадра и встаёт
+// поверх ещё наполовину видного текста старой.
+const fadeThrough = () => zoomThrough(0);
+
 type LiftProps = { distance: number };
 // Мягкий подъём: старая сцена уезжает вверх и гаснет, новая поднимается снизу.
 // Спокойнее, чем slide на весь экран, — для цитат и пунктов. Старая гаснет
@@ -87,9 +91,9 @@ export function pickTransition(
     case "quote":
       return anyP(lift(size.height * 0.08));
     case "media":
-      return anyP(hasVisual(prev) ? fade({ shouldFadeOutExitingScene: true }) : slide({ direction: alt ? "from-right" : "from-left" }));
+      return hasVisual(prev) ? anyP(fadeThrough()) : anyP(slide({ direction: alt ? "from-right" : "from-left" }));
     case "statement":
     default:
-      return anyP(hasVisual(prev) ? fade({ shouldFadeOutExitingScene: true }) : slide({ direction: alt ? "from-right" : "from-left" }));
+      return hasVisual(prev) ? anyP(fadeThrough()) : anyP(slide({ direction: alt ? "from-right" : "from-left" }));
   }
 }

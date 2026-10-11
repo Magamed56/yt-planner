@@ -6,6 +6,7 @@ import { compareRevealFrames } from "../lib/cues";
 import { useLayout } from "../lib/layout";
 import { fitTokens, type FontSpec } from "../lib/text";
 import { withAlpha } from "../theme";
+import { textStartAfterChapter } from "./ChapterCard";
 import { SceneFrame, clamp, type SceneProps } from "./common";
 import { formatNumber } from "./StatScene";
 
@@ -56,7 +57,7 @@ export const CompareScene: React.FC<SceneProps> = (p) => {
           align="left"
           scene={p.scene}
           mode="stagger"
-          start={0}
+          start={textStartAfterChapter(p, 0)}
           step={3}
           entrance="rise"
           highlight="underline"
