@@ -61,6 +61,9 @@ export const LANG_CHANNELS: LangChannel[] = Object.entries(FILES).map(([lang, js
 
 export const langChannel = (lang: string): LangChannel => LANG_CHANNELS.find((c) => c.lang === lang) ?? langChannelOf(lang, null);
 
+// Сам файл канала (null — нет): из него страница языка считает план выхода (lib/lang-plan.ts).
+export const langChannelJson = (lang: string): unknown => FILES[lang] ?? null;
+
 // Меню всех страниц (корневой layout → LangNav): без похода в GitHub, поэтому по релизам — только
 // на самой странице языка.
 export const NAV_LANGS: NavLang[] = navLangs(LANG_CHANNELS);

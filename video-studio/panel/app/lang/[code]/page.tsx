@@ -1,7 +1,8 @@
 // Канал на другом языке (/lang/en): ролики из релизов «en-08a-….mp4» — скачать на телефон и
-// выложить руками, тексты для Studio и Instagram — одним нажатием; оформление канала — из
-// бренд-кита brand/<язык>/. Только GitHub (релизы, запуски, файлы ветки): YouTube второго канала
-// панель не трогает — ключа к нему нет.
+// выложить руками, тексты для Studio и Instagram — одним нажатием, время выхода — по плану из
+// channels/<язык>.json; оформление канала — из бренд-кита brand/<язык>/. Только GitHub (релизы,
+// запуски, файлы ветки, переменная с отметками): YouTube второго канала панель не трогает — ключа
+// к нему нет.
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
@@ -10,8 +11,9 @@ import ErrorScreen from "@/components/ErrorScreen";
 import LangView from "@/components/LangView";
 import { brandDir, brandKitOf, type BrandKit } from "@/lib/brand-kit";
 import { CHANNEL_NAME } from "@/lib/channel-name";
-import { assetText, branchName, listDirEntries, listReleases, listRuns, readFile, repoName } from "@/lib/github";
-import { LANG_CHANNELS, langChannel, navLangs, PANEL_TZ } from "@/lib/lang-channels";
+import { assetText, branchName, getVariable, listDirEntries, listReleases, listRuns, readFile, repoName } from "@/lib/github";
+import { LANG_CHANNELS, langChannel, langChannelJson, navLangs, PANEL_TZ } from "@/lib/lang-channels";
+import { langPlanOf, parseStudioMarks, STUDIO_MARKS_VAR } from "@/lib/lang-plan";
 import { STUDIO_DIR } from "@/lib/load";
 import { emptyText, langRunsOf, langVideosOf, releaseLangs, withFileTexts, type LangPageData, type LangRunNote } from "@/lib/lang-videos";
 import { runInfos, type RunInfo } from "@/lib/state";
@@ -79,10 +81,26 @@ export default async function LangPage({ params }: Params) {
   let data: LangPageData;
   try {
     // Кит не прочитался — страница с роликами всё равно нужна: блок оформления просто не покажем.
-    const [releases, ghRuns, brand] = await Promise.all([listReleases(), listRuns(), readBrandKit(lang).catch(() => null)]);
+    // Отметки «запланирован в Studio» не прочитались — время всё равно считаем, кнопку прячем.
+    const [releases, ghRuns, brand, marksRaw] = await Promise.all([
+      listReleases(),
+      listRuns(),
+      readBrandKit(lang).catch(() => null),
+      getVariable(STUDIO_MARKS_VAR).then(
+        (raw) => ({ raw }),
+        () => null,
+      ),
+    ]);
     let videos = langVideosOf(releases, lang);
     const missing = videos.filter((v) => !v.texts && v.description).slice(0, 12);
     if (missing.length) videos = withFileTexts(videos, await readTexts(missing.map((v) => v.description!.id)));
+    const marks = marksRaw ? (parseStudioMarks(marksRaw.raw)[lang] ?? {}) : null;
+    const plan = langPlanOf(langChannelJson(lang), videos.map((v) => v.code), marks, now.getTime());
+    // Есть план — карточки в порядке выхода (так их и грузят), иначе свежие коды первыми.
+    if (plan.order.length) {
+      const pos = new Map(plan.order.map((c, i) => [c, i]));
+      videos = [...videos].sort((a, b) => (pos.get(a.code) ?? pos.size) - (pos.get(b.code) ?? pos.size));
+    }
 
     const day = new Intl.DateTimeFormat("ru-RU", { timeZone: PANEL_TZ, day: "2-digit", month: "2-digit" });
     const time = new Intl.DateTimeFormat("ru-RU", { timeZone: PANEL_TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -103,6 +121,7 @@ export default async function LangPage({ params }: Params) {
       // Переключатель: пункты меню + языки, у которых уже есть ролики, + этот.
       langs: navLangs(LANG_CHANNELS, [...releaseLangs(releases), lang]),
       brand,
+      plan,
       mainChannel: CHANNEL_NAME,
       actionsUrl: `https://github.com/${repo}/actions/workflows/video-studio.yml?query=branch%3A${encodeURIComponent(branchName())}`,
       shell: { updated: time.format(now), generatedAt: now.toISOString(), activeRuns: active.length, activeIds: active.map((r) => r.id) },

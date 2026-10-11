@@ -7,6 +7,7 @@
 // channel.json с диска — loadChannel в channel-file.ts.
 
 import { THEME_NAMES, type ThemeName } from "../types";
+import { compareCodes, isLongCode, normCode } from "./codes";
 
 export interface ChannelSchedule {
   perDay: number;
@@ -352,4 +353,74 @@ export function parseScheduleStart(raw: string, timeZone: string): Date {
   const ms = Date.parse(v);
   if (!Number.isFinite(ms)) throw new Error(`Не похоже на дату: «${raw}». Примеры: 2026-10-14 или 2026-10-14T09:00:00Z.`);
   return new Date(ms);
+}
+
+// ---- План выхода от первого дня (channels/en.json → schedule.start) ----
+// Канал, куда ролики грузят руками в Studio: время ставит человек, панель лишь считает его.
+
+// «2026-10-12» → { y, m, d }; несуществующая дата (2026-02-30) и другой вид — null.
+export function parseDay(raw: unknown): { y: number; m: number; d: number } | null {
+  const m = typeof raw === "string" ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw.trim()) : null;
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const t = new Date(Date.UTC(y, mo - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === mo - 1 && t.getUTCDate() === d ? { y, m: mo, d } : null;
+}
+
+export interface StartPlan {
+  start: string; // «2026-10-12» — первый день выхода по поясу канала
+  schedule: ChannelSchedule; // слоты Shorts
+  longSchedule: ChannelSchedule; // слоты «Разборов»
+}
+
+// План из файла канала. Не бросает: битое объясняет problem — страница покажет его вместо
+// времени. Пояс и время здесь обязательны: умолчание channelFromJson (Москва) дало бы
+// правдоподобное, но чужое время, а его человек перенесёт в Studio.
+export function startPlanOf(json: unknown): { plan: StartPlan | null; problem: string | null } {
+  const sch = obj(obj(json).schedule);
+  const no = (problem: string) => ({ plan: null, problem });
+  if (sch.start === undefined || sch.start === null || sch.start === "") return no("нет schedule.start — первого дня выхода, например «2026-10-12»");
+  const day = parseDay(sch.start);
+  if (!day) return no(`schedule.start «${String(sch.start)}» — не дата; нужно «ГГГГ-ММ-ДД», например «2026-10-12»`);
+  const tz = str(sch.timezone);
+  if (!tz) return no("нет schedule.timezone — часового пояса канала, например «America/New_York»");
+  if (!isValidTimeZone(tz)) return no(`часовой пояс «${tz}» (schedule.timezone) не распознан; пример: America/New_York`);
+  const times = strList(sch.publishTimesLocal).length ? strList(sch.publishTimesLocal) : strList([sch.publishTimeLocal]);
+  if (!parseTimes(times).length) return no("в schedule.publishTimesLocal нет времени вида «12:00»");
+  const ch = channelFromJson(json);
+  const start = `${day.y}-${String(day.m).padStart(2, "0")}-${String(day.d).padStart(2, "0")}`;
+  return { plan: { start, schedule: ch.schedule, longSchedule: longScheduleOf(ch) }, problem: null };
+}
+
+export interface PlannedSlot {
+  at: Date;
+  fixed: boolean; // время уже стоит в Studio (из fixed), а не из очереди слотов
+}
+
+// Ролики по порядку кодов занимают слоты подряд от первого дня: 01a — первый слот, 01b — второй,
+// 02a — третий… Прошедшие слоты тоже раздаются: кто не успел — видно, а остальные не съезжают.
+// fixed — код → момент, уже поставленный в Studio: ролик остаётся на нём, и этот слот другим не
+// достаётся, даже если ролика больше нет в codes. Shorts и «Разборы» (L01) — каждый в свои слоты.
+export function planFromStart(plan: StartPlan, codes: string[], fixed: Readonly<Record<string, number>> = {}): Map<string, PlannedSlot> {
+  const out = new Map<string, PlannedSlot>();
+  const own = [...new Set(codes.map((c) => normCode(c)).filter((c): c is string => Boolean(c)))].sort(compareCodes);
+  for (const c of own) {
+    const at = fixed[c];
+    if (at !== undefined && Number.isFinite(at)) out.set(c, { at: new Date(at), fixed: true });
+  }
+  const day = parseDay(plan.start);
+  if (!day) return out;
+  const taken = Object.values(fixed).filter((t) => Number.isFinite(t));
+  for (const [schedule, long] of [[plan.schedule, false], [plan.longSchedule, true]] as const) {
+    const queue = own.filter((c) => isLongCode(c) === long && !out.has(c));
+    if (!queue.length) continue;
+    // Минуту до полуночи первого дня: upcomingSlots берёт слоты строго позже from.
+    const from = new Date(zonedTimeToUtc(day.y, day.m, day.d, 0, 0, schedule.timezone) - 60_000);
+    const slots = upcomingSlots(schedule, queue.length, { from, minLeadMinutes: 0, taken });
+    queue.forEach((c, i) => {
+      const at = slots[i];
+      if (at) out.set(c, { at, fixed: false });
+    });
+  }
+  return out;
 }

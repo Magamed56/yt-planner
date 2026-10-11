@@ -1,12 +1,15 @@
 "use client";
-// Канал на другом языке: ролики из релизов (свежие коды первыми) — видео и обложку на телефон,
-// название, описание, теги и подпись Reels — в буфер одним нажатием; сверху — оформление канала
-// из бренд-кита (BrandKitCard). Выкладывает владелец сам: у панели нет ключа YouTube этого
-// канала, расписания и статистики здесь нет.
+// Канал на другом языке: ролики из релизов (по плану выхода, без плана — свежие коды первыми) —
+// видео и обложку на телефон, название, описание, теги и подпись Reels — в буфер одним нажатием,
+// время выхода — по поясу канала и телефона; сверху — оформление канала из бренд-кита
+// (BrandKitCard). Выкладывает владелец сам: у панели нет ключа YouTube этого канала — время в
+// Studio ставит он, статистики здесь нет.
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { captionAction } from "@/app/actions";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { captionAction, studioMarkAction } from "@/app/actions";
 import type { SaveItem } from "@/lib/downloads";
+import { nextToUpload, slotLabel, type VideoSlot } from "@/lib/lang-slots";
 import type { LangPageData } from "@/lib/lang-videos";
 import { codesLabel, plural } from "@/lib/stages";
 import AppShell from "./AppShell";
@@ -43,14 +46,79 @@ async function writeClipboard(text: string | Promise<string>): Promise<boolean> 
   }
 }
 
+// Пояс телефона серверу неизвестен: до загрузки страницы — пусто (разметка совпадает с
+// серверной), потом — время устройства.
+const noSubscribe = () => () => {};
+const deviceZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "device";
+const useDeviceZone = () => useSyncExternalStore(noSubscribe, deviceZone, () => "");
+
+interface SlotView {
+  slot: VideoSlot;
+  zone: string; // «по Нью-Йорку»
+  next: boolean; // ближайший к загрузке
+  inStudio: boolean; // с учётом только что нажатой кнопки
+  canMark: boolean; // отметки прочитались — кнопку показываем
+  busy: boolean;
+  onMark: (on: boolean) => void;
+}
+
+// Когда выйдет ролик: главное — время телефона (его и ставить в Studio), ниже — по поясу канала.
+function SlotBox({ slot, zone, next, inStudio, canMark, busy, onMark }: SlotView) {
+  const device = useDeviceZone();
+  const phone = device ? slotLabel(new Date(slot.at)) : null;
+  const same = phone === slot.label;
+  return (
+    <div className={`${s.when}${next ? ` ${s.whenNext}` : ""}`}>
+      <div className={s.whenTop}>
+        <span className={s.whenKicker}>{next ? "➜ Следующий к загрузке" : "Выход"}</span>
+        {inStudio ? (
+          <span className={`badge ${s.inStudio}`}>✓ {slot.past ? "вышел" : "в Studio"}</span>
+        ) : (
+          slot.past && <span className={`badge ${s.pastBadge}`}>прошло</span>
+        )}
+      </div>
+      {same ? (
+        <div className={s.whenMain}>
+          <b>{slot.label}</b> <span className="small muted">{zone} — как на телефоне</span>
+        </div>
+      ) : (
+        <>
+          <div className={s.whenMain}>
+            <b>{phone ?? "…"}</b> <span className="small muted">на вашем телефоне</span>
+          </div>
+          <div className="small muted">
+            {slot.label} {zone}
+          </div>
+        </>
+      )}
+      {slot.past && !inStudio && canMark && <p className="small flag">Слот прошёл, а отметки нет: если ролик не выложен — выложите сейчас, следующие не сдвигаются.</p>}
+      {canMark && (
+        <button className={`btn small${inStudio ? " ghost" : ""}`} aria-pressed={inStudio} disabled={busy} onClick={() => onMark(!inStudio)}>
+          {busy ? "Сохраняю…" : inStudio ? "Снять отметку" : "Запланирован в Studio ✓"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 const releaseOf = (v: Video): SaveItem => ({ code: v.file, release: { mp4: v.mp4, cover: v.cover, thumb: v.thumb } });
 const coverSrc = (v: Video) => (v.cover ? `/api/asset/${v.cover.id}/file` : v.thumb ? `/api/asset/${v.thumb.id}/file` : null);
 
-function VideoCard({ v, onCopy, manual }: { v: Video; onCopy: (key: string, what: string, text: string | (() => Promise<string>)) => void; manual: { what: string; text: string } | null }) {
+function VideoCard({
+  v,
+  onCopy,
+  manual,
+  when,
+}: {
+  v: Video;
+  onCopy: (key: string, what: string, text: string | (() => Promise<string>)) => void;
+  manual: { what: string; text: string } | null;
+  when: SlotView | null;
+}) {
   const item = releaseOf(v);
   const t = v.texts;
   return (
-    <article className={`card ${s.video}`}>
+    <article className={`card ${s.video}${when?.next ? ` ${s.next}` : ""}`}>
       <div className={s.head}>
         <Thumb src={coverSrc(v)} video={`/api/asset/${v.mp4.id}/file`} code={v.code} className={s.cover} />
         <div className={s.info}>
@@ -64,6 +132,8 @@ function VideoCard({ v, onCopy, manual }: { v: Video; onCopy: (key: string, what
           </Link>
         </div>
       </div>
+
+      {when && <SlotBox {...when} />}
 
       {/* Главное — видео в «Фото»; остальное — кнопки второго плана: тексты YouTube, затем Reels. */}
       <div className={s.main}>
@@ -153,8 +223,18 @@ function VideoCard({ v, onCopy, manual }: { v: Video; onCopy: (key: string, what
 }
 
 export default function LangView({ data }: { data: LangPageData }) {
-  const { channel, videos } = data;
+  const { channel, videos, plan } = data;
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
+  // Только что нажатые отметки — поверх данных сервера, пока страница не обновилась.
+  const [marked, setMarked] = useState<Record<string, boolean>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const [seen, setSeen] = useState(data.shell.generatedAt);
+  if (seen !== data.shell.generatedAt) {
+    setSeen(data.shell.generatedAt);
+    setMarked({});
+  }
   const [manual, setManual] = useState<{ key: string; what: string; text: string } | null>(null);
   // Подписи Instagram, уже взятые с сервера: второе нажатие копирует сразу.
   const loaded = useRef(new Map<string, string>());
@@ -187,6 +267,31 @@ export default function LangView({ data }: { data: LangPageData }) {
       show("Телефон не дал скопировать — текст показан в карточке.", false);
     }
   }
+
+  const inStudio = (code: string) => marked[code] ?? plan.slots[code]?.inStudio === true;
+  const nextCode = nextToUpload(plan.order, plan.slots, inStudio);
+
+  async function mark(v: Video, on: boolean) {
+    const slot = plan.slots[v.code];
+    if (!slot || busy) return;
+    setBusy(v.code);
+    const r = await studioMarkAction(data.lang, v.code, on ? slot.at : null).catch((e: unknown) => ({ ok: false, message: e instanceof Error ? e.message : String(e) }));
+    setBusy(null);
+    show(r.message, r.ok);
+    if (!r.ok) return;
+    setMarked((m) => ({ ...m, [v.code]: on }));
+    startTransition(() => router.refresh());
+  }
+
+  const whenOf = (v: Video): SlotView | null => {
+    const slot = plan.slots[v.code];
+    if (!slot) return null;
+    return { slot, zone: plan.zone, next: v.code === nextCode, inStudio: inStudio(v.code), canMark: plan.marks, busy: busy === v.code, onMark: (on) => void mark(v, on) };
+  };
+  // Вышедшие и отмеченные — в конец, свёрнуто: список начинается с того, что ещё грузить.
+  const done = videos.filter((v) => plan.slots[v.code]?.past && inStudio(v.code));
+  const todo = videos.filter((v) => !done.includes(v));
+  const card = (v: Video) => <VideoCard key={v.file} v={v} onCopy={copy} manual={manual?.key === v.file ? manual : null} when={whenOf(v)} />;
 
   const count = videos.length;
   return (
@@ -285,18 +390,40 @@ export default function LangView({ data }: { data: LangPageData }) {
                 </li>
                 <li>
                   «Скопировать для YouTube» → «Название», затем «Описание» — вставить в поля. «Для детей» — нет; «Изменённый или синтетический контент» —
-                  да (голос ИИ).
+                  да (голос ИИ). Видимость — «Запланировать»: дата и время «на вашем телефоне» из карточки.
                 </li>
                 <li>Reels: «Обложка» и «📋 Подпись». Теги ставятся только в Studio на компьютере («Теги» — там же, в «Скопировать для YouTube»).</li>
               </ol>
-              <p className="small muted">Время выхода и тексты на этом канале панель не ставит: ключа YouTube к нему нет. Названия файлов начинаются с {data.lang}-код.</p>
+              <p className="small muted">
+                Сама панель на этом канале ничего не ставит: ключа YouTube к нему нет. Время выхода — в карточке ролика (план из {channel.file}), названия
+                файлов начинаются с {data.lang}-код.
+              </p>
             </details>
 
-            <div className={s.list}>
-              {videos.map((v) => (
-                <VideoCard key={v.file} v={v} onCopy={copy} manual={manual?.key === v.file ? manual : null} />
-              ))}
-            </div>
+            {plan.order.length > 0 && (
+              <div className="notice info">
+                <span>
+                  🗓 При загрузке в Studio канала «{channel.name}» выберите «Запланировать» и поставьте время по вашему телефону из списка.
+                  {plan.marks ? " Поставили — «Запланирован в Studio ✓»: подсветится следующий." : ""}
+                </span>
+              </div>
+            )}
+            {plan.problem && (
+              <div className="notice warn">
+                <span>
+                  Время выхода не посчитано: {plan.problem} <span className="small muted">({channel.file})</span>
+                </span>
+              </div>
+            )}
+
+            <div className={s.list}>{todo.map(card)}</div>
+
+            {done.length > 0 && (
+              <details className={`card ${s.howto}`}>
+                <summary>Уже вышли ({done.length})</summary>
+                <div className={`${s.list} ${s.doneList}`}>{done.map(card)}</div>
+              </details>
+            )}
 
             {count > 1 && (
               <details className={`card ${s.howto}`}>
