@@ -249,7 +249,11 @@ jobs:
       - name: Модель распознавания — имя
         id: asr-model
         if: env.MODE != 'draft'
-        run: echo "name=$(npx tsx -e 'import("./src/pipeline/voice/align.ts").then((m) => console.log(m.ASR_MODEL_NAME))' | tail -n 1)" >> "$GITHUB_OUTPUT"
+        run: |
+          name=$(npx tsx -e 'import("./src/pipeline/voice/align.ts").then((m) => console.log(m.ASR_MODEL_NAME))' | tail -n 1)
+          # Пустое имя — кэш модели не используется, и она скачивается при каждом запуске: сборка не падает, но пусть это будет видно.
+          [ -n "$name" ] || echo "::warning::Не удалось узнать имя модели распознавания — кэш GigaAM пропущен, модель скачается заново."
+          echo "name=$name" >> "$GITHUB_OUTPUT"
 
       - name: Кэш модели распознавания — восстановить
         id: asr-cache

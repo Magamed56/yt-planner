@@ -61,5 +61,8 @@ export function useLanguageChannel(lang: string, env: NodeJS.ProcessEnv = proces
     throw new Error(`Для роликов на «${lang}» нужен файл канала ${rel} (та же схема, что channel.json): скопируйте channels/en.json и переведите тексты, или задайте CHANNEL_FILE.`);
   }
   env.CHANNEL_FILE = rel;
+  // CHANNEL_NAME (переменная репозитория) — имя основного канала: иначе финал английского ролика
+  // подпишется «Суть за минуту». Имя берём из файла канала языка.
+  delete env.CHANNEL_NAME;
   return rel;
 }

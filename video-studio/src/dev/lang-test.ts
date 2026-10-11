@@ -159,9 +159,12 @@ await test("channels/en|kk|uz.json: та же схема; en — настоящ�
   assert.equal(env.TTS_VOICE, "kk-KZ-DauletNeural");
   assert.equal(env.GEMINI_TTS_VOICE, undefined);
 
-  const e1: NodeJS.ProcessEnv = {};
+  const e1: NodeJS.ProcessEnv = { CHANNEL_NAME: "Суть за минуту" };
   assert.equal(useLanguageChannel("en", e1), "channels/en.json");
   assert.equal(e1.CHANNEL_FILE, "channels/en.json");
+  // Имя русского канала из переменных репозитория не перебивает имя из channels/en.json.
+  assert.equal(e1.CHANNEL_NAME, undefined);
+  assert.equal(loadChannel({ env: e1 }).name, "Gist in a Minute");
   assert.equal(useLanguageChannel("ru", {}), null);
   const own: NodeJS.ProcessEnv = { CHANNEL_FILE: "my.json" };
   assert.equal(useLanguageChannel("en", own), null);
@@ -346,6 +349,8 @@ await test("заставка ролика: канал языка (channels/en.js
 
   // data.ts в браузере рендера читает inputProps через getInputProps() (window.remotion_inputProps):
   // с props английского ролика название бренда — английское (без ключа — channel.json из бандла).
+  // BRAND считается один раз при загрузке модуля — поэтому только динамический импорт после window:
+  // статический импорт data.ts (в т. ч. через другой модуль) в этом файле молча даст русский BRAND.
   const g = globalThis as { window?: unknown };
   g.window = { remotion_inputProps: JSON.stringify(en), location: { origin: "http://localhost" } };
   try {
