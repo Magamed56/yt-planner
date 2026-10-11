@@ -48,7 +48,7 @@ for (const it of cfg.items) {
 // 2) Pixabay: ещё силуэт головы коня и узоры — картинки.
 // 2) Pixabay: видео коней и беркута (лицензия Pixabay — без указания автора).
 if (P) {
-  const want = [["horses running", 3], ["horses galloping", 2], ["eagle green screen", 3], ["eagle flying", 2]];
+  const want = [["eagle flying green screen", 4], ["flying eagle green screen loop", 3], ["golden eagle green screen", 3], ["hawk flying green screen", 3], ["falcon green screen", 2], ["bird flying green screen", 3]];
   for (const [q, n] of want) {
     const r = await j(`https://pixabay.com/api/videos/?key=${P}&q=${encodeURIComponent(q)}&per_page=10&safesearch=true`);
     const hits = r.b?.hits ?? [];
