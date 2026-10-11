@@ -1,5 +1,18 @@
 {
  "keep": "Edit this photo of a real boy. Keep his face, head, haircut, skin tone, eyes, mouth, facial proportions and age EXACTLY the same — the same real child, photorealistic, no beautifying, no cartoon, natural hands with five fingers. ",
  "bg": " Plain solid very dark brown studio background (#22140e) with no objects, soft warm studio light from the front, full body visible from head to boots, centered, vertical 9:16 portrait, high detail.",
- "items": []
+ "items": [
+  {
+   "id": "chapan",
+   "text": "Dress him in a traditional Kyrgyz festive national costume: a rich brown leather chapan coat with golden-brown ornament embroidery, a large natural fur collar and fur cape over the shoulders, leather belt and soft leather boots. He stands smiling and holds a small flag of Kyrgyzstan in one hand."
+  },
+  {
+   "id": "burkut",
+   "text": "Dress him as a young Kyrgyz burkutchu (eagle hunter): an ornamented brown leather coat with fur trim and Kyrgyz patterns, leather boots, a thick leather glove; a golden eagle (berkut) sits calmly on his gloved forearm. He stands smiling."
+  },
+  {
+   "id": "batyr",
+   "text": "Dress him as a young Kyrgyz batyr in child-friendly ceremonial ornamented brown leather armor with Kyrgyz patterns, a round embossed bronze shield in one hand and a small sheathed sword on the belt, leather boots. He stands proudly and smiles."
+  }
+ ]
 }
