@@ -872,7 +872,8 @@ await test("Финал повторяет прошлые ролики — зам
   assert.equal(recent.length, 10, "последние 10 финалов");
   assert.equal(recent.at(-1)!.code, scripts.at(-1)!.code, "самый свежий — последним");
   assert.ok(!covered.some((e) => e.texts.some((t) => e.cta && t.includes(e.cta))), "финал — не факт");
-  assert.ok(ctaRepeat("А ты замечал такое? Напиши в комментариях.", recent), "шаблон «напиши в комментариях» уже был");
+  // Шаблон был у старых финалов (01a–13b); свежие его уже не повторяют — сверяем со всеми финалами канала.
+  assert.ok(ctaRepeat("А ты замечал такое? Напиши в комментариях.", recentCtas(covered, covered.length)), "шаблон «напиши в комментариях» уже был");
   assert.equal(ctaRepeat("А что из вчерашнего ты помнишь сегодня?", recent), null);
 
   const entries: CoveredEntry[] = [{ code: "08b", title: "Рост", texts: ["Утром ты выше, чем вечером"], cta: "А ты замечал, что вечером ниже? Напиши в комментариях и подпишись." }];
