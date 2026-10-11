@@ -18,7 +18,7 @@
 //   OPENAI_TTS_BASE_URL, OPENAI_TTS_MODEL, OPENAI_TTS_VOICE, OPENAI_TTS_API_KEY   (локальный Qwen3-TTS/Chatterbox)
 //   FISH_TTS_BASE_URL, FISH_TTS_REFERENCE_ID
 //   MODELS_DIR        куда скачивать локальные модели (по умолчанию ./models)
-//   CAPTION_ALIGN     0 — не выравнивать тайминги слов по распознанной речи (voice/align.ts), только оценка по звуку
+//   CAPTION_ALIGN     0 (или false/no/off/none) — не выравнивать тайминги слов по распознанной речи (voice/align.ts), только оценка по звуку
 //   LLM_PROVIDER      gemini | claude | groq | openrouter | ollama | custom   (по умолчанию gemini)
 //   LLM_MODEL, LLM_BASE_URL, LLM_API_KEY
 //   ANTHROPIC_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY

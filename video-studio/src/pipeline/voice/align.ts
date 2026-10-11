@@ -55,11 +55,10 @@ export function alignEnabled(env: Record<string, string | undefined> = process.e
 
 // ---- сопоставление слов (чистая функция, без модели) ----
 
-// Похожесть слов 0…1 по расстоянию Левенштейна: «Сатурна» ~ «сатурна» = 1,
-// «гелия» ~ «гелея» = 0.8; имена распознаватель пишет «как слышит».
-export function wordSimilarity(a: string, b: string): number {
-  if (a === b) return 1;
-  if (!a.length || !b.length) return 0;
+// Расстояние Левенштейна: сколько букв поправить, чтобы из a получилось b.
+function editDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length || !b.length) return Math.max(a.length, b.length);
   let prev = new Array<number>(b.length + 1);
   let cur = new Array<number>(b.length + 1);
   for (let j = 0; j <= b.length; j++) prev[j] = j;
@@ -70,16 +69,20 @@ export function wordSimilarity(a: string, b: string): number {
     }
     [prev, cur] = [cur, prev];
   }
-  return 1 - prev[b.length]! / Math.max(a.length, b.length);
+  return prev[b.length]!;
+}
+
+const simOf = (dist: number, a: string, b: string) => (a === b ? 1 : !a.length || !b.length ? 0 : 1 - dist / Math.max(a.length, b.length));
+
+// Похожесть слов 0…1 по расстоянию Левенштейна: «Сатурна» ~ «сатурна» = 1,
+// «гелия» ~ «гелея» = 0.8; имена распознаватель пишет «как слышит».
+export function wordSimilarity(a: string, b: string): number {
+  return simOf(editDistance(a, b), a, b);
 }
 
 const FOUND_SIM = 0.5; // слово «нашлось», если похоже хотя бы наполовину
 const GAP = 1; // цена пропуска слова с любой стороны
 const JOIN = 0.25; // доплата за склейку «во что» ↔ «вочто»
-// Склейка 2↔1 засчитывается, только если она заметно лучше каждого слова по отдельности:
-// иначе пропущенное последнее слово сцены («нет») «прилипает» к первому слову следующей
-// («британские» ~ «нетбританские» = 0,77), и разрез сцен уезжает за это слово.
-const JOIN_MARGIN = 0.1;
 
 // Распознаватель не различает ё/е и пишет буквы без дефисов — сравниваем так же.
 const asrNorm = (w: string) => normWord(w).replace(/ё/g, "е");
@@ -93,7 +96,23 @@ export function matchWords(script: string[], asr: string[]): ({ from: number; to
   const D = new Float64Array((n + 1) * W).fill(Infinity);
   const how = new Uint8Array((n + 1) * W);
   D[0] = 0;
+  // Правки слово ↔ слово: нужны и для 1↔1, и для проверки склеек.
+  const d1 = new Int32Array(n * m);
+  for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) d1[i * m + j] = editDistance(script[i]!, asr[j]!);
   const cost = (sim: number) => 2 * (1 - sim);
+  // Склейка 2↔1 / 1↔2 — только если она ближе по буквам, чем каждое слово само по себе
+  // («в антарктиде» ↔ «вантарктиде»: 0 правок против 1). Иначе пропущенное или лишнее
+  // слово у стыка сцен «прилипает» к соседнему: «нет британские» ~ «британские»,
+  // «выжили» ~ «там выжили» — и разрез сцен или подсветка уезжают на это слово.
+  const joinCost = (a: string, b: string, alone1: number, alone2: number) => {
+    const alone = Math.min(alone1, alone2);
+    // Разница длин — нижняя граница правок: заведомо не лучше или непохоже — не считаем.
+    const dl = Math.abs(a.length - b.length);
+    if (dl >= alone || dl > (1 - FOUND_SIM) * Math.max(a.length, b.length)) return Infinity;
+    const d = editDistance(a, b);
+    const sim = simOf(d, a, b);
+    return d < alone && sim >= FOUND_SIM ? cost(sim) + JOIN : Infinity;
+  };
   for (let i = 0; i <= n; i++) {
     for (let j = 0; j <= m; j++) {
       const here = D[i * W + j]!;
@@ -107,9 +126,9 @@ export function matchWords(script: string[], asr: string[]): ({ from: number; to
       };
       if (i < n) relax(i + 1, j, GAP, 1);
       if (j < m) relax(i, j + 1, GAP, 2);
-      if (i < n && j < m) relax(i + 1, j + 1, cost(wordSimilarity(script[i]!, asr[j]!)), 3);
-      if (i + 1 < n && j < m) relax(i + 2, j + 1, cost(wordSimilarity(script[i]! + script[i + 1]!, asr[j]!)) + JOIN, 4);
-      if (i < n && j + 1 < m) relax(i + 1, j + 2, cost(wordSimilarity(script[i]!, asr[j]! + asr[j + 1]!)) + JOIN, 5);
+      if (i < n && j < m) relax(i + 1, j + 1, cost(simOf(d1[i * m + j]!, script[i]!, asr[j]!)), 3);
+      if (i + 1 < n && j < m) relax(i + 2, j + 1, joinCost(script[i]! + script[i + 1]!, asr[j]!, d1[i * m + j]!, d1[(i + 1) * m + j]!), 4);
+      if (i < n && j + 1 < m) relax(i + 1, j + 2, joinCost(script[i]!, asr[j]! + asr[j + 1]!, d1[i * m + j]!, d1[i * m + j + 1]!), 5);
     }
   }
   const out: ({ from: number; to: number } | null)[] = new Array(n).fill(null);
@@ -118,21 +137,17 @@ export function matchWords(script: string[], asr: string[]): ({ from: number; to
     if (mv === 1) i--;
     else if (mv === 2) j--;
     else if (mv === 3) {
-      if (wordSimilarity(script[i - 1]!, asr[j - 1]!) >= FOUND_SIM) out[i - 1] = { from: j - 1, to: j - 1 };
+      if (simOf(d1[(i - 1) * m + j - 1]!, script[i - 1]!, asr[j - 1]!) >= FOUND_SIM) out[i - 1] = { from: j - 1, to: j - 1 };
       i--;
       j--;
     } else if (mv === 4) {
-      const joined = wordSimilarity(script[i - 2]! + script[i - 1]!, asr[j - 1]!);
-      const a = wordSimilarity(script[i - 2]!, asr[j - 1]!);
-      const b = wordSimilarity(script[i - 1]!, asr[j - 1]!);
-      if (joined >= FOUND_SIM && joined >= Math.max(a, b) + JOIN_MARGIN) {
-        out[i - 2] = { from: j - 1, to: j - 1 };
-        out[i - 1] = { from: j - 1, to: j - 1 };
-      } else if (Math.max(a, b) >= FOUND_SIM) out[a >= b ? i - 2 : i - 1] = { from: j - 1, to: j - 1 }; // другое — «не нашлось»
+      // Склейка засчитана в ДП, только если похожа (joinCost), — оба слова нашлись.
+      out[i - 2] = { from: j - 1, to: j - 1 };
+      out[i - 1] = { from: j - 1, to: j - 1 };
       i -= 2;
       j--;
     } else if (mv === 5) {
-      if (wordSimilarity(script[i - 1]!, asr[j - 2]! + asr[j - 1]!) >= FOUND_SIM) out[i - 1] = { from: j - 2, to: j - 1 };
+      out[i - 1] = { from: j - 2, to: j - 1 };
       i--;
       j -= 2;
     } else break;
@@ -448,6 +463,10 @@ export async function alignedSplitPoints(samples: Float32Array, sampleRate: numb
   return splitByAsr(texts, asr, profile);
 }
 
+// Пауза между сценами начинается сразу после последнего слова сцены (и кончается
+// прямо перед первым словом следующей) — не дальше этого от найденного слова.
+const SNAP_MS = 120;
+
 // Чистая часть (для тестов): границы сцен по распознанным словам.
 export function splitByAsr(texts: string[], asr: AsrWord[], profile: SpeechProfile): AlignedSplit | null {
   const counts = texts.map((t) => tokenize(t).length);
@@ -459,6 +478,9 @@ export function splitByAsr(texts: string[], asr: AsrWord[], profile: SpeechProfi
     if (n && r.found.slice(at, at + n).filter(Boolean).length / n < 0.5) return null;
     at += n;
   }
+  // Части пауз внутри [lo, hi] — по времени.
+  const within = (lo: number, hi: number) =>
+    profile.pauses.map((p) => ({ a: Math.max(p.startMs, lo), b: Math.min(p.endMs, hi) })).filter((p) => p.b > p.a);
   const cuts: number[] = [];
   at = 0;
   for (let k = 0; k + 1 < texts.length; k++) {
@@ -470,11 +492,25 @@ export function splitByAsr(texts: string[], asr: AsrWord[], profile: SpeechProfi
     const nextStart = r.words[at]!.startMs;
     const prev = cuts.at(-1) ?? 0;
     // Самая длинная пауза в промежутке между сценами — разрез посередине неё.
-    const inGap = profile.pauses
-      .map((p) => ({ a: Math.max(p.startMs, lastEnd), b: Math.min(p.endMs, nextStart) }))
-      .filter((p) => p.b > p.a);
+    const inGap = within(lastEnd, nextStart);
     const best = inGap.length ? inGap.reduce((x, y) => (y.b - y.a > x.b - x.a ? y : x)) : null;
-    const cut = best ? (best.a + best.b) / 2 : (lastEnd + Math.max(lastEnd, nextStart)) / 2;
+    let cut = best ? (best.a + best.b) / 2 : (lastEnd + Math.max(lastEnd, nextStart)) / 2;
+    // Слово у стыка не нашлось в речи: интерполяция растянула его на всю паузу между
+    // сценами, промежуток пуст, и разрез ложился вплотную к найденному соседу (01b, если
+    // не распознано «больше»: хвост «эры» уходил в следующую сцену). Тогда граница — в паузе,
+    // примыкающей к найденному слову. Самая длинная тут не годится: тихий хвост
+    // слова («-ся», «-ии») по энергии тоже пауза.
+    let snap: { a: number; b: number } | undefined;
+    if (r.found[at - 1] && !r.found[at]) {
+      let ni = at;
+      while (ni + 1 < at + counts[k + 1]! && !r.found[ni]) ni++;
+      snap = within(lastEnd, r.words[ni]!.startMs).find((p) => p.a <= lastEnd + SNAP_MS);
+    } else if (!r.found[at - 1] && r.found[at]) {
+      let li = at - 1;
+      while (li > at - counts[k]! && !r.found[li]) li--;
+      snap = within(Math.max(r.words[li]!.endMs, r.rawEndMs[li] ?? 0), nextStart).findLast((p) => p.b >= nextStart - SNAP_MS);
+    }
+    if (snap) cut = (snap.a + snap.b) / 2;
     if (cut <= prev + 200) return null;
     cuts.push(cut);
   }

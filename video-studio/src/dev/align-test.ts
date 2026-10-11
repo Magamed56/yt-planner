@@ -122,6 +122,28 @@ async function main() {
     assert.deepEqual(m2, [{ from: 0, to: 1 }, { from: 2, to: 2 }]);
     const m3 = matchWords(["сам", "оксфорд", "основан"], ["самоксфорд", "основан"]);
     assert.deepEqual(m3, [{ from: 0, to: 0 }, { from: 0, to: 0 }, { from: 1, to: 1 }], "настоящая склейка «сам оксфорд»");
+    // Однобуквенное слово: склейка точнее одного длинного слова (0 правок против 1).
+    assert.deepEqual(matchWords(["в", "антарктиде"], ["вантарктиде"]), [{ from: 0, to: 0 }, { from: 0, to: 0 }]);
+    assert.deepEqual(matchWords(["в", "девятнадцатом"], ["вдевятнадцатам"]), [{ from: 0, to: 0 }, { from: 0, to: 0 }], "и с ошибкой в букве");
+  });
+
+  await test("лишнее распознанное слово не прилипает к слову сценария (1↔2)", () => {
+    // Звук 13b: «там» в речи есть, в тексте сцены — нет. «выжили» ~ «тамвыжили» = 0,67,
+    // и без проверки склейки подсветка «выжили» начиналась с «там» — на 0,24 с раньше голоса.
+    const asr: AsrWord[] = [
+      { text: "под", startMs: 100, endMs: 220 },
+      { text: "полным", startMs: 340, endMs: 660 },
+      { text: "солнечным", startMs: 740, endMs: 1220 },
+      { text: "светом", startMs: 1300, endMs: 1620 },
+      { text: "там", startMs: 6260, endMs: 6420 },
+      { text: "выжили", startMs: 6500, endMs: 6860 },
+      { text: "лишь", startMs: 6940, endMs: 7140 },
+      { text: "единицы", startMs: 7260, endMs: 7700 },
+    ];
+    const m = matchWords(["под", "полным", "солнечным", "светом", "выжили", "лишь", "единицы"], asr.map((w) => w.text));
+    assert.deepEqual(m[4], { from: 5, to: 5 });
+    const r = alignTextToAsr("Под полным солнечным светом выжили лишь единицы.", asr, 8000)!;
+    assert.equal(r.words[4]!.startMs, 6500 - 40, "«выжили» — с начала своего слова");
   });
 
   await test("совпало меньше 60 % — null (остаётся прежняя оценка)", () => {
@@ -228,6 +250,49 @@ async function main() {
     assert.ok(s.words[1]![0]!.startMs >= 0, "«британские» — целиком в своей сцене");
   });
 
+  await test("последнее слово сцены не нашлось — его распознанное слово не прилипает к первому слову следующей", () => {
+    // Слово сценария записано не так, как его пишет распознаватель (здесь — цифрой):
+    // «нейробиологи» ~ «пятьнейробиологи» = 0,75, и без проверки склейки разрез
+    // уходил на 560 мс — «пять» (500–800) доставалось следующей сцене.
+    const asr = asrOf(["ровно", "пять", "нейробиологи", "удивились"]);
+    asr.slice(2).forEach((w) => ((w.startMs += 800), (w.endMs += 800))); // «пять» до 900, «нейробиологи» с 1700
+    assert.deepEqual(matchWords(["ровно", "5", "нейробиологи", "удивились"], asr.map((w) => w.text)), [
+      { from: 0, to: 0 },
+      null,
+      { from: 2, to: 2 },
+      { from: 3, to: 3 },
+    ]);
+    const s = splitByAsr(["Ровно 5.", "Нейробиологи удивились."], asr, profileOf(3200, [{ startMs: 900, endMs: 1700 }]))!;
+    assert.ok(s.cuts[0]! > 900 && s.cuts[0]! < 1700, `разрез ${s.cuts[0]} — между «пять» (до 900) и «нейробиологи» (с 1700)`);
+  });
+
+  await test("склейка «в» + слово через стык: «В» подсвечено с голосом, разрез — посреди паузы", () => {
+    const asr: AsrWord[] = [
+      { text: "лед", startMs: 200, endMs: 500 },
+      { text: "тает", startMs: 600, endMs: 900 },
+      { text: "вантарктиде", startMs: 1700, endMs: 2300 },
+      { text: "теплеет", startMs: 2400, endMs: 2800 },
+    ];
+    const s = splitByAsr(["Лёд тает.", "В Антарктиде теплеет."], asr, profileOf(3200, [{ startMs: 900, endMs: 1700 }]))!;
+    assert.equal(s.cuts[0], 1300);
+    assert.equal(s.words[1]![0]!.startMs, 1700 - 1300, "«В» — не на всю паузу перед ним");
+  });
+
+  await test("слово у стыка не распознано — разрез в паузе у найденного соседа, а не вплотную к нему", () => {
+    // «эры» 1800–2100, пауза 2100–2600, «больше» 2600–2900, «трёх» с 3000.
+    const texts = ["Это было до нашей эры.", "Больше трёх тысяч лет."];
+    const said = asrOf(["это", "было", "до", "нашей", "эры", "больше", "трех", "тысяч", "лет"]);
+    said.slice(5).forEach((w) => ((w.startMs += 400), (w.endMs += 400)));
+    const pauses = [{ startMs: 2100, endMs: 2600 }, { startMs: 2900, endMs: 3000 }, { startMs: 3300, endMs: 3400 }];
+    const prof = profileOf(4500, pauses);
+    // Нет первого слова следующей сцены: раньше разрез ложился на самый конец «эры».
+    const b = splitByAsr(texts, said.filter((w) => w.text !== "больше"), prof)!;
+    assert.ok(b.cuts[0]! > 2200 && b.cuts[0]! < 2600, `без «больше»: разрез ${b.cuts[0]} — в паузе после «эры»`);
+    // Нет последнего слова сцены: раньше — вплотную к началу «больше».
+    const a = splitByAsr(texts, said.filter((w) => w.text !== "эры"), prof)!;
+    assert.ok(a.cuts[0]! > 2100 && a.cuts[0]! < 2500, `без «эры»: разрез ${a.cuts[0]} — в паузе перед «больше»`);
+  });
+
   await test("сцена не нашлась в речи — null (нарезка по паузам)", () => {
     const texts = ["Сатурн менее плотный, чем вода.", "Совершенно другой текст про погоду завтра."];
     const asr = asrOf(["сатурн", "менее", "плотный", "чем", "вода", "солнце", "светит"]);
@@ -240,6 +305,9 @@ async function main() {
     assert.equal(alignEnabled({}), true);
     assert.equal(alignEnabled({ TTS_LANGUAGE: "ru" }), true);
     assert.equal(alignEnabled({ CAPTION_ALIGN: "0" }), false);
+    assert.equal(alignEnabled({ CAPTION_ALIGN: "off" }), false);
+    assert.equal(alignEnabled({ CAPTION_ALIGN: "false" }), false);
+    assert.equal(alignEnabled({ CAPTION_ALIGN: "" }), true, "пусто — включено");
     assert.equal(alignEnabled({ TTS_LANGUAGE: "en" }), false);
   });
 
