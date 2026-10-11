@@ -33,4 +33,5 @@ jobs:
       - name: Голос — в ветку
         run: |
           git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tmp-voice/out && git commit -qm "tmp: голос приглашения" && git push -q origin HEAD:claude/stats-probe
+          git add tmp-voice/out && git commit -qm "tmp: голос приглашения"
+          for i in 1 2 3 4; do git pull -q --rebase origin claude/stats-probe && git push -q origin HEAD:claude/stats-probe && break; sleep 3; done

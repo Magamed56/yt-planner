@@ -1,4 +1,4 @@
-// Временный: озвучка приглашения на той (кыргызский) одним запросом Gemini.
+// Временный (v2: со стихами): озвучка приглашения на той (кыргызский) одним запросом Gemini.
 import fs from "node:fs";
 import path from "node:path";
 import { geminiProvider } from "../main/video-studio/src/pipeline/voice/providers/gemini.ts";
