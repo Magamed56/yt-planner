@@ -12,6 +12,7 @@ export interface UiText {
   chapter: (n: number) => string;
   decimal: string; // десятичный разделитель
   group: string; // разделитель тысяч
+  groupFrom?: number; // с какого значения делить разряды (нет — с 1000, как в английском)
 }
 
 const RU: UiText = {
@@ -24,6 +25,7 @@ const RU: UiText = {
   chapter: (n) => `ГЛАВА ${n}`,
   decimal: ",",
   group: " ", // узкий неразрывный пробел, как принято в русском
+  groupFrom: 10_000, // четырёхзначные по-русски не делят: «2560», но «12 500»
 };
 
 const EN: UiText = {

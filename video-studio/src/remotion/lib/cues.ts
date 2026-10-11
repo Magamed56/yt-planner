@@ -1,4 +1,5 @@
 import type { RenderScene, WordTiming } from "../../types";
+import { isNumeralWord } from "./numbers";
 import { parseMarkup } from "./text";
 import { listItemFrames, msToFrames, normalizeWord, voiceFrames } from "./timing";
 
@@ -21,20 +22,10 @@ export function listRevealFrames(scene: CueScene, fps: number): number[] {
 
 // ---- Счётчик крупной цифры ----
 
-// Русские числительные (как их пишет narration: «двести сорок три»). Короткие
-// формы — только целиком: «сто» не должно ловить «стоит», «семь» — «семья».
-const NUMERAL =
-  /^(ноль|нуль|один|одна|одно|одного|одной|одну|два|две|двух|двум|двумя|три|трех|трем|тремя|четыре|четырех|четырем|пять|пяти|шесть|шести|семь|семи|восемь|восьми|девять|девяти|десять|десяти|\p{L}+надцать|\p{L}+надцати|двадцать|двадцати|тридцать|тридцати|сорок|сорока|пятьдесят|пятидесяти|шестьдесят|шестидесяти|семьдесят|семидесяти|восемьдесят|восьмидесяти|девяносто|девяноста|сто|ста|двести|двухсот|триста|трехсот|четыреста|четырехсот|пятьсот|шестьсот|семьсот|восемьсот|девятьсот|\p{L}+сот(ни|ен)?|тысяч\p{L}*|миллион\p{L}*|миллиард\p{L}*|триллион\p{L}*|полтор\p{L}*|процент\p{L}*|\d+([.,]\d+)?)$/u;
-const BAD_SOT = /^(высот|красот|частот|пустот|работ|забот)/u;
-
-export function isNumeralWord(w: string): boolean {
-  const n = normalizeWord(w);
-  return n.length > 0 && NUMERAL.test(n) && !BAD_SOT.test(n);
-}
-
 // Самая «числовая» фраза речи: подряд идущие числительные; длиннее — вероятнее
 // та самая цифра сцены («двести сорок три» важнее «один оборот»), при «%» —
 // фраза со словом «процент». null — числа в речи нет (или нет таймингов).
+// Числительные распознаёт isNumeralWord (lib/numbers.ts) — тот же разбор решает, год ли цифра.
 export function spokenNumberRun(words: WordTiming[], suffix?: string): { from: number; to: number } | null {
   let best: { from: number; to: number; score: number } | null = null;
   for (let i = 0; i < words.length; i++) {
