@@ -13,12 +13,12 @@ import { useLangNav } from "./LangNav";
 import { LiveRunsContext } from "./LiveRuns";
 
 export type Section = "feed" | "calendar" | "runs";
-type MainItem = Section | "stats";
+type MainItem = Section | "board" | "stats";
 // Пункты меню: лента и календарь на главной переключаются без перезагрузки, остальные — ссылки.
 // «lang:en» — канал на другом языке (/lang/en), пункты приходят из LangNav.
 export type NavItem = MainItem | `lang:${string}`;
 // «План» убран: порядок выхода меняется прямо в календаре (одна очередь, без дублей).
-const NAV: MainItem[] = ["feed", "calendar", "runs", "stats"];
+const NAV: MainItem[] = ["feed", "calendar", "board", "runs", "stats"];
 
 // Кольцо-секундомер из знака канала: заполнено на столько дней расписания из недели.
 export function RunwayRing({ days, size = 52 }: { days: number | null; size?: number }) {
@@ -57,6 +57,15 @@ const ICONS: Record<MainItem, React.ReactNode> = {
       <path d="M16 2v4M8 2v4M3 10h18" />
     </>
   ),
+  // «Доска» — полотно с зонами и стикером.
+  board: (
+    <>
+      <rect x="3" y="3" width="8" height="8" rx="2" />
+      <rect x="13" y="3" width="8" height="5" rx="2" />
+      <rect x="13" y="10" width="8" height="11" rx="2" />
+      <rect x="3" y="13" width="8" height="8" rx="2" />
+    </>
+  ),
   runs: <path d="m6 4 14 8-14 8z" />,
   stats: <path d="M3 21h18M7 17v-5M12 17V5M17 17V9" />,
 };
@@ -67,8 +76,8 @@ const LANG_ICON = (
     <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
   </>
 );
-const LABEL: Record<MainItem, string> = { feed: "Лента", calendar: "Календарь", runs: "Запуски", stats: "Статистика" };
-const HREF: Record<MainItem, string> = { feed: "/", calendar: "/?view=calendar", runs: "/runs", stats: "/stats" };
+const LABEL: Record<MainItem, string> = { feed: "Лента", calendar: "Календарь", board: "Доска", runs: "Запуски", stats: "Статистика" };
+const HREF: Record<MainItem, string> = { feed: "/", calendar: "/?view=calendar", board: "/board", runs: "/runs", stats: "/stats" };
 
 function Icon({ children }: { children: React.ReactNode }) {
   return (
@@ -167,7 +176,7 @@ export default function AppShell({
       }}
     >
       <Icon>{it.icon}</Icon>
-      {it.label}
+      <span className="nav-label">{it.label}</span>
     </Link>
   );
   const refreshIcon = (

@@ -1,0 +1,313 @@
+/* «Доска» (/board): полотно с зонами площадок. Цвета — токены из app/globals.css. */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.head {
+  display: grid;
+  gap: 8px;
+}
+.title {
+  font: 900 22px var(--display);
+}
+.runways,
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.runwayChip {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  font: 600 12px var(--body);
+  cursor: pointer;
+}
+.runwayChip b {
+  color: var(--text);
+}
+.runwayChip.warn {
+  border-color: var(--warn);
+}
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.legendItem::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--st);
+}
+
+/* статус — цветом: полоска карточки, точка легенды */
+.card[data-status="published"],
+.legendItem[data-status="published"] {
+  --st: var(--published);
+}
+.card[data-status="scheduled"],
+.legendItem[data-status="scheduled"] {
+  --st: var(--scheduled);
+}
+.card[data-status="studio"],
+.legendItem[data-status="studio"] {
+  --st: var(--studio);
+}
+.card[data-status="ready"],
+.legendItem[data-status="ready"] {
+  --st: var(--video);
+}
+.card[data-status="script"],
+.legendItem[data-status="script"] {
+  --st: var(--script);
+}
+
+/* ---- полотно ---- */
+.stage {
+  position: relative;
+  min-height: 300px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--panel);
+}
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* жесты ведёт сама доска: браузер не прокручивает и не приближает страницу */
+  touch-action: none;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  background-color: var(--panel);
+  background-image: radial-gradient(circle, var(--line) 1.2px, transparent 1.4px);
+  background-size: 24px 24px;
+}
+.viewport:active {
+  cursor: grabbing;
+}
+.world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.zone {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+}
+.zoneHead {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 12px;
+}
+.zoneTitle {
+  overflow: hidden;
+  font: 900 20px var(--display);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.zoneSub {
+  color: var(--dim);
+  font: 600 12px var(--body);
+}
+.runway {
+  margin: 4px 0 0;
+  color: var(--accent);
+  font: 800 15px var(--body);
+}
+.runway.warn {
+  color: var(--warn);
+}
+.todayBand {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.dayLabel {
+  position: absolute;
+  left: 14px;
+  width: 50px;
+  padding-top: 8px;
+  color: var(--dim);
+  font: 600 12px var(--body);
+  line-height: 1.3;
+}
+.dayLabel b {
+  display: block;
+  color: var(--muted);
+  font: 800 14px var(--display);
+}
+.dayLabel.today,
+.dayLabel.today b {
+  color: var(--accent);
+}
+
+/* размеры — как CARD_W и CARD_H в lib/board.ts */
+.card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 2px;
+  width: 172px;
+  height: 96px;
+  padding: 7px 9px 7px 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--st);
+  border-radius: 12px;
+  background: var(--card);
+  cursor: pointer;
+}
+.card:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.cardTop {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.code {
+  font: 900 14px var(--display);
+}
+.when {
+  color: var(--muted);
+}
+.longTag {
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--card-2);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+.cardTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.cardFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 22px;
+}
+.status {
+  overflow: hidden;
+  color: var(--st);
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.markBtn,
+.unmark {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font: 800 11px var(--body);
+  cursor: pointer;
+}
+.markBtn {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.unmark {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--dim);
+}
+.markBtn:disabled,
+.unmark:disabled {
+  opacity: 0.5;
+}
+.cardNote {
+  position: absolute;
+  right: 8px;
+  top: 7px;
+  color: var(--warn);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ---- инструменты поверх полотна ---- */
+.toolbar {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.tool,
+.zoom {
+  pointer-events: auto;
+}
+.tool {
+  min-height: 36px;
+  padding: 4px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text);
+  font: 700 14px var(--body);
+  cursor: pointer;
+}
+.tool:hover {
+  border-color: var(--accent);
+}
+.zoom {
+  min-width: 46px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+.toast {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  max-width: calc(100% - 24px);
+  padding: 8px 14px;
+  border: 1px solid var(--ok);
+  border-radius: 14px;
+  background: var(--card-2);
+  font-size: 13px;
+  transform: translateX(-50%);
+}
+.toast.warn {
+  border-color: var(--error);
+}

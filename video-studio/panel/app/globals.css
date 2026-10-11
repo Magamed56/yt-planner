@@ -1198,6 +1198,16 @@ h4 {
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
 }
+/* Пунктов шесть («Доска» и «English») — длинная подпись на узком телефоне не вылезает за вкладку. */
+.tabbar a {
+  min-width: 0;
+}
+.tabbar .nav-label {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 /* Просмотры на обложке вышедшего ролика — под временем: справа на узкой карточке тесно. */
 .vcard .views-badge {
   position: absolute;
