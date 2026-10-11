@@ -68,6 +68,8 @@ export function geminiAudioToPcm(b64: string, mime: string, sampleRateHint?: num
   return { kind: "pcm", audio: decodePcm16(bytes, rate) };
 }
 
+const INVALID_KEY = /API key not valid|API_KEY_INVALID|valid API key/i;
+
 export function geminiProvider(): RawProvider {
   const keys = geminiKeys(process.env);
   const model = process.env.GEMINI_TTS_MODEL?.trim() || GEMINI_DEFAULT_MODEL;
@@ -116,9 +118,12 @@ export function geminiProvider(): RawProvider {
             return keys.length > 1 ? { ...out, keyIndex: ki + 1 } : out;
           } catch (err) {
             const e = safeError(err, label, keys);
-            if (e.status === 401 || e.status === 403) {
-              // Ключ неверный — другие модели с ним не помогут. Есть второй рабочий — дальше им.
-              const other = keys.findIndex((_, i) => i !== ki && !rejected.has(i));
+            // Gemini на неверный ключ обычно отвечает 400 API_KEY_INVALID, а не 401/403.
+            const badKey = e.status === 401 || e.status === 403 || (e.status === 400 && INVALID_KEY.test(e.message));
+            const other = badKey ? keys.findIndex((_, i) => i !== ki && !rejected.has(i)) : -1;
+            if (badKey && (other >= 0 || e.status !== 400)) {
+              // Ключ неверный — другие модели с ним не помогут. Есть второй рабочий — дальше им;
+              // единственный неверный ключ на 400 идёт по цепочке моделей, как раньше.
               if (other < 0) throw e;
               rejected.add(ki);
               lastErr = e;

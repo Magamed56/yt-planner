@@ -67,7 +67,7 @@ function speechLike(texts: string[], sr = 24000): PcmAudio {
   return { sampleRate: sr, channels: [Float32Array.from(parts)] };
 }
 
-type Reply = "ok" | "day" | "minute" | 401 | 403 | 404 | 500 | "leak";
+type Reply = "ok" | "day" | "minute" | 400 | 401 | 403 | 404 | 500 | "leak";
 interface Seen {
   model: string;
   key: 1 | 2 | 0; // 0 — чужой ключ (такого быть не должно)
@@ -290,6 +290,22 @@ async function main() {
       assert.deepEqual(pairs(g.seen), [`${MAIN}#1`, `${MAIN}#1`]);
       assert.equal(a.keyIndex, 1);
       assert.match(logs[0]!, /лимит запросов в минуту — жду 1 с и повторяю/);
+    });
+  });
+
+  await test("400 API_KEY_INVALID (так Gemini отвечает на неверный ключ) — ключ пропускается, как при 401", async () => {
+    // Неверный ключ 1 — основная модель вторым ключом, а не уход на lite.
+    await withGoogle({ GEMINI_API_KEY: K1, GEMINI_API_KEY_2: K2 }, (_m, k) => (k === 1 ? 400 : "ok"), async (g) => {
+      const a = await geminiProvider().synthesizeRaw("Тест.", ctx);
+      assert.deepEqual(pairs(g.seen), [`${MAIN}#1`, `${MAIN}#2`]);
+      assert.equal(a.fallback, undefined);
+      assert.equal(a.keyIndex, 2);
+      assert.ok(logs.some((l) => l.includes("Ключ 1 пропускаю")), logs.join("\n"));
+    });
+    // Единственный ключ на 400 — как раньше: дальше по цепочке моделей, затем ошибка.
+    await withGoogle({ GEMINI_API_KEY: K1 }, () => 400, async (g) => {
+      await assert.rejects(geminiProvider().synthesizeRaw("Тест.", ctx), (e: Error) => /HTTP 400/.test(e.message));
+      assert.deepEqual(pairs(g.seen), [`${MAIN}#1`, `${LITE}#1`, `${LEGACY}#1`]);
     });
   });
 
