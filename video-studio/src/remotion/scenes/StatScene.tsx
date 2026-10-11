@@ -4,24 +4,13 @@ import { KineticText } from "../components/KineticText";
 import { FONT_BODY, FONT_DISPLAY, FONT_NUMBER } from "../fonts";
 import { statCountWindow } from "../lib/cues";
 import { useLayout } from "../lib/layout";
+import { formatNumber, isYearNumber } from "../lib/numbers";
 import { fitTokens, type FontSpec } from "../lib/text";
-import { uiText } from "../lib/ui-text";
 import { withAlpha } from "../theme";
 import { ContentBox, SceneFrame, clamp, type SceneProps } from "./common";
 
 const NUMBER_FONT: FontSpec = { fontFamily: FONT_NUMBER, fontWeight: 800, lineHeight: 1, letterSpacingEm: -0.04 };
 const LABEL_FONT: FontSpec = { fontFamily: FONT_BODY, fontWeight: 600, lineHeight: 1.22 };
-
-// Число с разделителем тысяч (узкий неразрывный пробел, как принято в русском)
-// и тем же количеством знаков после запятой, что и у целевого значения.
-// lang — язык ролика: у английского «1,250.5», у русского «1 250,5».
-export function formatNumber(v: number, decimals: number, lang?: string | null): string {
-  const t = uiText(lang);
-  const fixed = Math.abs(v).toFixed(decimals);
-  const [int, frac] = fixed.split(".");
-  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, t.group);
-  return `${v < 0 ? "−" : ""}${grouped}${frac ? `${t.decimal}${frac}` : ""}`;
-}
 
 // Крупная цифра: счётчик докручивается с ease-out (пока цифры бегут — лёгкое
 // размытие движения) и встаёт на место вместе с голосом: вспышка-кольцо и
@@ -36,6 +25,8 @@ export const StatScene: React.FC<SceneProps> = (p) => {
   const stat = p.scene.stat ?? { value: 0, label: p.scene.onScreen };
   const isPercent = (stat.suffix ?? "").trim() === "%";
   const decimals = Number.isInteger(stat.value) ? 0 : Math.min(2, String(stat.value).split(".")[1]?.length ?? 1);
+  // Год встаёт сразу (без счёта от нуля), вспышка и удар — как у числа.
+  const year = isYearNumber(stat.value, stat.prefix, stat.suffix, p.scene.narration);
 
   // Окно счёта — по речи: цифра встаёт на место, когда диктор её договорил
   // (lib/cues.ts; там же удар и нарастание в AudioLayer).
@@ -44,12 +35,12 @@ export const StatScene: React.FC<SceneProps> = (p) => {
   const countLen = Math.max(1, win.end - win.start);
   const ease = Easing.out(Easing.cubic);
   const tAt = (f: number) => interpolate(f, [countStart, countStart + countLen], [0, 1], { ...clamp, easing: ease });
-  const t = tAt(frame);
+  const t = year ? 1 : tAt(frame);
   // Скорость счёта → вертикальное размытие: быстро бегущие цифры «смазаны».
-  const blur = Math.min(7, (tAt(frame) - tAt(frame - 1)) * 110) * unit;
+  const blur = year ? 0 : Math.min(7, (tAt(frame) - tAt(frame - 1)) * 110) * unit;
   const current = stat.value * t;
-  const finalText = `${stat.prefix ?? ""}${formatNumber(stat.value, decimals, p.video.language)}${stat.suffix ?? ""}`;
-  const shownText = `${stat.prefix ?? ""}${formatNumber(current, decimals, p.video.language)}${stat.suffix ?? ""}`;
+  const finalText = `${stat.prefix ?? ""}${formatNumber(stat.value, decimals, p.video.language, year)}${stat.suffix ?? ""}`;
+  const shownText = `${stat.prefix ?? ""}${formatNumber(current, decimals, p.video.language, year)}${stat.suffix ?? ""}`;
 
   const ring = Math.round(Math.min(content.w * (shorts ? 0.9 : 0.42), content.h * (shorts ? 0.6 : 0.96)));
   const numberBox = isPercent ? { w: ring * 0.74, h: ring * 0.46 } : { w: content.w * (shorts ? 0.9 : 0.46), h: content.h * (shorts ? 0.36 : 0.6) };

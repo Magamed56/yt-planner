@@ -5,8 +5,8 @@ import { Background } from "./components/Background";
 import { Icon, IconGradientDefs } from "./components/Icon";
 import { KineticText } from "./components/KineticText";
 import { FONT_DISPLAY, FONT_NUMBER, FontGate } from "./fonts";
+import { formatNumber, isYearNumber } from "./lib/numbers";
 import { fitTokens, stripMarkup, type FontSpec } from "./lib/text";
-import { formatNumber } from "./scenes/StatScene";
 import { getTheme, withAlpha, type Theme } from "./theme";
 
 const BADGE_FONT: FontSpec = { fontFamily: FONT_NUMBER, fontWeight: 800, lineHeight: 1.1, letterSpacingEm: -0.04 };
@@ -44,7 +44,8 @@ export const Thumbnail: React.FC<VideoProps & Record<string, unknown>> = (props)
   // Хук короткий и с *акцентом* — берём его; иначе заголовок ролика.
   const statScene = props.scenes.find((s) => s.kind === "stat" && s.stat);
   const stat = statScene?.stat;
-  const statText = stat ? `${stat.prefix ?? ""}${formatNumber(stat.value, Number.isInteger(stat.value) ? 0 : 1, props.language)}${stat.suffix ?? ""}` : null;
+  const statYear = stat ? isYearNumber(stat.value, stat.prefix, stat.suffix, statScene?.narration) : false;
+  const statText = stat ? `${stat.prefix ?? ""}${formatNumber(stat.value, Number.isInteger(stat.value) ? 0 : 1, props.language, statYear)}${stat.suffix ?? ""}` : null;
   const text = autoAccent(hookText && stripMarkup(hookText).length <= 48 ? hookText : props.title, stat ? String(stat.value) : null);
   const icon = hook?.icon ?? statScene?.icon;
   const textW = width * 0.57;
