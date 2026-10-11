@@ -1,7 +1,6 @@
 import React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import type { TransitionPresentation, TransitionPresentationComponentProps } from "@remotion/transitions";
-import { fade } from "@remotion/transitions/fade";
 import { slide } from "@remotion/transitions/slide";
 import { wipe } from "@remotion/transitions/wipe";
 import { iris } from "@remotion/transitions/iris";
@@ -28,13 +27,15 @@ const ZoomThrough: React.FC<TransitionPresentationComponentProps<ZoomProps>> = (
     presentationDirection === "exiting"
       ? {
           transform: `scale(${interpolate(p, [0, 1], [1, 1 + 0.35 * k], { easing: Easing.in(Easing.cubic) })})`,
-          opacity: interpolate(p, [0, 0.42], [1, 0], { extrapolateRight: "clamp" }),
+          opacity: interpolate(p, [0, 0.3], [1, 0], { extrapolateRight: "clamp" }),
         }
       : {
           transform: `scale(${interpolate(p, [0, 1], [1 - 0.22 * k, 1], { easing: Easing.out(Easing.cubic) })})`,
           // Почти без наложения: два заголовка поверх друг друга на полупрозрачности
-          // выглядят «грязно» — движение и масштаб и так связывают сцены.
-          opacity: interpolate(p, [0.36, 0.85], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+          // выглядят «грязно» — движение и масштаб и так связывают сцены. Но и
+          // без долгого провала: старая сцена гаснет быстро, новая проявляется
+          // сразу за ней, а не к концу перехода (было ≈ 0,3 с почти пустого кадра).
+          opacity: interpolate(p, [0.15, 0.55], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
         };
   return <AbsoluteFill style={style}>{children}</AbsoluteFill>;
 };
@@ -44,16 +45,23 @@ export const zoomThrough = (strength = 1): TransitionPresentation<ZoomProps> => 
   props: { strength },
 });
 
+// Смена «через затухание»: окна ZoomThrough без масштаба. Перекрёстный fade()
+// здесь не годится — текст новой сцены выезжает с первого кадра и встаёт
+// поверх ещё наполовину видного текста старой.
+const fadeThrough = () => zoomThrough(0);
+
 type LiftProps = { distance: number };
 // Мягкий подъём: старая сцена уезжает вверх и гаснет, новая поднимается снизу.
-// Спокойнее, чем slide на весь экран, — для цитат и пунктов.
+// Спокойнее, чем slide на весь экран, — для цитат и пунктов. Старая гаснет
+// к p = 0,3, как в ZoomThrough: иначе в кадре, где проявляется новая, оба
+// текста висят друг на друге полупрозрачными.
 const Lift: React.FC<TransitionPresentationComponentProps<LiftProps>> = ({ children, presentationDirection, presentationProgress, passedProps }) => {
   const p = presentationProgress;
   const d = passedProps.distance;
   const style: React.CSSProperties =
     presentationDirection === "exiting"
-      ? { transform: `translateY(${interpolate(p, [0, 1], [0, -d])}px)`, opacity: interpolate(p, [0, 0.45], [1, 0], { extrapolateRight: "clamp" }) }
-      : { transform: `translateY(${interpolate(p, [0, 1], [d, 0])}px)`, opacity: interpolate(p, [0.42, 0.95], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) };
+      ? { transform: `translateY(${interpolate(p, [0, 1], [0, -d])}px)`, opacity: interpolate(p, [0, 0.3], [1, 0], { extrapolateRight: "clamp" }) }
+      : { transform: `translateY(${interpolate(p, [0, 1], [d, 0])}px)`, opacity: interpolate(p, [0.2, 0.6], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) };
   return <AbsoluteFill style={style}>{children}</AbsoluteFill>;
 };
 export const lift = (distance: number): TransitionPresentation<LiftProps> => ({ component: Lift, props: { distance } });
@@ -83,9 +91,9 @@ export function pickTransition(
     case "quote":
       return anyP(lift(size.height * 0.08));
     case "media":
-      return anyP(hasVisual(prev) ? fade({ shouldFadeOutExitingScene: true }) : slide({ direction: alt ? "from-right" : "from-left" }));
+      return hasVisual(prev) ? anyP(fadeThrough()) : anyP(slide({ direction: alt ? "from-right" : "from-left" }));
     case "statement":
     default:
-      return anyP(hasVisual(prev) ? fade({ shouldFadeOutExitingScene: true }) : slide({ direction: alt ? "from-right" : "from-left" }));
+      return hasVisual(prev) ? anyP(fadeThrough()) : anyP(slide({ direction: alt ? "from-right" : "from-left" }));
   }
 }

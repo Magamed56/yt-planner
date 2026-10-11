@@ -5,6 +5,7 @@ import { Illustration } from "../components/Illustration";
 import { FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
 import { withAlpha } from "../theme";
+import { textStartAfterChapter } from "./ChapterCard";
 import { ContentBox, SceneFrame, type SceneProps } from "./common";
 
 // Полноэкранный визуал (сток / AI-картинка) с подписью в нижней трети
@@ -41,7 +42,7 @@ export const MediaScene: React.FC<SceneProps> = (p) => {
         align="left"
         scene={p.scene}
         mode="stagger"
-        start={8}
+        start={textStartAfterChapter(p, 2)}
         step={3}
         entrance="rise"
         highlight="marker"

@@ -8,6 +8,7 @@ import { listRevealFrames } from "../lib/cues";
 import { fitTokens, parseMarkup, type FontSpec } from "../lib/text";
 import { voiceFrames } from "../lib/timing";
 import { withAlpha } from "../theme";
+import { textStartAfterChapter } from "./ChapterCard";
 import { SceneFrame, clamp, type SceneProps } from "./common";
 
 const ITEM_FONT: FontSpec = { fontFamily: FONT_BODY, fontWeight: 700, lineHeight: 1.16, letterSpacingEm: -0.01 };
@@ -96,7 +97,7 @@ export const ListScene: React.FC<SceneProps> = (p) => {
             align="left"
             scene={p.scene}
             mode="stagger"
-            start={4}
+            start={textStartAfterChapter(p, 0)}
             step={3}
             entrance="rise"
             highlight="underline"
