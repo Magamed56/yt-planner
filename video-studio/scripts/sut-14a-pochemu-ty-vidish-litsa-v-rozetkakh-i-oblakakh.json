@@ -1,0 +1,98 @@
+{
+  "title": "Почему ты видишь лица в розетках и облаках",
+  "description": "Разбираем парейдолию: почему мозг находит лица в розетках, облаках и фарах машин. Узнаешь, какая зона мозга отвечает за лица, как быстро она замечает иллюзорные лица и почему обезьяны видят их тоже.\n#shorts #парейдолия #мозг #психология",
+  "tags": [
+    "парейдолия",
+    "лица в предметах",
+    "мозг",
+    "психология",
+    "нейробиология",
+    "веретенообразная извилина",
+    "иллюзии восприятия",
+    "видите мой глаз",
+    "лица в розетках",
+    "макаки",
+    "наука",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Розетка смотрит на тебя? Это мозг так устроен.",
+      "onScreen": "Розетка *смотрит* на тебя?",
+      "icon": "eye",
+      "visualQuery": "electrical outlet wall face",
+      "imagePrompt": "cinematic close-up of a white wall power outlet that looks like a surprised face, cool blue ambient light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это называется парейдолия. Самое интересное про неё — в конце.",
+      "onScreen": "Это *парейдолия*",
+      "icon": "lightbulb",
+      "visualQuery": "clouds sky shapes",
+      "imagePrompt": "dramatic sky with clouds forming a vague human face, deep blue twilight tones, wide angle"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "В мозге есть зона, которая реагирует почти только на лица. Её описали в тысяча девятьсот девяносто седьмом.",
+      "onScreen": "Зона лиц в мозге, *1997*",
+      "icon": "brain",
+      "visualQuery": "Fusiform gyrus brain",
+      "imagePrompt": "glowing 3D model of a human brain with a small bright region on the underside of the temporal lobe, dark background, blue rim light"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Она в веретенообразной извилине. И срабатывает с запасом: две дырки и щель — уже лицо.",
+      "onScreen": "Две точки и черта = *лицо*",
+      "icon": "zap",
+      "visualQuery": "car headlights front grille",
+      "imagePrompt": "front of a vintage car at night whose headlights and grille resemble a smiling face, blue neon reflections, low angle"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Иллюзорное лицо мозг замечает за доли секунды. Так же быстро, как настоящее.",
+      "onScreen": "Фальшивое лицо — *мгновенно*",
+      "icon": "timer",
+      "visualQuery": "brain scan monitor",
+      "imagePrompt": "neuroscience lab monitor showing flashing brain activity map, dark room, cool blue glow"
+    },
+    {
+      "id": "s6",
+      "kind": "list",
+      "narration": "Поэтому лица повсюду: розетки, облака, фары машин.",
+      "onScreen": "Лица *повсюду*",
+      "items": [
+        "Розетки",
+        "Облака",
+        "Фары машин"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "house facade windows door",
+      "imagePrompt": "collage-like night scene of everyday objects resembling faces, moody blue palette, soft rim light"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "А теперь главное. Макаки-резусы тоже видят лица в предметах. Значит, этот трюк старше человека.",
+      "onScreen": "Обезьяны тоже видят *лица*",
+      "icon": "users",
+      "visualQuery": "Rhesus macaque",
+      "imagePrompt": "rhesus macaque staring curiously at an object, forest background, cool blue light, cinematic portrait"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А где ты последний раз видел лицо?",
+      "onScreen": "Где ты видел *лицо*?",
+      "icon": "message-circle"
+    }
+  ]
+}
