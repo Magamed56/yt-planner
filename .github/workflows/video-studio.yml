@@ -182,6 +182,8 @@ jobs:
       IG_API_VERSION: ${{ vars.IG_API_VERSION }}
       IG_AI_GENERATED: ${{ vars.IG_AI_GENERATED }}
       MODELS_DIR: ${{ github.workspace }}/video-studio/models
+      # Тайминги субтитров по распознанной речи; 0 — выключить (оценка по звуку).
+      CAPTION_ALIGN: ${{ vars.CAPTION_ALIGN }}
       # На 2 vCPU (приватный репозиторий) 2 потока быстрее авто-значения (1) на ~12 %.
       RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
       NO_COLOR: "1"
@@ -227,15 +229,18 @@ jobs:
             remotion-${{ runner.os }}-${{ hashFiles('video-studio/package-lock.json') }}-
 
       # Голоса Piper и модель распознавания речи для таймингов субтитров (GigaAM v2, ~240 МБ,
-      # voice/align.ts). v2: в записях v1 модели распознавания нет, а при точном попадании
-      # actions/cache кэш не перезаписывает — модель качалась бы каждый запуск. Голос Piper
-      # из v1 подхватывается через restore-keys, новая запись сохраняется уже с обеими моделями.
-      - name: Кэш локальных моделей (Piper, распознавание речи)
+      # voice/align.ts). Берётся самая свежая запись (и старые v1/v2), сохраняется отдельным
+      # шагом в конце с ключом по набору скачанных моделей (tokens.txt есть в папке каждой).
+      # Один постоянный ключ был ловушкой: его мог занять запуск, которому распознавание не
+      # нужно (английский ролик, голос Edge, CAPTION_ALIGN=0), а запись по точному ключу
+      # actions/cache не перезаписывает — русские запуски качали бы 170 МБ каждый раз.
+      - name: Кэш локальных моделей — восстановить
+        id: models-cache
         if: env.MODE != 'draft'
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: video-studio/models
-          key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-v2
+          key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}
           restore-keys: |
             tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-
 
@@ -663,6 +668,16 @@ jobs:
         with:
           path: video-studio/.cache/voice
           key: tts-voice-${{ runner.os }}-${{ hashFiles('video-studio/.cache/voice/*.json') }}
+
+      # Набор моделей не изменился (ничего не скачано) — не сохраняем; добавилась модель —
+      # новая запись с ней, и следующий запуск восстановит уже её (самую свежую).
+      - name: Кэш локальных моделей — сохранить
+        if: always() && env.MODE != 'draft' && hashFiles('video-studio/models/*/tokens.txt') != '' && steps.models-cache.outputs.cache-matched-key != format('tts-models-{0}-{1}-{2}', runner.os, inputs.voice_name || vars.TTS_VOICE || 'default', hashFiles('video-studio/models/*/tokens.txt'))
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: video-studio/models
+          key: tts-models-${{ runner.os }}-${{ inputs.voice_name || vars.TTS_VOICE || 'default' }}-${{ hashFiles('video-studio/models/*/tokens.txt') }}
 
       # Сценарии (draft и пакет по плану), отметки в плане и тексты собранных роликов для
       # youtube-fill — в ветку. always(): уже готовое не теряется, даже если дальше что-то упало.

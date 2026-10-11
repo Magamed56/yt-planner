@@ -54,9 +54,12 @@ Openverse, и только по теме сцены; остальные сцен
 **Тайминги субтитров.** У Edge и ElevenLabs время слов отдаёт сервис. У Piper, Gemini и остальных
 его нет, поэтому сцена распознаётся офлайн (sherpa-onnx + русская модель GigaAM v2 CTC, ~170 МБ,
 скачивается один раз в `MODELS_DIR`), и текст сценария выравнивается по распознанным словам:
-подсветка слова совпадает с голосом (замер на роликах 12a/13a/13b: медиана расхождения
-0,8–1,3 с → 0,01–0,03 с). Общую озвучку Gemini режет на сцены тоже по распознанным словам —
-оценка по паузам ошибалась на целое предложение, и сдвиг тянулся сценами. Нет модели (нет сети)
+подсветка слова совпадает с голосом (замер на роликах 11b/12a/13a/13b: медиана расхождения
+начала реплик с голосом 0,15–1,3 с → 0,02–0,03 с). Общую озвучку Gemini режет на сцены тоже
+по распознанным словам — оценка по паузам ошибалась на целое предложение, и сдвиг тянулся
+сценами. Ролики, озвученные раньше, хранят в кэше озвучки уже разрезанные куски — со старой,
+возможно неверной, нарезкой; перерезать их можно только новой озвучкой: `TTS_CACHE=0` на одну
+пересборку (тратит квоту Gemini). Нет модели (нет сети)
 или совпало меньше 60 % слов — тайминги оцениваются по звуку, как раньше, сборка не падает.
 Выключить — `CAPTION_ALIGN=0`. Время: ≈ 6–8 с на Shorts 50–65 с на 4 ядрах, 13–17 с на 2 ядрах (раннер Actions), плюс первая загрузка модели.
 Лицензия GigaAM v2 — MIT (файл `LICENSE` в папке модели).
@@ -209,7 +212,7 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    `LLM_PROVIDER`, `LLM_MODEL`, `LLM_FALLBACKS`, `LLM_EFFORT`, `VISUALS`, `VISUALS_PREFER`,
    `VISUALS_JUDGE` (`claude` — судья Claude для кадров, платно), `VISUALS_JUDGE_MODEL`, `VISUALS_MIN_PHOTO_PX`,
    `TTS_PROVIDER` (только для расписания — при ручном запуске провайдер и голос выбираются кнопкой: поля «Озвучка» и «Голос»), `TTS_VOICE`,
-   `TTS_RATE`, `TTS_FALLBACK`, `TTS_CACHE`, `TTS_CACHE_DAYS`, `GEMINI_TTS_MODEL`, `GEMINI_TTS_VOICE`, `GEMINI_TTS_STYLE`,
+   `TTS_RATE`, `TTS_FALLBACK`, `TTS_CACHE`, `TTS_CACHE_DAYS`, `GEMINI_TTS_MODEL`, `GEMINI_TTS_VOICE`, `GEMINI_TTS_STYLE`, `CAPTION_ALIGN`,
    `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL`, `MUSIC`, `MUSIC_MOOD`, `LOUDNESS_TARGET`,
    `RENDER_CONCURRENCY`, `YT_CATEGORY_ID`, `YT_SYNTHETIC_MEDIA`, `PUBLISH_TIMES`, `PUBLISH_TZ`,
    `IG_API_VERSION`, `IG_AI_GENERATED`, `SCHEDULED_TOPIC` (тема для запуска

@@ -120,6 +120,8 @@ async function main() {
     assert.ok(r1.words[0]!.endMs <= r1.words[1]!.startMs && r1.words[1]!.startMs > r1.words[0]!.startMs, "склеенное слово делится по весам");
     const m2 = matchWords(["сверхновая", "звезда"], ["сверх", "новая", "звезда"]);
     assert.deepEqual(m2, [{ from: 0, to: 1 }, { from: 2, to: 2 }]);
+    const m3 = matchWords(["сам", "оксфорд", "основан"], ["самоксфорд", "основан"]);
+    assert.deepEqual(m3, [{ from: 0, to: 0 }, { from: 0, to: 0 }, { from: 1, to: 1 }], "настоящая склейка «сам оксфорд»");
   });
 
   await test("совпало меньше 60 % — null (остаётся прежняя оценка)", () => {
@@ -135,6 +137,19 @@ async function main() {
     assert.equal(r.words[1]!.startMs, 860, "«два» — с конца паузы");
     assert.ok(r.words[0]!.endMs <= 520, "«раз» кончается до паузы");
     assert.equal(r.words[0]!.startMs, 200, "первое слово — с начала речи");
+  });
+
+  await test("тишина внутри слова (смычка «к» в «капкан») не обрывает конец слова", () => {
+    // «капкан» 200–700 (последняя буква ~660), смычка 420–470, настоящая пауза 720–900.
+    const asr: AsrWord[] = [
+      { text: "капкан", startMs: 200, endMs: 700 },
+      { text: "закрылся", startMs: 900, endMs: 1400 },
+    ];
+    const prof = profileOf(1700, [{ startMs: 420, endMs: 470 }, { startMs: 720, endMs: 900 }]);
+    const r = alignTextToAsr("Капкан закрылся.", asr, 1700, prof)!;
+    assert.ok(r.words[0]!.endMs > 660, `«капкан» подсвечен до последней буквы, а не до смычки: конец ${r.words[0]!.endMs}`);
+    assert.equal(r.words[0]!.endMs, 720, "конец — по настоящей паузе после слова");
+    assert.equal(r.words[1]!.startMs, 900, "«закрылся» — с конца паузы");
   });
 
   await test("буквы CTC → слова: пробел — граница, время первой и последней буквы", () => {
@@ -193,6 +208,24 @@ async function main() {
     ];
     const s = splitByAsr(texts, asr, profileOf(asr.at(-1)!.endMs + 300, pauses))!;
     assert.ok(s.cuts[0]! > asr[8]!.endMs && s.cuts[0]! < asr[9]!.startMs, `разрез ${s.cuts[0]} — после «всплыл»`);
+  });
+
+  await test("последнее слово сцены не распознано — не склеивается с первым словом следующей", () => {
+    // «нет» сказано (1400–1700), но распознаватель его пропустил; «нетбританские» ~
+    // «британские» = 0,77 — без порога склейки разрез уезжал за «британские».
+    const texts = ["И щекотки почти нет.", "Британские нейробиологи проверили это."];
+    const said = ["и", "щекотки", "почти", "нет", "британские", "нейробиологи", "проверили", "это"];
+    const all = asrOf(said);
+    all.slice(4).forEach((w) => ((w.startMs += 700), (w.endMs += 700))); // между сценами — 0,8 с
+    const asr = all.filter((w) => w.text !== "нет");
+    const m = matchWords(said, asr.map((w) => w.text));
+    assert.equal(m[3], null, "«нет» — не нашлось");
+    assert.deepEqual(m[4], { from: 3, to: 3 }, "«британские» — само по себе");
+    const s = splitByAsr(texts, asr, profileOf(4400, [{ startMs: 1700, endMs: 2500 }]))!;
+    assert.ok(s);
+    assert.ok(s.cuts[0]! >= 1700 && s.cuts[0]! <= 2500, `разрез ${s.cuts[0]} — между «нет» (до 1700) и «британские» (с 2500)`);
+    assert.equal(s.words[1]![0]!.text, "Британские");
+    assert.ok(s.words[1]![0]!.startMs >= 0, "«британские» — целиком в своей сцене");
   });
 
   await test("сцена не нашлась в речи — null (нарезка по паузам)", () => {

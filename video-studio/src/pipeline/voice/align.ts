@@ -76,6 +76,10 @@ export function wordSimilarity(a: string, b: string): number {
 const FOUND_SIM = 0.5; // слово «нашлось», если похоже хотя бы наполовину
 const GAP = 1; // цена пропуска слова с любой стороны
 const JOIN = 0.25; // доплата за склейку «во что» ↔ «вочто»
+// Склейка 2↔1 засчитывается, только если она заметно лучше каждого слова по отдельности:
+// иначе пропущенное последнее слово сцены («нет») «прилипает» к первому слову следующей
+// («британские» ~ «нетбританские» = 0,77), и разрез сцен уезжает за это слово.
+const JOIN_MARGIN = 0.1;
 
 // Распознаватель не различает ё/е и пишет буквы без дефисов — сравниваем так же.
 const asrNorm = (w: string) => normWord(w).replace(/ё/g, "е");
@@ -118,10 +122,13 @@ export function matchWords(script: string[], asr: string[]): ({ from: number; to
       i--;
       j--;
     } else if (mv === 4) {
-      if (wordSimilarity(script[i - 2]! + script[i - 1]!, asr[j - 1]!) >= FOUND_SIM) {
+      const joined = wordSimilarity(script[i - 2]! + script[i - 1]!, asr[j - 1]!);
+      const a = wordSimilarity(script[i - 2]!, asr[j - 1]!);
+      const b = wordSimilarity(script[i - 1]!, asr[j - 1]!);
+      if (joined >= FOUND_SIM && joined >= Math.max(a, b) + JOIN_MARGIN) {
         out[i - 2] = { from: j - 1, to: j - 1 };
         out[i - 1] = { from: j - 1, to: j - 1 };
-      }
+      } else if (Math.max(a, b) >= FOUND_SIM) out[a >= b ? i - 2 : i - 1] = { from: j - 1, to: j - 1 }; // другое — «не нашлось»
       i -= 2;
       j--;
     } else if (mv === 5) {
@@ -183,7 +190,10 @@ export function alignTextToAsr(text: string, asr: AsrWord[], durationMs: number,
       const speechStart = i === 0 && profile.speechStartMs <= t.startMs + 20 && profile.speechStartMs >= t.startMs - ONSET_LOOKBACK_MS ? profile.speechStartMs : null;
       t.startMs = before ? before.endMs : speechStart ?? Math.max(0, t.startMs - CTC_LAG_MS);
       const nextStart = times.slice(i + 1).find(Boolean)?.startMs ?? profile.speechEndMs + 400;
-      const pause = pauses.find((p) => p.startMs >= t.startMs && p.startMs < nextStart && p.startMs <= t.endMs + 400);
+      // Пауза должна тянуться дальше последней распознанной буквы (конец слова − кадр
+      // модели): смычка «т/к/п/ц» внутри слова — тоже тишина ≥ 40 мс, но после неё
+      // буквы ещё звучат, и подсветка гасла бы посреди слова.
+      const pause = pauses.find((p) => p.startMs >= t.startMs && p.endMs > t.endMs - CTC_LAG_MS && p.startMs < nextStart && p.startMs <= t.endMs + 400);
       if (pause) t.endMs = Math.max(t.startMs + 60, Math.min(t.endMs + 80, pause.startMs));
     }
   } else {
