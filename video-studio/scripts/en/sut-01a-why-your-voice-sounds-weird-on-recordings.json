@@ -1,0 +1,96 @@
+{
+  "title": "Why your voice sounds weird on recordings",
+  "description": "Ever wondered why your own voice sounds higher and stranger on a recording than in your head? Learn how sound reaches your ears through the air and through your skull, and which version of your voice everyone else actually hears.\n#shorts #voice #science #didyouknow",
+  "tags": [
+    "voice",
+    "recorded voice",
+    "why does my voice sound different",
+    "bone conduction",
+    "hearing",
+    "sound",
+    "psychology",
+    "science",
+    "facts",
+    "science shorts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Hate hearing your recorded voice? Blame your bones.",
+      "onScreen": "Your voice sounds *wrong*?",
+      "icon": "mic",
+      "visualQuery": "smartphone voice recording",
+      "imagePrompt": "cinematic close-up of a young person listening to a voice recording on a smartphone, puzzled expression, dark room lit only by the phone screen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "When you talk, the sound reaches your ears in two ways at once. That's the whole secret.",
+      "onScreen": "Sound takes *two* paths",
+      "icon": "ear",
+      "visualQuery": "human ear close",
+      "imagePrompt": "macro shot of a human ear with soft glowing sound waves flowing around it, dark background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "list",
+      "narration": "Path one is through the air, from the outside, like for everyone else. Path two is from the inside, through your skull and tissues.",
+      "onScreen": "Two paths of *sound*",
+      "items": [
+        "Through the air — outside",
+        "Through bone — inside"
+      ],
+      "icon": "audio-waveform",
+      "visualQuery": "sound wave equalizer",
+      "imagePrompt": "glowing sound wave lines passing through a translucent human head silhouette, side view, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Bone carries low frequencies better. So inside your head, your voice sounds lower, deeper, and richer.",
+      "onScreen": "Your voice sounds *lower* inside",
+      "icon": "bone",
+      "visualQuery": "skull x-ray scan",
+      "imagePrompt": "x-ray style image of a human skull with warm low-frequency waves glowing inside, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "But a microphone only picks up sound from the air. Without that bone boost, your voice sounds higher, thinner, almost like a stranger's.",
+      "onScreen": "Mics hear *only* air",
+      "icon": "volume-2",
+      "visualQuery": "studio microphone close",
+      "imagePrompt": "close-up of a studio condenser microphone in a dark room, a thin bright sound wave in front of it, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Psychologists studied this back in the sixties. People often cringe at their own recordings: it's your voice, but it feels unfamiliar.",
+      "onScreen": "Your voice feels *unfamiliar*",
+      "icon": "brain",
+      "visualQuery": "person wearing headphones",
+      "imagePrompt": "person in headphones covering face with one hand in mild embarrassment, dim recording studio, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Here's the good news: the recording is pretty much the voice everyone around you hears every day. They got used to it long ago, and so will you.",
+      "onScreen": "This is how others *hear* you",
+      "icon": "users",
+      "visualQuery": "friends talking cafe",
+      "imagePrompt": "group of friends talking and laughing at a cafe table at night, warm bokeh lights in the background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "So, do you like your recorded voice? Tell me in the comments.",
+      "onScreen": "Do you like your *voice*?",
+      "icon": "message-circle"
+    }
+  ]
+}

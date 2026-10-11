@@ -1,0 +1,93 @@
+{
+  "title": "The most famous computer bug was a real insect",
+  "description": "On September 9, 1947, operators of the Harvard Mark II found a moth stuck in a relay and taped it into their logbook. Find out why this moth wasn't actually the first bug, and where that famous page is kept today.\n#computerbug #techhistory #programming #shorts",
+  "tags": [
+    "computer bug",
+    "first computer bug",
+    "programming",
+    "tech history",
+    "computers",
+    "harvard mark ii",
+    "thomas edison",
+    "moth",
+    "smithsonian",
+    "technology",
+    "fun facts",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "The world's most famous computer bug? A real, literal insect.",
+      "onScreen": "The famous bug was an *insect*",
+      "icon": "bug",
+      "visualQuery": "moth insect macro",
+      "imagePrompt": "macro of a small moth resting on a vintage electromechanical relay, warm tungsten light, dust particles, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "September ninth, nineteen forty-seven. Harvard University, and a giant relay computer called the Mark Two.",
+      "onScreen": "1947. The *Mark II* computer",
+      "icon": "cpu",
+      "visualQuery": "vintage computer room",
+      "imagePrompt": "1940s room filled with tall relay computer cabinets and cables, black and white film look tinted blue, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "The machine starts glitching. Engineers open a panel and find a moth stuck in one of the relays.",
+      "onScreen": "A *moth* in the relay",
+      "icon": "search",
+      "visualQuery": "old electrical relays",
+      "imagePrompt": "flashlight beam revealing rows of old electrical relays inside an open panel, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "quote",
+      "narration": "They carefully taped the moth into the logbook and wrote: first actual case of bug being found.",
+      "onScreen": "First actual case of bug being *found*",
+      "icon": "quote",
+      "visualQuery": "old logbook handwriting",
+      "imagePrompt": "old handwritten logbook page with a moth taped to it, desk lamp light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "But that caption hides a joke. Engineers were calling glitches bugs long before computers existed.",
+      "onScreen": "\"Bug\" is *older* than computers",
+      "icon": "book-open",
+      "visualQuery": "old engineering blueprints",
+      "imagePrompt": "stack of yellowed engineering notebooks and blueprints, soft vintage light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Back in eighteen seventy-eight, Thomas Edison was already calling small glitches in his inventions bugs.",
+      "onScreen": "Edison, *1878*",
+      "icon": "lightbulb",
+      "visualQuery": "vintage light bulb filament",
+      "imagePrompt": "glowing carbon filament of an early light bulb in a dark workshop, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "So those engineers found a bug in the most literal sense. And the page with the moth is still kept at the Smithsonian's National Museum of American History.",
+      "onScreen": "The moth is now a *museum* piece",
+      "icon": "landmark",
+      "visualQuery": "museum display case",
+      "imagePrompt": "an old notebook page displayed in a museum glass case under a spotlight, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "What's the weirdest bug you've ever run into? Tell us in the comments.",
+      "onScreen": "Your weirdest *bug*?",
+      "icon": "message-circle"
+    }
+  ]
+}

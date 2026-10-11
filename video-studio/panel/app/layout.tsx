@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { LangNavProvider } from "@/components/LangNav";
 import { CHANNEL_NAME } from "@/lib/channel-name";
+import { NAV_LANGS } from "@/lib/lang-channels";
 import "./globals.css";
 
 // Шрифты канала из video-studio/assets/fonts (OFL, латиница + кириллица, переменная насыщенность) —
@@ -29,7 +31,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={`${display.variable} ${body.variable}`}>
-      <body>{children}</body>
+      <body>
+        {/* Пункты меню каналов на других языках — из channels/<язык>.json, вшитых при сборке. */}
+        <LangNavProvider langs={NAV_LANGS}>{children}</LangNavProvider>
+      </body>
     </html>
   );
 }

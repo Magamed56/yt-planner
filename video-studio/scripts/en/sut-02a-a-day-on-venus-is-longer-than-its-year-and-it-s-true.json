@@ -1,0 +1,109 @@
+{
+  "title": "A Day on Venus Is Longer Than Its Year, and It's True",
+  "description": "Venus spins once on its axis in 243 Earth days but circles the Sun in 225. Find out why the Sun rises in the west there and how long a Venus day really lasts from sunrise to sunrise.\n#space #venus #astronomy #shorts",
+  "tags": [
+    "space",
+    "venus",
+    "planets",
+    "solar system",
+    "astronomy",
+    "science",
+    "space facts",
+    "fun facts",
+    "venus day",
+    "day on venus",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "A day on Venus outlasts its whole year. Seriously.",
+      "onScreen": "A day *longer* than a year",
+      "icon": "orbit",
+      "visualQuery": "planet venus space",
+      "imagePrompt": "planet venus glowing pale yellow in deep space, thick swirling clouds, soft sunlight from one side, ultra detailed, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Venus takes two hundred forty-three Earth days to spin once on its axis. That's the slowest spin of any planet.",
+      "onScreen": "One spin takes *243* days",
+      "stat": {
+        "value": 243,
+        "suffix": " days",
+        "label": "one turn on its axis"
+      },
+      "icon": "rotate-ccw",
+      "visualQuery": "spinning globe dark",
+      "imagePrompt": "slowly rotating planet with motion trails around its axis, black space, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "But it circles the Sun in just two hundred twenty-five days. The year ends before a single spin does.",
+      "onScreen": "A year is just *225* days",
+      "icon": "sun",
+      "visualQuery": "sun solar flare",
+      "imagePrompt": "the sun with a small bright planet on a curved orbital path, glowing orbit line, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Venus also spins backwards. So the Sun rises in the west and sets in the east.",
+      "onScreen": "The Sun rises in the *west*",
+      "icon": "sunrise",
+      "visualQuery": "sunrise horizon clouds",
+      "imagePrompt": "alien sunrise over a rocky horizon under a thick hazy orange sky, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Here's the twist: thanks to that backward spin, sunrise to sunrise takes about one hundred seventeen Earth days.",
+      "onScreen": "Sunrise every *117* days",
+      "stat": {
+        "value": 117,
+        "prefix": "≈",
+        "suffix": " days",
+        "label": "sunrise to sunrise"
+      },
+      "icon": "clock",
+      "visualQuery": "hourglass sand timer",
+      "imagePrompt": "giant hourglass standing on a volcanic plain, dim yellow light, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Not that you'd actually see the Sun. The sky is hidden behind thick clouds of sulfuric acid droplets.",
+      "onScreen": "Clouds of *sulfuric* acid",
+      "icon": "cloud",
+      "visualQuery": "thick yellow clouds",
+      "imagePrompt": "dense layered yellow clouds seen from inside an alien atmosphere, oppressive haze, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "stat",
+      "narration": "And at the surface it's over four hundred sixty degrees Celsius. Hotter than Mercury, even though Mercury is closer to the Sun.",
+      "onScreen": "Hotter than *Mercury*",
+      "stat": {
+        "value": 460,
+        "prefix": ">",
+        "suffix": " °C",
+        "label": "at the surface of Venus"
+      },
+      "icon": "thermometer-sun",
+      "visualQuery": "volcanic lava rocks",
+      "imagePrompt": "scorching volcanic surface with glowing cracks under a heavy orange sky, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Could you survive one day on Venus? Tell me in the comments.",
+      "onScreen": "Could you survive a *day* there?",
+      "icon": "message-circle"
+    }
+  ]
+}
