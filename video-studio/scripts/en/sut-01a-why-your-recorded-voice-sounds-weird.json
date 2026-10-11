@@ -1,0 +1,94 @@
+{
+  "title": "Why your recorded voice sounds weird",
+  "description": "Ever wondered why your voice sounds so different and squeaky on recordings? Here is the science behind bone conduction and how other people actually hear you.\n#science #voice #shorts #didyouknow",
+  "tags": [
+    "voice",
+    "recorded voice",
+    "bone conduction",
+    "hearing",
+    "sound",
+    "psychology",
+    "science facts",
+    "did you know",
+    "shorts"
+  ],
+  "language": "en",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Hate your recorded voice? Blame your bones.",
+      "onScreen": "Why your voice sounds *weird*",
+      "icon": "mic",
+      "visualQuery": "smartphone voice recording",
+      "imagePrompt": "cinematic close-up of a young person listening to a voice recording on a smartphone, puzzled expression, dark room lit only by the phone screen, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "When you speak, sound reaches your inner ears through two separate paths.",
+      "onScreen": "Sound travels *two* ways",
+      "icon": "ear",
+      "visualQuery": "human ear close",
+      "imagePrompt": "macro shot of a human ear with soft glowing sound waves flowing around it, dark background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s3",
+      "kind": "list",
+      "narration": "The first is through the air, just like everyone else hears. The second is through your skull bones.",
+      "onScreen": "Two sound *pathways*",
+      "items": [
+        "Through air from outside",
+        "Through bones from inside"
+      ],
+      "icon": "audio-waveform",
+      "visualQuery": "sound wave equalizer",
+      "imagePrompt": "glowing sound wave lines passing through a translucent human head silhouette, side view, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Your bones enhance low frequencies, making your voice sound deeper and richer inside your head.",
+      "onScreen": "Your voice sounds *deeper* inside",
+      "icon": "bone",
+      "visualQuery": "skull x-ray scan",
+      "imagePrompt": "x-ray style image of a human skull with warm low-frequency waves glowing inside, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "A microphone only picks up airborne sound. Without the bone vibrations, you sound higher and totally unfamiliar.",
+      "onScreen": "Microphones catch *only* air",
+      "icon": "volume-2",
+      "visualQuery": "studio microphone close",
+      "imagePrompt": "close-up of a studio condenser microphone in a dark room, a thin bright sound wave in front of it, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Psychologists studied this back in the nineteen sixties. Hearing your true voice triggers pure discomfort.",
+      "onScreen": "The strange *confrontation*",
+      "icon": "brain",
+      "visualQuery": "person wearing headphones",
+      "imagePrompt": "person in headphones covering face with one hand in mild embarrassment, dim recording studio, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "The good news is, that recording is what everyone hears every day. They are used to it, and you can get used to it too.",
+      "onScreen": "How others *hear* you",
+      "icon": "users",
+      "visualQuery": "friends talking cafe",
+      "imagePrompt": "group of friends talking and laughing at a cafe table at night, warm bokeh lights in the background, deep midnight blue palette with cyan highlights, cinematic lighting, shallow depth of field, no text"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Do you actually like the sound of your recorded voice?",
+      "onScreen": "Do you like your *voice*?",
+      "icon": "message-circle"
+    }
+  ]
+}
