@@ -27,6 +27,9 @@ export const IG_DEFAULT_HOST = "graph.facebook.com";
 export const IG_UPLOAD_HOST = "rupload.facebook.com";
 export const IG_DEFAULT_VERSION = "v26.0"; // Graph API v26.0 — 29.07.2026
 export const IG_CAPTION_MAX = 2200;
+// Жёсткая защита перед отправкой, а не наша норма: сами ставим до 5 (instagramHashtags).
+// 30 — прежний документированный предел API; ниже не опускаем, чтобы старые instagram.txt
+// с 5–8 тегами публиковались. Если Instagram и правда режет больше 5 — ответит ошибкой API.
 export const IG_HASHTAGS_MAX = 30;
 export const IG_REEL_MAX_BYTES = 300 * 1024 * 1024; // лимит Reels — 300 МБ, 3 с – 15 мин
 
@@ -305,7 +308,7 @@ function checkCaption(caption: string): void {
   const len = Array.from(caption).length;
   if (len > IG_CAPTION_MAX) throw new InstagramError(`Подпись для Instagram — ${len} символов, а можно не больше ${IG_CAPTION_MAX}. Сократите instagram.txt.`);
   const tags = caption.match(/#[\p{L}\p{N}_]+/gu)?.length ?? 0;
-  if (tags > IG_HASHTAGS_MAX) throw new InstagramError(`В подписи ${tags} хэштегов, Instagram разрешает не больше ${IG_HASHTAGS_MAX}.`);
+  if (tags > IG_HASHTAGS_MAX) throw new InstagramError(`В подписи ${tags} хэштегов, а больше ${IG_HASHTAGS_MAX} Instagram точно не примет. Оставьте в instagram.txt до 5.`);
 }
 
 export async function publishReel(input: PublishReelInput): Promise<PublishReelResult> {
@@ -490,8 +493,9 @@ function sentences(text: string): string[] {
 }
 
 // Хэштеги Reels: бренд, 2 по теме, затем вперемешку общие и «инстаграмные» —
-// не больше 5: с декабря 2025 Instagram ограничивает пост пятью хэштегами (по прессе),
-// поэтому общие идут последними и отрезаются первыми.
+// ставим не больше 5: с декабря 2025 Instagram, по прессе, ограничивает пост пятью
+// хэштегами, поэтому общие идут последними и отрезаются первыми. Проверка перед
+// отправкой (IG_HASHTAGS_MAX = 30) мягче нарочно — см. там.
 export function instagramHashtags(script: Pick<VideoScript, "tags">, channel: ChannelConfig | null, max = 5): string[] {
   const topic = topicHashtags(script.tags ?? [], 2);
   if (!channel) return uniqueHashtags(topic).slice(0, max);
