@@ -55,10 +55,19 @@ export function brandFilePath(lang: string, segments: string[]): string | null {
 export const brandDownloadName = (lang: string, path: string): string => `${lang}-${path.replace(/^highlights\//, "highlight-")}`;
 
 // Картинка через панель: репозиторий приватный, прямые ссылки GitHub без токена не откроются.
-// ?v=<sha> — у новой версии файла новый адрес, поэтому прежнюю браузер может держать неделю.
+// ?v=<начало sha> — у новой версии файла новый адрес, поэтому прежнюю браузер может держать неделю.
+const shortSha = (sha: string): string => sha.slice(0, 12);
+
 export function brandSrc(lang: string, path: string, sha: string): string {
-  const v = sha ? `?v=${encodeURIComponent(sha.slice(0, 12))}` : "";
+  const v = sha ? `?v=${encodeURIComponent(shortSha(sha))}` : "";
   return `/api/brand/${lang}/${path.split("/").map(encodeURIComponent).join("/")}${v}`;
+}
+
+// Кэш ответа маршрута: неделю — только если отданные байты и есть версия из ?v= (sha — от них
+// самих). Страница помнит кит 10 минут: файл в ветке уже новый, а адрес ещё старый — тогда новая
+// картинка не должна залечь под старым адресом надолго.
+export function brandCacheControl(v: string | null, sha: string): string {
+  return v && v === shortSha(sha) ? "private, max-age=604800, immutable" : "private, max-age=300";
 }
 
 // ---- тексты из README ----

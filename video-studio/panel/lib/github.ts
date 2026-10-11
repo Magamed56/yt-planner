@@ -1,5 +1,7 @@
 // GitHub REST для панели: файлы ветки (план, сценарии, списки текстов), релизы с роликами,
 // запуски workflow и переменные автопилота. Токен — fine-grained, только на этот репозиторий.
+import { createHash } from "node:crypto";
+
 const API = "https://api.github.com";
 
 export const repoName = () => process.env.GITHUB_REPO?.trim() || "Magamed56/yt-planner";
@@ -135,6 +137,13 @@ export async function readFileBytes(path: string, maxBytes: number): Promise<Arr
   const buf = await res.arrayBuffer();
   if (buf.byteLength > maxBytes) throw new GithubError(`файл ${path} больше ${Math.round(maxBytes / 1_048_576)} МБ`, 413);
   return buf;
+}
+
+// sha файла, как его называет git (и sha в списке папки): sha1 от «blob <длина>\0» и байтов —
+// по нему маршрут проверяет, что отдаёт ту самую версию, которую назвала страница (?v=).
+export function gitBlobSha(bytes: ArrayBuffer | Uint8Array): string {
+  const buf = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  return createHash("sha1").update(`blob ${buf.byteLength}\0`).update(buf).digest("hex");
 }
 
 export interface GhAsset {

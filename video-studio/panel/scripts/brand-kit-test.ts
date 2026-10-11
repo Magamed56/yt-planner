@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { channelFromJson } from "../../src/pipeline/channel";
 import { BRAND_STILLS, brandJobs } from "../../src/remotion/brand/jobs";
 import {
+  brandCacheControl,
   brandDir,
   brandDownloadName,
   brandFilePath,
@@ -25,6 +26,7 @@ import {
   YOUTUBE_KIT,
   type KitEntry,
 } from "../lib/brand-kit";
+import { gitBlobSha } from "../lib/github";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const enJson = JSON.parse(fs.readFileSync(path.join(studio, "channels", "en.json"), "utf8")) as { pillars: { id: string }[] };
@@ -163,6 +165,21 @@ test("кит для страницы: порядок, имена с языком
   assert.deepEqual(brandKitOf("en", entries, null)?.texts, { description: null, keywords: null, post: null }, "README нет — кнопок текста нет");
   assert.equal(brandDownloadName("en", "highlights/space.png"), "en-highlight-space.png");
   assert.equal(brandSrc("en", "avatar-youtube.png", ""), "/api/brand/en/avatar-youtube.png");
+});
+
+test("кэш картинки: неделю — только если байты и есть версия из ?v=", () => {
+  // Известные sha git: пустой файл и «hello\n» (git hash-object).
+  assert.equal(gitBlobSha(new Uint8Array()), "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391");
+  assert.equal(gitBlobSha(new TextEncoder().encode("hello\n").buffer), "ce013625030ba8dba906f756967f9e9ca394464a");
+  const banner = fs.readFileSync(path.join(kitDir, "banner-youtube.png"));
+  const sha = gitBlobSha(banner);
+  const v = new URL(brandSrc("en", "banner-youtube.png", sha), "http://x").searchParams.get("v");
+  const WEEK = "private, max-age=604800, immutable";
+  assert.equal(brandCacheControl(v, sha), WEEK, "адрес страницы и отданный файл — одна версия");
+  assert.notEqual(brandCacheControl(v, gitBlobSha(banner.subarray(1))), WEEK, "файл в ветке уже новый — под старым адресом ненадолго");
+  assert.notEqual(brandCacheControl(null, sha), WEEK, "без ?v=");
+  assert.notEqual(brandCacheControl("", sha), WEEK);
+  assert.notEqual(brandCacheControl(sha.slice(0, 1), sha), WEEK, "только тот ?v=, что ставит страница");
 });
 
 console.log(`\nВсе проверки пройдены: ${passed}.`);

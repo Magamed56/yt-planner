@@ -2,7 +2,7 @@
 // файлы брать, пакеты для меню «Поделиться». Запуск из папки video-studio:
 // npx tsx panel/scripts/files-test.ts
 import assert from "node:assert/strict";
-import { downloadName, fileHref, filesOf, kindTotals, loadFileOf, safeDownloadName, shareGroups, type SaveItem } from "../lib/downloads";
+import { downloadName, fileHref, filesOf, kindTotals, loadFileOf, safeDownloadName, shareGroups, sizeLabel, type SaveItem } from "../lib/downloads";
 
 let passed = 0;
 function test(name: string, fn: () => void) {
@@ -112,6 +112,22 @@ test("пакеты «Поделиться»: файлы ролика вмест�
     [["12a-pochemu-tak.mp4"], ["12a-cover.jpg", "12b-pochemu-tak.mp4", "12b-cover.jpg"]],
   );
   assert.deepEqual(shareGroups([], 10, 200 * MB), []);
+});
+
+test("размеры: КБ до мегабайта, прогресс — в единицах всего файла", () => {
+  assert.equal(sizeLabel(17_400), "17 КБ", "водяной знак");
+  assert.equal(sizeLabel(300), "1 КБ", "не «0 КБ» у непустого файла");
+  assert.equal(sizeLabel(0), "0 КБ");
+  assert.equal(sizeLabel(1_262_165), "1,2 МБ", "баннер");
+  assert.equal(sizeLabel(25 * 1_048_576), "25,0 МБ");
+  // Граница: 1023,5 КБ округлились бы в «1024 КБ» — это уже мегабайт.
+  assert.equal(sizeLabel(1_048_063), "1023 КБ");
+  assert.equal(sizeLabel(1_048_064), "1,0 МБ");
+  assert.equal(sizeLabel(1_048_575), "1,0 МБ");
+  // Начало скачивания ролика: «0,0 из 25,0 МБ», а не «0 КБ из 25,0 МБ».
+  assert.equal(sizeLabel(0, 25 * 1_048_576), "0,0 МБ");
+  assert.equal(sizeLabel(400_000, 25 * 1_048_576), "0,4 МБ");
+  assert.equal(sizeLabel(5_000, 17_400), "5 КБ", "маленький файл — весь прогресс в КБ");
 });
 
 console.log(`\nВсе проверки скачивания пройдены: ${passed}.`);

@@ -4,8 +4,8 @@
 // берёт его целиком — ответ 200 на любой Range) и ?download=1 — файлом с языком в имени.
 import { contentDisposition } from "@/lib/asset-range";
 import { requireSession } from "@/lib/auth";
-import { BRAND_MAX_BYTES, brandDownloadName, brandFilePath } from "@/lib/brand-kit";
-import { readFileBytes } from "@/lib/github";
+import { BRAND_MAX_BYTES, brandCacheControl, brandDownloadName, brandFilePath } from "@/lib/brand-kit";
+import { gitBlobSha, readFileBytes } from "@/lib/github";
 import { STUDIO_DIR } from "@/lib/load";
 
 const text = (status: number, message: string) =>
@@ -29,8 +29,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ lang
         "Content-Type": "image/png",
         "Content-Length": String(bytes.byteLength),
         "Content-Disposition": contentDisposition(brandDownloadName(lang, file.join("/")), query.get("download") === "1"),
-        // ?v=<sha> — адрес меняется вместе с файлом: такую картинку браузер держит неделю.
-        "Cache-Control": query.get("v") ? "private, max-age=604800, immutable" : "private, max-age=300",
+        // ?v=<sha> — адрес меняется вместе с файлом: неделю, если отдаём именно эту версию.
+        "Cache-Control": brandCacheControl(query.get("v"), gitBlobSha(bytes)),
       },
     });
   } catch (e) {

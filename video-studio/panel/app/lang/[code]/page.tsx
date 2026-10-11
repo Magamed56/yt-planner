@@ -47,13 +47,23 @@ async function readBrandKit(lang: string): Promise<BrandKit | null> {
   const dir = `${STUDIO_DIR}/${brandDir(lang)}`;
   const top = await listDirEntries(dir);
   const has = (name: string, type: string) => top.some((e) => e.name === name && e.type === type);
-  const [sub, readme] = top.length
-    ? await Promise.all([has("highlights", "dir") ? listDirEntries(`${dir}/highlights`) : [], has("README.md", "file") ? readFile(`${dir}/README.md`) : null])
-    : [[], null];
+  const withReadme = has("README.md", "file");
+  // README не прочитался (сбой GitHub) — картинки всё равно покажем, без кнопок текста, и такой
+  // кит не запомним: тексты вернутся со следующим заходом, а не через 10 минут.
+  let readmeFailed = false;
+  const [sub, readme] = await Promise.all([
+    has("highlights", "dir") ? listDirEntries(`${dir}/highlights`) : [],
+    withReadme
+      ? readFile(`${dir}/README.md`).catch(() => {
+          readmeFailed = true;
+          return null;
+        })
+      : null,
+  ]);
   const entries = [...top, ...sub].filter((e) => e.type === "file" && e.path.startsWith(`${dir}/`)).map((e) => ({ path: e.path.slice(dir.length + 1), size: e.size, sha: e.sha }));
   const readmeUrl = `https://github.com/${repoName()}/blob/${encodeURIComponent(branchName())}/${dir}/README.md`;
-  const kit = brandKitOf(lang, entries, readme, readme === null ? null : readmeUrl);
-  kits.set(lang, { at: Date.now(), kit });
+  const kit = brandKitOf(lang, entries, readme, withReadme ? readmeUrl : null);
+  if (!readmeFailed) kits.set(lang, { at: Date.now(), kit });
   return kit;
 }
 

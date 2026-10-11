@@ -3,7 +3,7 @@
 // телефон тем же FilesSaver, что и ролики (на iPhone — «Сохранить в Фото», без сжатия), описание и
 // ключевые слова в буфер, короткие шаги с телефона. Тексты — из brand/<язык>/README.md, картинки —
 // через /api/brand (репозиторий приватный). Свёрнут ли блок — запоминается на этом устройстве.
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { charCount, DESCRIPTION_MAX, type BrandKit } from "@/lib/brand-kit";
 import type { LangChannel } from "@/lib/lang-channels";
 import { plural } from "@/lib/stages";
@@ -27,9 +27,10 @@ export default function BrandKitCard({
   onCopy: Copy;
   manual: { what: string; text: string } | null;
 }) {
-  // Сервер рисует открытым; свернули раньше — закроем после загрузки (разметка не расходится).
+  // Сервер рисует открытым; свернули раньше — закроем после гидрации (разметка не расходится).
+  // useLayoutEffect — до первой отрисовки: при переходе по меню блок не мелькнёт раскрытым.
   const [open, setOpen] = useState(true);
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
       if (localStorage.getItem(OPEN_KEY) === "0") setOpen(false);
     } catch {
@@ -53,10 +54,19 @@ export default function BrandKitCard({
   const ig = kit.instagram.length;
 
   return (
-    <details className={`card ${s.brand}`} open={open} onToggle={(e) => toggle(e.currentTarget.open)}>
+    <details
+      className={`card ${s.brand}`}
+      open={open}
+      // toggle шлёт и сам браузер, когда open ставит React или разбор HTML, — не всегда до чтения
+      // localStorage, и «1» затёрло бы сохранённое «свёрнут». Запоминаем только нажатие: после
+      // него DOM расходится с состоянием.
+      onToggle={(e) => {
+        if (e.currentTarget.open !== open) toggle(e.currentTarget.open);
+      }}
+    >
       <summary>
-        <span className={s.brandTitle}>🎨 Оформление канала</span>
-        <span className={`small muted ${s.brandHint}`}> баннер, аватар, описание</span>
+        <span className={s.brandTitle}>🎨 Оформление канала</span>{" "}
+        <span className={`small muted ${s.brandHint}`}>баннер, аватар, описание</span>
       </summary>
 
       <div className={s.brandBody}>
@@ -115,7 +125,9 @@ export default function BrandKitCard({
               )}
             </div>
           ) : (
-            <p className="small flag">В README кита нет блоков «Описание канала» и «Ключевые слова» — откройте инструкцию ниже.</p>
+            <p className="small flag">
+              Описание и ключевые слова не прочитались из README кита — обновите страницу{kit.readmeUrl ? " или откройте инструкцию ниже" : ""}.
+            </p>
           )}
           {manual && (
             <div className={s.manual}>

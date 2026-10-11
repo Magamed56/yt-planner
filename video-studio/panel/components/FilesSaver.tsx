@@ -5,11 +5,9 @@
 // имени. Что отмечено — запоминается на этом устройстве.
 import { useEffect, useRef, useState } from "react";
 import { assetType, parseContentRange } from "@/lib/asset-range";
-import { FILE_KINDS, filesOf, KIND_LABEL, kindTotals, loadFileOf, shareGroups, type FileKind, type LoadFile, type SaveItem } from "@/lib/downloads";
+import { FILE_KINDS, filesOf, KIND_LABEL, kindTotals, loadFileOf, shareGroups, sizeLabel, type FileKind, type LoadFile, type SaveItem } from "@/lib/downloads";
 import { plural } from "@/lib/stages";
 
-// Меньше мегабайта — в КБ: водяной знак (17 КБ) иначе показался бы как «0,0 МБ».
-const mb = (bytes: number) => (bytes < 1_048_576 ? `${Math.max(bytes ? 1 : 0, Math.round(bytes / 1024))} КБ` : `${(bytes / 1_048_576).toFixed(1).replace(".", ",")} МБ`);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const KINDS_KEY = "panel.files.kinds";
 
@@ -244,7 +242,7 @@ export default function FilesSaver({
   const main = subtle ? "btn small" : "btn primary";
   const downloadButton = (
     <button className={main} disabled={!files.length || busy} onClick={downloadAll}>
-      {saving ? `Скачиваю ${saving.done + 1} из ${saving.total}…` : label ? `⬇ ${label} · ${mb(bytes)}` : `⬇ Скачать ${filesLabel(files.length)} · ${mb(bytes)}`}
+      {saving ? `Скачиваю ${saving.done + 1} из ${saving.total}…` : label ? `⬇ ${label} · ${sizeLabel(bytes)}` : `⬇ Скачать ${filesLabel(files.length)} · ${sizeLabel(bytes)}`}
     </button>
   );
   const parts = groups.current.length;
@@ -264,7 +262,7 @@ export default function FilesSaver({
                 <span>
                   {KIND_LABEL[k]}
                   <span className="muted small">
-                    {count} · {mb(t.size)}
+                    {count} · {sizeLabel(t.size)}
                   </span>
                 </span>
               </label>
@@ -287,7 +285,7 @@ export default function FilesSaver({
           </button>
         ) : platform === "ios" ? (
           <button className={main} disabled={!files.length || busy} onClick={startShare}>
-            {label ? `📱 ${label} · ${mb(bytes)}` : `${shareLabel} · ${filesLabel(files.length)}, ${mb(bytes)}`}
+            {label ? `📱 ${label} · ${sizeLabel(bytes)}` : `${shareLabel} · ${filesLabel(files.length)}, ${sizeLabel(bytes)}`}
           </button>
         ) : (
           downloadButton
@@ -319,7 +317,7 @@ export default function FilesSaver({
             <span style={{ width: `${pct}%` }} />
           </div>
           <span className="small muted">
-            {mb(share.done)} из {mb(share.total)} · осталось {mb(Math.max(0, share.total - share.done))}
+            {sizeLabel(share.done, share.total)} из {sizeLabel(share.total)} · осталось {sizeLabel(Math.max(0, share.total - share.done), share.total)}
             {parts > 1 ? ` · потом ещё ${parts - share.part - 1} ${plural(parts - share.part - 1, "часть", "части", "частей")}` : ""}
           </span>
         </div>
@@ -372,7 +370,7 @@ export default function FilesSaver({
                 <a href={f.href} download={f.name}>
                   ⬇ {f.name}
                 </a>
-                <span className="muted small">{mb(f.size)}</span>
+                <span className="muted small">{sizeLabel(f.size)}</span>
               </li>
             ))}
           </ul>
