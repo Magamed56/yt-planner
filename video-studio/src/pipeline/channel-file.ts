@@ -22,14 +22,33 @@ export function loadChannel(opts: { file?: string | null; env?: NodeJS.ProcessEn
   let raw: unknown = {};
   let used: string | null = null;
   if (file && fs.existsSync(file)) {
-    try {
-      raw = JSON.parse(fs.readFileSync(file, "utf8").replace(/^﻿/, ""));
-      used = file;
-    } catch (e) {
-      throw new Error(`${path.basename(file)}: битый JSON (${e instanceof Error ? e.message : String(e)}). Проверьте запятые и кавычки или удалите файл.`);
-    }
+    raw = readChannelJson(file);
+    used = file;
   }
   return channelFromJson(raw, env, used);
+}
+
+function readChannelJson(file: string): unknown {
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8").replace(/^﻿/, ""));
+  } catch (e) {
+    throw new Error(`${path.basename(file)}: битый JSON (${e instanceof Error ? e.message : String(e)}). Проверьте запятые и кавычки или удалите файл.`);
+  }
+}
+
+// Файл канала для бренд-заставки ролика (props.brandChannel → src/remotion/brand/data.ts). В бандл
+// композиции вшит channel.json, поэтому передаём только другой файл — канал языка (channels/en.json)
+// или свой CHANNEL_FILE: иначе в английском ролике мелькает «Суть за минуту». Ролик с channel.json —
+// без ключа: его props.json и кадры как раньше. Файл целиком, как у `npm run brand`, — тот же путь в data.ts.
+export function brandChannelOf(channel: Pick<ChannelConfig, "file">): Record<string, unknown> | null {
+  const file = channel.file;
+  // relative, а не ===: на Windows путь мог прийти с другим регистром буквы диска.
+  if (!file || path.relative(projectRoot(), path.resolve(file)) === "channel.json") return null;
+  const json = readChannelJson(file);
+  if (!json || typeof json !== "object" || Array.isArray(json)) return null;
+  // Без названия заставке показывать нечего — пусть остаётся вшитый канал.
+  const name = (json as { name?: unknown }).name;
+  return typeof name === "string" && name.trim() ? (json as Record<string, unknown>) : null;
 }
 
 // Канал языка ролика: channels/<язык>.json (та же схема, что channel.json) → CHANNEL_FILE, если

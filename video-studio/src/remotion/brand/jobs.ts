@@ -1,6 +1,7 @@
 // Список бренд-картинок: id композиции → файл в brand/ (brand/<язык>/) и размер. Чистый TS
 // без React — его читают и Root.tsx (регистрация <Still>), и CLI в Node
 // (`npm run brand`), чтобы размеры и имена файлов жили в одном месте.
+import type { VideoProps } from "../../types";
 
 export interface BrandStill {
   id: string; // id композиции Remotion (латиница, цифры, дефис)
@@ -19,9 +20,11 @@ export const BRAND_STILLS = {
   smallPreview: { id: "Brand-Small-Preview", width: 1600, height: 760 },
 } satisfies Record<string, BrandStill>;
 
-// Ключ inputProps, в котором CLI передаёт файл канала (channel.json или channels/<язык>.json);
+// Ключ inputProps, в котором передают файл канала: `npm run brand` (channel.json или
+// channels/<язык>.json) и конвейер роликов (props.json другого языка — для бренд-заставки);
 // читает его data.ts через getInputProps(). Нет ключа — channel.json из бандла.
-export const BRAND_CHANNEL_PROP = "brandChannel";
+// satisfies — имя ключа не разойдётся с полем VideoProps.
+export const BRAND_CHANNEL_PROP = "brandChannel" satisfies keyof VideoProps;
 
 export interface BrandJob {
   group: string; // для --only=avatar,banner,…

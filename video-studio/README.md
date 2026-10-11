@@ -359,7 +359,8 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 - `npm run make -- --script scripts/en/sut-08a-<имя>.json` — язык берётся из сценария: канал
   `channels/en.json` (та же схема, что `channel.json`: имя, хэштеги, призывы, подвал, дисклеймер),
   голос языка (Gemini — тот же Charon; для kk и uz Gemini TTS нет — Edge `kk-KZ-DauletNeural`,
-  `uz-UZ-SardorNeural`), подписи в кадре («Subscribe», «FACT OR MYTH?»). Свой файл канала —
+  `uz-UZ-SardorNeural`), подписи в кадре («Subscribe», «FACT OR MYTH?») и название канала в
+  полусекундной заставке (файл канала уходит в `props.json` → `brandChannel`). Свой файл канала —
   `CHANNEL_FILE`.
 - В GitHub Actions: workflow «video-studio: ролик», поле **lang** (draft / render / batch). В релизе
   файл называется `en-08a-<имя>.mp4` — панель и youtube-fill его не трогают (их ролики — `08a-….mp4`).

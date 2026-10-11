@@ -172,6 +172,9 @@ export interface VideoProps {
   channelName: string | null; // для финальной сцены cta
   ctaComment?: string | null; // подпись к «облачку» комментария в финальной сцене; null — не показывать
   language?: string; // язык ролика (из сценария): подписи композиции и запись чисел; нет — русский
+  // Файл канала не по умолчанию (channels/en.json): из него бренд-заставка берёт название
+  // (src/remotion/brand/data.ts, ключ BRAND_CHANNEL_PROP). Нет — channel.json из бандла.
+  brandChannel?: Record<string, unknown>;
 }
 
 export const DEFAULT_TRANSITION_FRAMES = 12; // 0.4 c при 30 fps

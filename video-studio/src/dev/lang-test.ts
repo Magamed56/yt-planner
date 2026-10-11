@@ -1,6 +1,6 @@
 // Офлайн-проверка роликов на других языках: коды и имена файлов, выбор канала
 // channels/<язык>.json, голос под язык, перевод сценария (проверка + ремонтный запрос на
-// подменённом fetch), описание и подписи композиции на языке ролика. Сеть и ключи не нужны.
+// подменённом fetch), описание, подписи композиции и бренд-заставка на языке ролика. Сеть и ключи не нужны.
 // Запуск: npx tsx src/dev/lang-test.ts
 
 import assert from "node:assert/strict";
@@ -9,15 +9,17 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyChannelDefaults } from "../pipeline/channel";
-import { loadChannel, useLanguageChannel } from "../pipeline/channel-file";
+import { brandChannelOf, loadChannel, useLanguageChannel } from "../pipeline/channel-file";
 import { applyLanguageVoice, captionFileName, channelFileForLang, langInfo, langScriptDir, langVideoName, normalizeLang, parseLangs, voiceLang } from "../pipeline/lang";
 import { buildYoutubeMeta, metaText } from "../pipeline/meta";
+import { buildVideoProps } from "../pipeline/props";
 import { checkScriptTranslation, scriptTextOf, translateScript } from "../pipeline/script/translate";
 import { coerceScriptCandidate } from "../pipeline/script/validate";
 import { edgeDefaultVoice } from "../pipeline/voice/providers/edge";
 import { resolvePiperVoice } from "../pipeline/voice/providers/piper";
 import { parseLangArg, prepareLanguage, runLanguage, scriptLanguage } from "../cli/lang-run";
 import { factsNote, langScriptName } from "../cli/script-lang";
+import { BRAND_CHANNEL_PROP } from "../remotion/brand/jobs";
 import { BRAND_TEXTS, brandTexts } from "../remotion/brand/texts";
 import { uiText } from "../remotion/lib/ui-text";
 import type { VideoScript } from "../types";
@@ -320,6 +322,39 @@ await test("надписи бренд-кита: русские как были, 
     const texts = BRAND_TEXTS[ch.language ?? "ru"];
     assert.ok(texts, `${lang}: нет надписей бренд-кита в src/remotion/brand/texts.ts`);
     for (const p of ch.pillars) assert.ok(texts.short[p.id], `${lang}: нет короткой подписи рубрики ${p.id}`);
+  }
+});
+
+await test("заставка ролика: канал языка (channels/en.json) — в props и в название бренда; русский ролик — без ключа", async () => {
+  const voices = demo.scenes.map(() => ({ file: "", durationMs: 1500, words: [], wordsSource: "estimated" as const }));
+  const props = (script: VideoScript, brandChannel: Record<string, unknown> | null) =>
+    buildVideoProps({ script, publicDir: os.tmpdir(), voices, music: null, whooshSrc: null, brandIntro: true, brandChannel, channelName: null }) as unknown as Record<string, unknown>;
+
+  // Как в make: --lang en → CHANNEL_FILE=channels/en.json → loadChannel → props.
+  const env: NodeJS.ProcessEnv = {};
+  useLanguageChannel("en", env);
+  const en = props({ ...demo, language: "en" }, brandChannelOf(loadChannel({ env })));
+  const brand = en[BRAND_CHANNEL_PROP] as { name?: string; language?: string } | undefined;
+  assert.equal(brand?.name, "Gist in a Minute");
+  assert.equal(brand?.language, "en");
+
+  // Русский ролик (channel.json) и ролик без файла канала — ключа нет, props.json как раньше.
+  const ru = props(demo, brandChannelOf(loadChannel({ env: {} })));
+  assert.equal(BRAND_CHANNEL_PROP in ru, false);
+  assert.equal(brandChannelOf({ file: null }), null);
+  assert.equal(brandChannelOf({ file: path.join(root, ".", "channel.json") }), null);
+
+  // data.ts в браузере рендера читает inputProps через getInputProps() (window.remotion_inputProps):
+  // с props английского ролика название бренда — английское (без ключа — channel.json из бандла).
+  const g = globalThis as { window?: unknown };
+  g.window = { remotion_inputProps: JSON.stringify(en), location: { origin: "http://localhost" } };
+  try {
+    const { BRAND, splitName } = await import("../remotion/brand/data");
+    assert.equal(BRAND.name, "Gist in a Minute");
+    assert.deepEqual(splitName(BRAND.name), ["GIST", "IN A MINUTE"]);
+    assert.equal(BRAND.language, "en");
+  } finally {
+    delete g.window;
   }
 });
 
