@@ -81,6 +81,13 @@ test("EN: план от schedule.start своего en.json, английско�
   assert.equal(zone(zones, "en").runway.gap?.label, "11.10 19:00");
 });
 
+test("EN: отметка в Studio без релиза (удалён) — слот занят, не «пусто» и не дыра", () => {
+  const fx = boardFixture();
+  const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [], marks: { "05a": Date.parse("2026-10-11T16:00:00Z") } }, marks: fx.boardMarks });
+  assert.equal(zone(z, "en").runway.text, "запас до 11.10 (0 дней)");
+  assert.ok(!zone(z, "en").empty.some((e) => e.at === "2026-10-11T16:00:00Z"));
+});
+
 test("EN: нет английского названия — русское", () => {
   const fx = boardFixture();
   const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [{ code: "01a", title: "", cover: null }], marks: {} }, marks: fx.boardMarks });

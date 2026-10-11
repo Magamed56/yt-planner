@@ -189,10 +189,11 @@ function enZone({ en, now }: BoardInput, titles: Map<string, string>): BoardZone
   const from = Math.max(nowMs, zonedTimeToUtc(day.y, day.m, day.d, 0, 0, tz) - 60_000);
   const perDay = Math.max(1, plan.schedule.publishTimesLocal.length);
   const times = upcomingSlots(plan.schedule, SLOT_GRID_DAYS * perDay, { from: new Date(from) }).map((d) => d.getTime());
-  const empty = emptySlots(times, items, f);
+  // Занят — отмечен в Studio. По самим отметкам, а не по роликам из релизов: релиз могли удалить
+  // (или он не попал в первые страницы списка), а время в Studio стоит — слот не пуст.
+  const inStudio = new Map(Object.entries(en.marks ?? {}).filter(([c]) => !isLongCode(c)).map(([c, t]) => [minute(t), c]));
+  const empty = emptySlots(times.filter((t) => !inStudio.has(minute(t))), items, f);
   if (!en.marks) return { key: "en", title: en.name, sub, items, empty, runway: unknownRunway("отметки PANEL_LANG_STUDIO не прочитались") };
-  // Занят — отмечен в Studio.
-  const inStudio = new Map(lp.order.filter((c) => !isLongCode(c) && lp.slots[c]!.inStudio).map((c) => [minute(Date.parse(lp.slots[c]!.at)), c]));
   const grid = times.map((t) => cell(f, t, inStudio.get(minute(t)) ?? null));
   return { key: "en", title: en.name, sub, items, empty, runway: gridRunway(grid, nowMs, f) };
 }
