@@ -13,8 +13,8 @@ import { encoderOptions, encoderSettings } from "../pipeline/render";
 import { KEEP_LEAD_MS, KEEP_TAIL_MS, postprocessVoice } from "../pipeline/voice/provider";
 import { captionPages } from "../remotion/lib/caption-pages";
 import { WHOOSH_VARIANTS, synthWhoosh } from "../pipeline/audio/whoosh";
-import { WHOOSH_LEAD_FRAMES, WHOOSH_UNDER_VOICE, isNumeralWord, spokenNumberRun, statCountWindow, STAT_FALLBACK, whooshDuck } from "../remotion/lib/cues";
-import { formatLike, formatNumber, isThousandsTail, isYearNumber, numberInfo } from "../remotion/lib/numbers";
+import { WHOOSH_LEAD_FRAMES, WHOOSH_UNDER_VOICE, spokenNumberRun, statCountWindow, STAT_FALLBACK, whooshDuck } from "../remotion/lib/cues";
+import { formatLike, formatNumber, isNumeralWord, isThousandsTail, isYearNumber, numberInfo } from "../remotion/lib/numbers";
 import {
   CHAPTER_CARD_FRAMES,
   DEFAULT_TRANSITION_FRAMES,
@@ -98,6 +98,26 @@ await test("Крупная цифра: разряды по-русски с 5 ц�
   assert.ok(!isYearNumber(2048, "", "", "Точнее, две тысячи сорок восемь слов оперативной памяти."), "11a s2 — счётчик остаётся");
   assert.ok(!isYearNumber(2000, "", "", "Две тысячи человек в год."), "«в год» — не дата");
   assert.ok(!isYearNumber(4000, "", "", "В двадцать первом году повторили на четырёх тысячах человек."), "4000 — не календарный год");
+  // Год по речи — только если годом названо именно это число.
+  const rerun = "В двадцать первом году опыт повторили на двух тысячах участников.";
+  assert.ok(!isYearNumber(2000, "", "", rerun), "2000 участников — «двадцать первом году» про другое число");
+  assert.ok(isYearNumber(2021, "", "", rerun), "а 2021 — краткая форма того же года");
+  assert.ok(!isYearNumber(2000, "", "", "Каждый год сюда приезжают две тысячи туристов."));
+  assert.ok(!isYearNumber(2000, "", "", "В этом году пришло две тысячи заявок."));
+  assert.ok(!isYearNumber(2021, "", "", "Через двадцать один год всё повторилось."), "количественное + «год» — срок");
+  assert.ok(isYearNumber(1096, "", "", "С тысяча девяносто шестого года прошло больше девятисот лет."), "своё число, хоть в речи есть и другое");
+  assert.ok(
+    isYearNumber(2016, "", "", "В две тысячи шестнадцатом и семнадцатом годах в журнале Numeracy вышли две статьи."),
+    "L01 s26 — «год» через «и»",
+  );
+  assert.ok(isYearNumber(1961, "в ", "", "Гагарин полетел в тысяча девятьсот шестьдесят первом году."), "приставка «в»");
+  assert.ok(isYearNumber(1096, "", "", "Первые лекции прошли в 1096 году."), "цифрами в речи");
+  assert.ok(isYearNumber(2016, "", "", "Статья вышла в 2016-м году."));
+  // «год» в подписи — год, только если стоит сразу за числом.
+  assert.ok(isYearNumber(1096, "в ", " году"), "«в 1096 году»");
+  assert.ok(!isYearNumber(1500, "", " ₽ в год"), "«в год» — частота, а не дата");
+  assert.ok(!isYearNumber(1200, "", " часов в год"));
+  assert.ok(!isYearNumber(1800, "", " раз в год"));
 });
 
 const words = (list: string[]): WordTiming[] => list.map((text, i) => ({ text, startMs: i * 400, endMs: i * 400 + 350 }));
