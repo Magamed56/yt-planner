@@ -28,7 +28,8 @@
 - [docs/youtube-setup.md](docs/youtube-setup.md) — оформить канал в YouTube Studio и публиковать по расписанию;
 - [docs/instagram-setup.md](docs/instagram-setup.md) — Reels через официальный API или вручную;
 - [docs/telegram-setup.md](docs/telegram-setup.md) — ролики в канал Telegram через своего бота;
-- [brand/README.md](brand/README.md) — аватар, баннер, водяной знак, обложки «Актуального».
+- [brand/README.md](brand/README.md) — аватар, баннер, водяной знак, обложки «Актуального»;
+  английский канал «Gist in a Minute» — [brand/en/README.md](brand/en/README.md) (картинки и тексты описания).
 
 ---
 
@@ -368,6 +369,8 @@ instagram для других языков выключены. Что сдела
 
 1. Создать канал (лучше — отдельный бренд-аккаунт), заполнить `channels/<язык>.json`: `name`,
    `handle`, `links`, проверить тексты (kk, uz — носителю языка), удалить `_todo` и `placeholder`.
+   Картинки канала — `npm run brand -- --channel=<язык>` → `brand/<язык>/` (надписи языка — в
+   `src/remotion/brand/texts.ts`). Английский канал уже создан: @GistinaMinute, кит — `brand/en/`.
 2. Пока — собирать с upload = release и загружать `en-08a-….mp4` в Studio нового канала руками,
    тексты — из `description.txt` релиза. В панели это страница «English» (`/lang/en`): видео в «Фото»,
    название, описание, теги и подпись Reels — одним нажатием.

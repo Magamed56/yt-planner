@@ -1,4 +1,4 @@
-// Список бренд-картинок: id композиции → файл в brand/ и размер. Чистый TS
+// Список бренд-картинок: id композиции → файл в brand/ (brand/<язык>/) и размер. Чистый TS
 // без React — его читают и Root.tsx (регистрация <Still>), и CLI в Node
 // (`npm run brand`), чтобы размеры и имена файлов жили в одном месте.
 
@@ -19,6 +19,10 @@ export const BRAND_STILLS = {
   smallPreview: { id: "Brand-Small-Preview", width: 1600, height: 760 },
 } satisfies Record<string, BrandStill>;
 
+// Ключ inputProps, в котором CLI передаёт файл канала (channel.json или channels/<язык>.json);
+// читает его data.ts через getInputProps(). Нет ключа — channel.json из бандла.
+export const BRAND_CHANNEL_PROP = "brandChannel";
+
 export interface BrandJob {
   group: string; // для --only=avatar,banner,…
   compositionId: string;
@@ -28,7 +32,7 @@ export interface BrandJob {
   compress?: boolean;
 }
 
-// highlights — по одной обложке на рубрику из channel.json.
+// highlights — по одной обложке на рубрику из файла канала.
 export function brandJobs(pillarIds: string[]): BrandJob[] {
   const S = BRAND_STILLS;
   return [

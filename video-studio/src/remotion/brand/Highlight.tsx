@@ -119,7 +119,14 @@ export const Highlight: React.FC<{ pillar?: string }> = ({ pillar }) => {
             color: t.textDim,
           }}
         >
-          {p.title} · {BRAND.handle}
+          {/* Три текстовых узла, как было: одной строкой глифы ложатся иначе на субпиксель — русский кит переставал совпадать попиксельно */}
+          {BRAND.handle ? (
+            <>
+              {p.title} · {BRAND.handle}
+            </>
+          ) : (
+            p.title
+          )}
         </div>
       </FontGate>
     </AbsoluteFill>
