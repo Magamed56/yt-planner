@@ -1,7 +1,8 @@
 "use client";
 // Канал на другом языке: ролики из релизов (свежие коды первыми) — видео и обложку на телефон,
-// название, описание, теги и подпись Reels — в буфер одним нажатием. Выкладывает владелец сам:
-// у панели нет ключа YouTube этого канала, расписания и статистики здесь нет.
+// название, описание, теги и подпись Reels — в буфер одним нажатием; сверху — оформление канала
+// из бренд-кита (BrandKitCard). Выкладывает владелец сам: у панели нет ключа YouTube этого
+// канала, расписания и статистики здесь нет.
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { captionAction } from "@/app/actions";
@@ -9,6 +10,7 @@ import type { SaveItem } from "@/lib/downloads";
 import type { LangPageData } from "@/lib/lang-videos";
 import { codesLabel, plural } from "@/lib/stages";
 import AppShell from "./AppShell";
+import BrandKitCard from "./BrandKitCard";
 import FilesSaver from "./FilesSaver";
 import Thumb from "./Thumb";
 import s from "./lang.module.css";
@@ -249,6 +251,10 @@ export default function LangView({ data }: { data: LangPageData }) {
               .
             </span>
           </div>
+        )}
+
+        {data.brand && (
+          <BrandKitCard kit={data.brand} channel={channel} mainChannel={data.mainChannel} onCopy={copy} manual={manual?.key === channel.name ? manual : null} />
         )}
 
         {count === 0 ? (

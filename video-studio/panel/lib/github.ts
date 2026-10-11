@@ -100,13 +100,41 @@ export async function writeFile(path: string, text: string, sha: string, message
   if (!res.ok) throw await failure(res, `запись ${path}`);
 }
 
-// Имена файлов папки ветки ([] — папки нет).
-export async function listDir(path: string): Promise<string[]> {
+export interface GhEntry {
+  name: string;
+  path: string; // от корня репозитория
+  type: string; // file | dir | symlink | submodule
+  size: number;
+  sha: string;
+}
+
+// Содержимое папки ветки: файлы и подпапки с размером и sha ([] — папки нет).
+export async function listDirEntries(path: string): Promise<GhEntry[]> {
   const res = await gh(`/repos/${repoName()}/contents/${encPath(path)}?ref=${encodeURIComponent(branchName())}`);
   if (res.status === 404) return [];
   if (!res.ok) throw await failure(res, `папка ${path}`);
-  const list = (await res.json()) as { name: string; type: string }[];
-  return Array.isArray(list) ? list.filter((f) => f.type === "file").map((f) => f.name) : [];
+  const list = (await res.json()) as GhEntry[];
+  return Array.isArray(list) ? list.map((e) => ({ name: e.name, path: e.path, type: e.type, size: Number(e.size) || 0, sha: e.sha ?? "" })) : [];
+}
+
+// Имена файлов папки ветки ([] — папки нет).
+export async function listDir(path: string): Promise<string[]> {
+  return (await listDirEntries(path)).filter((f) => f.type === "file").map((f) => f.name);
+}
+
+// Двоичный файл ветки целиком (картинки бренд-кита), не больше maxBytes; null — файла нет.
+// Raw-ответ отдаёт и файлы больше 1 МБ, в отличие от JSON с base64 (readFileWithSha).
+export async function readFileBytes(path: string, maxBytes: number): Promise<ArrayBuffer | null> {
+  const res = await gh(`/repos/${repoName()}/contents/${encPath(path)}?ref=${encodeURIComponent(branchName())}`, { accept: "application/vnd.github.raw+json" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw await failure(res, `файл ${path}`);
+  if (Number(res.headers.get("content-length")) > maxBytes) {
+    await res.body?.cancel().catch(() => {});
+    throw new GithubError(`файл ${path} больше ${Math.round(maxBytes / 1_048_576)} МБ`, 413);
+  }
+  const buf = await res.arrayBuffer();
+  if (buf.byteLength > maxBytes) throw new GithubError(`файл ${path} больше ${Math.round(maxBytes / 1_048_576)} МБ`, 413);
+  return buf;
 }
 
 export interface GhAsset {

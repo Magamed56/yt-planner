@@ -2,7 +2,7 @@
 // файлы брать, пакеты для меню «Поделиться». Запуск из папки video-studio:
 // npx tsx panel/scripts/files-test.ts
 import assert from "node:assert/strict";
-import { downloadName, fileHref, filesOf, kindTotals, safeDownloadName, shareGroups, type SaveItem } from "../lib/downloads";
+import { downloadName, fileHref, filesOf, kindTotals, loadFileOf, safeDownloadName, shareGroups, type SaveItem } from "../lib/downloads";
 
 let passed = 0;
 function test(name: string, fn: () => void) {
@@ -73,6 +73,16 @@ test("ссылки: видео — редиректом на GitHub, облож�
   const [video, cover] = filesOf([item("08a", 25)], ["video", "cover"]);
   assert.equal(fileHref(video!), `/api/asset/${video!.assetId}`);
   assert.equal(fileHref(cover!), `/api/asset/${cover!.assetId}/file?download=1&name=08a-cover.jpg`);
+  // FilesSaver берёт байты для «Поделиться» потоком через панель, скачивает — по той же ссылке.
+  assert.deepEqual(loadFileOf(cover!), {
+    key: "08a-cover",
+    code: "08a",
+    name: "08a-cover.jpg",
+    size: cover!.size,
+    src: `/api/asset/${cover!.assetId}/file`,
+    href: fileHref(cover!),
+  });
+  assert.equal(loadFileOf(video!).href, `/api/asset/${video!.assetId}`);
 });
 
 test("пакеты «Поделиться»: файлы ролика вместе, лимиты по числу и размеру", () => {
