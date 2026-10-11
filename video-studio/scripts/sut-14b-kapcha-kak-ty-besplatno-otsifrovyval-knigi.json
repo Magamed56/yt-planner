@@ -1,0 +1,98 @@
+{
+  "title": "Капча: как ты бесплатно оцифровывал книги",
+  "description": "Как работала reCAPTCHA: одно слово проверяло, что ты человек, а второе было нераспознанным словом из скана старой книги или газеты. Узнаешь, как так оцифровали архив The New York Times и книги Internet Archive и почему в 2009 году проект купила Google.\n#shorts #капча #recaptcha #интернет #технологии",
+  "tags": [
+    "капча",
+    "recaptcha",
+    "captcha",
+    "оцифровка книг",
+    "google",
+    "нью-йорк таймс",
+    "internet archive",
+    "распознавание текста",
+    "капча заработок",
+    "captcha free earn money",
+    "интернет",
+    "технологии",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Вводя капчу, ты, возможно, оцифровывал старые книги.",
+      "onScreen": "Капча = *оцифровка* книг?",
+      "icon": "book-open",
+      "visualQuery": "CAPTCHA distorted text screen",
+      "imagePrompt": "cinematic close-up of distorted warped letters floating above an old open book, cold blue screen glow, dark background, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Капча проверяет, человек ты или бот. Но у рекапчи была вторая, скрытая работа.",
+      "onScreen": "У капчи была *вторая* работа",
+      "icon": "eye",
+      "visualQuery": "person typing laptop keyboard",
+      "imagePrompt": "cinematic shot of hands typing on a laptop keyboard at night, blue monitor light on fingers, moody dark room"
+    },
+    {
+      "id": "s3",
+      "kind": "list",
+      "narration": "Тебе показывали два слова. Первое система уже знала, это проверка. Второе компьютер не смог распознать в скане.",
+      "onScreen": "Два слова — *две* задачи",
+      "items": [
+        "Слово для проверки",
+        "Слово из скана"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "scanned old newspaper page",
+      "imagePrompt": "two glowing words hovering over a scanned yellowed newspaper page, one sharp, one blurred, cool cyan light, macro shot"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Сканы брали из старых книг и газет, где программа распознавания путалась.",
+      "onScreen": "Там, где *программа* сдавалась",
+      "icon": "scan-text",
+      "visualQuery": "book scanner digitization library",
+      "imagePrompt": "cinematic view of an old book on a scanning station in a dim archive, beam of blue scanner light across pages"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Так оцифровывали архив Нью-Йорк Таймс и книги Интернет-архива. По слову от каждого из нас.",
+      "onScreen": "Архив *NYT* и Internet Archive",
+      "icon": "globe",
+      "visualQuery": "The New York Times archive newspapers",
+      "imagePrompt": "towering stacks of vintage newspapers in a dark archive, dust in a cold blue light beam, wide cinematic angle"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "В две тысячи девятом году проект купил Гугл. И назвал это так: учим компьютеры читать.",
+      "onScreen": "2009: Google *покупает* reCAPTCHA",
+      "icon": "cpu",
+      "visualQuery": "server room data center",
+      "imagePrompt": "long corridor of glowing servers in a data center, blue and teal light, cinematic perspective"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Выходит, ты доказывал, что не робот, и заодно учил робота читать. Бесплатно.",
+      "onScreen": "Ты учил *робота* читать",
+      "icon": "lightbulb",
+      "visualQuery": "robot hand reading book",
+      "imagePrompt": "a sleek robotic hand turning the page of an antique book, soft blue rim light, dark background, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Сколько слов из старых книг набрал ты?",
+      "onScreen": "Сколько слов набрал *ты*?",
+      "icon": "message-circle"
+    }
+  ]
+}
