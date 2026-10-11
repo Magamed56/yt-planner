@@ -1,6 +1,7 @@
 // Список бренд-картинок: id композиции → файл в brand/ (brand/<язык>/) и размер. Чистый TS
 // без React — его читают и Root.tsx (регистрация <Still>), и CLI в Node
-// (`npm run brand`), чтобы размеры и имена файлов жили в одном месте.
+// (`npm run brand`), чтобы размеры и имена файлов жили в одном месте. Переименовали файл —
+// поправьте и кнопки панели (panel/lib/brand-kit.ts; сверяет panel/scripts/brand-kit-test.ts).
 import type { VideoProps } from "../../types";
 
 export interface BrandStill {

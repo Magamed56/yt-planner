@@ -1,14 +1,18 @@
 // Канал на другом языке (/lang/en): ролики из релизов «en-08a-….mp4» — скачать на телефон и
-// выложить руками, тексты для Studio и Instagram — одним нажатием. Только GitHub (релизы и
-// запуски): YouTube второго канала панель не трогает — ключа к нему нет.
+// выложить руками, тексты для Studio и Instagram — одним нажатием; оформление канала — из
+// бренд-кита brand/<язык>/. Только GitHub (релизы, запуски, файлы ветки): YouTube второго канала
+// панель не трогает — ключа к нему нет.
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { DEFAULT_LANG, LANGS, normalizeLang } from "../../../../src/pipeline/lang";
 import ErrorScreen from "@/components/ErrorScreen";
 import LangView from "@/components/LangView";
-import { assetText, branchName, listReleases, listRuns, repoName } from "@/lib/github";
+import { brandDir, brandKitOf, type BrandKit } from "@/lib/brand-kit";
+import { CHANNEL_NAME } from "@/lib/channel-name";
+import { assetText, branchName, listDirEntries, listReleases, listRuns, readFile, repoName } from "@/lib/github";
 import { LANG_CHANNELS, langChannel, navLangs, PANEL_TZ } from "@/lib/lang-channels";
+import { STUDIO_DIR } from "@/lib/load";
 import { emptyText, langRunsOf, langVideosOf, releaseLangs, withFileTexts, type LangPageData, type LangRunNote } from "@/lib/lang-videos";
 import { runInfos, type RunInfo } from "@/lib/state";
 
@@ -33,6 +37,36 @@ async function readTexts(ids: number[]): Promise<Map<number, string>> {
   return fileTexts;
 }
 
+// Бренд-кит языка: файлы папки (размер и sha — для кнопок и адресов картинок), обложки
+// «Актуального» и README с текстами. Меняется редко — помним 10 минут; папки нет (kk, uz) —
+// null, блок «Оформление канала» не показываем. Ошибку не помним: со следующим заходом — заново.
+const kits = new Map<string, { at: number; kit: BrandKit | null }>();
+async function readBrandKit(lang: string): Promise<BrandKit | null> {
+  const hit = kits.get(lang);
+  if (hit && Date.now() - hit.at < 10 * 60_000) return hit.kit;
+  const dir = `${STUDIO_DIR}/${brandDir(lang)}`;
+  const top = await listDirEntries(dir);
+  const has = (name: string, type: string) => top.some((e) => e.name === name && e.type === type);
+  const withReadme = has("README.md", "file");
+  // README не прочитался (сбой GitHub) — картинки всё равно покажем, без кнопок текста, и такой
+  // кит не запомним: тексты вернутся со следующим заходом, а не через 10 минут.
+  let readmeFailed = false;
+  const [sub, readme] = await Promise.all([
+    has("highlights", "dir") ? listDirEntries(`${dir}/highlights`) : [],
+    withReadme
+      ? readFile(`${dir}/README.md`).catch(() => {
+          readmeFailed = true;
+          return null;
+        })
+      : null,
+  ]);
+  const entries = [...top, ...sub].filter((e) => e.type === "file" && e.path.startsWith(`${dir}/`)).map((e) => ({ path: e.path.slice(dir.length + 1), size: e.size, sha: e.sha }));
+  const readmeUrl = `https://github.com/${repoName()}/blob/${encodeURIComponent(branchName())}/${dir}/README.md`;
+  const kit = brandKitOf(lang, entries, readme, withReadme ? readmeUrl : null);
+  if (!readmeFailed) kits.set(lang, { at: Date.now(), kit });
+  return kit;
+}
+
 export default async function LangPage({ params }: Params) {
   await connection();
   const raw = (await params).code;
@@ -44,7 +78,8 @@ export default async function LangPage({ params }: Params) {
   const now = new Date();
   let data: LangPageData;
   try {
-    const [releases, ghRuns] = await Promise.all([listReleases(), listRuns()]);
+    // Кит не прочитался — страница с роликами всё равно нужна: блок оформления просто не покажем.
+    const [releases, ghRuns, brand] = await Promise.all([listReleases(), listRuns(), readBrandKit(lang).catch(() => null)]);
     let videos = langVideosOf(releases, lang);
     const missing = videos.filter((v) => !v.texts && v.description).slice(0, 12);
     if (missing.length) videos = withFileTexts(videos, await readTexts(missing.map((v) => v.description!.id)));
@@ -67,6 +102,8 @@ export default async function LangPage({ params }: Params) {
       geminiVoice: LANGS[lang]?.geminiTts ?? false,
       // Переключатель: пункты меню + языки, у которых уже есть ролики, + этот.
       langs: navLangs(LANG_CHANNELS, [...releaseLangs(releases), lang]),
+      brand,
+      mainChannel: CHANNEL_NAME,
       actionsUrl: `https://github.com/${repo}/actions/workflows/video-studio.yml?query=branch%3A${encodeURIComponent(branchName())}`,
       shell: { updated: time.format(now), generatedAt: now.toISOString(), activeRuns: active.length, activeIds: active.map((r) => r.id) },
     };

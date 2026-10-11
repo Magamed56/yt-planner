@@ -70,6 +70,28 @@ export function fileHref(f: Pick<SaveFile, "assetId" | "kind" | "name">): string
   return f.kind === "video" ? `/api/asset/${f.assetId}` : `/api/asset/${f.assetId}/file?download=1&name=${encodeURIComponent(f.name)}`;
 }
 
+// Размер на кнопке и в прогрессе: меньше мегабайта — в КБ (водяной знак — 17 КБ, а не «0,0 МБ»).
+// unit — по какому числу выбрать единицу: прогресс идёт в единицах всего файла («0,4 из 25,0 МБ»,
+// а не «0 КБ из 25,0 МБ»). Граница — по округлённым КБ: «1024 КБ» не бывает, это уже «1,0 МБ».
+export function sizeLabel(bytes: number, unit = bytes): string {
+  if (Math.round(unit / 1024) < 1024) return `${Math.max(bytes > 0 ? 1 : 0, Math.round(bytes / 1024))} КБ`;
+  return `${(bytes / 1_048_576).toFixed(1).replace(".", ",")} МБ`;
+}
+
+// Что FilesSaver скачивает на самом деле: src — байты через панель (для меню «Поделиться» на
+// телефоне; кусками с Range или целиком), href — ссылка «скачать файлом». Так через тот же
+// FilesSaver идут и файлы релизов, и картинки бренд-кита канала (lib/brand-kit.ts).
+export interface LoadFile {
+  key: string;
+  code: string; // файлы с одним code не разрываются между частями «Поделиться»
+  name: string;
+  size: number;
+  src: string;
+  href: string;
+}
+
+export const loadFileOf = (f: SaveFile): LoadFile => ({ key: f.key, code: f.code, name: f.name, size: f.size, src: `/api/asset/${f.assetId}/file`, href: fileHref(f) });
+
 // Пакет для меню «Поделиться» на телефоне: столько файлов сразу держать в памяти и отдавать
 // одним меню рискованно, поэтому — частями. Файлы одного ролика стараются не разрывать; ролик
 // больше лимита идёт отдельной частью (по файлу, если и так не помещается).
