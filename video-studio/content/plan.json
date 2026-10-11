@@ -679,7 +679,8 @@
           "source": "Wardle S. G. et al. Rapid and dynamic processing of face pareidolia in the human brain. Nature Communications 11, 4518 (2020)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-14a-pochemu-my-vidim-litsa-v-veshchakh-pareydoliya.json"
     },
     {
       "id": "14b",
@@ -699,7 +700,8 @@
           "source": "Google Official Blog, «Teaching computers to read: Google acquires reCAPTCHA» (16.09.2009)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-14b-kak-ty-besplatno-otsifrovyval-knigi-v-kapche.json"
     },
     {
       "id": "15a",

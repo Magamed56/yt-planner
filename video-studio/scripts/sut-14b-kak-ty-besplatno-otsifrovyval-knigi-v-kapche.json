@@ -1,0 +1,86 @@
+{
+  "title": "Как ты бесплатно оцифровывал книги в капче",
+  "description": "Почему в старой капче всегда было два слова и как миллионы пользователей помогли оцифровать архив The New York Times. История сервиса reCAPTCHA.\n\n#shorts #технологии #интернет #история",
+  "tags": [
+    "капча",
+    "recaptcha",
+    "гугл",
+    "книги",
+    "технологии",
+    "факты",
+    "история интернета",
+    "google",
+    "shorts",
+    "капча заработок"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Вводя капчу, ты, возможно, оцифровывал старые книги.",
+      "onScreen": "Вводя капчу, ты *оцифровывал* книги",
+      "icon": "book-open",
+      "visualQuery": "CAPTCHA computer screen closeup",
+      "imagePrompt": "cinematic macro shot of an old computer monitor displaying a vintage wavy two-word captcha, soft blue glow, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Помнишь сервис рекапча с двумя искажёнными словами? Одно из них система знала заранее.",
+      "onScreen": "Система знала только *одно* слово",
+      "icon": "shield",
+      "visualQuery": "typing keyboard fingers close up",
+      "imagePrompt": "cinematic close-up of fingers typing on a modern keyboard, screen glow reflecting on hands, moody lighting"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "А вот второе слово не могли распознать сканеры в старых газетах и архивах.",
+      "onScreen": "Второе слово *не* распознал сканер",
+      "icon": "eye",
+      "visualQuery": "The New York Times vintage newspaper archive",
+      "imagePrompt": "close-up of an aged, yellowed newspaper page with faded ink and blurred typography, warm atmospheric library lighting"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "Так люди бесплатно расшифровали два гигантских хранилища: архив газеты Нью-Йорк Таймс и проект Интернет Архив.",
+      "onScreen": "Что помогли *оцифровать* люди",
+      "items": [
+        "Архив New York Times",
+        "Проект Internet Archive"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "Internet Archive servers library",
+      "imagePrompt": "endless towering rows of vintage archives and glowing modern server racks merging together, cinematic perspective"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Если несколько человек вводили одинаковый текст, машина считала слово расшифрованным.",
+      "onScreen": "Совпало у многих — слово *готово*",
+      "icon": "users",
+      "visualQuery": "people using laptops internet cafe",
+      "imagePrompt": "diverse silhouettes of people working behind illuminated screens in a moody modern room, glowing code reflections"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Идея оказалась настолько гениальной, что в две тысячи девятом году компанию купил Гугл.",
+      "onScreen": "В 2009 году проект купил *Google*",
+      "icon": "sparkles",
+      "visualQuery": "Googleplex headquarters building",
+      "imagePrompt": "cinematic exterior view of a sleek modern glass tech headquarters at dusk, dramatic ambient lights"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "А ты помнишь ту старую двухсловную капчу?",
+      "onScreen": "Помнишь ту старую *двухсловную* капчу?",
+      "icon": "message-circle"
+    }
+  ]
+}

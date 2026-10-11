@@ -1,0 +1,80 @@
+{
+  "title": "Почему мы видим лица в вещах: парейдолия",
+  "description": "Розетка с глазами или грустный тостер — это не мистика. Узнай, как веретенообразная извилина мозга за доли секунды находит лица там, где их нет.\n#shorts #наука #мозг #факты",
+  "tags": [
+    "парейдолия",
+    "мозг",
+    "нейробиология",
+    "психология",
+    "зрение",
+    "почему мы видим лица",
+    "макаки",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Розетка смотрит на тебя? Это мозг так устроен.",
+      "onScreen": "Розетка *смотрит* на тебя?",
+      "icon": "eye",
+      "visualQuery": "electrical wall socket face",
+      "imagePrompt": "cinematic close-up of a white wall electrical socket resembling a surprised human face, soft dramatic lighting, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Этот зрительный эффект называют парейдолией. Мы постоянно замечаем живые черты в облаках, автомобилях и чашках кофе.",
+      "onScreen": "Феномен *парейдолии*",
+      "icon": "smile",
+      "visualQuery": "cloud face shaped sky",
+      "imagePrompt": "fluffy white cloud in a blue sky naturally resembling a smiling human face, cinematic bright sunlight"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "В коре нашего мозга есть особая веретенообразная извилина. В ней расположена зона, которая избирательно реагирует именно на лица.",
+      "onScreen": "Веретенообразная *извилина* мозга",
+      "icon": "brain",
+      "visualQuery": "human brain model studio",
+      "imagePrompt": "photorealistic glowing human brain showing the active fusiform face area highlighted in warm amber light, dark background"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Нейробиологи выяснили, что мозг обрабатывает эти иллюзорные мордочки за доли секунды, точно так же, как настоящие лица людей.",
+      "onScreen": "Обработка за *доли* секунды",
+      "icon": "zap",
+      "visualQuery": "car front headlights face",
+      "imagePrompt": "front bumper of a vintage retro car looking distinctly like a cheerful face with round headlights, cinematic street"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Система настроена с запасом: лучше случайно принять за лицо чайник, чем однажды пропустить хищника в темноте.",
+      "onScreen": "Система работает *с запасом*",
+      "icon": "shield",
+      "visualQuery": "shadow forest tree silhouette",
+      "imagePrompt": "silhouette of gnarled tree branches casting a mysterious shadow resembling a face in a foggy mysterious forest"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Этот механизм очень древний. Учёные доказали, что макаки-резусы точно так же воспринимают лица в самых обычных неживых предметах.",
+      "onScreen": "Макаки тоже *видят* лица",
+      "icon": "scan-face",
+      "visualQuery": "Rhesus macaque looking curious",
+      "imagePrompt": "expressive rhesus macaque monkey sitting on a branch looking intently towards the camera, natural soft jungle light"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "А в каком предмете ты видишь лицо?",
+      "onScreen": "В каком предмете видишь *лицо*?",
+      "icon": "sparkles"
+    }
+  ]
+}
