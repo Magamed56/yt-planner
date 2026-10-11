@@ -1,0 +1,89 @@
+{
+  "title": "Капча: как ты бесплатно оцифровывал книги",
+  "description": "Разбираем, как работала reCAPTCHA: одно слово проверяло, что ты человек, а второе помогало расшифровать сканы старых книг и газет. Узнаешь, какие архивы так обрабатывали и кто купил проект в 2009 году.\n#shorts #капча #recaptcha #google",
+  "tags": [
+    "капча",
+    "recaptcha",
+    "google",
+    "оцифровка книг",
+    "captcha free earn money",
+    "капча заработок",
+    "интернет",
+    "технологии",
+    "нейросети",
+    "архивы",
+    "the new york times",
+    "internet archive",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Вводя капчу, ты, возможно, оцифровывал старые книги.",
+      "onScreen": "Капча: ты *работал* бесплатно",
+      "icon": "book-open",
+      "visualQuery": "Captcha distorted text",
+      "imagePrompt": "cinematic close-up of a laptop screen with distorted wavy letters, dark room, cold blue glow"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Раньше капча показывала два слова. Но проверялось только одно из них.",
+      "onScreen": "Два слова. Проверяется *одно*",
+      "icon": "eye",
+      "visualQuery": "typing keyboard hands night",
+      "imagePrompt": "cinematic hands typing on a keyboard at night, two glowing words floating above, cold blue glow"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Второе слово компьютер не смог прочитать в скане старой книги или газеты. Расшифровать его просили тебя.",
+      "onScreen": "Второе слово — из *сканов*",
+      "icon": "scan-text",
+      "visualQuery": "Book scanner library",
+      "imagePrompt": "cinematic book scanner glowing light scanning an old yellowed page, cold blue palette"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "Так люди помогали читать архивы. Газетный архив The New York Times. И книги из Internet Archive.",
+      "onScreen": "Что *оцифровали* вместе с тобой",
+      "items": [
+        "Архив The New York Times",
+        "Книги Internet Archive"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "Old newspaper archive pages",
+      "imagePrompt": "stacks of old newspapers and books in dim archive, cold blue light, shallow depth of field"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Один человек справлялся за секунды. А миллионы ответов складывались в целые страницы текста.",
+      "onScreen": "Секунды каждого — *страницы* всем",
+      "icon": "users",
+      "visualQuery": "people using computers crowd",
+      "imagePrompt": "many glowing screens in a dark room forming a network of light, cold blue palette"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Об этом написали в журнале Science в две тысячи восьмом году. А в две тысячи девятом проект купила Google.",
+      "onScreen": "2009: проект купила *Google*",
+      "icon": "building-2",
+      "visualQuery": "Googleplex Mountain View",
+      "imagePrompt": "modern glass office building at dusk, cold blue light, cinematic wide shot"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "А какое слово из капчи тебе запомнилось?",
+      "onScreen": "Какое слово *запомнилось*?",
+      "icon": "message-circle"
+    }
+  ]
+}

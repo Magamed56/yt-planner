@@ -56,3 +56,6 @@
 {"at":"2026-10-11T14:04:50Z","kind":"tts","code":"13a","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":2,"chars":700,"runId":"38143507911","keyIndex":2}
 {"at":"2026-10-11T14:09:19Z","kind":"tts","code":"13b","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":1,"chars":801,"runId":"38143507911","keyIndex":1}
 {"at":"2026-10-11T14:21:22Z","kind":"tts","code":"06b","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":1,"chars":61,"runId":"38146767756","keyIndex":1}
+{"at":"2026-10-11T15:22:15Z","kind":"script","code":"14a","provider":"claude","model":"claude-sonnet-5-5","inputTokens":10937,"outputTokens":1352,"costUsd":0.039683,"calls":1,"chars":null,"runId":"38150926836"}
+{"at":"2026-10-11T15:22:15Z","kind":"script","code":"14a","provider":"claude","model":"claude-sonnet-5-5","inputTokens":12454,"outputTokens":2381,"costUsd":0.033279,"calls":1,"chars":null,"runId":"38150926836"}
+{"at":"2026-10-11T15:22:25Z","kind":"script","code":"14b","provider":"claude","model":"claude-sonnet-5-5","inputTokens":10857,"outputTokens":1150,"costUsd":0.017775,"calls":1,"chars":null,"runId":"38150926836"}

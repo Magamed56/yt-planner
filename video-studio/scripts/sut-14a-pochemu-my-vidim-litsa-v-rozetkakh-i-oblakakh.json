@@ -1,0 +1,92 @@
+{
+  "title": "Почему мы видим лица в розетках и облаках",
+  "description": "Парейдолия: почему мозг находит лица в розетках, облаках и фасадах. Разбираем зону лиц в веретенообразной извилине, опыты на макаках-резусах и скорость, с которой мозг реагирует на иллюзорные лица.\n#shorts #парейдолия #мозг #психология",
+  "tags": [
+    "парейдолия",
+    "лица в предметах",
+    "мозг",
+    "веретенообразная извилина",
+    "зона лиц",
+    "макаки",
+    "восприятие",
+    "психология",
+    "нейронаука",
+    "видите мой глаз",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Розетка смотрит на тебя? Это мозг так устроен.",
+      "onScreen": "Розетка *смотрит* на тебя?",
+      "icon": "eye",
+      "visualQuery": "Electrical outlet wall",
+      "imagePrompt": "cinematic close-up of a white wall socket that looks like a surprised face, soft cold light, shallow depth of field, deep blue palette"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "В мозге есть участок, который заточен под лица. Он сидит в веретенообразной извилине.",
+      "onScreen": "Мозг держит зону *только* для лиц",
+      "icon": "brain",
+      "visualQuery": "Fusiform gyrus brain MRI",
+      "imagePrompt": "glowing human brain in profile with one small region lit in warm light, dark background, deep blue palette"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Зону описали в тысяча девятьсот девяносто седьмом году. Она реагирует именно на лица.",
+      "onScreen": "Открытие 1997 года",
+      "icon": "microscope",
+      "visualQuery": "Brain scan monitor",
+      "imagePrompt": "neuroscience lab with an fMRI scan on a monitor, moody blue light, cinematic, deep blue palette"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Зона работает с запасом. Лучше лишний раз ошибиться, чем пропустить человека.",
+      "onScreen": "Лучше *ошибиться*, чем пропустить",
+      "icon": "triangle-alert",
+      "visualQuery": "Face shaped clouds sky",
+      "imagePrompt": "dramatic clouds forming a faint face in a twilight sky, cinematic, deep blue palette"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Два пятна и черта под ними — уже лицо. Мозг не спрашивает разрешения.",
+      "onScreen": "Два пятна и черта — *лицо*",
+      "icon": "smile",
+      "visualQuery": "House facade windows door",
+      "imagePrompt": "old house facade with two windows and a door resembling a face, dusk light, cinematic, deep blue palette"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Иллюзорное лицо мозг обрабатывает за доли секунды, как настоящее.",
+      "onScreen": "Доли секунды — и *лицо* найдено",
+      "icon": "timer",
+      "visualQuery": "Stopwatch fast motion",
+      "imagePrompt": "glowing stopwatch dissolving into particles forming a face, dark background, deep blue palette"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "И это не только про людей. Макаки-резусы тоже видят лица в неживых предметах.",
+      "onScreen": "Обезьяны *тоже* видят лица",
+      "icon": "users",
+      "visualQuery": "Rhesus macaque face",
+      "imagePrompt": "rhesus macaque looking intently at the camera, soft rim light, shallow depth of field, deep blue palette"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А какое лицо ты уже увидел сегодня?",
+      "onScreen": "Какое лицо увидел *ты*?",
+      "icon": "message-circle"
+    }
+  ]
+}
