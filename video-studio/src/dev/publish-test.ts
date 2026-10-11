@@ -123,6 +123,26 @@ await test("--schedule / --schedule-slot / --publish-at: разбор и ито�
 
 // ---- YouTube ----
 
+await test("описание YouTube без ссылок: источники кадров и музыки — текстом, ссылки из текста убраны", () => {
+  const m = buildYoutubeMeta({
+    script: { ...demo, description: demo.description + " Подробнее: https://example.com/x" },
+    format: "shorts",
+    visualCredits: [
+      { provider: "Pixabay", author: "jLasWilson", url: "https://pixabay.com/videos/id-34091/" },
+      { provider: "Wikimedia Commons", author: "NASA (CC BY 4.0)", url: "https://commons.wikimedia.org/wiki/File:X.jpg" },
+    ],
+    musicCredit: "Музыка: «Трек» — Автор (CC BY 4.0) https://example.org/track",
+    voiceProvider: "gemini",
+    channel,
+  });
+  const d = m.description;
+  assert.doesNotMatch(d, /https?:\/\/|www\./, d);
+  assert.match(d, /• Pixabay — jLasWilson$/m);
+  assert.match(d, /• Wikimedia Commons — NASA \(CC BY 4\.0\)$/m);
+  assert.match(d, /«Трек» — Автор \(CC BY 4\.0\)$/m);
+  assert.match(d, /Подробнее:$/m);
+});
+
 await test("описание YouTube с каналом: призыв, подписка, Instagram, хэштеги бренда, дисклеймер в конце", () => {
   const m = buildYoutubeMeta({ script: demo, format: "shorts", visualCredits: [], musicCredit: null, voiceProvider: "gemini", channel });
   const d = m.description;

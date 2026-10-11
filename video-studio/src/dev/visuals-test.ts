@@ -453,7 +453,7 @@ await test("Wikimedia: только свободные лицензии без �
   const r2 = await findVisual(scene({ id: "s2", visualQuery: "giza pyramid desert" }), ctx, { fetch: fn, env: { VISUALS: "wikimedia" }, log, cacheDir });
   assert.deepEqual(r2.visual, { type: "image", src: "visuals/s2.jpg", credit: "Wikimedia Commons: NASA (общественное достояние)" });
 
-  // Описание ролика: автор, лицензия и страница файла.
+  // Описание ролика: автор и лицензия (ссылку на страницу файла YouTube в описании не принимает).
   const meta = buildYoutubeMeta({
     script: { title: "Пирамиды", description: "Текст.", tags: [], language: "ru", format: "shorts", scenes: [] },
     format: "shorts",
@@ -461,7 +461,8 @@ await test("Wikimedia: только свободные лицензии без �
     musicCredit: null,
     voiceProvider: "edge",
   });
-  assert.ok(meta.description.includes("Wikimedia Commons — Foo & Bar (CC BY-SA 4.0) https://commons.wikimedia.org/wiki/File:Giza_pyramid_complex.jpg"), meta.description);
+  assert.ok(meta.description.includes("Wikimedia Commons — Foo & Bar (CC BY-SA 4.0)\n"), meta.description);
+  assert.doesNotMatch(meta.description, /https?:\/\//, meta.description);
   assert.ok(meta.description.includes("NASA (общественное достояние)"), meta.description);
 
   // WIKIMEDIA_LICENSES=pd,cc0 — BY-SA больше не берём.

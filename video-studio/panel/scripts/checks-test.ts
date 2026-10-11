@@ -52,6 +52,13 @@ const pexelsPhoto: Credit = { provider: "Pexels", author: "Bob", url: "https://w
 const pixabay: Credit = { provider: "Pixabay", author: "cat", url: "https://pixabay.com/videos/clip-5/" };
 const wiki = (n: number): Credit => ({ provider: "Wikimedia Commons", author: `Автор ${n} (CC BY-SA 4.0)`, url: `https://commons.wikimedia.org/wiki/File:Photo_${n}.jpg` });
 
+// Релизы до 11.10.2026: у строк источников в конце была ссылка (по ней видно, клип или фото).
+function withLinks(text: string, credits: Credit[]): string {
+  let out = text;
+  for (const c of credits) out = out.replace(`• ${c.provider} — ${c.author}\n`, `• ${c.provider} — ${c.author} ${c.url}\n`);
+  return out;
+}
+
 // description.txt ровно как его пишет make.ts: buildYoutubeMeta → descriptionTxt.
 function descriptionOf(credits: Credit[], over: { script?: Partial<VideoScript>; voice?: string | null } = {}): string {
   const meta = buildYoutubeMeta({ script: { ...demo, ...over.script }, format: "shorts", visualCredits: credits, musicCredit: null, voiceProvider: "gemini", channel });
@@ -189,8 +196,8 @@ test("голос, который нужен: канал из channel.json, ру�
 
 // ---- кадры: блок «Видео и фото» ----
 
-test("кадры: видео Pexels и Pixabay, фото Pexels и Wikimedia — всё в порядке", () => {
-  const c = parseCredits(descriptionOf([pexelsVideo, pexelsPhoto, pixabay, wiki(1), null as unknown as Credit]));
+test("кадры (релиз до 11.10, со ссылками): видео Pexels и Pixabay, фото Pexels и Wikimedia — всё в порядке", () => {
+  const c = parseCredits(withLinks(descriptionOf([pexelsVideo, pexelsPhoto, pixabay, wiki(1), null as unknown as Credit]), [pexelsVideo, pexelsPhoto, pixabay, wiki(1)]));
   assert.equal(c.block, true);
   assert.deepEqual([c.stockVideo, c.stockPhoto, c.stockOther, c.archive, c.hidden], [2, 1, 0, 1, 0]);
   assert.deepEqual(c.providers, [
@@ -200,6 +207,13 @@ test("кадры: видео Pexels и Pixabay, фото Pexels и Wikimedia —
   ]);
   const line = releaseChecks(facts(qcOk(qcJson()), ok(c)), ctx()).find((l) => l.text.startsWith("Кадры"));
   assert.deepEqual(line, { level: "ok", text: "Кадры: видео — 2, фото — 2 (Pexels 2, Pixabay 1, Wikimedia Commons 1)." });
+});
+
+test("кадры (новое описание без ссылок): видео Pexels не отличить от фото, но предупреждения нет", () => {
+  const c = parseCredits(descriptionOf([pexelsVideo, pexelsPhoto, pixabay, wiki(1)]));
+  assert.deepEqual([c.stockVideo, c.stockPhoto, c.stockOther, c.archive, c.hidden], [1, 0, 2, 1, 0]);
+  const line = releaseChecks(facts(qcOk(qcJson()), ok(c)), ctx()).find((l) => l.text.startsWith("Кадры"));
+  assert.deepEqual(line, { level: "ok", text: "Кадры: видео — 1, фото — 1 (Pexels 2, Pixabay 1, Wikimedia Commons 1)." });
 });
 
 test("кадры только из Wikimedia (как 10a–12b) — предупреждение с подсказкой про ключи стоков", () => {
@@ -226,14 +240,14 @@ test("кадры: рубрика «настоящих фото» (history, natur
   assert.match(line.text, /^Кадры — фото \(Wikimedia Commons 2\): в этой рубрике сначала ищутся настоящие фото/);
   assert.doesNotMatch(line.text, /пересборка/i, "пересборка с ключами ничего не изменит — не советуем");
   // Фото Wikimedia и Pexels без видео — тоже норма для рубрики; видео есть — обычная строка «всё в порядке».
-  assert.equal(releaseChecks(facts(qcOk(qcJson()), creditsOk(descriptionOf([wiki(1), pexelsPhoto]))), ctx({ realPhotos: true })).find((l) => l.text.startsWith("Кадры"))!.level, "info");
-  assert.equal(releaseChecks(facts(qcOk(qcJson()), creditsOk(descriptionOf([wiki(1), pexelsVideo]))), ctx({ realPhotos: true })).find((l) => l.text.startsWith("Кадры"))!.level, "ok");
+  assert.equal(releaseChecks(facts(qcOk(qcJson()), creditsOk(withLinks(descriptionOf([wiki(1), pexelsPhoto]), [wiki(1), pexelsPhoto]))), ctx({ realPhotos: true })).find((l) => l.text.startsWith("Кадры"))!.level, "info");
+  assert.equal(releaseChecks(facts(qcOk(qcJson()), creditsOk(withLinks(descriptionOf([wiki(1), pexelsVideo]), [wiki(1), pexelsVideo]))), ctx({ realPhotos: true })).find((l) => l.text.startsWith("Кадры"))!.level, "ok");
   // Совсем без кадров — предупреждение и в такой рубрике.
   assert.ok(releaseChecks(facts(qcOk(qcJson()), creditsOk(descriptionOf([]))), ctx({ realPhotos: true })).some((l) => l.level === "warn" && /нет ни видео, ни фото/.test(l.text)));
 });
 
 test("кадры: только фото Pexels — «стокового видео нет»", () => {
-  const line = releaseChecks(facts(qcOk(qcJson()), creditsOk(descriptionOf([pexelsPhoto, wiki(1)]))), ctx()).find((l) => l.text.startsWith("Стокового"))!;
+  const line = releaseChecks(facts(qcOk(qcJson()), creditsOk(withLinks(descriptionOf([pexelsPhoto, wiki(1)]), [pexelsPhoto, wiki(1)]))), ctx()).find((l) => l.text.startsWith("Стокового"))!;
   assert.equal(line.level, "warn");
   assert.match(line.text, /только фото \(Pexels 1, Wikimedia Commons 1\)/);
 });
@@ -252,7 +266,7 @@ test("кадры: длинное описание свернуло строки 
   const desc = descriptionOf(credits, { script: { description: "Очень длинный текст ролика. ".repeat(60) } });
   const c = parseCredits(desc);
   assert.ok(c.hidden > 0, "часть строк свёрнута");
-  assert.equal(c.stockVideo + c.stockPhoto + c.archive + c.hidden, 62);
+  assert.equal(c.stockVideo + c.stockPhoto + c.stockOther + c.archive + c.hidden, 62);
   assert.ok(c.hiddenProviders.includes("Wikimedia Commons"));
   const line = releaseChecks(facts(qcOk(qcJson()), ok(c)), ctx()).find((l) => l.text.startsWith("Кадры"))!;
   assert.equal(line.level, "ok");

@@ -153,10 +153,14 @@ export function voiceCreditLine(provider: string, voice?: string | null): string
   return `Озвучка: синтезированный голос — ${title}${voice ? `, голос ${voice}` : ""}`;
 }
 
+// Ссылки в описании YouTube не ставим: с ними описание не сохраняется (владелец канала, 11.10.2026).
+// Источник и автор остаются текстом — Pexels/Pixabay атрибуцию не требуют, CC BY хватает имени и лицензии.
+const URL_IN_TEXT = /\s*(?:https?:\/\/|www\.)\S+/gi;
+export const withoutUrls = (text: string) => text.replace(URL_IN_TEXT, "").replace(/[ \t]+$/gm, "");
+
 function creditLine(c: Credit): string {
   const who = c.author ? ` — ${c.author}` : "";
-  const url = c.url ? ` ${c.url}` : "";
-  return `${c.provider}${who}${url}`;
+  return `${c.provider}${who}`;
 }
 
 interface CreditParts {
@@ -209,7 +213,7 @@ function creditLines(p: CreditParts, stockShown = p.stock.length, lang?: string)
     }
   }
   if (p.ai.length) lines.push(t.ai(p.ai.join(", ")));
-  if (p.music) lines.push(`${t.music} ${p.music}`);
+  if (p.music) lines.push(`${t.music} ${withoutUrls(p.music)}`);
   return lines;
 }
 
@@ -306,7 +310,7 @@ export function buildYoutubeMeta(input: MetaInput): YoutubeMeta {
   // Порядок: текст → таймкоды → призыв и ссылки → хэштеги → источники → дисклеймер.
   // Подвал канала и таймкоды не урезаются никогда — сокращаются только стоки и текст.
   const compose = (text: string, stockShown: number) =>
-    [text, chapters, footer, tagLine, creditLines(credits, stockShown, lang).join("\n"), disclaimer].filter(Boolean).join("\n\n");
+    withoutUrls([text, chapters, footer, tagLine, creditLines(credits, stockShown, lang).join("\n"), disclaimer].filter(Boolean).join("\n\n"));
   // Не влезает в 5000 байт — сначала сворачиваем строки стоков с конца
   // (у длинного ролика их десятки), и только в крайнем случае режем текст
   // сценариста — по границе символа, чтобы не разрезать букву пополам.
