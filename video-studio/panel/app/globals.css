@@ -738,6 +738,9 @@ h4 {
 .btile .mark {
   align-self: flex-start;
   max-width: 100%;
+  /* «пересобирается» на 375 px шире плитки — перенос, а не обрезка */
+  overflow-wrap: anywhere;
+  hyphens: auto;
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--stage);

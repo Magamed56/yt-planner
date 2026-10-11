@@ -14,7 +14,7 @@ import { STAGES, codesLabel, plural, runLabel, shiftDateKey, type Stage } from "
 import type { StatsHistory } from "./history";
 import { typicalRatio } from "./insights";
 import { buildPulse, type Pulse } from "./pulse";
-import { buildsVideo, parseRebuildList, releaseIsFresh, type Hold } from "./rebuild-hold";
+import { buildsVideo, parseRebuildList, rebuildProblem, releaseIsFresh, type Hold } from "./rebuild-hold";
 import { isShorts, rowStats, viewsPerDay, type RowStats } from "./stats";
 
 export { STAGES, STAGE_LABEL, codesLabel, plural, type Stage } from "./stages";
@@ -683,6 +683,8 @@ export function buildState(input: StateInput): PanelState {
         .join(" "),
     });
   }
+  const rebuildNote = rebuildProblem(input.rebuildJson ?? null);
+  if (rebuildNote) reminders.push({ kind: "rebuild", level: "warn", text: rebuildNote });
   const toFill = rows.filter((r) => r.stage === "studio" && !pending.has(r.code));
   if (toFill.length) {
     reminders.push({

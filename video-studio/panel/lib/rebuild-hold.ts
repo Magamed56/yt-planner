@@ -46,6 +46,27 @@ export function parseRebuildList(raw: unknown): Map<string, RebuildMark> {
   return out;
 }
 
+// Что в файле не понято — для заметки в панели: опечатка в since иначе молча вернула бы старые
+// версии в «Загрузить в Studio». Файла нет (null) — не ошибка.
+export function rebuildProblem(raw: unknown): string | null {
+  if (raw === null || raw === undefined) return null;
+  const j = typeof raw === "object" && !Array.isArray(raw) ? (raw as { codes?: unknown }) : null;
+  if (!j || !Array.isArray(j.codes)) return `${REBUILD_FILE} не понят — нужен { "since": "…", "reason": "…", "codes": [ … ] }. Пока никто не ждёт пересборки.`;
+  const name = (c: unknown) => (c && typeof c === "object" ? String((c as { code?: unknown }).code ?? "?") : String(c));
+  const list = (cs: unknown[]) => `${cs.slice(0, 6).map(name).join(", ")}${cs.length > 6 ? "…" : ""}`;
+  const lost = j.codes.filter((c) => parseRebuildList({ ...j, codes: [c] }).size === 0);
+  // Свой since не понят — запись держится на общем: так безопаснее, но задумано было другое.
+  const own = j.codes.filter((c) => !lost.includes(c) && c && typeof c === "object" && (c as { since?: unknown }).since !== undefined && parseRebuildList({ codes: [c] }).size === 0);
+  if (!lost.length && !own.length) return null;
+  return [
+    `${REBUILD_FILE}: время нужно с поясом («2026-10-11T12:00:00Z») или просто дата, код — как «08a».`,
+    lost.length ? `Не понято: ${list(lost)} — их панель пока зовёт загружать как обычно.` : "",
+    own.length ? `У ${list(own)} свой since не понят — взят общий.` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 // Релиз «свежий», если опубликован позже since. Именно published_at: created_at у релиза GitHub —
 // дата коммита, и пересборка с коммита до since выглядела бы старой.
 export const releaseIsFresh = (release: { publishedAt: string | null; createdAt: string } | null, since: string): boolean =>

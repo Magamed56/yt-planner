@@ -59,14 +59,17 @@ export const retryCost = (r: RunInfo) =>
 // числе только что этим же запуском автопилота — launched). Общее у автоповтора и «Повторить».
 function retryTodo(r: RunInfo, runs: RunInfo[], rows: Pick<Row, "code" | "stage" | "hold">[], launched: { batch: string[]; draft: string[] }): { todo: string[]; covered: boolean } {
   const byCode = new Map(rows.map((x) => [x.code, x]));
+  const t = Date.parse(r.createdAt);
   // Черновику достаточно сценария, сборке нужно видео (или ролик уже дальше по этапам). Видео,
-  // которое ждёт пересборки (content/rebuild.json), для сборки не в счёт — упавшую пересборку повторяем.
+  // которое ждёт пересборки (content/rebuild.json), не в счёт только для запуска позже since:
+  // повтор идёт на том же коммите, и запуск до since снова собрал бы старую версию, а его релиз
+  // (опубликован после since) снял бы пометку.
   const done = (code: string) => {
     const x = byCode.get(code);
     const st = x?.stage;
-    return st !== undefined && st !== "topic" && (r.kind === "draft" || (st !== "script" && !x?.hold));
+    const rebuild = x?.hold ? t > Date.parse(x.hold.since) : false;
+    return st !== undefined && st !== "topic" && (r.kind === "draft" || (st !== "script" && !rebuild));
   };
-  const t = Date.parse(r.createdAt);
   const later = runs.filter((x) => x.id !== r.id && RETRY_KINDS.has(x.kind) && Date.parse(x.createdAt) > t && (x.active || x.conclusion === "success"));
   // Сценарий черновика пишет и пакет, а видео черновик не соберёт.
   const isCovered = (code: string) =>

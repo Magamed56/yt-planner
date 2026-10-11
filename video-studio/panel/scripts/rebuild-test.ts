@@ -1,7 +1,8 @@
 // Офлайн-проверка «ждёт пересборки» (content/rebuild.json → lib/rebuild-hold.ts): старый релиз не
 // зовут грузить в Studio, идущая сборка — «пересобирается», свежий релиз (по published_at) снимает
-// пометку, ролик в YouTube не меняется, без файла или с битым — всё как раньше. Настоящие plan.json,
-// channel.json и rebuild.json, подставные релизы, запуски и YouTube. Сеть не нужна.
+// пометку, ролик в YouTube не меняется, без файла или с битым — всё как раньше. Настоящие plan.json
+// и channel.json; список пересборки — своя копия (настоящий файл правят и чистят, от него проверяем
+// только, что он читается); релизы, запуски и YouTube подставные. Сеть не нужна.
 // Запуск из папки video-studio: npx tsx panel/scripts/rebuild-test.ts
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -9,9 +10,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ChannelVideo, FillItem } from "../../src/pipeline/youtube-fill";
 import type { GhRelease, GhRun } from "../lib/github";
-import { canRetry } from "../lib/ops";
+import { canRetry, pickRetries } from "../lib/ops";
 import { dailySummary } from "../lib/push-summary";
-import { buildsVideo, holdLabel, parseRebuildList, REBUILD_FILE } from "../lib/rebuild-hold";
+import { buildsVideo, holdLabel, parseRebuildList, REBUILD_FILE, rebuildProblem } from "../lib/rebuild-hold";
 import { buildState, parseAutopilot, type PanelState, type StateInput } from "../lib/state";
 import { buildTodo, pushLine } from "../lib/todo";
 
@@ -31,7 +32,12 @@ const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", 
 const json = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8")) as unknown;
 const now = new Date("2026-10-11T13:00:00Z"); // вс 11.10, 16:00 МСК
 const SINCE = "2026-10-11T12:00:00Z";
-const rebuildFile = json(REBUILD_FILE);
+// Копия content/rebuild.json на 11.10: сценарии ниже построены на ней, а не на файле в репозитории.
+const REBUILD = {
+  since: SINCE,
+  reason: "голос нарезан не по речи — субтитры расходятся с голосом",
+  codes: ["08a", "08b", "09b", "10b", "11a", "11b", "12a", "12b", "13a", "13b"],
+};
 
 const video = (code: string, over: Partial<ChannelVideo> = {}): ChannelVideo => ({
   videoId: `v${code}${over.publishAt ?? ""}`,
@@ -76,8 +82,9 @@ const fullSlots = ["2026-10-11T16:00:00Z", ...["12", "13", "14", "15", "16", "17
 const full = fullSlots.map((iso, i) => video(`other${i}`, { publishAt: iso }));
 
 // 08b пересобран (новый релиз: коммит 12:04, вышел 12:18); 09a в списке нет; 09b и 10b сейчас
-// собираются; 11a — повтор старого запуска: коммит старый, релиз вышел после since; у 11b идёт
-// только английская сборка; 12a уже в Studio; 13a собран на компьютере (релиза нет).
+// собираются; 11a собран новым запуском после since на коммите до since (в master с тех пор ничего
+// не коммитили): дата коммита старая, релиз вышел после since; у 11b идёт только английская сборка;
+// 12a уже в Studio; 13a собран на компьютере (релиза нет).
 const releases: GhRelease[] = [
   OLD("08b"),
   release("08b", "2026-10-11T12:04:22Z", "2026-10-11T12:18:46Z", "video-08b-new"),
@@ -85,7 +92,7 @@ const releases: GhRelease[] = [
   OLD("09b"),
   OLD("10b"),
   OLD("11a"),
-  release("11a", "2026-10-09T05:13:06Z", "2026-10-11T12:50:00Z", "video-11a-rerun"),
+  release("11a", "2026-10-09T05:13:06Z", "2026-10-11T12:50:00Z", "video-11a-late"),
   OLD("11b"),
   OLD("12a"),
 ];
@@ -104,7 +111,7 @@ const base: StateInput = {
   autopilotLast: null,
   repo: "x/y",
   branch: "master",
-  rebuildJson: rebuildFile,
+  rebuildJson: REBUILD,
 };
 const state = (over: Partial<StateInput> = {}) => buildState({ ...base, ...over });
 const rowOf = (s: PanelState, code: string) => s.rows.find((r) => r.code === code)!;
@@ -113,8 +120,15 @@ const reminder = (s: PanelState, kind: string) => s.reminders.find((m) => m.kind
 
 console.log("«Ждёт пересборки» (без сети):");
 
-test("content/rebuild.json: 10 кодов, since и причина; свой since у кода; битое — пусто", () => {
-  const list = parseRebuildList(rebuildFile);
+test("content/rebuild.json в репозитории читается: since с поясом, все коды — коды", () => {
+  // Файла нет — «всё как раньше», это не ошибка. Есть — каждая запись понята (иначе она молча
+  // выпала бы из списка или взяла общий since).
+  if (!fs.existsSync(path.join(studio, REBUILD_FILE))) return;
+  assert.equal(rebuildProblem(json(REBUILD_FILE)), null);
+});
+
+test("список: 10 кодов, since и причина; свой since у кода; битое — пусто", () => {
+  const list = parseRebuildList(REBUILD);
   assert.deepEqual([...list.keys()], ["08a", "08b", "09b", "10b", "11a", "11b", "12a", "12b", "13a", "13b"]);
   assert.deepEqual(list.get("09b"), { since: "2026-10-11T12:00:00.000Z", reason: "голос нарезан не по речи — субтитры расходятся с голосом" });
   assert.equal(list.has("09a"), false, "09a и 10a — нормальные, их грузить можно");
@@ -151,7 +165,7 @@ test("старый релиз — удержан; идёт сборка — «п
   assert.equal(h("13a")?.rebuilding, false, "собранный на компьютере тоже ждёт (релиза новее нет)");
   for (const c of ["08b", "09a", "11a", "12a"]) assert.equal(h(c), undefined, c);
   assert.equal(rowOf(s, "08b").release?.tag, "video-08b-new", "в карточке — новый релиз");
-  assert.equal(rowOf(s, "11a").release?.tag, "video-11a-rerun", "свежее — по published_at, а не по дате коммита");
+  assert.equal(rowOf(s, "11a").release?.tag, "video-11a-late", "свежее — по published_at, а не по дате коммита");
 });
 
 test("удержанные — не в «Загрузить в Studio», не в «⬇ Скачать N», не в напоминании и не в уведомлении", () => {
@@ -208,16 +222,29 @@ test("ролик уже в YouTube — без пометки и как рань�
   assert.equal(rowOf(out, "09b").hold, undefined);
 });
 
-test("без rebuild.json и с битым файлом — как раньше, без падения", () => {
+test("без rebuild.json и с битым файлом — как раньше, без падения; непонятое — заметкой", () => {
   const before = upload(state({ rebuildJson: undefined }))!;
   assert.deepEqual(before.codes, ["08b", "09a", "09b", "10b", "11a", "11b", "13a"]);
   assert.deepEqual(before.action, { kind: "download", label: "⬇ Скачать 6", codes: ["08b", "09a", "09b", "10b", "11a", "11b"] });
-  for (const bad of [null, "{oops", 42, [], { since: "вчера", codes: ["09b"] }, { codes: "09b" }]) {
+  assert.equal(reminder(state({ rebuildJson: null }), "rebuild"), null, "файла нет — не ошибка");
+  for (const bad of ["{oops", 42, [], { since: "вчера", codes: ["09b"] }, { codes: "09b" }]) {
     const s = state({ rebuildJson: bad });
     assert.deepEqual(upload(s), before, JSON.stringify(bad));
-    assert.equal(reminder(s, "rebuild"), null);
     assert.equal(s.rows.some((r) => r.hold), false);
+    // Опечатку видно в панели: иначе старые версии молча снова зовут загружать.
+    const note = reminder(s, "rebuild")!;
+    assert.equal(note.level, "warn", JSON.stringify(bad));
+    assert.match(note.text, /^content\/rebuild\.json/);
   }
+  // Непонятный код выпадает (заметка), непонятный свой since — общий since и заметка.
+  const half = state({ rebuildJson: { ...REBUILD, codes: ["09b", { code: "10b", since: "2026-10-11 12:00" }, "мусор"] } });
+  assert.ok(rowOf(half, "09b").hold);
+  assert.equal(rowOf(half, "10b").hold?.since, "2026-10-11T12:00:00.000Z");
+  assert.equal(
+    half.reminders.find((m) => m.kind === "rebuild" && !m.codes)?.text,
+    "content/rebuild.json: время нужно с поясом («2026-10-11T12:00:00Z») или просто дата, код — как «08a». Не понято: мусор — их панель пока зовёт загружать как обычно. У 10b свой since не понят — взят общий.",
+  );
+  assert.equal(state().reminders.filter((m) => m.kind === "rebuild").length, 1, "понятный файл — без заметки");
 });
 
 test("пустой слот: удержанный — «открыть» (там «Пересобрать»), не «Скачать»; идёт сборка — без кнопки", () => {
@@ -243,8 +270,29 @@ test("упавшая пересборка: «Повторить» есть, по
   assert.deepEqual(canRetry(s.runs[0]!, s), { ok: true, cost: 2 });
   const plain = state({ runs: [failed], rebuildJson: null });
   assert.deepEqual(canRetry(plain.runs[0]!, plain), { ok: false, reason: "уже готово или запущено заново" }, "без файла — как раньше: видео есть");
-  const fresh = state({ runs: [failed], releases: [...releases, release("09b", "2026-10-11T12:28:54Z", "2026-10-11T12:41:06Z"), release("10b", "2026-10-11T12:28:54Z", "2026-10-11T12:48:00Z")] });
+  const fresh = state({ runs: [failed], releases: [...releases, release("09b", "2026-10-11T12:28:54Z", "2026-10-11T12:48:00Z"), release("10b", "2026-10-11T12:28:54Z", "2026-10-11T12:48:00Z")] });
   assert.deepEqual(canRetry(fresh.runs[0]!, fresh), { ok: false, reason: "уже готово или запущено заново" });
+  // Автопилот повторяет упавшую пересборку сам.
+  assert.deepEqual(pickRetries(s.runs, s.rows, now.getTime(), 10).runs.map((r) => r.id), [5]);
+});
+
+test("запуск до since не повторяем: повтор на том же коммите соберёт старую версию и снимет пометку", () => {
+  // Упал после релизов (например, на коммите текстов), создан до since: 11b собран со старой нарезкой,
+  // 12a уже в Studio.
+  const stale = run(6, "batch: 11b,12a", "completed", "failure", "2026-10-10T23:00:00Z");
+  const s = state({ runs: [stale] });
+  assert.ok(rowOf(s, "11b").hold, "11b ждёт пересборки");
+  const plain = state({ runs: [stale], rebuildJson: null });
+  for (const st of [s, plain]) {
+    assert.deepEqual(canRetry(st.runs[0]!, st), { ok: false, reason: "уже готово или запущено заново" });
+    assert.deepEqual(pickRetries(st.runs, st.rows, now.getTime(), 10), { runs: [], skipped: ["«Ролик · 11b, 12a» — уже готово или запущено заново"] });
+  }
+  // Ровно в since — тоже до: годится только запуск позже.
+  const atSince = state({ runs: [run(7, "batch: 11b,12a", "completed", "failure", SINCE)] });
+  assert.equal(canRetry(atSince.runs[0]!, atSince).ok, false);
+  // А у ролика без видео (13b) запуск до since повторяет, как и раньше.
+  const noVideo = state({ runs: [run(8, "batch: 13b", "completed", "failure", "2026-10-10T23:00:00Z")] });
+  assert.deepEqual(canRetry(noVideo.runs[0]!, noVideo), { ok: true, cost: 1 });
 });
 
 console.log(`\nВсе проверки «ждёт пересборки» пройдены: ${passed}.`);
