@@ -1,0 +1,27 @@
+# Временный: ассеты для видео-приглашения (Gemini image + Pixabay). Удалить после.
+name: "tmp: ассеты приглашения"
+on:
+  push:
+    branches: [claude/stats-probe]
+    paths: [tmp-assets/prompts.json, tmp-assets/assets.mjs]
+permissions:
+  contents: write
+jobs:
+  assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: node tmp-assets/assets.mjs
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          OUT_DIR: ${{ github.workspace }}/tmp-assets/out
+      - name: Ассеты — в ветку
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tmp-assets/out && git commit -qm "tmp: ассеты приглашения" && git push -q origin HEAD:claude/stats-probe || true
