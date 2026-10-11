@@ -130,10 +130,16 @@ function CardThumb({ src, code }: { src: string | null; code: string }) {
 const ourSheet = () => typeof window !== "undefined" && typeof (window.history.state as { boardSheet?: unknown } | null)?.boardSheet === "string";
 const sheetUrl = (key: string | null) => (key ? `${window.location.pathname}?v=${encodeURIComponent(key)}` : window.location.pathname);
 
+// Раскладка и стикеры, изменённые в этой вкладке, — на уровне модуля: Next держит открытую минуту
+// назад страницу в кеше (staleTimes) и по «Назад» покажет её со старыми данными, а router.refresh
+// после перетаскивания мы не зовём. Пока данные те же (gen), берём своё, а не устаревшее серверное.
+let kept: { gen: string; layout: BoardLayout; stickers: Sticker[] } | null = null;
+
 export default function BoardCanvas({ data, initialSelected = null }: { data: BoardData; initialSelected?: string | null }) {
   // Раскладка и стикеры — своё состояние: перетащили — видно сразу, сервер только сохраняет.
-  const [layout, setLayout] = useState<BoardLayout>(data.layout);
-  const [stickers, setStickers] = useState<Sticker[]>(data.stickers);
+  const fromKept = kept && kept.gen === data.shell.generatedAt ? kept : null;
+  const [layout, setLayout] = useState<BoardLayout>(fromKept?.layout ?? data.layout);
+  const [stickers, setStickers] = useState<Sticker[]>(fromKept?.stickers ?? data.stickers);
   const [stickerSel, setStickerSel] = useState<string | null>(null);
   const plan = useMemo(() => applyLayout(data.plan, layout), [data.plan, layout]);
   const bounds = useMemo(() => boardBounds(plan, stickers), [plan, stickers]);
@@ -157,7 +163,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   const [ready, setReady] = useState(false);
   const [seen, setSeen] = useState(data.shell.generatedAt);
   const wantRefresh = useRef(false);
-  const [touched, setTouched] = useState(false); // раскладку или стикеры меняли в этой вкладке
+  const [touched, setTouched] = useState(fromKept !== null); // раскладку или стикеры меняли в этой вкладке
   const stickerSaved = useRef<Sticker | null>(null); // стикер, каким был при открытии листа
   const lastTap = useRef<{ id: string; t: number } | null>(null);
   if (seen !== data.shell.generatedAt) {
@@ -173,6 +179,9 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   useEffect(() => {
     wantRefresh.current = false;
   }, [data.shell.generatedAt]);
+  useEffect(() => {
+    if (touched) kept = { gen: data.shell.generatedAt, layout, stickers };
+  }, [touched, layout, stickers, data.shell.generatedAt]);
 
   const headRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -607,7 +616,8 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
 
   // ---- раскладка и стикеры: на полотне сразу, на сервере — одним действием ----
 
-  // Не сохранилось — откатываем только это изменение (соседние перетаскивания остаются).
+  // Не сохранилось — откатываем это изменение и перечитываем доску с сервера: после нескольких
+  // неудач подряд «обратные» правки легли бы не на то состояние, а сервер знает, что сохранено.
   async function persist(run: () => Promise<ActionResult>, revert: () => void) {
     setTouched(true);
     if (data.demo) return; // демо на фикстуре: только в этой вкладке
@@ -615,6 +625,9 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     if (r.ok) return;
     revert();
     showToast(`Не сохранилось: ${r.message}`, false);
+    kept = null;
+    setTouched(false);
+    startTransition(() => router.refresh());
   }
   function changeLayout(patch: LayoutPatch, undo: LayoutPatch) {
     setLayout((l) => patchLayout(l, patch) ?? l);
@@ -655,7 +668,9 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     openSticker(st);
   }
   function openSticker(st: Sticker) {
+    if (stickerSel === st.id) return; // уже открыт — правка продолжается
     if (selected) closeSheet();
+    if (stickerSel) closeSticker(); // открытый — сохранить, прежде чем открыть другой
     stickerSaved.current = st;
     setStickerSel(st.id);
   }
@@ -674,6 +689,14 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     changeSticker({ op: "delete", id: st.id }, { op: "put", sticker: st });
     showToast("Стикер удалён.", true, () => changeSticker({ op: "put", sticker: st }, { op: "delete", id: st.id }));
   }
+  // Ушли со страницы (вкладка меню, «Назад» на Android) с открытым листом стикера — правку сохраняем.
+  const flushSticker = useRef(() => {});
+  useEffect(() => {
+    flushSticker.current = () => {
+      if (stickerSel) closeSticker();
+    };
+  });
+  useEffect(() => () => flushSticker.current(), []);
   // Двойное касание или двойной щелчок по стикеру — его лист.
   function tapSticker(id: string) {
     const now = performance.now();

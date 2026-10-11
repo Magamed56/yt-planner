@@ -602,8 +602,9 @@ export async function studioMarkAction(lang: string, code: string, at: string | 
 // ---- «Доска»: «загрузил» в Instagram и TikTok, раскладка, стикеры — одна переменная PANEL_BOARD ----
 
 // Перечитать PANEL_BOARD прямо перед записью и поменять только свой раздел (lib/board.ts →
-// writeBoard): две вкладки сразу — побеждает последняя, но чужой раздел не стирается. Не
-// помещается в 48 КБ — ошибка, ничего не пишем.
+// writeBoard); не помещается в 48 КБ — ошибка, ничего не пишем. Из одной вкладки действия идут по
+// очереди (Next), но запросы с двух устройств могут пересечься: у API переменных GitHub нет
+// If-Match, и тогда побеждает последняя запись целиком — как у PANEL_LANG_STUDIO.
 async function writeBoardVar(change: (raw: string | null) => BoardWrite): Promise<string | null> {
   const r = change(await getVariable(BOARD_VAR));
   if ("error" in r) return r.error;
