@@ -1,13 +1,13 @@
 "use client";
-// Скачать файлы одного или нескольких роликов: видео, вертикальную обложку, обложку YouTube.
-// Телефон — «Сохранить в Фото» через меню «Поделиться» (частями, если файлов много); компьютер —
-// файлами по очереди, с кодом ролика в имени. Что отмечено — запоминается на этом устройстве.
+// Скачать файлы одного или нескольких роликов: видео, вертикальную обложку, обложку YouTube
+// (или готовый список files — картинки бренд-кита канала). Телефон — «Сохранить в Фото» через меню
+// «Поделиться» (частями, если файлов много); компьютер — файлами по очереди, с кодом ролика в
+// имени. Что отмечено — запоминается на этом устройстве.
 import { useEffect, useRef, useState } from "react";
 import { assetType, parseContentRange } from "@/lib/asset-range";
-import { FILE_KINDS, fileHref, filesOf, KIND_LABEL, kindTotals, shareGroups, type FileKind, type SaveFile, type SaveItem } from "@/lib/downloads";
+import { FILE_KINDS, filesOf, KIND_LABEL, kindTotals, loadFileOf, shareGroups, sizeLabel, type FileKind, type LoadFile, type SaveItem } from "@/lib/downloads";
 import { plural } from "@/lib/stages";
 
-const mb = (bytes: number) => `${(bytes / 1_048_576).toFixed(1).replace(".", ",")} МБ`;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const KINDS_KEY = "panel.files.kinds";
 
@@ -37,9 +37,10 @@ function platformOf(): Platform {
 
 const filesLabel = (n: number) => `${n} ${plural(n, "файл", "файла", "файлов")}`;
 
-// Файл релиза в память кусками через /api/asset/<id>/file (каждый ответ — не больше 4 МБ),
-// с прогрессом. Оборвался кусок — тот же запрос ещё раз (до 3 попыток) с того же байта.
-async function fetchAsset(id: number, signal: AbortSignal, onProgress: (done: number) => void): Promise<Blob> {
+// Файл в память через панель: релиз — кусками /api/asset/<id>/file (каждый ответ — не больше
+// 4 МБ), картинка кита — целиком; с прогрессом. Оборвался кусок — тот же запрос ещё раз (до 3
+// попыток) с того же байта.
+async function fetchFile(src: string, signal: AbortSignal, onProgress: (done: number) => void): Promise<Blob> {
   const parts: BlobPart[] = [];
   let done = 0;
   let total = 0;
@@ -48,7 +49,7 @@ async function fetchAsset(id: number, signal: AbortSignal, onProgress: (done: nu
   for (;;) {
     const before = done;
     try {
-      const res = await fetch(`/api/asset/${id}/file`, { headers: { Range: `bytes=${done}-` }, cache: "no-store", signal });
+      const res = await fetch(src, { headers: { Range: `bytes=${done}-` }, cache: "no-store", signal });
       if (res.status !== 200 && res.status !== 206) {
         const text = (await res.text().catch(() => "")) || `HTTP ${res.status}`;
         throw Object.assign(new Error(text), { retry: res.status >= 500 });
@@ -96,17 +97,20 @@ function savedKinds(): FileKind[] | null {
 }
 
 // fixed — один набор файлов без галочек и без запоминания (кнопки «Видео», «Обложка» на странице
-// канала другого языка), label — их название на кнопке, compact — одна кнопка: без подсказки про
-// меню телефона (она там одна на страницу) и без второй «Поделиться» на Android, subtle — кнопка
-// второго плана (маленькая, не жёлтая). Без них — как в карточке ролика.
+// канала другого языка), files — готовый список вместо роликов (тоже без галочек), label — их
+// название на кнопке, compact — одна кнопка: без подсказки про меню телефона (она там одна на
+// страницу) и без второй «Поделиться» на Android, subtle — кнопка второго плана (маленькая, не
+// жёлтая). Без них — как в карточке ролика.
 export default function FilesSaver({
-  items,
+  items = [],
+  files: given,
   fixed,
   label,
   compact = false,
   subtle = false,
 }: {
-  items: SaveItem[];
+  items?: SaveItem[];
+  files?: LoadFile[];
   fixed?: FileKind[];
   label?: string;
   compact?: boolean;
@@ -117,18 +121,19 @@ export default function FilesSaver({
   const [share, setShare] = useState<Share>({ phase: "idle" });
   const [saving, setSaving] = useState<{ done: number; total: number } | null>(null);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
-  const groups = useRef<SaveFile[][]>([]);
+  const groups = useRef<LoadFile[][]>([]);
   const abort = useRef<AbortController | null>(null);
+  const pick = !fixed && !given; // галочки «что скачать»
 
   // Только в браузере: на сервере нет navigator и localStorage, разметка не должна расходиться.
   useEffect(() => {
-    const saved = fixed ? null : savedKinds();
+    const saved = pick ? savedKinds() : null;
     if (saved) setKinds(saved);
     setPlatform(platformOf());
     return () => abort.current?.abort();
   }, []);
 
-  const files = filesOf(items, kinds);
+  const files = given ?? filesOf(items, kinds).map(loadFileOf);
   const bytes = files.reduce((s, f) => s + f.size, 0);
   const totals = kindTotals(items);
   const many = items.length > 1;
@@ -160,7 +165,7 @@ export default function FilesSaver({
       let base = 0;
       let shown = 0;
       for (const f of group) {
-        const blob = await fetchAsset(f.assetId, ctrl.signal, (d) => {
+        const blob = await fetchFile(f.src, ctrl.signal, (d) => {
           // Перерисовка — только когда сменился процент, а не на каждый кусок сети.
           const p = total ? Math.floor(((base + d) / total) * 100) : 0;
           if (p !== shown) setShare({ phase: "loading", part, done: base + d, total });
@@ -214,7 +219,7 @@ export default function FilesSaver({
     for (let i = 0; i < list.length; i++) {
       setSaving({ done: i, total: list.length });
       const a = document.createElement("a");
-      a.href = fileHref(list[i]!);
+      a.href = list[i]!.href;
       a.download = list[i]!.name;
       a.rel = "noopener";
       document.body.appendChild(a);
@@ -237,7 +242,7 @@ export default function FilesSaver({
   const main = subtle ? "btn small" : "btn primary";
   const downloadButton = (
     <button className={main} disabled={!files.length || busy} onClick={downloadAll}>
-      {saving ? `Скачиваю ${saving.done + 1} из ${saving.total}…` : label ? `⬇ ${label} · ${mb(bytes)}` : `⬇ Скачать ${filesLabel(files.length)} · ${mb(bytes)}`}
+      {saving ? `Скачиваю ${saving.done + 1} из ${saving.total}…` : label ? `⬇ ${label} · ${sizeLabel(bytes)}` : `⬇ Скачать ${filesLabel(files.length)} · ${sizeLabel(bytes)}`}
     </button>
   );
   const parts = groups.current.length;
@@ -245,7 +250,7 @@ export default function FilesSaver({
 
   return (
     <div className="files-saver">
-      {!fixed && (
+      {pick && (
         <div className="kinds" role="group" aria-label="Что скачать">
           {FILE_KINDS.map((k) => {
             const t = totals[k];
@@ -257,7 +262,7 @@ export default function FilesSaver({
                 <span>
                   {KIND_LABEL[k]}
                   <span className="muted small">
-                    {count} · {mb(t.size)}
+                    {count} · {sizeLabel(t.size)}
                   </span>
                 </span>
               </label>
@@ -280,7 +285,7 @@ export default function FilesSaver({
           </button>
         ) : platform === "ios" ? (
           <button className={main} disabled={!files.length || busy} onClick={startShare}>
-            {label ? `📱 ${label} · ${mb(bytes)}` : `${shareLabel} · ${filesLabel(files.length)}, ${mb(bytes)}`}
+            {label ? `📱 ${label} · ${sizeLabel(bytes)}` : `${shareLabel} · ${filesLabel(files.length)}, ${sizeLabel(bytes)}`}
           </button>
         ) : (
           downloadButton
@@ -312,7 +317,7 @@ export default function FilesSaver({
             <span style={{ width: `${pct}%` }} />
           </div>
           <span className="small muted">
-            {mb(share.done)} из {mb(share.total)} · осталось {mb(Math.max(0, share.total - share.done))}
+            {sizeLabel(share.done, share.total)} из {sizeLabel(share.total)} · осталось {sizeLabel(Math.max(0, share.total - share.done), share.total)}
             {parts > 1 ? ` · потом ещё ${parts - share.part - 1} ${plural(parts - share.part - 1, "часть", "части", "частей")}` : ""}
           </span>
         </div>
@@ -337,7 +342,7 @@ export default function FilesSaver({
       {share.phase === "ready" && (
         <p className="small muted">
           Готово {filesLabel(share.files.length)}.{" "}
-          {platform === "ios" ? "В меню выберите «Сохранить» — видео и обложки лягут в «Фото» в исходном качестве" : "В меню выберите приложение — TikTok, Instagram, Google Фото"}
+          {platform === "ios" ? "В меню выберите «Сохранить» — видео и картинки лягут в «Фото» в исходном качестве" : "В меню выберите приложение — TikTok, Instagram, Google Фото"}
           {parts > 1 ? "; следующая часть начнёт готовиться сама" : ""}.
         </p>
       )}
@@ -350,7 +355,7 @@ export default function FilesSaver({
           </button>
         </p>
       )}
-      {!files.length && !fixed && <p className="small muted">Отметьте, что скачать.</p>}
+      {!files.length && pick && <p className="small muted">Отметьте, что скачать.</p>}
       <div role="status" aria-live="polite">
         {note && <p className={`small ${note.ok ? "muted" : "flag"}`}>{note.text}</p>}
       </div>
@@ -362,10 +367,10 @@ export default function FilesSaver({
           <ul>
             {files.map((f) => (
               <li key={f.key}>
-                <a href={fileHref(f)} download={f.name}>
+                <a href={f.href} download={f.name}>
                   ⬇ {f.name}
                 </a>
-                <span className="muted small">{mb(f.size)}</span>
+                <span className="muted small">{sizeLabel(f.size)}</span>
               </li>
             ))}
           </ul>

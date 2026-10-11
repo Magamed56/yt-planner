@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { channelFromJson, isoNoMs, longScheduleOf, upcomingSlots } from "../../src/pipeline/channel";
 import { isLongCode, mp4Code, normCode } from "../../src/pipeline/codes";
+import { DEFAULT_LANG, LANGS, normalizeLang } from "../../src/pipeline/lang";
 import { LONG_BUILD_LABEL, LONG_PLAN_FILE, parseLongPlan } from "../../src/pipeline/long-plan";
 import { parsePlan, PLAN_CODE, scriptCode } from "../../src/pipeline/plan";
 import { applyUpdate, fillItemsOf, matchVideos, planUpdates, setThumbnail, THUMBNAIL_MAX_BYTES, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
@@ -13,6 +14,7 @@ import { runAutopilot } from "@/lib/autopilot";
 import { dispatchOnce } from "@/lib/dispatch";
 import { buildFirstComment, commentBlocker, commentProblem, commentUrl, ctaQuestion, type OwnComment } from "@/lib/first-comment";
 import { assetBytes, assetText, dispatchWorkflow, getVariable, GithubError, listReleases, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
+import { parseStudioMarks, STUDIO_MARKS_VAR, studioMarksText, withStudioMark } from "@/lib/lang-plan";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { canRetry, confirmStale } from "@/lib/ops";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
@@ -574,6 +576,24 @@ export async function captionAction(assetId: number): Promise<(ActionResult & { 
   return guarded(async () => {
     if (!Number.isInteger(assetId) || assetId <= 0) return fail("Неверный файл.");
     return { ok: true, message: "", text: await assetText(assetId) };
+  });
+}
+
+// ---- канал другого языка: «запланирован в Studio» ----
+
+// Время ролика уже стоит в Studio — план его больше не двигает (lib/lang-plan.ts). at — момент из
+// карточки, null — снять отметку. Перечитываем переменную прямо перед записью: две вкладки сразу —
+// побеждает последняя.
+export async function studioMarkAction(lang: string, code: string, at: string | null): Promise<ActionResult> {
+  return guarded(async () => {
+    const l = normalizeLang(lang);
+    const c = normCode(code);
+    if (!l || l === DEFAULT_LANG || !LANGS[l] || !c) return fail("Неверный ролик — обновите страницу.");
+    const ms = at === null ? null : Date.parse(at);
+    if (ms !== null && !(Number.isFinite(ms) && Math.abs(ms - Date.now()) < 400 * 86_400_000)) return fail("Неверное время — обновите страницу.");
+    const marks = parseStudioMarks(await getVariable(STUDIO_MARKS_VAR));
+    await setVariable(STUDIO_MARKS_VAR, studioMarksText(withStudioMark(marks, l, c, ms)));
+    return ok(ms === null ? `${l}-${c}: отметка снята — время снова по плану.` : `${l}-${c}: запланирован в Studio, время закреплено.`);
   });
 }
 

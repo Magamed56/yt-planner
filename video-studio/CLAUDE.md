@@ -47,7 +47,8 @@
   замер на ролике из релиза — `src/dev/align-check.ts`, не тест: нужна модель); `props.ts` (сборка props),
   `render.ts` (bundle → renderMedia/renderStill), `youtube.ts` (resumable-загрузка, publishAt),
   `srt.ts`, `meta.ts` (описание/теги, подвал канала), `slug.ts`, `channel.ts` (channel.json, слоты
-  расписания через Intl — DST-безопасно), `instagram.ts` (Reels: контейнер → rupload → статус →
+  расписания через Intl — DST-безопасно; план от первого дня `schedule.start` — `startPlanOf`,
+  `planFromStart`, его показывает панель на `/lang/en`), `instagram.ts` (Reels: контейнер → rupload → статус →
   media_publish; подпись `instagram.txt`), `cover.ts` (обложка Reels `cover.jpg` — renderStill
   композиции Video в конце хука, тот же кадр → `thumb_offset`), `telegram.ts` (канал Telegram:
   sendVideo с `cover.jpg`, подпись `telegram.txt`/`instagram.txt` ≤ 1024, пережатие > 50 МБ,

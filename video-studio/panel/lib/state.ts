@@ -14,6 +14,7 @@ import { STAGES, codesLabel, plural, runLabel, shiftDateKey, type Stage } from "
 import type { StatsHistory } from "./history";
 import { typicalRatio } from "./insights";
 import { buildPulse, type Pulse } from "./pulse";
+import { buildsVideo, parseRebuildList, rebuildProblem, releaseIsFresh, type Hold } from "./rebuild-hold";
 import { isShorts, rowStats, viewsPerDay, type RowStats } from "./stats";
 
 export { STAGES, STAGE_LABEL, codesLabel, plural, type Stage } from "./stages";
@@ -27,7 +28,8 @@ export interface Asset {
 export interface ReleaseInfo {
   tag: string;
   url: string;
-  createdAt: string;
+  createdAt: string; // у релиза GitHub это дата коммита
+  publishedAt: string | null; // когда релиз опубликован — по нему «свежий» и «старый»
   mp4: Asset;
   cover: Asset | null; // cover.jpg — вертикальный кадр (обложка Reels)
   thumb: Asset | null; // thumbnail.png — обложка YouTube 1280×720
@@ -71,6 +73,9 @@ export interface Row {
   voice?: VoiceRef | null; // каким голосом должен быть озвучен (рубрика или канал) — для проверки релиза
   realPhotos?: boolean; // рубрика «настоящих фото» (history, nature, space): только Wikimedia — норма
   long?: boolean; // «Разбор» (L01…, content/long-plan.json): 16:9, ~7 минут, свои слоты вт/чт/сб 21:00
+  // В content/rebuild.json и нет релиза новее since: старую версию в Studio не грузить (только у
+  // этапа «видео»; уже загруженному в YouTube пометка не нужна).
+  hold?: Hold;
 }
 
 export type RunKind = "draft" | "batch" | "render" | "fill" | "check" | "instagram" | "plan" | "titles" | "captions" | "other";
@@ -97,7 +102,7 @@ export interface RunInfo {
 }
 
 export interface Reminder {
-  kind: "runway" | "youtube" | "upload" | "fill" | "problem" | "drift" | "run" | "secrets" | "long";
+  kind: "runway" | "youtube" | "upload" | "fill" | "problem" | "drift" | "run" | "secrets" | "long" | "rebuild";
   level: "error" | "warn" | "info";
   text: string;
   href?: string;
@@ -248,6 +253,7 @@ export interface StateInput {
   history?: StatsHistory | null; // PANEL_STATS_HISTORY — для «Пульса» (в состояние — только сжатое)
   runSteps?: Record<number, GhStep[]>; // шаги идущих запусков (по id)
   longPlanJson?: unknown; // content/long-plan.json (null/нет — «Разборов» нет)
+  rebuildJson?: unknown; // content/rebuild.json (null/нет/битый — никто не ждёт пересборки)
 }
 
 // «["09a","07a","L02"]» → коды; битое — пустой список (порядок плана). «Разборы» в том же
@@ -395,7 +401,10 @@ export function runInfos(ghRuns: GhRun[], steps: Record<number, GhStep[]> | unde
   return runs;
 }
 
-// Самый свежий релиз с файлом «08a-….mp4» (или «L01-….mp4») на каждый код.
+// Самый свежий релиз с файлом «08a-….mp4» (или «L01-….mp4») на каждый код — по времени
+// публикации: created_at у релиза — дата коммита, и повтор старого запуска (тот же коммит) иначе
+// проиграл бы прежнему релизу.
+const releasedAt = (r: { publishedAt: string | null; createdAt: string }) => ms(r.publishedAt ?? r.createdAt);
 function releasesByCode(releases: GhRelease[]): Map<string, ReleaseInfo> {
   const out = new Map<string, ReleaseInfo>();
   for (const r of releases) {
@@ -404,11 +413,13 @@ function releasesByCode(releases: GhRelease[]): Map<string, ReleaseInfo> {
     if (!mp4) continue;
     const code = mp4Code(mp4.name)!;
     const prev = out.get(code);
-    if (prev && ms(prev.createdAt) >= ms(r.created_at)) continue;
+    const publishedAt = r.published_at ?? null;
+    if (prev && releasedAt(prev) >= releasedAt({ publishedAt, createdAt: r.created_at })) continue;
     out.set(code, {
       tag: r.tag_name,
       url: r.html_url,
       createdAt: r.created_at,
+      publishedAt,
       mp4,
       cover: r.assets.find((a) => a.name === "cover.jpg") ?? null,
       thumb: r.assets.find((a) => a.name === "thumbnail.png") ?? null,
@@ -495,6 +506,9 @@ export function buildState(input: StateInput): PanelState {
   const runs = runInfos(input.runs, input.runSteps, tz);
   const running = new Map<string, string>();
   for (const r of runs) if (r.active) for (const c of r.codes) if (!running.has(c)) running.set(c, RUNNING_LABEL[r.kind] ?? "идёт запуск");
+  // «Ждёт пересборки» (content/rebuild.json) и какие из них собираются прямо сейчас.
+  const rebuildList = parseRebuildList(input.rebuildJson ?? null);
+  const rebuilding = new Set(runs.filter((r) => r.active && buildsVideo(r)).flatMap((r) => r.codes));
 
   const rows: Row[] = allItems.map((it) => {
     const long = longCodes.has(it.id);
@@ -523,6 +537,9 @@ export function buildState(input: StateInput): PanelState {
     } else if (release || hasTexts) stage = "video";
     else if (scriptPath) stage = "script";
     else stage = "topic";
+    const mark = stage === "video" ? rebuildList.get(it.id) : undefined;
+    const hold: Hold | null =
+      mark && !releaseIsFresh(release, mark.since) ? { reason: mark.reason, since: mark.since, sinceLabel: labelOf(mark.since), rebuilding: rebuilding.has(it.id) } : null;
 
     return {
       code: it.id,
@@ -554,6 +571,7 @@ export function buildState(input: StateInput): PanelState {
       voice: release ? expectedVoice(channel, it.pillar) : null,
       realPhotos: release ? realPhotosFirst(it.pillar) : false,
       ...(long ? { long: true } : {}),
+      ...(hold ? { hold } : {}),
     };
   });
 
@@ -634,7 +652,8 @@ export function buildState(input: StateInput): PanelState {
     const left = days < 1 ? "меньше суток" : `${days} ${plural(days, "день", "дня", "дней")}`;
     reminders.push({ kind: "runway", level: days < 2 ? "warn" : "info", text: `Первый пустой слот на YouTube — ${gap.label}: до него ${left}.` });
   }
-  const toUpload = rows.filter((r) => r.stage === "video");
+  // Ждущие пересборки — не в «загрузить»: старая версия с ошибкой, новая вот-вот будет.
+  const toUpload = rows.filter((r) => r.stage === "video" && !r.hold);
   if (toUpload.length) {
     const soon = toUpload.some((r) => r.when && ms(r.when) - nowMs < 2 * DAY_MS);
     reminders.push({
@@ -644,6 +663,28 @@ export function buildState(input: StateInput): PanelState {
       text: `Ждут загрузки в Studio: ${codesLabel(toUpload.map((r) => r.code))}. Загрузите руками (имя файла начинается с кода), затем «Найти новые загрузки».`,
     });
   }
+  const held = rows.filter((r) => r.hold);
+  if (held.length) {
+    const building = held.filter((r) => r.hold!.rebuilding).map((r) => r.code);
+    const wait = held.filter((r) => !r.hold!.rebuilding);
+    const reasons = [...new Set(held.map((r) => r.hold!.reason).filter(Boolean))];
+    reminders.push({
+      kind: "rebuild",
+      // Ждёт, никто не собирает, а выходить ему меньше чем через двое суток, — пора пересобрать.
+      level: wait.some((r) => r.when && ms(r.when) - nowMs < 2 * DAY_MS) ? "warn" : "info",
+      codes: held.map((r) => r.code),
+      text: [
+        `Пересборка${reasons.length ? ` (${reasons.join("; ")})` : ""} — старые версии в Studio не загружайте.`,
+        building.length ? `Идёт: ${codesLabel(building)}.` : "",
+        wait.length ? `Ждут: ${codesLabel(wait.map((r) => r.code))} — «Пересобрать» в карточке ролика.` : "",
+        "Готовый ролик сам вернётся в «Загрузить в Studio».",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    });
+  }
+  const rebuildNote = rebuildProblem(input.rebuildJson ?? null);
+  if (rebuildNote) reminders.push({ kind: "rebuild", level: "warn", text: rebuildNote });
   const toFill = rows.filter((r) => r.stage === "studio" && !pending.has(r.code));
   if (toFill.length) {
     reminders.push({
