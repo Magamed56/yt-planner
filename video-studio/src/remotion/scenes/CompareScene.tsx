@@ -56,7 +56,7 @@ export const CompareScene: React.FC<SceneProps> = (p) => {
           align="left"
           scene={p.scene}
           mode="stagger"
-          start={4}
+          start={0}
           step={3}
           entrance="rise"
           highlight="underline"

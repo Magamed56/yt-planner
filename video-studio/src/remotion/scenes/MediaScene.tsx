@@ -41,7 +41,7 @@ export const MediaScene: React.FC<SceneProps> = (p) => {
         align="left"
         scene={p.scene}
         mode="stagger"
-        start={8}
+        start={2}
         step={3}
         entrance="rise"
         highlight="marker"

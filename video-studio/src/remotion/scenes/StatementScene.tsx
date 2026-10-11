@@ -18,6 +18,8 @@ export const StatementScene: React.FC<SceneProps> = (p) => {
   const gap = Math.round((shorts ? 56 : 72) * unit);
   const barIn = spring({ frame: frame - 14, fps, config: { damping: 200 }, durationInFrames: 20 });
 
+  // Слова выезжают с первого кадра перехода: с задержкой у склейки ≈ 0,3 с
+  // экран почти пуст (старая сцена ушла, текст новой ещё не появился).
   const text = (
     <KineticText
       text={p.scene.onScreen}
@@ -29,8 +31,8 @@ export const StatementScene: React.FC<SceneProps> = (p) => {
       align="left"
       scene={p.scene}
       mode="stagger"
-      start={6}
-      step={3}
+      start={0}
+      step={2}
       entrance="rise"
       highlight="underline"
     />
