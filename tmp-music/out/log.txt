@@ -1,0 +1,13 @@
+q="komuz": 0 results
+q="kyrgyz music": 0 results
+q="kyrgyz folk": 0 results
+q="kyrgyz instrumental": 0 results
+q="kazakh dombra": 0 results
+q="dombra": 1 results
+q="central asian folk": 0 results
+q="celebration folk instrumental": 7 results
+saved 18efea6f-2f78-4a90-9a05-6a233ff9c391.mp3 | Turkish music on wedding 140906_01.wav | klankbeeld | by 4.0 | freesound | 234s | Turkey,ambience,ambient,celebration,close-recording,davul,drum,field-recording,flute,folk-music,folklore,live-music
+saved 54672ed5-d4f7-4228-b6ff-32c411218c18.mp3 | Toc de matinades (2) | RafaelCaro | cc0 1.0 | freesound | 71s | Barcelona,Catalonia,festivals,folk,gralla,street,timbal,toc-de-matinades
+saved ad56b2b5-b103-4b73-a688-306d7fcf2994.mp3 | Turkish music on wedding on 100-150m 160604_00.wav | klankbeeld | by 4.0 | freesound | 117s | ambience,ambient,cars,celebration,davul,drum,field-recording,flute,folklore,folk-music,honk,hoot
+saved 4199d67d-c616-4ea7-8c9e-8cc964df0e9d.mp3 | Toc de matinades (1) | RafaelCaro | cc0 1.0 | freesound | 75s | Barcelona,Catalonia,festivals,folk,gralla,street,timbal,toc-de-matinades
+done
