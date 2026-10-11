@@ -15,7 +15,7 @@ import { BOARD_VAR, isSocial, parseBoardMarks, SOCIAL_LABEL, withBoardMark } fro
 import { dispatchOnce } from "@/lib/dispatch";
 import { buildFirstComment, commentBlocker, commentProblem, commentUrl, ctaQuestion, type OwnComment } from "@/lib/first-comment";
 import { assetBytes, assetText, dispatchWorkflow, getVariable, GithubError, listReleases, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
-import { parseStudioMarks, STUDIO_MARKS_VAR, studioMarksText, withStudioMark } from "@/lib/lang-plan";
+import { parseStudioMarks, STUDIO_MARKS_MAX, STUDIO_MARKS_VAR, studioMarksText, withStudioMark } from "@/lib/lang-plan";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { canRetry, confirmStale } from "@/lib/ops";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
@@ -601,16 +601,20 @@ export async function studioMarkAction(lang: string, code: string, at: string | 
 // ---- «Доска»: «загрузил» в Instagram и TikTok ----
 
 // Ролик выложен (или поставлен в расписание) в Instagram или TikTok: at — его время на доске,
-// null — снять отметку. Как studioMarkAction: переменную перечитываем прямо перед записью.
+// null — снять отметку. Как studioMarkAction: переменную перечитываем прямо перед записью. Код —
+// только из плана Shorts; отметку, которую срезал бы лимит (400 на площадку), не пишем.
 export async function boardMarkAction(platform: string, code: string, at: string | null): Promise<ActionResult> {
   return guarded(async () => {
     const c = normCode(code);
     if (!isSocial(platform) || !c || isLongCode(c)) return fail("Неверный ролик — обновите страницу.");
+    if (!(await planCodes([c])).length) return fail(`Ролика ${c} нет в плане — обновите страницу.`);
     const ms = at === null ? null : Date.parse(at);
     if (ms !== null && !(Number.isFinite(ms) && Math.abs(ms - Date.now()) < 400 * 86_400_000)) return fail("Неверное время — обновите страницу.");
     const marks = parseBoardMarks(await getVariable(BOARD_VAR));
-    await setVariable(BOARD_VAR, studioMarksText(withBoardMark(marks, platform, c, ms)));
+    const next = withBoardMark(marks, platform, c, ms);
     const where = SOCIAL_LABEL[platform];
+    if (ms !== null && next[platform]?.[c] !== ms) return fail(`${where}: отметок уже ${STUDIO_MARKS_MAX}, а эта — самая ранняя, её не сохранить. Снимите старые отметки.`);
+    await setVariable(BOARD_VAR, studioMarksText(next));
     return ok(ms === null ? `${where}, ${c}: отметка снята.` : `${where}, ${c}: загружен.`);
   });
 }

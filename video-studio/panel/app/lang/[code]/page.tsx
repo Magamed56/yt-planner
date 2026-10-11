@@ -11,11 +11,12 @@ import ErrorScreen from "@/components/ErrorScreen";
 import LangView from "@/components/LangView";
 import { brandDir, brandKitOf, type BrandKit } from "@/lib/brand-kit";
 import { CHANNEL_NAME } from "@/lib/channel-name";
-import { assetText, branchName, getVariable, listDirEntries, listReleases, listRuns, readFile, repoName } from "@/lib/github";
+import { branchName, getVariable, listDirEntries, listReleases, listRuns, readFile, repoName } from "@/lib/github";
 import { LANG_CHANNELS, langChannel, langChannelJson, navLangs, PANEL_TZ } from "@/lib/lang-channels";
 import { langPlanOf, parseStudioMarks, STUDIO_MARKS_VAR } from "@/lib/lang-plan";
 import { STUDIO_DIR } from "@/lib/load";
-import { emptyText, langRunsOf, langVideosOf, releaseLangs, withFileTexts, type LangPageData, type LangRunNote } from "@/lib/lang-videos";
+import { withReleaseTexts } from "@/lib/lang-texts";
+import { emptyText, langRunsOf, langVideosOf, releaseLangs, type LangPageData, type LangRunNote } from "@/lib/lang-videos";
 import { runInfos, type RunInfo } from "@/lib/state";
 
 type Params = { params: Promise<{ code: string }> };
@@ -23,20 +24,6 @@ type Params = { params: Promise<{ code: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const lang = normalizeLang((await params).code);
   return { title: lang && lang !== DEFAULT_LANG ? `${langChannel(lang).name} — панель` : "Каналы — панель" };
-}
-
-// description.txt релизов с пустым текстом релиза: файл по номеру не меняется — помним его.
-const fileTexts = new Map<number, string>();
-async function readTexts(ids: number[]): Promise<Map<number, string>> {
-  if (fileTexts.size > 200) fileTexts.clear();
-  await Promise.all(
-    ids.filter((id) => !fileTexts.has(id)).map((id) =>
-      assetText(id)
-        .then((t) => void fileTexts.set(id, t))
-        .catch(() => {}), // не прочитался — название из релиза, копирование описания скрыто
-    ),
-  );
-  return fileTexts;
 }
 
 // Бренд-кит языка: файлы папки (размер и sha — для кнопок и адресов картинок), обложки
@@ -91,9 +78,7 @@ export default async function LangPage({ params }: Params) {
         () => null,
       ),
     ]);
-    let videos = langVideosOf(releases, lang);
-    const missing = videos.filter((v) => !v.texts && v.description).slice(0, 12);
-    if (missing.length) videos = withFileTexts(videos, await readTexts(missing.map((v) => v.description!.id)));
+    let videos = await withReleaseTexts(langVideosOf(releases, lang));
     const marks = marksRaw ? (parseStudioMarks(marksRaw.raw)[lang] ?? {}) : null;
     const plan = langPlanOf(langChannelJson(lang), videos.map((v) => v.code), marks, now.getTime());
     // Есть план — карточки в порядке выхода (так их и грузят), иначе свежие коды первыми.
