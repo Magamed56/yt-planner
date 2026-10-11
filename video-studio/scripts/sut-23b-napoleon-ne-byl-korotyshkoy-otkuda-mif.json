@@ -1,0 +1,98 @@
+{
+  "title": "Наполеон не был коротышкой: откуда миф",
+  "description": "Каким был настоящий рост Наполеона Бонапарта и почему его до сих пор считают коротышкой. Разбираем путаницу французских и английских дюймов и британские карикатуры Джеймса Гилрея про Little Boney.\n#shorts #наполеон #история #мифы",
+  "tags": [
+    "наполеон",
+    "наполеон бонапарт",
+    "рост наполеона",
+    "комплекс наполеона",
+    "история",
+    "мифы истории",
+    "джеймс гилрей",
+    "карикатура",
+    "наполеон война 1812",
+    "napoleon",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Наполеон был обычного роста. Миф помогли создать карикатуристы.",
+      "onScreen": "Наполеон *не был* коротышкой",
+      "icon": "triangle-alert",
+      "visualQuery": "Napoleon Bonaparte portrait",
+      "imagePrompt": "cinematic portrait of Napoleon Bonaparte in a dark blue uniform standing tall in a candlelit study, warm amber light, oil painting texture"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "По английским меркам в нём было около пяти футов семи дюймов. Это примерно сто семьдесят сантиметров.",
+      "onScreen": "5 футов 7 дюймов = *≈170 см*",
+      "stat": {
+        "value": 170,
+        "prefix": "≈",
+        "suffix": " см",
+        "label": "рост Наполеона"
+      },
+      "icon": "ruler",
+      "visualQuery": "antique measuring ruler",
+      "imagePrompt": "antique brass measuring rod beside a French officer bicorne hat on a wooden table, warm candle light, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Для своей эпохи это вполне средний рост. Не великан, но и не коротышка.",
+      "onScreen": "Рост *средний* для эпохи",
+      "icon": "users",
+      "visualQuery": "Napoleonic soldiers reenactment",
+      "imagePrompt": "line of early 19th century French soldiers in uniforms standing shoulder to shoulder in morning fog, warm golden haze"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Откуда тогда миф? Первая ловушка — единицы измерения. Французский дюйм длиннее английского.",
+      "onScreen": "Ловушка №1: *разные* дюймы",
+      "icon": "scale",
+      "visualQuery": "old measuring tape tailor",
+      "imagePrompt": "two old measuring tapes crossing each other on aged parchment, warm sepia light, macro shot"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Французские цифры читали как английские. И Наполеон на бумаге будто съёживался.",
+      "onScreen": "На бумаге он *съёживался*",
+      "icon": "trending-down",
+      "visualQuery": "old handwritten document quill",
+      "imagePrompt": "quill pen writing numbers on an old French document by candlelight, ink drops, warm amber tones"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Вторая ловушка опаснее. Британец Джеймс Гилрей рисовал его крошечным и звал Маленький Бони.",
+      "onScreen": "Гилрей и *Little Boney*",
+      "icon": "pen-tool",
+      "visualQuery": "James Gillray caricature Napoleon",
+      "imagePrompt": "18th century satirical print workshop with hand-colored engravings drying on strings, warm window light, no readable text"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Карикатура смешнее цифр, поэтому запомнилась она. Вывод простой: проверяй, кто и зачем нарисовал образ.",
+      "onScreen": "Смешной образ живёт *дольше* правды",
+      "icon": "eye",
+      "visualQuery": "British Museum print room",
+      "imagePrompt": "magnifying glass over a faded hand-colored caricature print on a museum table, soft warm light, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Какой ещё исторический образ придумали враги?",
+      "onScreen": "Чей образ тоже *придумали* враги?",
+      "icon": "message-circle"
+    }
+  ]
+}

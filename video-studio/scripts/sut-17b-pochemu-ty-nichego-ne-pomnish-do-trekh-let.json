@@ -1,0 +1,90 @@
+{
+  "title": "Почему ты ничего не помнишь до трёх лет",
+  "description": "Детская амнезия простыми словами: с какого возраста обычно начинаются самые ранние воспоминания взрослых и почему младенцы на самом деле запоминают. Разбираем исследования Рубина, Бауэр и свежую работу о гиппокампе младенцев.\n#shorts #память #мозг #психология",
+  "tags": [
+    "детская амнезия",
+    "память",
+    "мозг",
+    "психология",
+    "ранние воспоминания",
+    "гиппокамп",
+    "младенцы",
+    "почему ты ничего не помнишь",
+    "почему ты меня не помнишь",
+    "наука",
+    "shorts",
+    "childhood amnesia"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Ты прожил три года, которых совсем не помнишь.",
+      "onScreen": "3 года, которых ты *не помнишь*",
+      "icon": "hourglass",
+      "visualQuery": "baby first steps home",
+      "imagePrompt": "cinematic shot of a toddler's small footprints fading on a sunlit wooden floor, warm golden haze, shallow depth of field, nostalgic mood"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Психолог Дэвид Рубин изучил самые ранние воспоминания взрослых. В среднем они относятся к трём, трём с половиной годам.",
+      "onScreen": "Память стартует с *3–3,5 лет*",
+      "stat": {
+        "value": 3.5,
+        "prefix": "≈",
+        "suffix": " года",
+        "label": "возраст самого раннего воспоминания"
+      },
+      "icon": "calendar-check",
+      "visualQuery": "old family photo album",
+      "imagePrompt": "cinematic close-up of an open vintage family photo album with blurred childhood snapshots, warm amber window light, soft dust particles"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Логично решить, что младенцы просто не умеют запоминать. Но разгадка интереснее, и она в конце.",
+      "onScreen": "Младенцы не запоминают? *Не совсем*",
+      "icon": "circle-x",
+      "visualQuery": "infant looking at toy",
+      "imagePrompt": "cinematic portrait of a curious infant staring at a colorful toy, warm sunset light through curtains, soft bokeh background"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "В две тысячи двадцать пятом году команда Йейтса показала на томографе: гиппокамп годовалых малышей уже записывает новое.",
+      "onScreen": "Гиппокамп *записывает* уже с года",
+      "icon": "brain",
+      "visualQuery": "Magnetic resonance imaging scanner",
+      "imagePrompt": "cinematic view of a calm hospital MRI scanner room with a tiny blanket on the bed, warm amber accent light, soft gentle mood"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "А Патриция Бауэр объясняет второе: маленькие дети запоминают, но забывают гораздо быстрее взрослых.",
+      "onScreen": "Запоминают, но *забывают* быстрее",
+      "icon": "trending-down",
+      "visualQuery": "toddler playing blocks floor",
+      "imagePrompt": "cinematic shot of toddler hands stacking wooden blocks that dissolve into golden light particles, warm backlight, shallow depth of field"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Значит, ты всё это пережил и запомнил. Воспоминания просто не дожили до сегодняшнего дня.",
+      "onScreen": "Ты помнил. Память *не дожила*",
+      "icon": "heart",
+      "visualQuery": "child running park sunset",
+      "imagePrompt": "cinematic silhouette of a small child running through a meadow at sunset, warm orange glow, lens flare, nostalgic dreamy mood"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "Какое твоё самое первое воспоминание?",
+      "onScreen": "Твоё *первое* воспоминание?",
+      "icon": "message-circle"
+    }
+  ]
+}

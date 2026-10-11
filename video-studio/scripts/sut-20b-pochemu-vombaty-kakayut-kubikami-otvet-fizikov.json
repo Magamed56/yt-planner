@@ -1,0 +1,102 @@
+{
+  "title": "Почему вомбаты какают кубиками: ответ физиков",
+  "description": "Вомбаты какают кубиками, и форму задаёт сам кишечник с участками разной жёсткости. Разбираем, как мягкая стенка лепит грани и углы и за что учёные получили Шнобелевскую премию по физике 2019 года.\n#shorts #вомбаты #наука #животные",
+  "tags": [
+    "вомбаты",
+    "вомбаты какают кубиками",
+    "вомбат какает кубиками видео",
+    "вомбат",
+    "животные",
+    "физика",
+    "шнобелевская премия",
+    "биология",
+    "факты о животных",
+    "наука",
+    "wombat",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Это животное какает кубиками. И физики знают почему.",
+      "onScreen": "Это животное какает *кубиками*",
+      "icon": "box",
+      "visualQuery": "Common wombat",
+      "imagePrompt": "cinematic close-up of a wombat sitting in dry eucalyptus forest, warm golden hour light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Это вомбат. Его помёт выходит с гранями и углами, как маленькие кубики.",
+      "onScreen": "Вомбат: помёт с *гранями*",
+      "icon": "eye",
+      "visualQuery": "wombat walking grass",
+      "imagePrompt": "wombat walking through grassy bushland at sunset, low angle, warm earthy palette, soft haze"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Думаешь, кубик лепится уже на выходе? Нет. Форму задаёт сам кишечник.",
+      "onScreen": "Форму задаёт *кишечник*",
+      "icon": "circle-x",
+      "visualQuery": "wombat burrow entrance",
+      "imagePrompt": "entrance of a wombat burrow in red soil among roots, dramatic side light, earthy tones"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "Схема простая. Стенка кишечника. Участки разной жёсткости. И на выходе грани с углами.",
+      "onScreen": "Как получается *кубик*",
+      "items": [
+        "Стенка кишечника",
+        "Разная жёсткость",
+        "Грани и углы"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "wombat eating grass",
+      "imagePrompt": "top-down view of soft clay being shaped into a cube by flexible bands, natural warm light, earthy palette"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Жёсткие и мягкие участки по-разному давят на содержимое. Так стенка сама лепит грани.",
+      "onScreen": "Стенка лепит *грани* сама",
+      "icon": "layers",
+      "visualQuery": "wombat Tasmania grassland",
+      "imagePrompt": "wombat grazing on a misty meadow at dawn, soft backlight, warm green and amber palette"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "За эту разгадку учёные получили Шнобелевскую премию по физике в две тысячи девятнадцатом году.",
+      "onScreen": "Шнобелевка по *физике*",
+      "stat": {
+        "value": 2019,
+        "label": "Шнобелевская премия по физике"
+      },
+      "icon": "trophy",
+      "visualQuery": "trophy award ceremony",
+      "imagePrompt": "small golden trophy on a wooden table beside a tiny cube of soil, warm spotlight, earthy background"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "И главный вывод серьёзный. Чтобы сделать углы, жёсткая форма не нужна. Хватит мягкой трубки с разной жёсткостью стенок.",
+      "onScreen": "Углы без формы — только *мягкая* трубка",
+      "icon": "lightbulb",
+      "visualQuery": "soft silicone tube",
+      "imagePrompt": "translucent soft tube with alternating stiff and flexible rings, macro shot, warm rim light, earthy palette"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты поверил бы в кубики без объяснения?",
+      "onScreen": "Поверил бы в *кубики*?",
+      "icon": "message-circle"
+    }
+  ]
+}

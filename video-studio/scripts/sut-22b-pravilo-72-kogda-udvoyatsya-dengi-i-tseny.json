@@ -1,0 +1,89 @@
+{
+  "title": "Правило 72: когда удвоятся деньги и цены",
+  "description": "Правило 72 помогает в уме прикинуть, за сколько лет удвоятся вклад или цены при инфляции. Разбираем, почему работает именно 72 и как формула связана с Лукой Пачоли и 1494 годом. Это математика сложных процентов, а не финансовый совет.\n#shorts #правило72 #сложныйпроцент #инфляция #математика",
+  "tags": [
+    "правило 72",
+    "сложный процент",
+    "инфляция",
+    "финансовая грамотность",
+    "математика",
+    "удвоение денег",
+    "лука пачоли",
+    "устный счёт",
+    "правило 72 как заполнять",
+    "проценты",
+    "rule of 72",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Есть формула, которая за секунду считает, когда удвоятся деньги.",
+      "onScreen": "Удвоение денег *за секунду*",
+      "icon": "timer",
+      "visualQuery": "coins stack growing",
+      "imagePrompt": "cinematic close-up of two stacks of gold coins on a dark wooden table, one twice as tall, soft green rim light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Раздели семьдесят два на годовой процент. Получишь годы до удвоения. А самое полезное — в конце.",
+      "onScreen": "72 ÷ ставка = *годы*",
+      "icon": "lightbulb",
+      "visualQuery": "calculator notebook desk",
+      "imagePrompt": "top-down view of a notebook with handwritten division and a pencil, warm desk lamp light, emerald and gold palette"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Шесть процентов годовых? Семьдесят два делим на шесть. Двенадцать лет.",
+      "onScreen": "6% → *12 лет*",
+      "icon": "calendar-check",
+      "visualQuery": "hand counting money",
+      "imagePrompt": "cinematic shot of hands counting banknotes beside an old calendar, soft window light, emerald tones"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Этому правилу больше пятисот лет. Его записал Лука Пачоли в тысяча четыреста девяносто четвёртом.",
+      "onScreen": "Лука Пачоли, *1494*",
+      "icon": "book-open",
+      "visualQuery": "Luca Pacioli portrait",
+      "imagePrompt": "Renaissance study with an open ancient arithmetic book, quill and candle, warm golden light, dark green velvet background"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Откуда семьдесят два? Удвоение задаёт логарифм двойки, около ноль шестьдесят девять. А семьдесят два удобно делится почти на всё.",
+      "onScreen": "Секрет в *логарифме* двойки",
+      "stat": {
+        "value": 0.693,
+        "prefix": "≈",
+        "label": "натуральный логарифм двух"
+      },
+      "icon": "atom",
+      "visualQuery": "math formulas chalkboard",
+      "imagePrompt": "chalkboard with abstract mathematical curves glowing faintly green, dim classroom, cinematic side light"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "А теперь главное. Правило работает и против тебя. Инфляция восемь процентов — и цены удвоятся за девять лет.",
+      "onScreen": "Инфляция 8% → цены ×2 за *9 лет*",
+      "icon": "trending-up",
+      "visualQuery": "supermarket price tags",
+      "imagePrompt": "cinematic supermarket aisle with blurred shelves and a single price tag in focus, cool emerald light, moody atmosphere"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "За сколько лет удвоятся твои цены?",
+      "onScreen": "Когда удвоятся *твои* цены?",
+      "icon": "message-circle"
+    }
+  ]
+}

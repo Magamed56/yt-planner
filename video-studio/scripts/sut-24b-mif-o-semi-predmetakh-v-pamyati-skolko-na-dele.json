@@ -1,0 +1,99 @@
+{
+  "title": "Миф о семи предметах в памяти: сколько на деле",
+  "description": "Откуда взялось магическое число семь плюс-минус два Джорджа Миллера и почему поздние исследования рабочей памяти называют предел около четырёх элементов. Узнаешь, зачем номера телефонов разбивают на группы и как с помощью этого запоминать коды и списки.\n#shorts #память #психология #мозг",
+  "tags": [
+    "рабочая память",
+    "магическое число семь",
+    "миллер",
+    "коуэн",
+    "память",
+    "психология",
+    "мозг",
+    "мифы",
+    "мифы против ученых",
+    "как запомнить",
+    "кратковременная память",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "В голове помещается не семь вещей. Меньше.",
+      "onScreen": "Не семь. *Меньше.*",
+      "icon": "brain",
+      "visualQuery": "person thinking hand forehead",
+      "imagePrompt": "cinematic portrait of a person in deep thought, glowing floating fragments of light around the head, deep blue palette, soft rim light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Число семь пошло от психолога Джорджа Миллера. В тысяча девятьсот пятьдесят шестом году вышла его статья: магическое число семь плюс-минус два.",
+      "onScreen": "Миллер, 1956: *7 ± 2*",
+      "icon": "book-open",
+      "visualQuery": "George Armitage Miller portrait",
+      "imagePrompt": "vintage 1950s psychology journal lying open on a wooden desk, typewriter nearby, warm lamp light against deep blue shadows, cinematic"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Цифра прижилась. Но в таких опытах люди незаметно склеивали элементы в группы.",
+      "onScreen": "Люди *склеивали* элементы в группы",
+      "icon": "layers",
+      "visualQuery": "wooden blocks hands stacking",
+      "imagePrompt": "hands grouping glowing cubes into small clusters on a dark table, blue cinematic light, shallow depth of field"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "В две тысячи первом году Нельсон Коуэн учёл эту хитрость. Без группировки предел — около четырёх единиц.",
+      "onScreen": "Коуэн, 2001: предел около *4*",
+      "stat": {
+        "value": 4,
+        "prefix": "≈",
+        "label": "единицы в рабочей памяти"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Миллер",
+            "value": 7
+          },
+          {
+            "label": "Коуэн",
+            "value": 4
+          }
+        ],
+        "suffix": ""
+      }
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Вот почему номер телефона пишут группами. Мозгу проще удержать несколько кусков, чем россыпь цифр.",
+      "onScreen": "Номер — это *куски*, а не цифры",
+      "icon": "smartphone",
+      "visualQuery": "phone keypad dialing finger",
+      "imagePrompt": "close-up of a finger dialing on a phone keypad, glowing digits in the dark, deep blue palette, cinematic bokeh"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Используй это сам. Длинный код или список режь на три-четыре куска. Каждый кусок мозг считает за одну вещь.",
+      "onScreen": "Режь на куски по *3–4*",
+      "icon": "list-checks",
+      "visualQuery": "sticky notes desk notebook",
+      "imagePrompt": "top-down view of a dark desk with a notebook and neatly grouped sticky notes, soft blue light, minimal composition"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "На сколько кусков ты делишь свой номер?",
+      "onScreen": "Сколько *кусков* в твоём номере?",
+      "icon": "message-circle"
+    }
+  ]
+}

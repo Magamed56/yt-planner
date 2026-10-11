@@ -1,0 +1,93 @@
+{
+  "title": "Почему лёд скользкий: миф о давлении коньков",
+  "description": "Почему лёд скользкий, если давление конька его почти не плавит? Разбираем три версии: миф о таянии под давлением, жидкоподобный слой Фарадея и нагрев трением, плюс что показали опыты и моделирование 2018 года.\n#shorts #физика #лёд #наука",
+  "tags": [
+    "почему лед скользкий",
+    "скользкий",
+    "лёд",
+    "физика",
+    "наука",
+    "фарадей",
+    "трение",
+    "коньки",
+    "молекулы",
+    "почему лед не тонет",
+    "shorts",
+    "ice physics"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Почему лёд скользкий? Учёные до сих пор спорят.",
+      "onScreen": "Почему лёд *скользкий*?",
+      "icon": "triangle-alert",
+      "visualQuery": "person slipping on ice",
+      "imagePrompt": "cinematic low angle shot of a frozen lake surface with a lone skate blade gliding, icy blue light, frosty mist, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "В школе учат: давление конька плавит лёд, и ты едешь по воде.",
+      "onScreen": "Конёк плавит лёд? Школьная *версия*",
+      "icon": "graduation-cap",
+      "visualQuery": "ice skate blade",
+      "imagePrompt": "macro shot of a steel ice skate blade pressing into ice, crisp blue tones, cold rim light"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Это миф. При обычном морозе давления конька не хватит, чтобы растопить лёд.",
+      "onScreen": "Давление почти *не плавит* лёд",
+      "icon": "circle-x",
+      "visualQuery": "ice skating rink skaters",
+      "imagePrompt": "wide cinematic view of an outdoor ice rink at dusk, skaters in motion blur, icy blue and silver palette"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Ещё Фарадей предположил: поверхность льда покрыта тонким слоем, похожим на жидкость.",
+      "onScreen": "Идея Фарадея: *жидкоподобный* слой",
+      "icon": "droplet",
+      "visualQuery": "Michael Faraday portrait",
+      "imagePrompt": "19th century laboratory table with a block of ice glistening under candle light, cold blue reflections, moody atmosphere"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Вторая версия — трение. Ты скользишь, и трение греет лёд прямо под подошвой.",
+      "onScreen": "Версия №2: *трение* греет лёд",
+      "icon": "flame",
+      "visualQuery": "boots walking icy sidewalk",
+      "imagePrompt": "close-up of a winter boot sliding on glossy ice, faint warm glow beneath the sole contrasting with icy blue surroundings"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "А в две тысячи восемнадцатом году опыты и моделирование показали: верхние молекулы слабо связаны и перекатываются.",
+      "onScreen": "2018: молекулы *перекатываются*",
+      "icon": "atom",
+      "visualQuery": "ice crystal macro",
+      "imagePrompt": "abstract visualization of glowing water molecules on a crystalline ice lattice, top layer loosely rolling, deep blue and cyan light"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Выходит, ты скользишь по шатким молекулам. А точку в споре пока никто не поставил.",
+      "onScreen": "Спор физиков *не окончен*",
+      "icon": "microscope",
+      "visualQuery": "frozen lake surface",
+      "imagePrompt": "vast frozen lake under a pale winter sky, a single figure far away, cold blue palette, contemplative mood"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты бы поставил на плёнку или трение?",
+      "onScreen": "Плёнка или *трение*?",
+      "icon": "message-circle"
+    }
+  ]
+}

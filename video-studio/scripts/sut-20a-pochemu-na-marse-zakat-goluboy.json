@@ -1,0 +1,98 @@
+{
+  "title": "Почему на Марсе закат голубой",
+  "description": "Почему на Марсе небо рыжее, а закат голубой? Разбираем снимки марсоходов Curiosity и Spirit и объясняем, как мелкая марсианская пыль рассеивает синий свет вперёд, к Солнцу.\n#shorts #марс #космос #наука",
+  "tags": [
+    "марс",
+    "на марс",
+    "закат на марсе",
+    "голубой закат",
+    "марсоход curiosity",
+    "кьюриосити",
+    "спирит",
+    "марсианская пыль",
+    "космос",
+    "астрономия",
+    "наука",
+    "mars sunset",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "На Марсе всё наоборот: небо рыжее, а закат голубой.",
+      "onScreen": "Рыжее небо. *Голубой* закат",
+      "icon": "sun",
+      "visualQuery": "Mars sunset Gale crater",
+      "imagePrompt": "cinematic wide shot of a dusty rust-colored Martian landscape at dusk, small pale sun surrounded by a cold blue glow, soft haze, teal and orange palette"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Это не рисунок. В две тысячи пятнадцатом году марсоход Кьюриосити снял такой закат в кратере Гейл.",
+      "onScreen": "Curiosity, кратер Гейл, *2015*",
+      "icon": "camera",
+      "visualQuery": "Curiosity rover Mars",
+      "imagePrompt": "cinematic low-angle shot of a six-wheeled Mars rover on red rocky ground, mast camera pointed at a setting sun with blue halo, dusty haze"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Это был девятьсот пятьдесят шестой сол его миссии. Сол — это марсианские сутки.",
+      "onScreen": "Сол — это *марсианские* сутки",
+      "stat": {
+        "value": 956,
+        "label": "сол миссии Curiosity"
+      },
+      "icon": "calendar-check",
+      "visualQuery": "Gale crater Mars surface",
+      "imagePrompt": "cinematic panorama of a vast Martian crater floor with layered mountain in distance, warm dusty light, teal shadows"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "А десятью годами раньше похожий кадр прислал марсоход Спирит. Значит, это не случайность.",
+      "onScreen": "Spirit, 2005: *снова* голубой",
+      "icon": "eye",
+      "visualQuery": "Spirit rover Mars",
+      "imagePrompt": "cinematic shot of a small solar-panelled Mars rover silhouetted against a pale blue sunset over red plains, quiet mood"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Секрет в пыли. Марсианский воздух полон очень мелких пылинок.",
+      "onScreen": "Всё дело в *пыли*",
+      "icon": "wind",
+      "visualQuery": "Mars dust storm",
+      "imagePrompt": "macro cinematic view of fine reddish dust particles floating in thin air, backlit by distant sun, glowing haze, shallow depth of field"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Такая пыль рассеивает синий свет не во все стороны, а вперёд, почти по лучу.",
+      "onScreen": "Синий свет летит *вперёд*",
+      "icon": "zap",
+      "visualQuery": "sunbeam through dust",
+      "imagePrompt": "cinematic diagram-like scene of sunlight beams passing through suspended dust, blue light continuing forward along the beam, dark reddish background"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Поэтому синева держится у самого Солнца. На закате ты смотришь прямо в неё.",
+      "onScreen": "Синева *вокруг* Солнца",
+      "icon": "sunset",
+      "visualQuery": "sunset horizon desert",
+      "imagePrompt": "cinematic view from Martian surface looking at a tiny setting sun with an intense blue aura fading into ochre sky, rocks in silhouette"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Что выберешь: рыжее небо или голубой закат?",
+      "onScreen": "Рыжее небо или *голубой* закат?",
+      "icon": "message-circle"
+    }
+  ]
+}

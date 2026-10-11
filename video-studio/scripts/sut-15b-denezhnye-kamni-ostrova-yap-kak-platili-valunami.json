@@ -1,0 +1,96 @@
+{
+  "title": "Денежные камни острова Яп: как платили валунами",
+  "description": "Камни раи с острова Яп — деньги, которые часто вообще не двигали с места. Узнаешь, как община помнила владельца каждого камня, почему утонувший камень всё равно считался богатством и что общего у этой системы с твоим банковским счётом.\n#shorts #деньги #история #экономика #яп",
+  "tags": [
+    "денежные камни",
+    "денежный камень",
+    "остров яп",
+    "камни раи",
+    "история денег",
+    "экономика",
+    "деньги",
+    "палау",
+    "банк",
+    "необычные факты",
+    "shorts",
+    "rai stones"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "На одном острове платили камнями выше человеческого роста.",
+      "onScreen": "Деньги *выше* человека",
+      "icon": "coins",
+      "visualQuery": "Rai stones Yap",
+      "imagePrompt": "cinematic low-angle shot of a giant round stone disc with a hole in the center standing among tropical palms, warm golden hour light, human silhouette for scale"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Это остров Яп. Самые большие камни раи — около трёх с половиной метров.",
+      "onScreen": "Камни раи острова *Яп*",
+      "stat": {
+        "value": 3.6,
+        "prefix": "≈",
+        "suffix": " м",
+        "label": "диаметр самых больших камней"
+      },
+      "icon": "circle-check",
+      "visualQuery": "Rai stone Yap island",
+      "imagePrompt": "massive carved limestone disc leaning against a jungle hillside, warm sunset palette, soft haze, wide shot"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Причём добывали их не на Япе, а на архипелаге Палау.",
+      "onScreen": "Добыча — на *Палау*",
+      "icon": "compass",
+      "visualQuery": "Palau Rock Islands",
+      "imagePrompt": "aerial view of green limestone islands in turquoise lagoon at sunset, warm golden tones, cinematic wide shot",
+      "map": {
+        "lat": 7.5,
+        "lon": 134.6,
+        "label": "Палау",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "А теперь самое странное. При покупке камень часто даже не двигали. Менялся только владелец в памяти всей общины.",
+      "onScreen": "Камень стоит. Меняется *владелец*",
+      "icon": "users",
+      "visualQuery": "Yap stone money village",
+      "imagePrompt": "villagers gathered around a huge stone disc in a tropical village, warm evening light, documentary mood"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Но дальше ещё интереснее. Один камень утонул при перевозке. А семья всё равно считалась богатой: он лежал на дне, но оставался деньгами.",
+      "onScreen": "На дне моря — и всё ещё *деньги*",
+      "icon": "droplet",
+      "visualQuery": "underwater sea floor rock",
+      "imagePrompt": "large round stone disc resting on the sandy ocean floor, sun rays piercing through water, warm-teal cinematic palette"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Узнаёшь? Твои деньги в банке тоже не лежат пачкой с твоим именем. Это просто запись, которой все доверяют.",
+      "onScreen": "Банк — это *запись*, а не пачка",
+      "icon": "wallet",
+      "visualQuery": "bank ledger book",
+      "imagePrompt": "old leather ledger with handwritten columns next to a modern bank card, warm desk lamp light, shallow depth of field"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "Чем твоя карта отличается от камня?",
+      "onScreen": "Карта или *камень*?",
+      "icon": "message-circle"
+    }
+  ]
+}

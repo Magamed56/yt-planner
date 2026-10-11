@@ -1,0 +1,114 @@
+{
+  "title": "Акулы старше деревьев: что говорят окаменелости",
+  "description": "Почему акулы древнее первых деревьев на Земле. Сравниваем две окаменелости: скелет хрящевой рыбы долиодуса возрастом около 409 млн лет и древнейшие деревья ваттиезы из Гилбоа возрастом около 385 млн лет.\n#shorts #акулы #палеонтология #эволюция #факты",
+  "tags": [
+    "акулы",
+    "древние акулы",
+    "деревья",
+    "эволюция",
+    "палеонтология",
+    "окаменелости",
+    "девон",
+    "ваттиеза",
+    "долиодус",
+    "интересные факты",
+    "акулы дети",
+    "акульи слёзы",
+    "shorts",
+    "sharks"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Акулы появились раньше, чем на Земле выросло первое дерево.",
+      "onScreen": "Акулы *старше* деревьев",
+      "icon": "clock",
+      "visualQuery": "shark swimming ocean",
+      "imagePrompt": "cinematic silhouette of an ancient shark gliding through deep teal water above a barren rocky shore, god rays, moody prehistoric atmosphere"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Доказательство — окаменелый скелет древней хрящевой рыбы, долиодуса. Ему около четырёхсот девяти миллионов лет.",
+      "onScreen": "Долиодус: *409* млн лет",
+      "stat": {
+        "value": 409,
+        "prefix": "≈",
+        "suffix": " млн лет",
+        "label": "древнейший скелет хрящевой рыбы"
+      },
+      "icon": "microscope",
+      "visualQuery": "Doliodus fossil",
+      "imagePrompt": "cinematic close-up of a fossilized small shark skeleton embedded in grey stone, soft rim light, shallow depth of field, teal and amber palette"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "А древнейшие известные деревья, ваттиезы, нашли у городка Гилбоа в Америке. Им около трёхсот восьмидесяти пяти миллионов.",
+      "onScreen": "Первые деревья — *385* млн лет",
+      "icon": "leaf",
+      "visualQuery": "Wattieza fossil tree stump",
+      "imagePrompt": "cinematic reconstruction of tall fern-like Devonian trees without leaves, misty swamp, soft teal light, low angle",
+      "map": {
+        "lat": 42.4,
+        "lon": -74.45,
+        "label": "Гилбоа",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "Разница — примерно двадцать четыре миллиона лет. Акулы успели обжить моря задолго до первого леса.",
+      "onScreen": "Фора в *24* млн лет",
+      "stat": {
+        "value": 24,
+        "prefix": "≈",
+        "suffix": " млн лет",
+        "label": "акулы опередили деревья"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Хрящевые рыбы",
+            "value": 409
+          },
+          {
+            "label": "Первые деревья",
+            "value": 385
+          }
+        ],
+        "suffix": " млн лет"
+      }
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Представь: в воде уже скользят хищники с хрящевым скелетом, а на суше ни одной тени от кроны.",
+      "onScreen": "В море акулы. На суше — *пусто*",
+      "icon": "eye",
+      "visualQuery": "barren rocky coastline waves",
+      "imagePrompt": "cinematic wide shot of an empty rocky coastline with no trees, waves crashing, a shark fin in the teal water, overcast amber sky"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Так что лес — более молодое изобретение природы, чем акула. Это доказано окаменелостями.",
+      "onScreen": "Лес *моложе* акулы",
+      "icon": "trees",
+      "visualQuery": "forest trees canopy",
+      "imagePrompt": "cinematic contrast of a lush forest canopy reflected in water with a shark shadow beneath the surface, soft rim light, teal and amber palette"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "Что ещё, по-твоему, старше деревьев?",
+      "onScreen": "Что ещё *старше* деревьев?",
+      "icon": "message-circle"
+    }
+  ]
+}

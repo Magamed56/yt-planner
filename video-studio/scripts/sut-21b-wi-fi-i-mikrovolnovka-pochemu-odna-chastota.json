@@ -1,0 +1,104 @@
+{
+  "title": "Wi‑Fi и микроволновка: почему одна частота",
+  "description": "Почему микроволновка работает на 2,45 ГГц, а Wi‑Fi на 2,4 ГГц, откуда берутся помехи и правда ли печь резонирует с водой. Разбираем диапазон ISM, миф о резонансе и клетку Фарадея на дверце, а в конце даём простой совет, куда ставить роутер.\n#shorts #wifi #микроволновка #физика #наука",
+  "tags": [
+    "wi-fi",
+    "микроволновка",
+    "роутер",
+    "частота",
+    "2.4 ггц",
+    "диапазон ism",
+    "клетка фарадея",
+    "физика",
+    "мифы",
+    "наука",
+    "помехи wi-fi",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Твой роутер и микроволновка работают на одной частоте.",
+      "onScreen": "Роутер и микроволновка: *одна* частота",
+      "icon": "zap",
+      "visualQuery": "wireless router microwave oven",
+      "imagePrompt": "cinematic shot of a wifi router and a microwave oven side by side on a dark kitchen counter, glowing blue indicator lights, deep teal shadows"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Не совпадение. Эту полосу выделили промышленности, науке и медицине.",
+      "onScreen": "Диапазон *ISM*: 2,4–2,5 ГГц",
+      "icon": "globe",
+      "visualQuery": "radio spectrum analyzer screen",
+      "imagePrompt": "glowing radio spectrum waveform on a dark screen with a highlighted band, teal and electric blue palette, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Печь греет на двух целых сорока пяти гигагерцах. Вайфай — по соседству.",
+      "onScreen": "Печь 2,45. Wi‑Fi *2,4*",
+      "stat": {
+        "value": 2.45,
+        "suffix": " ГГц",
+        "label": "частота микроволновой печи"
+      },
+      "icon": "atom",
+      "visualQuery": "magnetron microwave oven",
+      "imagePrompt": "macro shot of a microwave magnetron component, cool blue rim light, dark background, cinematic"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Поэтому, пока греешь обед, видео может подвисать.",
+      "onScreen": "Обед греется — видео *тормозит*",
+      "icon": "triangle-alert",
+      "visualQuery": "microwave oven kitchen food heating",
+      "imagePrompt": "plate rotating inside a glowing microwave oven at night, smartphone with buffering screen on the counter, moody teal light"
+    },
+    {
+      "id": "s5",
+      "kind": "quiz",
+      "narration": "Говорят, это резонансная частота воды. Правда или миф?",
+      "onScreen": "Резонанс *воды*?",
+      "icon": "droplet",
+      "visualQuery": "water droplets glass",
+      "imagePrompt": "water droplets suspended in the air, backlit with cold blue light, dark background, cinematic macro",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Нагрев диэлектрический, частоту выбрали из-за правил и глубины прогрева",
+        "question": "А ты верил в резонанс воды?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Миф. Нагрев диэлектрический: молекулы воды вертятся вслед за полем. Частоту выбрали из-за правил и глубины прогрева.",
+      "onScreen": "Не резонанс, а *глубина* прогрева",
+      "icon": "flask-conical",
+      "visualQuery": "water molecule model",
+      "imagePrompt": "abstract water molecules rotating in an oscillating electric field, glowing blue particles, dark background, cinematic"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Сетка на дверце — клетка Фарадея. Но роутер держи подальше от кухни.",
+      "onScreen": "Сетка на дверце — *клетка Фарадея*",
+      "icon": "shield",
+      "visualQuery": "microwave oven door mesh",
+      "imagePrompt": "close view of a microwave oven door metal mesh with warm light behind it, teal shadows, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Твой вайфай тоже тормозит во время обеда?",
+      "onScreen": "Твой Wi‑Fi тоже *тормозит*?",
+      "icon": "wifi"
+    }
+  ]
+}

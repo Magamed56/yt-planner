@@ -1,0 +1,104 @@
+{
+  "title": "Первый сайт в мире: его можно открыть сейчас",
+  "description": "Где находится первый сайт в мире, кто его создал и почему Всемирная паутина стала бесплатной для всех. Узнаешь, что именно ты видишь по адресу info.cern.ch: оригинал или восстановленную копию.\n#shorts #интернет #история #cern #факты",
+  "tags": [
+    "первый сайт в мире",
+    "первый сайт",
+    "info.cern.ch",
+    "тим бернерс-ли",
+    "cern",
+    "церн",
+    "всемирная паутина",
+    "история интернета",
+    "www",
+    "интернет",
+    "факты",
+    "shorts",
+    "first website"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Первому сайту в мире больше тридцати лет. И он работает.",
+      "onScreen": "Первому сайту 30+ лет. Он *работает*",
+      "icon": "globe",
+      "visualQuery": "old computer monitor web page",
+      "imagePrompt": "cinematic close-up of a vintage computer monitor glowing with a simple text web page in a dark room, cool blue light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Адрес — инфо точка церн точка си эйч. Тим Бернерс-Ли запустил его в ЦЕРНе в девяносто первом.",
+      "onScreen": "info.cern.ch — *1991*",
+      "icon": "compass",
+      "visualQuery": "CERN Meyrin site",
+      "imagePrompt": "aerial cinematic view of a research campus near mountains at dusk, soft blue haze, glowing windows",
+      "map": {
+        "lat": 46.234,
+        "lon": 6.053,
+        "label": "ЦЕРН",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Сервером служил его личный компьютер Некст.",
+      "onScreen": "Сервер — один компьютер *NeXT*",
+      "icon": "cpu",
+      "visualQuery": "NeXT Computer CERN",
+      "imagePrompt": "cinematic shot of a black early 1990s workstation on a cluttered lab desk, cool rim light, dark background"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "А рассказывал первый сайт о самом себе — о проекте Всемирной паутины.",
+      "onScreen": "Первый сайт — *о самом себе*",
+      "icon": "book-open",
+      "visualQuery": "World Wide Web first page",
+      "imagePrompt": "macro shot of glowing blue hyperlinks on an old monitor screen, scanlines, deep blue palette"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Главное случилось тридцатого апреля тысяча девятьсот девяносто третьего. ЦЕРН отдал программы веба в общественное достояние.",
+      "onScreen": "30 апреля 1993: веб — *общий*",
+      "stat": {
+        "value": 1993,
+        "label": "ПО веба — в общественное достояние"
+      },
+      "icon": "key",
+      "visualQuery": "CERN document archive",
+      "imagePrompt": "cinematic close-up of an old typed document on a desk under a lamp, cool blue shadows, shallow depth of field"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Бесплатно и для всех. Поэтому веб и не стал чьей-то собственностью.",
+      "onScreen": "Бесплатно и *для всех*",
+      "icon": "users",
+      "visualQuery": "people using laptops cafe",
+      "imagePrompt": "many glowing screens in a dark city at night connected by thin light lines, cinematic blue palette"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Но честно: ты видишь копию. В две тысячи тринадцатом её восстановили по версии девяносто второго — самой ранней из найденных.",
+      "onScreen": "Это *копия*: восстановлена в 2013",
+      "icon": "triangle-alert",
+      "visualQuery": "server room racks",
+      "imagePrompt": "cinematic shot of an old web page reassembling from floating fragments of light in darkness, blue glow"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Какой сайт из твоих проживёт тридцать лет?",
+      "onScreen": "Твой сайт проживёт *30 лет*?",
+      "icon": "hourglass"
+    }
+  ]
+}

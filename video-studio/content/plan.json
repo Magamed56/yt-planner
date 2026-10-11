@@ -721,7 +721,8 @@
           "source": "Weber B. et al. Molecular insight into the slipperiness of ice. Journal of Physical Chemistry Letters 9(11), 2838–2842 (2018)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-15a-pochemu-led-skolzkiy-mif-o-davlenii-konkov.json"
     },
     {
       "id": "15b",
@@ -741,7 +742,8 @@
           "source": "Furness W. H. The Island of Stone Money: Uap of the Carolines. Lippincott, 1910; Friedman M. The Island of Stone Money. Hoover Institution Working Paper E-91-3 (1991)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-15b-denezhnye-kamni-ostrova-yap-kak-platili-valunami.json"
     },
     {
       "id": "16a",
@@ -761,7 +763,8 @@
           "source": "Russell J. B. Inventing the Flat Earth: Columbus and Modern Historians. Praeger, 1991"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-16a-srednie-veka-verili-li-v-ploskuyu-zemlyu.json"
     },
     {
       "id": "16b",
@@ -785,7 +788,8 @@
           "source": "Yaemsiri S., Hou N., Slining M. M., He K. Growth rate of human fingernails and toenails in healthy American young adults. JEADV 24(4), 420–423 (2010)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-16b-luna-otdalyaetsya-ot-zemli-i-vot-pochemu.json"
     },
     {
       "id": "17a",
@@ -805,7 +809,8 @@
           "source": "Stein W. E. et al. Giant cladoxylopsid trees resolve the enigma of the Earth's earliest forest stumps at Gilboa. Nature 446, 904–907 (2007)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-17a-akuly-starshe-derevev-chto-govoryat-okamenelosti.json"
     },
     {
       "id": "17b",
@@ -829,7 +834,8 @@
           "source": "Yates T. S. et al. Hippocampal encoding of memories in human infants. Science 387 (2025)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-17b-pochemu-ty-nichego-ne-pomnish-do-trekh-let.json"
     },
     {
       "id": "18a",
@@ -849,7 +855,8 @@
           "source": "CERN, «The birth of the Web»; CERN Document Server, «Statement concerning CERN W3 software release into public domain» (1993)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-18a-pervyy-sayt-v-mire-ego-mozhno-otkryt-seychas.json"
     },
     {
       "id": "18b",
@@ -869,7 +876,8 @@
           "source": "US Patent 139,121 (1873)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-18b-zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873.json"
     },
     {
       "id": "19a",
@@ -889,7 +897,8 @@
           "source": "Magyar Nemzeti Bank (Банк Венгрии), история форинта"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-19a-vengriya-1946-samaya-bolshaya-inflyatsiya-v-istorii.json"
     },
     {
       "id": "19b",
@@ -909,7 +918,8 @@
           "source": "Schwane J. A. et al. Delayed-onset muscular soreness and plasma CPK and LDH activities after downhill running. Medicine & Science in Sports & Exercise 15(1), 51–56 (1983)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-19b-pochemu-bolyat-myshtsy-posle-trenirovki.json"
     },
     {
       "id": "20a",
@@ -929,7 +939,8 @@
           "source": "Lemmon M. T. et al. Atmospheric imaging results from the Mars Exploration Rovers: Spirit and Opportunity. Science 306(5702), 1753–1756 (2004)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-20a-pochemu-na-marse-zakat-goluboy.json"
     },
     {
       "id": "20b",
@@ -949,7 +960,8 @@
           "source": "Improbable Research, Ig Nobel Prize winners 2019"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-20b-pochemu-vombaty-kakayut-kubikami-otvet-fizikov.json"
     },
     {
       "id": "21a",
@@ -969,7 +981,8 @@
           "source": "MacLeod C. M. Half a century of research on the Stroop effect: an integrative review. Psychological Bulletin 109(2), 163–203 (1991)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-21a-nazovi-tsvet-a-ne-slovo-effekt-strupa.json"
     },
     {
       "id": "21b",
@@ -993,7 +1006,8 @@
           "source": "Chaplin M. Water and microwaves. London South Bank University, Water Structure and Science"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-21b-wi-fi-i-mikrovolnovka-pochemu-odna-chastota.json"
     },
     {
       "id": "22a",
@@ -1017,7 +1031,8 @@
           "source": "Joung Y. S., Buie C. R. Aerosol generation by raindrop impact on soil. Nature Communications 6, 6083 (2015)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-22a-pochemu-posle-dozhdya-tak-pakhnet-petrikor.json"
     },
     {
       "id": "22b",
@@ -1037,7 +1052,8 @@
           "source": "Pacioli L. Summa de arithmetica, geometria, proportioni et proportionalità. Venezia, 1494"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-22b-pravilo-72-kogda-udvoyatsya-dengi-i-tseny.json"
     },
     {
       "id": "23a",
@@ -1053,7 +1069,8 @@
           "source": "Alberts B. et al. Molecular Biology of the Cell, 6th ed. Garland Science, 2014; Annunziato A. DNA packaging: nucleosomes and chromatin. Nature Education 1(1):26 (2008)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-23a-dva-metra-dnk-v-odnoy-kletke-kak-ona-vlezaet.json"
     },
     {
       "id": "23b",
@@ -1073,7 +1090,8 @@
           "source": "British Museum, коллекция карикатур James Gillray"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-23b-napoleon-ne-byl-korotyshkoy-otkuda-mif.json"
     },
     {
       "id": "24a",
@@ -1093,7 +1111,8 @@
           "source": "Badlangana N. L., Adams J. W., Manger P. R. The giraffe cervical vertebral column. Zoological Journal of the Linnean Society 155(3), 736–757 (2009)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-24a-skolko-pozvonkov-v-shee-zhirafa-i-pochemu.json"
     },
     {
       "id": "24b",
@@ -1113,7 +1132,8 @@
           "source": "Cowan N. The magical number 4 in short-term memory. Behavioral and Brain Sciences 24(1), 87–114 (2001)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-24b-mif-o-semi-predmetakh-v-pamyati-skolko-na-dele.json"
     },
     {
       "id": "25a",

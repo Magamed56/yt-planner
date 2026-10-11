@@ -1,0 +1,99 @@
+{
+  "title": "Средние века: верили ли в плоскую Землю?",
+  "description": "Почему миф о том, что в Средние века верили в плоскую Землю, не выдерживает проверки. Ты узнаешь, как Эратосфен измерил планету, что такое учебник «О сфере» Сакробоско и откуда в девятнадцатом веке взялась эта выдумка.\n#shorts #средниевека #история #мифы #средневековье",
+  "tags": [
+    "средние века",
+    "о средневековье",
+    "средние века история",
+    "в средние века",
+    "плоская земля",
+    "эратосфен",
+    "сакробоско",
+    "колумб",
+    "мифы истории",
+    "средневековье",
+    "history",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Средневековые учёные знали, что Земля — шар.",
+      "onScreen": "Средневековье знало: Земля — *шар*",
+      "icon": "globe",
+      "visualQuery": "medieval armillary sphere",
+      "imagePrompt": "cinematic close-up of an antique brass armillary sphere on a monk's wooden desk, warm candle light, deep amber and burgundy palette, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Откуда тогда миф о плоской Земле? Разгадка в конце.",
+      "onScreen": "Откуда взялся *миф*?",
+      "icon": "circle-x",
+      "visualQuery": "medieval manuscript library monastery",
+      "imagePrompt": "dim medieval monastery library with stacked parchment books, dust in golden candlelight, warm amber palette, wide cinematic shot"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "А началось всё с греков. Около двухсот сорокового года до нашей эры Эратосфен оценил окружность Земли.",
+      "onScreen": "Эратосфен *измерил* планету",
+      "stat": {
+        "value": 240,
+        "prefix": "≈",
+        "suffix": " до н. э.",
+        "label": "Эратосфен оценивает окружность Земли"
+      },
+      "icon": "compass",
+      "visualQuery": "Eratosthenes portrait",
+      "imagePrompt": "ancient greek scholar measuring a sun shadow cast by a tall obelisk in Alexandria, warm golden sunset light, cinematic wide angle"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "В тринадцатом веке Иоанн де Сакробоско пишет учебник с говорящим названием: О сфере.",
+      "onScreen": "XIII век: учебник *«О сфере»*",
+      "icon": "book-open",
+      "visualQuery": "De sphaera mundi Sacrobosco",
+      "imagePrompt": "illuminated medieval manuscript page showing a spherical earth diagram with concentric circles, candlelit parchment, warm amber tones, macro shot"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Для образованного европейца круглая Земля была не ересью, а основой учёбы.",
+      "onScreen": "Не ересь, а *основа* учёбы",
+      "icon": "graduation-cap",
+      "visualQuery": "medieval university lecture",
+      "imagePrompt": "medieval university lecture hall with robed students and a teacher holding a globe, warm window light, burgundy and gold palette, cinematic"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "А миф родился в девятнадцатом веке. В тысяча восемьсот двадцать восьмом Вашингтон Ирвинг издал яркую биографию Колумба.",
+      "onScreen": "1828: Ирвинг *сочиняет* Колумба",
+      "icon": "feather",
+      "visualQuery": "Washington Irving portrait",
+      "imagePrompt": "19th century writer's study with quill, inkwell and an old sailing map of Columbus voyage, warm oil lamp glow, cinematic close-up"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Выдумка прижилась, и Средневековью приписали невежество, которого не было.",
+      "onScreen": "Невежество *приписали* задним числом",
+      "icon": "triangle-alert",
+      "visualQuery": "Christopher Columbus ships painting",
+      "imagePrompt": "three caravels sailing on a golden ocean at sunset, painterly cinematic style, warm amber and crimson sky"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А какой ещё факт о Средневековье — выдумка?",
+      "onScreen": "Какой миф о Средневековье *следующий*?",
+      "icon": "message-circle"
+    }
+  ]
+}

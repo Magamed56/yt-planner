@@ -1,0 +1,104 @@
+{
+  "title": "Луна отдаляется от Земли: и вот почему",
+  "description": "Почему Луна отдаляется от Земли примерно на 3,8 см в год, как это измеряют лазером по отражателям «Аполлонов» и при чём тут приливы. А ещё — как это удлиняет твои сутки на 1,8 мс за столетие.\n#shorts #луна #космос #наука #астрономия",
+  "tags": [
+    "луна",
+    "луна отдаляется от земли",
+    "луна удаляется от земли",
+    "космос",
+    "астрономия",
+    "аполлон",
+    "лазерная локация луны",
+    "приливы",
+    "длина суток",
+    "наука",
+    "факты",
+    "shorts",
+    "moon"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Луна убегает от Земли со скоростью роста твоих ногтей.",
+      "onScreen": "Луна *убегает* от Земли",
+      "icon": "moon",
+      "visualQuery": "full moon night sky",
+      "imagePrompt": "cinematic view of the Moon slowly drifting away from Earth in deep space, cold blue rim light, vast darkness"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Около трёх и восьми десятых сантиметра в год. И платит за это твой день.",
+      "onScreen": "Каждый год — на *3,8 см* дальше",
+      "stat": {
+        "value": 3.8,
+        "suffix": " см",
+        "label": "в год отдаляется Луна"
+      },
+      "icon": "trending-up",
+      "visualQuery": "fingernails hand ruler",
+      "imagePrompt": "macro shot of a human fingertip next to a tiny ruler, soft cool light, dark background, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Астронавты Аполлонов оставили на Луне уголковые отражатели. С Земли туда бьют лазером и ловят отражённый свет.",
+      "onScreen": "Лазер, Луна и *зеркало*",
+      "icon": "zap",
+      "visualQuery": "Apollo 11 Laser Ranging Retroreflector",
+      "imagePrompt": "cinematic photo of a retroreflector panel on grey lunar soil, thin green laser beam arriving from black sky, Earth on horizon"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Виноваты приливы. Луна тянет океаны, и вода тормозит вращение Земли.",
+      "onScreen": "Виноваты *приливы*",
+      "icon": "droplet",
+      "visualQuery": "ocean tide waves shore",
+      "imagePrompt": "aerial cinematic shot of ocean tide rolling onto a vast beach under moonlight, deep blue palette"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "А энергию, которую теряет Земля, забирает Луна. И её орбита понемногу растёт.",
+      "onScreen": "Земля теряет — Луна *забирает*",
+      "icon": "orbit",
+      "visualQuery": "Earth and Moon from space",
+      "imagePrompt": "Earth and Moon in space connected by faint glowing gravitational lines, cinematic blue and silver tones"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "Поэтому сутки удлиняются. В среднем на одну и восемь десятых миллисекунды за столетие.",
+      "onScreen": "Сутки *длиннее* на 1,8 мс",
+      "stat": {
+        "value": 1.8,
+        "suffix": " мс",
+        "label": "прибавка к суткам за столетие"
+      },
+      "icon": "hourglass",
+      "visualQuery": "hourglass sand table",
+      "imagePrompt": "cinematic close-up of an hourglass with glowing sand falling, moonlight through window, cool blue haze"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Выходит, Луна буквально растягивает твоё время. Медленно, как растёт ноготь, но без остановки.",
+      "onScreen": "Луна *растягивает* твоё время",
+      "icon": "clock",
+      "visualQuery": "clock face night",
+      "imagePrompt": "antique clock face under pale moonlight, the Moon reflected in its glass, cinematic dark blue mood"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Заметишь ли ты, что день стал длиннее?",
+      "onScreen": "Заметишь, что день *длиннее*?",
+      "icon": "message-circle"
+    }
+  ]
+}

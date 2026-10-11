@@ -1,0 +1,97 @@
+{
+  "title": "Назови цвет, а не слово: эффект Струпа",
+  "description": "Почему так трудно назвать цвет чернил, если слово означает другой цвет? Разбираем эффект Струпа 1935 года и автоматизм чтения, а ещё даём простой тест, который можно провести на друге.\n#shorts #эффектструпа #психология #мозг",
+  "tags": [
+    "эффект струпа",
+    "назови цвет а не слово",
+    "тест на цвет",
+    "психология",
+    "мозг",
+    "чтение",
+    "внимание",
+    "тест для мозга",
+    "иллюзии мозга",
+    "stroop effect",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Назови цвет слова. Спорим, споткнёшься?",
+      "onScreen": "Назови *цвет*, а не слово",
+      "icon": "eye",
+      "visualQuery": "colored words paper",
+      "imagePrompt": "cinematic close-up of bold colorful paint strokes on dark paper, neon rim light, shallow depth of field, deep blue and magenta palette"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Слово красный написано синим. Правильный ответ — синий. Но язык тянется сказать красный.",
+      "onScreen": "Слово «красный». Чернила *синие*",
+      "icon": "triangle-alert",
+      "visualQuery": "blue ink pen paper",
+      "imagePrompt": "macro shot of blue ink spreading on white paper, dark moody background, magenta rim light, cinematic"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Это заметил Джон Ридли Струп в тысяча девятьсот тридцать пятом. Цвет называешь медленнее, если слово значит другой цвет.",
+      "onScreen": "Струп, *1935*",
+      "icon": "timer",
+      "visualQuery": "colored markers drawing paper",
+      "imagePrompt": "vintage 1930s psychology laboratory desk with color cards and a stopwatch, warm lamp glow fading into deep blue shadows, cinematic"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Через полвека Колин Маклауд подвёл итог: это один из самых воспроизводимых эффектов психологии.",
+      "onScreen": "Один из самых *воспроизводимых* эффектов",
+      "icon": "book-open",
+      "visualQuery": "psychology journal stack library",
+      "imagePrompt": "stack of old scientific journals on a dark wooden table, blue and magenta rim light, shallow depth of field"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Причина в том, что чтение работает на автомате. Увидел буквы — уже прочёл.",
+      "onScreen": "Чтение — на *автомате*",
+      "icon": "zap",
+      "visualQuery": "person reading street signs city",
+      "imagePrompt": "glowing letters flowing into a silhouette of a human head, neural sparks, dark background, blue and magenta palette, cinematic"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "А цвет называешь сознательно, и мозгу нужно время задавить готовое слово.",
+      "onScreen": "Мозг *глушит* прочитанное слово",
+      "icon": "brain",
+      "visualQuery": "brain model laboratory",
+      "imagePrompt": "translucent human brain with one bright pathway being dimmed by a soft wave of light, macro, dark background, cinematic"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "Проверь на друге. Возьми цветные фломастеры. Пиши названия цветов чужим цветом. Пусть друг назовёт цвета вслух.",
+      "onScreen": "Тест Струпа *дома*",
+      "items": [
+        "Возьми цветные фломастеры",
+        "Пиши слова чужим цветом",
+        "Пусть друг назовёт цвета"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "hand writing colored markers notebook",
+      "imagePrompt": "top-down view of a desk with colorful felt-tip pens and a sheet of handwritten words, soft blue light with magenta accents"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "На каком слове ты споткнулся?",
+      "onScreen": "На каком слове *споткнулся*?",
+      "icon": "message-circle"
+    }
+  ]
+}

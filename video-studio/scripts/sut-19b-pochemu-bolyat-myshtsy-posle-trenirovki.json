@@ -1,0 +1,99 @@
+{
+  "title": "Почему болят мышцы после тренировки",
+  "description": "Почему мышцы болят после спорта на второй день и при чём тут вовсе не молочная кислота. Разбираем, куда девается лактат, когда приходит пик боли и что показал опыт с бегом под гору.\n#shorts #спорт #мышцы #тренировки",
+  "tags": [
+    "после спорта болят мышцы",
+    "мышцы болят после тренировки",
+    "мышечная боль после тренировки",
+    "крепатура",
+    "молочная кислота",
+    "лактат",
+    "мышцы",
+    "спорт",
+    "тренировки",
+    "физиология",
+    "doms",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Мышцы болят на второй день. Молочная кислота тут ни при чём.",
+      "onScreen": "Молочная кислота *ни при чём*",
+      "icon": "flame",
+      "visualQuery": "athlete sore legs stairs",
+      "imagePrompt": "cinematic shot of a tired athlete slowly walking down stairs holding his thigh, warm morning light, shallow depth of field, green and amber palette"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Да, лактат копится, пока ты тренируешься. Но кровь уносит его за час или два.",
+      "onScreen": "Лактат уходит за *1–2 часа*",
+      "icon": "droplet",
+      "visualQuery": "blood lactate test athlete",
+      "imagePrompt": "cinematic close-up of a sweaty athlete resting on a bench after a workout in a gym, soft rim light, green and amber palette"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "А боль приходит позже. Пик — через сутки, а иногда и через трое.",
+      "onScreen": "Пик боли — через *24–72 ч*",
+      "stat": {
+        "value": 72,
+        "prefix": "до ",
+        "suffix": " ч",
+        "label": "пик отсроченной мышечной боли"
+      },
+      "icon": "hourglass",
+      "visualQuery": "alarm clock bedroom morning",
+      "imagePrompt": "cinematic still of an alarm clock on a bedside table at sunrise, sore athlete blurred in bed behind, warm light, green and amber palette"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "В тысяча девятьсот восемьдесят третьем году группа Швейна изучала бег под гору.",
+      "onScreen": "1983: бег *под гору*",
+      "icon": "microscope",
+      "visualQuery": "runner downhill trail",
+      "imagePrompt": "cinematic wide shot of a runner descending a steep mountain trail, dust in the air, golden hour, green and amber palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Лактата при таком беге меньше. А боль на следующий день — сильнее.",
+      "onScreen": "Лактата меньше — боли *больше*",
+      "icon": "trending-down",
+      "visualQuery": "runner resting hands knees",
+      "imagePrompt": "cinematic shot of an exhausted runner bent over with hands on knees on a hill road, soft backlight, green and amber palette"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Потому что при спуске мышцы тормозят и растягиваются под нагрузкой. Волокна получают микроповреждения.",
+      "onScreen": "Мышца тормозит — волокна *рвутся*",
+      "icon": "dumbbell",
+      "visualQuery": "barbell lowering gym squat",
+      "imagePrompt": "cinematic slow motion of an athlete lowering into a heavy barbell squat, chalk dust, dramatic side light, green and amber palette"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Вокруг них начинается воспаление. Вот оно и болит на второй день, а не кислота.",
+      "onScreen": "Болит *воспаление*, а не кислота",
+      "icon": "zap",
+      "visualQuery": "skeletal muscle fibers microscope",
+      "imagePrompt": "macro view of glowing red muscle fibers with tiny tears and soft warm inflammation glow, cinematic, green and amber palette"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "После чего у тебя болело сильнее всего?",
+      "onScreen": "После чего болело *сильнее* всего?",
+      "icon": "message-circle"
+    }
+  ]
+}

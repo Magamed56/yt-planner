@@ -1,0 +1,98 @@
+{
+  "title": "Почему после дождя так пахнет: петрикор",
+  "description": "Откуда берётся запах дождя: что такое петрикор, при чём тут почвенные бактерии стрептомицеты и их геосмин и почему лёгкий дождь пахнет сильнее ливня. Коротко о том, как капли выбивают ароматы из земли прямо к твоему носу.\n#shorts #наука #петрикор #природа",
+  "tags": [
+    "петрикор",
+    "запах дождя",
+    "после дождя",
+    "почему после дождя пахнет",
+    "геосмин",
+    "стрептомицеты",
+    "бактерии",
+    "химия природы",
+    "наука",
+    "интересные факты",
+    "petrichor",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Запах дождя во многом делают бактерии. И у него есть имя.",
+      "onScreen": "Запах дождя делают *бактерии*",
+      "icon": "droplet",
+      "visualQuery": "rain drops wet soil",
+      "imagePrompt": "cinematic macro of raindrops falling onto dark dry soil, soft green ambient light, shallow depth of field, moody overcast atmosphere"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это петрикор. Слово придумали Беар и Томас в тысяча девятьсот шестьдесят четвёртом году. А главный секрет ещё впереди.",
+      "onScreen": "*Петрикор* — имя с 1964 года",
+      "icon": "book-open",
+      "visualQuery": "wet stones after rain",
+      "imagePrompt": "cinematic close-up of wet grey stones glistening after rain, soft diffused green light, fresh misty air, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Землистую ноту даёт геосмин. Его выделяют почвенные бактерии стрептомицеты.",
+      "onScreen": "Геосмин от бактерий *Streptomyces*",
+      "icon": "microscope",
+      "visualQuery": "Streptomyces colonies petri dish",
+      "imagePrompt": "cinematic macro of soil bacteria colonies in a petri dish, soft green rim light, laboratory atmosphere, shallow depth of field"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Пока почва сухая, запах сидит в ней. Капля бьёт по земле и выбивает в воздух облачко крошечных брызг.",
+      "onScreen": "Капля работает как *катапульта*",
+      "icon": "droplet",
+      "visualQuery": "raindrop splash slow motion",
+      "imagePrompt": "high speed cinematic shot of a single raindrop hitting dry earth and releasing a fine mist of tiny droplets, backlit, green and grey palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Вот секрет: сильнее пахнет лёгкий дождь. Мощный ливень таких брызг почти не поднимает.",
+      "onScreen": "Лёгкий дождь пахнет *сильнее* ливня",
+      "icon": "lightbulb",
+      "visualQuery": "light drizzle garden path",
+      "imagePrompt": "cinematic view of gentle drizzle over a garden path, soft overcast light, fresh green tones, calm mood"
+    },
+    {
+      "id": "s6",
+      "kind": "list",
+      "narration": "Выходит рецепт: масла с камней, геосмин бактерий и капли-катапульты.",
+      "onScreen": "Рецепт *запаха* дождя",
+      "items": [
+        "Масла с камней",
+        "Геосмин бактерий",
+        "Капли-катапульты"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "wet soil grass closeup",
+      "imagePrompt": "cinematic top-down view of wet soil, pebbles and grass blades covered in droplets, soft green light, shallow depth of field"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "А перед грозой запах другой, резкий. Это озон, его рождают молнии.",
+      "onScreen": "Перед грозой пахнет *озоном*",
+      "icon": "zap",
+      "visualQuery": "lightning storm field",
+      "imagePrompt": "cinematic wide shot of lightning striking over a dark green field before a storm, dramatic clouds, cool tones"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Ты узнал бы петрикор с закрытыми глазами?",
+      "onScreen": "Узнаешь *петрикор* вслепую?",
+      "icon": "eye"
+    }
+  ]
+}

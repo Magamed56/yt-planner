@@ -1,0 +1,101 @@
+{
+  "title": "Сколько позвонков в шее жирафа и почему",
+  "description": "Почему у жирафа такая длинная шея, хотя шейных позвонков у него столько же, сколько у человека. Узнаешь, какое правило объединяет почти всех млекопитающих и какие два зверя его нарушают.\n#shorts #жираф #животные #биология #фактыоприроде",
+  "tags": [
+    "у жирафа",
+    "жираф",
+    "шея жирафа",
+    "позвонки",
+    "шейные позвонки",
+    "млекопитающие",
+    "ленивец",
+    "ламантин",
+    "биология",
+    "анатомия",
+    "факты о животных",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "У жирафа и у тебя одинаковое число шейных позвонков.",
+      "onScreen": "Жираф и ты: *одинаковая* шея?",
+      "icon": "eye",
+      "visualQuery": "Giraffe head neck savanna",
+      "imagePrompt": "cinematic low-angle shot of a giraffe neck rising into a golden savanna sky, warm sunset light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Их ровно семь. И в твоей короткой шее, и в огромной шее жирафа. А в конце узнаешь, кто нарушает это правило.",
+      "onScreen": "7 позвонков у вас *обоих*",
+      "stat": {
+        "value": 7,
+        "label": "шейных позвонков у жирафа"
+      },
+      "icon": "target",
+      "visualQuery": "Giraffe skeleton museum",
+      "imagePrompt": "giraffe skeleton in a natural history museum hall, soft warm spotlight, deep green shadows, cinematic wide shot"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Секрет не в количестве. Просто каждый позвонок жирафа очень длинный. Те же семь деталей, только вытянутые.",
+      "onScreen": "Не больше костей, а *длиннее* каждая",
+      "icon": "trending-up",
+      "visualQuery": "giraffe eating tree leaves",
+      "imagePrompt": "giraffe stretching its long neck to eat acacia leaves, warm golden hour light, side view, cinematic"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "И это не случайность. Семь шейных позвонков почти у всех млекопитающих.",
+      "onScreen": "Правило *семи* у млекопитающих",
+      "icon": "dna",
+      "visualQuery": "human neck spine x-ray",
+      "imagePrompt": "medical x-ray of a human neck showing cervical vertebrae, glowing emerald tint, dark background"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "У мыши, у кошки, у тебя внутри шеи одна и та же семёрка.",
+      "onScreen": "Мышь, кошка, ты — *семь*",
+      "icon": "users",
+      "visualQuery": "cat stretching neck",
+      "imagePrompt": "cat stretching its neck on a sunlit windowsill, warm soft light, shallow depth of field, cinematic"
+    },
+    {
+      "id": "s6",
+      "kind": "list",
+      "narration": "Нарушителей почти нет. Их всего двое: ленивцы и ламантины.",
+      "onScreen": "Кто *нарушает* правило",
+      "items": [
+        "Ленивцы",
+        "Ламантины"
+      ],
+      "icon": "triangle-alert",
+      "visualQuery": "sloth hanging tree branch",
+      "imagePrompt": "sloth hanging upside down from a rainforest branch, misty green light, cinematic close-up"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Ламантин неспешно плывёт и даже не подозревает, что он редкое исключение.",
+      "onScreen": "Ламантин — редкое *исключение*",
+      "icon": "droplet",
+      "visualQuery": "West Indian manatee swimming",
+      "imagePrompt": "manatee gliding through clear turquoise water, sunbeams from above, calm underwater cinematic shot"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Нащупаешь у себя все семь позвонков?",
+      "onScreen": "Нащупаешь у себя *все семь*?",
+      "icon": "hand"
+    }
+  ]
+}

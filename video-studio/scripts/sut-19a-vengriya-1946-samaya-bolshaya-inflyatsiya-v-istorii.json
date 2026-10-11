@@ -1,0 +1,107 @@
+{
+  "title": "Венгрия 1946: самая большая инфляция в истории",
+  "description": "Как в Венгрии в 1946 году случилась рекордная гиперинфляция: цены росли на квадриллионы процентов в месяц. Разбираем, что значит удвоение цен каждые 15 часов, и как пенгё сменил форинт. Ты узнаешь простой приём, чтобы оценить масштаб любой инфляции.\n#shorts #инфляция #история #экономика #деньги",
+  "tags": [
+    "инфляция",
+    "гиперинфляция",
+    "венгрия",
+    "пенгё",
+    "форинт",
+    "история денег",
+    "экономика",
+    "цены подорожали",
+    "рост цен",
+    "деньги",
+    "рекорд",
+    "1946",
+    "hyperinflation",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "mono",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Здесь цены удваивались каждые пятнадцать часов.",
+      "onScreen": "Цены ×2 каждые *15 часов*",
+      "icon": "timer",
+      "visualQuery": "Hungarian pengő banknotes",
+      "imagePrompt": "cinematic close-up of a pile of old faded banknotes scattered on a wooden table, cold grey light, muted sepia palette, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Венгрия, июль тысяча девятьсот сорок шестого года. Это рекорд инфляции за всю историю.",
+      "onScreen": "Венгрия, 1946: *рекорд* истории",
+      "icon": "globe",
+      "visualQuery": "Budapest 1946 street",
+      "imagePrompt": "post-war european city street in 1940s, overcast sky, people in long coats, desaturated sepia tones, cinematic wide shot",
+      "map": {
+        "lat": 47.5,
+        "lon": 19.04,
+        "label": "Будапешт",
+        "zoom": "world"
+      }
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "За месяц цены выросли примерно на сорок два квадриллиона процентов. В этом числе семнадцать цифр.",
+      "onScreen": "Инфляция за *один* месяц",
+      "stat": {
+        "value": 4.19,
+        "prefix": "≈",
+        "suffix": "·10¹⁶ %",
+        "label": "рост цен за июль 1946"
+      },
+      "icon": "trending-up",
+      "visualQuery": "old ledger numbers handwriting",
+      "imagePrompt": "vintage accounting ledger filled with endless columns of handwritten numbers, desk lamp glow, sepia palette, cinematic macro shot"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Посчитай сам. Утром батон стоит одну цену. Через сутки он уже примерно втрое дороже.",
+      "onScreen": "Утро → утро: цена *×3*",
+      "icon": "clock",
+      "visualQuery": "bread loaf bakery counter",
+      "imagePrompt": "single loaf of bread on an old bakery counter with a vintage clock behind it, morning light through dusty window, sepia tones"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Получил зарплату — беги тратить в тот же час. Иначе деньги растают прямо в кармане.",
+      "onScreen": "Деньги *тают* в кармане",
+      "icon": "wallet",
+      "visualQuery": "people queue shop 1940s",
+      "imagePrompt": "crowd of people in 1940s clothing hurrying into a small shop, motion blur, grey overcast light, muted sepia palette, cinematic"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Чем всё кончилось? Первого августа тысяча девятьсот сорок шестого года пенгё заменили форинтом.",
+      "onScreen": "1 августа 1946: пришёл *форинт*",
+      "icon": "coins",
+      "visualQuery": "Hungarian forint coins",
+      "imagePrompt": "new shiny coins resting on top of a heap of worthless old paper money, warm spotlight cutting through grey tones, cinematic close-up"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Запомни приём: дели срок на время удвоения цен. И сразу видно, насколько опасна инфляция.",
+      "onScreen": "Срок ÷ время *удвоения*",
+      "icon": "lightbulb",
+      "visualQuery": "calculator notebook pencil",
+      "imagePrompt": "old mechanical calculator next to a notebook and pencil on a desk, soft side light, sepia palette, shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Сколько стоил бы твой обед через сутки?",
+      "onScreen": "Твой обед *через сутки*?",
+      "icon": "utensils"
+    }
+  ]
+}

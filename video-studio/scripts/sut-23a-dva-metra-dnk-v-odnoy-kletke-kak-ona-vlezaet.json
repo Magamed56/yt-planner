@@ -1,0 +1,90 @@
+{
+  "title": "Два метра ДНК в одной клетке: как она влезает",
+  "description": "Откуда берутся два метра ДНК в каждой клетке и как они помещаются в ядро шириной около 6 микрометров. Простая арифметика пар оснований и упаковка на белках-гистонах: нуклеосомы и хроматин.\n#shorts #днк #биология #наука #клетка",
+  "tags": [
+    "днк",
+    "клетка",
+    "биология",
+    "гистоны",
+    "нуклеосома",
+    "хроматин",
+    "ядро клетки",
+    "генетика",
+    "наука",
+    "факты",
+    "shorts",
+    "dna"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "В каждой твоей клетке свёрнуто два метра ДНК.",
+      "onScreen": "В каждой клетке — *2 метра* ДНК",
+      "icon": "dna",
+      "visualQuery": "DNA double helix model",
+      "imagePrompt": "cinematic macro of a glowing blue DNA double helix coiling inside a translucent cell, deep navy background, soft rim light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Это не метафора, а арифметика. Шесть и четыре десятых миллиарда пар оснований, каждая длиной треть нанометра.",
+      "onScreen": "6,4 млрд × 0,34 нм ≈ *2 м*",
+      "stat": {
+        "value": 6.4,
+        "prefix": "≈",
+        "suffix": " млрд",
+        "label": "пар оснований в клетке"
+      },
+      "icon": "atom",
+      "visualQuery": "DNA sequencing gel laboratory",
+      "imagePrompt": "cinematic close-up of glowing base pairs stretching into the distance like a luminous ladder, teal and violet palette, dark background"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Растяни эту нить, и выйдет около двух метров. А ядро клетки шириной всего шесть микрометров.",
+      "onScreen": "Ядро — всего *6 мкм*",
+      "icon": "microscope",
+      "visualQuery": "Cell nucleus microscope",
+      "imagePrompt": "cinematic microscope view of a single cell with a glowing nucleus, blue fluorescent stain, dark field, soft glow"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Представь двадцать километров нитки в теннисном мяче. Как не превратить это в клубок?",
+      "onScreen": "20 км нити в *теннисном мяче*",
+      "icon": "circle-x",
+      "visualQuery": "tennis ball thread spool",
+      "imagePrompt": "cinematic still life of a tennis ball with an endless glowing thread spilling around it, dark navy backdrop, dramatic rim light"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Клетка использует катушки. Это белки гистоны, и ДНК наматывается на них виток за витком.",
+      "onScreen": "Гистоны — *катушки* для ДНК",
+      "icon": "target",
+      "visualQuery": "Nucleosome histone structure",
+      "imagePrompt": "cinematic 3D render of DNA strand wrapping around round protein spools, glowing blue and violet, deep dark background, shallow depth of field"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Катушка с намоткой называется нуклеосома. Нить с ними похожа на бусы, а бусы складываются ещё плотнее.",
+      "onScreen": "Нуклеосомы: бусы, сложенные *плотнее*",
+      "icon": "layers",
+      "visualQuery": "Chromatin fiber electron micrograph",
+      "imagePrompt": "cinematic macro of a beaded strand folding into dense coils, luminous teal beads, dark navy background, soft volumetric light"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "А ты смог бы уложить нить без узлов?",
+      "onScreen": "Уложил бы *без узлов*?",
+      "icon": "message-circle"
+    }
+  ]
+}
