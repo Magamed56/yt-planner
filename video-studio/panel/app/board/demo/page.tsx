@@ -1,6 +1,7 @@
 // Демо «Доски» на фикстуре (lib/board-fixture.ts, её же проверяет scripts/board-test.ts) —
 // посмотреть вид глазами без GitHub и YouTube. Только в разработке (npm run dev): в сборке
-// для Vercel страница отвечает 404. ?yt=0 — как будто YouTube не ответил.
+// для Vercel страница отвечает 404. ?yt=0 — как будто YouTube не ответил. Раскладку и стикеры
+// демо двигает только в своей вкладке — в PANEL_BOARD не пишет.
 import { notFound } from "next/navigation";
 import BoardCanvas from "@/components/BoardCanvas";
 import { boardData } from "@/lib/board";
@@ -18,7 +19,8 @@ export default async function BoardDemoPage({ searchParams }: { searchParams: Pr
     enJson: fx.enJson,
     enVideos: langVideosOf(fx.releases, "en"),
     enMarks: fx.enMarks,
-    boardMarks: fx.boardMarks,
+    board: fx.board,
+    demo: true,
   });
   return <BoardCanvas data={data} initialSelected={typeof v === "string" ? v : null} />;
 }

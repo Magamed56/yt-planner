@@ -59,3 +59,14 @@ export function ZoneIcon({ zone, size = 22 }: { zone: ZoneKey; size?: number }) 
     </svg>
   );
 }
+
+// Стикер: квадрат с загнутым углом и плюсом — кнопка «+ Стикер» и шапка его листа.
+export function StickerIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden focusable={false}>
+      <path d="M4 4h16v10l-6 6H4z" fill="var(--accent)" />
+      <path d="M14 20v-6h6" fill="var(--accent-2)" />
+      <path d="M10 8v6M7 11h6" stroke="var(--accent-ink)" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}

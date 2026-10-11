@@ -333,6 +333,72 @@
 .hidden {
   display: none !important;
 }
+/* Перетаскиваемое — поверх соседей, без плавности (идёт за пальцем) и «поднятое» тенью. */
+.dragging {
+  z-index: 20;
+  cursor: grabbing;
+  transition: none !important;
+}
+.card.dragging,
+.sticker.dragging {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 22px 48px rgba(0, 0, 0, 0.55);
+}
+.zone.dragging {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 34px 80px rgba(4, 2, 16, 0.6);
+}
+.zoneHead[data-zonehead] {
+  cursor: grab;
+}
+
+/* ---- стикер: цвет — токены панели, текст — тёмный на светлом ---- */
+.sticker_yellow {
+  --sc: var(--accent);
+}
+.sticker_orange {
+  --sc: var(--accent-2);
+}
+.sticker_pink {
+  --sc: var(--error);
+}
+.sticker_green {
+  --sc: var(--ok);
+}
+.sticker_blue {
+  --sc: var(--scheduled);
+}
+.sticker {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  padding: 14px 14px 12px;
+  border-radius: 4px 4px 22px 4px;
+  background: var(--sc);
+  color: var(--accent-ink);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+  font: 700 15px/1.35 var(--body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.sticker p {
+  margin: 0;
+}
+.stickerSmall {
+  font-size: 12.5px;
+}
+.stickerHint {
+  opacity: 0.6;
+  font-weight: 600;
+}
+.sticker:focus-visible,
+.stickerOn {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
 .thumb {
   flex: none;
   display: flex;
@@ -649,10 +715,14 @@
 }
 .miniZone {
   position: absolute;
-  top: 0;
-  bottom: 0;
   background: var(--zg);
   opacity: 0.35;
+}
+.miniSticker {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--sc);
 }
 .miniToday {
   position: absolute;
@@ -948,6 +1018,57 @@
 }
 .enTexts dd {
   margin: 2px 0 0;
+}
+
+/* Лист стикера: поле обычного размера (16 px — iPhone не приближает страницу), цвета, удалить. */
+.stickerEdit {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.stickerField {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+  font: 600 16px/1.4 var(--body);
+  resize: vertical;
+}
+.stickerField:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.stickerEdit p {
+  margin: 0;
+}
+.stickerLeftWarn {
+  color: var(--warn);
+}
+.swatches {
+  display: flex;
+  gap: 10px;
+}
+.swatch {
+  width: 36px;
+  height: 36px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--sc);
+  cursor: pointer;
+}
+.swatch[aria-checked="true"] {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--panel) inset;
+}
+.swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.tool svg {
+  flex: none;
 }
 
 .short {

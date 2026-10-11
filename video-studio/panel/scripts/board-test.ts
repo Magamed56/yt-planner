@@ -1,10 +1,31 @@
 // Офлайн-проверка «Доски» (/board) на фикстуре lib/board-fixture.ts (её же показывает демо-страница
 // app/board/demo): статусы по зонам, YouTube не ответил, английские названия, «загрузил» в Instagram
-// и TikTok (PANEL_BOARD), запас и первая дыра, раскладка полотна, вид и время отметки. Свой
+// и TikTok (PANEL_BOARD), запас и первая дыра, раскладка полотна, вид и время отметки; переменная
+// PANEL_BOARD целиком — отметки, раскладка (места зон, сдвиги карточек) и стикеры не стирают друг
+// друга, лимиты (100 стикеров, 280 знаков, 48 КБ) и мусор во входе. Свой
 // channels/en.json — из фикстуры: тест не зависит от настоящих файлов канала. Сеть и ключи не нужны.
 // Запуск из папки video-studio: npx tsx panel/scripts/board-test.ts
 import assert from "node:assert/strict";
-import { BOARD_FIRST_DAY, BOARD_VAR, boardData, buildBoard, CARD_W, COLS, GAP, layoutBoard, parseBoardMarks, ROW, withBoardMark, type BoardZone } from "../lib/board";
+import {
+  BOARD_FIRST_DAY,
+  BOARD_VAR,
+  boardData,
+  boardStateText,
+  boardWithLayout,
+  boardWithMark,
+  boardWithSticker,
+  buildBoard,
+  CARD_W,
+  COLS,
+  GAP,
+  layoutBoard,
+  parseBoardState,
+  ROW,
+  withBoardMark,
+  type BoardWrite,
+  type BoardZone,
+} from "../lib/board";
+import { applyLayout, BOARD_BYTES_MAX, boardBounds, cardKey, COORD_MAX, patchLayout, STICKER_MAX, STICKER_TEXT_MAX, utf8Bytes, type Sticker } from "../lib/board-state";
 import { boardFixture, FIXTURE_EN_JSON, FIXTURE_NOW } from "../lib/board-fixture";
 import { cardVisible, markTime, parseSelected, READABLE_K, restoreView, storeView, wheelAction } from "../lib/board-view";
 import { studioMarksText } from "../lib/lang-plan";
@@ -23,13 +44,13 @@ function test(name: string, fn: () => void) {
 }
 
 const dataOf = (fx = boardFixture()) =>
-  boardData({ now: fx.now, state: fx.state, enName: "Gist in a Minute", enJson: fx.enJson, enVideos: langVideosOf(fx.releases, "en"), enMarks: fx.enMarks, boardMarks: fx.boardMarks });
+  boardData({ now: fx.now, state: fx.state, enName: "Gist in a Minute", enJson: fx.enJson, enVideos: langVideosOf(fx.releases, "en"), enMarks: fx.enMarks, board: fx.board });
 const zonesOf = (fx = boardFixture()) =>
   buildBoard({
     now: fx.now,
     ru: fx.state,
     en: { name: "Gist in a Minute", json: fx.enJson, released: langVideosOf(fx.releases, "en").map((v) => ({ code: v.code, title: v.texts?.title ?? "", cover: null })), marks: fx.enMarks },
-    marks: fx.boardMarks,
+    marks: fx.board.marks,
   });
 const zone = (zones: BoardZone[], key: string) => zones.find((z) => z.key === key)!;
 const card = (zones: BoardZone[], key: string, code: string) => zone(zones, key).items.find((i) => i.code === code);
@@ -83,14 +104,14 @@ test("EN: план от schedule.start своего en.json, английско�
 
 test("EN: отметка в Studio без релиза (удалён) — слот занят, не «пусто» и не дыра", () => {
   const fx = boardFixture();
-  const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [], marks: { "05a": Date.parse("2026-10-11T16:00:00Z") } }, marks: fx.boardMarks });
+  const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [], marks: { "05a": Date.parse("2026-10-11T16:00:00Z") } }, marks: fx.board.marks });
   assert.equal(zone(z, "en").runway.text, "запас до 11.10 (0 дней)");
   assert.ok(!zone(z, "en").empty.some((e) => e.at === "2026-10-11T16:00:00Z"));
 });
 
 test("EN: нет английского названия — русское", () => {
   const fx = boardFixture();
-  const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [{ code: "01a", title: "", cover: null }], marks: {} }, marks: fx.boardMarks });
+  const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [{ code: "01a", title: "", cover: null }], marks: {} }, marks: fx.board.marks });
   assert.equal(card(z, "en", "01a")?.title, "Почему свой голос на записи звучит чужим");
 });
 
@@ -126,18 +147,182 @@ test("YouTube не ответил: запас неизвестен, у неот�
 });
 
 test("PANEL_BOARD не прочиталась — кнопок нет, запас неизвестен", () => {
-  const fx = { ...boardFixture(), boardMarks: null };
+  const fx = boardFixture();
   const z = buildBoard({ now: fx.now, ru: fx.state, en: { name: "EN", json: fx.enJson, released: [], marks: {} }, marks: null });
   assert.equal(card(z, "instagram", "09b")?.marked, undefined);
   assert.match(zone(z, "tiktok").runway.text, new RegExp(`неизвестен.*${BOARD_VAR}`));
 });
 
 test("отметки PANEL_BOARD: только instagram и tiktok, снятие убирает код", () => {
-  const m = parseBoardMarks('{"instagram":{"08A":"2026-10-11T16:00:00Z"},"youtube":{"08a":"2026-10-11T16:00:00Z"},"tiktok":"мусор"}');
+  const m = parseBoardState('{"instagram":{"08A":"2026-10-11T16:00:00Z"},"youtube":{"08a":"2026-10-11T16:00:00Z"},"tiktok":"мусор"}').marks;
   assert.deepEqual(Object.keys(m), ["instagram"]);
   assert.equal(m.instagram?.["08a"], Date.parse("2026-10-11T16:00:00Z"));
-  assert.deepEqual(parseBoardMarks(studioMarksText(withBoardMark(m, "instagram", "08a", null))), {});
+  assert.deepEqual(parseBoardState(studioMarksText(withBoardMark(m, "instagram", "08a", null))).marks, {});
   assert.deepEqual(withBoardMark(m, "youtube", "08a", 1), m);
+});
+
+// ---- PANEL_BOARD целиком: отметки, раскладка, стикеры ----
+
+const textOf = (w: BoardWrite) => {
+  assert.ok("text" in w, "error" in w ? w.error : "");
+  return w.text;
+};
+const errorOf = (w: BoardWrite) => {
+  assert.ok("error" in w, "ожидали ошибку");
+  return w.error;
+};
+const sticker = (id: string, over: Partial<Sticker> = {}): Sticker => ({ id, x: 10, y: 20, text: "заметка", color: "yellow", ...over });
+const FULL = JSON.stringify({
+  instagram: { "08a": "2026-10-12T09:00:00Z" },
+  tiktok: { "07b": "2026-10-11T16:00:00Z" },
+  layout: { zones: { ru: { x: 0, y: 80 } }, cards: { "instagram:08a": { dx: 10, dy: -20 } } },
+  stickers: [sticker("a1"), sticker("b2", { color: "pink", text: "второй" })],
+});
+
+test("PANEL_BOARD: один разбор на весь объект — отметки, раскладка, стикеры", () => {
+  const st = parseBoardState(FULL);
+  assert.equal(st.marks.instagram?.["08a"], Date.parse("2026-10-12T09:00:00Z"));
+  assert.deepEqual(st.layout, { zones: { ru: { x: 0, y: 80 } }, cards: { "instagram:08a": { dx: 10, dy: -20 } } });
+  assert.deepEqual(
+    st.stickers.map((s) => s.id),
+    ["a1", "b2"],
+  );
+  // Запись и разбор — туда и обратно без потерь.
+  assert.deepEqual(parseBoardState(boardStateText(st)), st);
+});
+
+test("«загрузил» не стирает раскладку и стикеры", () => {
+  const before = parseBoardState(FULL);
+  const after = parseBoardState(textOf(boardWithMark(FULL, "tiktok", "08a", Date.parse("2026-10-12T09:00:00Z"))));
+  assert.equal(after.marks.tiktok?.["08a"], Date.parse("2026-10-12T09:00:00Z"));
+  assert.deepEqual(after.layout, before.layout);
+  assert.deepEqual(after.stickers, before.stickers);
+  const off = parseBoardState(textOf(boardWithMark(FULL, "instagram", "08a", null)));
+  assert.equal(off.marks.instagram, undefined);
+  assert.deepEqual(off.layout, before.layout);
+  assert.deepEqual(off.stickers, before.stickers);
+});
+
+test("раскладка и стикеры не стирают отметки", () => {
+  const before = parseBoardState(FULL);
+  const moved = parseBoardState(textOf(boardWithLayout(FULL, { zones: { tiktok: { x: 2000.4, y: -30 } }, cards: { "RU:09B": { dx: 5, dy: 0 }, "instagram:08a": null } })));
+  assert.deepEqual(moved.marks, before.marks);
+  assert.deepEqual(moved.stickers, before.stickers);
+  assert.deepEqual(moved.layout.zones, { ru: { x: 0, y: 80 }, tiktok: { x: 2000, y: -30 } }, "координаты — целые");
+  assert.deepEqual(moved.layout.cards, { "ru:09b": { dx: 5, dy: 0 } }, "ключ — через normCode, null убирает");
+  const withSticker = parseBoardState(textOf(boardWithSticker(FULL, { op: "put", sticker: sticker("c3") })));
+  assert.deepEqual(withSticker.marks, before.marks);
+  assert.deepEqual(withSticker.layout, before.layout);
+  assert.equal(withSticker.stickers.length, 3);
+  const edited = parseBoardState(textOf(boardWithSticker(FULL, { op: "put", sticker: sticker("a1", { text: "новый текст", color: "blue", x: -40 }) })));
+  assert.deepEqual(edited.stickers[0], sticker("a1", { text: "новый текст", color: "blue", x: -40 }), "тот же id — правка на месте");
+  const deleted = parseBoardState(textOf(boardWithSticker(FULL, { op: "delete", id: "a1" })));
+  assert.deepEqual(
+    deleted.stickers.map((s) => s.id),
+    ["b2"],
+  );
+  assert.deepEqual(deleted.marks, before.marks);
+});
+
+test("«По датам»: раскладка — пустая, стикеры и отметки остаются", () => {
+  const before = parseBoardState(FULL);
+  const reset = parseBoardState(textOf(boardWithLayout(FULL, { reset: true })));
+  assert.deepEqual(reset.layout, { zones: {}, cards: {} });
+  assert.deepEqual(reset.stickers, before.stickers);
+  assert.deepEqual(reset.marks, before.marks);
+  // Откат «По датам» — reset с прежними местами.
+  assert.deepEqual(patchLayout(reset.layout, { reset: true, ...before.layout }), before.layout);
+});
+
+test("лимиты: 100 стикеров, 280 знаков, 48 КБ — ошибка и ничего не пишем", () => {
+  const many = JSON.stringify({ stickers: Array.from({ length: STICKER_MAX }, (_, i) => sticker(`s${i}`, { text: "" })) });
+  assert.equal(parseBoardState(many).stickers.length, STICKER_MAX);
+  assert.match(errorOf(boardWithSticker(many, { op: "put", sticker: sticker("new") })), /уже 100/);
+  // Правка существующего при полном списке — можно.
+  assert.ok("text" in boardWithSticker(many, { op: "put", sticker: sticker("s5", { text: "ок" }) }));
+  assert.match(errorOf(boardWithSticker(FULL, { op: "put", sticker: sticker("long", { text: "я".repeat(STICKER_TEXT_MAX + 1) }) })), /до 280 знаков/);
+  assert.ok("text" in boardWithSticker(FULL, { op: "put", sticker: sticker("long", { text: "я".repeat(STICKER_TEXT_MAX) }) }));
+  // 100 стикеров по 280 кириллических знаков (≈ 56 КБ в UTF-8) в переменную не помещаются.
+  let raw = "{}";
+  let problem: string | null = null;
+  for (let i = 0; i < STICKER_MAX && !problem; i++) {
+    const w = boardWithSticker(raw, { op: "put", sticker: sticker(`big${i}`, { text: "ж".repeat(STICKER_TEXT_MAX) }) });
+    if ("error" in w) problem = w.error;
+    else raw = w.text;
+  }
+  assert.match(problem ?? "", /не помещается.*48/);
+  assert.ok(utf8Bytes(raw) <= BOARD_BYTES_MAX, "записанное — не больше 48 КБ");
+  assert.ok("text" in boardWithSticker(raw, { op: "delete", id: "big0" }), "удалить из полной — можно");
+  // Переменная без 5 байт полная: отметка (≈ 44 байта) не влезает — ошибка, а не обрезанный JSON.
+  const cards = Object.fromEntries(Array.from({ length: 500 }, (_, i) => [`ru:${String((i % 99) + 1).padStart(2, "0")}${"abcdef"[Math.floor(i / 99)]}`, { dx: 99999, dy: -99999 }]));
+  const empty = Array.from({ length: STICKER_MAX }, (_, i) => sticker(`p${i}`, { text: "" }));
+  let extra = BOARD_BYTES_MAX - 5 - utf8Bytes(boardStateText({ marks: {}, layout: { zones: {}, cards }, stickers: empty }));
+  const padded = empty.map((s) => {
+    const n = Math.min(STICKER_TEXT_MAX, Math.max(0, extra));
+    extra -= n;
+    return { ...s, text: "a".repeat(n) };
+  });
+  const nearFull = boardStateText({ marks: {}, layout: { zones: {}, cards }, stickers: padded });
+  assert.equal(utf8Bytes(nearFull), BOARD_BYTES_MAX - 5);
+  assert.match(errorOf(boardWithMark(nearFull, "instagram", "08a", Date.parse("2026-10-12T09:00:00Z"))), /не помещается/);
+  assert.ok("text" in boardWithLayout(nearFull, { cards: { "ru:01a": null } }), "убрать сдвиг — можно");
+});
+
+test("мусор во входе: битый JSON, чужие ключи, не числа, кривые коды — пропускаем", () => {
+  assert.deepEqual(parseBoardState("не json"), { marks: {}, layout: { zones: {}, cards: {} }, stickers: [] });
+  assert.deepEqual(parseBoardState("[1,2]"), { marks: {}, layout: { zones: {}, cards: {} }, stickers: [] });
+  const junk = parseBoardState(
+    JSON.stringify({
+      layout: {
+        zones: { ru: { x: "1", y: 2 }, youtube: { x: 1, y: 2 }, en: { x: 1e9, y: -1e9 } },
+        cards: { "ru:8a": { dx: 1, dy: 1 }, "tg:08a": { dx: 1, dy: 1 }, "en:L01": { dx: 0, dy: 0 }, "en:l02": { dx: 3.6, dy: null }, "en:l03": { dx: 3.6, dy: -2.2 } },
+      },
+      stickers: [{ id: "ok", x: 1, y: 2, text: "т".repeat(400), color: "чёрный" }, { id: "ok", x: 5, y: 5 }, { id: "плохой id", x: 1, y: 1 }, { x: 1, y: 1 }, "строка", null],
+    }),
+  );
+  assert.deepEqual(junk.layout, { zones: { en: { x: COORD_MAX, y: -COORD_MAX } }, cards: { "en:L03": { dx: 4, dy: -2 } } });
+  assert.equal(junk.stickers.length, 1, "повтор id и кривые — прочь");
+  assert.equal(junk.stickers[0]!.text.length, STICKER_TEXT_MAX, "длинный текст из переменной — обрезан");
+  assert.equal(junk.stickers[0]!.color, "yellow", "чужой цвет — жёлтый");
+  // Вход действий строже: непонятное — ошибка, переменная не меняется.
+  assert.ok("error" in boardWithLayout(FULL, { zones: { youtube: { x: 1, y: 1 } } }));
+  assert.ok("error" in boardWithLayout(FULL, { cards: { "ru:08a:x": { dx: 1, dy: 1 } } }));
+  assert.ok("error" in boardWithLayout(FULL, { cards: { "ru:08a": { dx: "1", dy: 1 } } }));
+  assert.ok("error" in boardWithLayout(FULL, "мусор"));
+  assert.ok("error" in boardWithSticker(FULL, { op: "put", sticker: { ...sticker("x"), color: "чёрный" } }));
+  assert.ok("error" in boardWithSticker(FULL, { op: "put", sticker: { ...sticker("x"), x: Number.NaN } }));
+  assert.ok("error" in boardWithSticker(FULL, { op: "move" }));
+  assert.equal(cardKey("Instagram:08A"), "instagram:08a");
+  assert.equal(cardKey("ru:L01"), "ru:L01");
+  assert.equal(cardKey("ru"), null);
+});
+
+test("раскладка на полотне: зона — свой угол, карточка — сдвиг от места по дате; рамка — со стикерами", () => {
+  const plan = layoutBoard(zones, "2026-10-11");
+  const tt = plan.zones.find((z) => z.key === "tiktok")!;
+  const c = tt.cards.find((x) => x.code === "06b")!;
+  const moved = applyLayout(plan, { zones: { tiktok: { x: -500, y: 300 } }, cards: { "tiktok:06b": { dx: 30, dy: -10 } } });
+  const mt = moved.zones.find((z) => z.key === "tiktok")!;
+  assert.deepEqual([mt.x, mt.y], [-500, 300]);
+  const mc = mt.cards.find((x) => x.code === "06b")!;
+  assert.deepEqual([mc.x, mc.y], [c.x + 30, c.y - 10]);
+  assert.equal(moved.days, plan.days, "строки дней — общие, по датам");
+  assert.equal(applyLayout(plan, { zones: {}, cards: {} }), plan);
+  const b = boardBounds(moved, [{ x: 5000, y: -200 }]);
+  assert.equal(b.x, -500);
+  assert.equal(b.y, -200);
+  assert.ok(b.x + b.w >= 5000 + 200);
+});
+
+test("фикстура: раскладка и пара стикеров для демо; PANEL_BOARD не прочиталась — двигать нельзя", () => {
+  const d = dataOf();
+  assert.equal(d.boardOk, true);
+  assert.ok(d.layout.zones.tiktok);
+  assert.equal(d.stickers.length, 2);
+  const fx = boardFixture();
+  const none = boardData({ now: fx.now, state: fx.state, enName: "EN", enJson: fx.enJson, enVideos: [], enMarks: fx.enMarks, board: null });
+  assert.equal(none.boardOk, false);
+  assert.deepEqual(none.stickers, []);
 });
 
 test("время отметки: прошло или ориентир — «сейчас»; впереди и точное — выбор", () => {

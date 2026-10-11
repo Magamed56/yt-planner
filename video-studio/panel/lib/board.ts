@@ -10,26 +10,95 @@
 // Без YouTube статусы русской очереди — ориентир: «загрузил» у неотмеченных прячем.
 import { localDate, parseDay, startPlanOf, upcomingSlots, zonedTimeToUtc } from "../../src/pipeline/channel";
 import { compareCodes, isLongCode } from "../../src/pipeline/codes";
-import { langPlanOf, parseMarks, withMark, type StudioMarks } from "./lang-plan";
+import { langPlanOf, marksJson, marksOf, STUDIO_MARKS_MAX, withMark, type StudioMarks } from "./lang-plan";
 import type { LangVideo } from "./lang-videos";
 import { zoneLabel } from "./lang-slots";
 import { plural, shiftDateKey, type Stage } from "./stages";
 import { coverage, SLOT_GRID_DAYS, type FirstGap, type PanelState, type Row, type SlotCell } from "./state";
+import {
+  BOARD_BYTES_MAX,
+  emptyLayout,
+  isSocial,
+  layoutOf,
+  patchLayout,
+  patchStickers,
+  stickersOf,
+  utf8Bytes,
+  type BoardLayout,
+  type Social,
+  type Sticker,
+  type ZoneKey,
+} from "./board-state";
+
+export { isSocial, SOCIAL, ZONE_KEYS, type Social, type ZoneKey } from "./board-state";
 
 export const BOARD_VAR = "PANEL_BOARD";
-export const SOCIAL = ["instagram", "tiktok"] as const;
-export type Social = (typeof SOCIAL)[number];
-export const isSocial = (k: unknown): k is Social => typeof k === "string" && (SOCIAL as readonly string[]).includes(k);
 export const SOCIAL_LABEL: Record<Social, string> = { instagram: "Instagram", tiktok: "TikTok" };
 
-// { "instagram": { "08a": "2026-10-12T09:00:00Z" }, "tiktok": { … } } — разбор как у PANEL_LANG_STUDIO.
-export const parseBoardMarks = (raw: string | null | undefined): StudioMarks => parseMarks(raw, isSocial);
+// ---- переменная PANEL_BOARD целиком ----
+// { "instagram": { "08a": "ISO" }, "tiktok": { … },
+//   "layout": { "zones": { "ru": { "x": 0, "y": 0 } }, "cards": { "ru:08a": { "dx": 10, "dy": -20 } } },
+//   "stickers": [{ "id", "x", "y", "text", "color" }] }
+// Один разбор и одна запись на весь объект: каждое действие сервера перечитывает переменную и
+// меняет только свой раздел — «загрузил» не стирает раскладку и стикеры, и наоборот.
+export interface BoardState {
+  marks: StudioMarks; // площадка → код → момент
+  layout: BoardLayout;
+  stickers: Sticker[];
+}
+
+// Терпимо к мусору: битое — пусто, кривые записи — пропускаем (как у PANEL_LANG_STUDIO).
+export function parseBoardState(raw: string | null | undefined): BoardState {
+  let j: unknown;
+  try {
+    j = JSON.parse(raw ?? "");
+  } catch {
+    j = null;
+  }
+  const o = j && typeof j === "object" && !Array.isArray(j) ? (j as Record<string, unknown>) : {};
+  return { marks: marksOf(o, isSocial), layout: layoutOf(o.layout), stickers: stickersOf(o.stickers) };
+}
+
+export function boardStateText(s: BoardState): string {
+  return JSON.stringify({ ...marksJson(s.marks), layout: s.layout, stickers: s.stickers });
+}
+
 export const withBoardMark = (marks: StudioMarks, platform: string, code: string, at: number | null): StudioMarks => withMark(marks, platform, code, at, isSocial);
+
+// Изменение переменной: change меняет свой раздел или возвращает ошибку словами; не помещается в
+// 48 КБ — ошибка, ничего не пишем. raw — то, что лежит в переменной прямо сейчас.
+export type BoardWrite = { text: string } | { error: string };
+export function writeBoard(raw: string | null | undefined, change: (s: BoardState) => BoardState | string): BoardWrite {
+  const next = change(parseBoardState(raw));
+  if (typeof next === "string") return { error: next };
+  const text = boardStateText(next);
+  const bytes = utf8Bytes(text);
+  if (bytes > BOARD_BYTES_MAX)
+    return { error: `Доска не помещается в переменную ${BOARD_VAR}: ${Math.ceil(bytes / 1024)} КБ из ${BOARD_BYTES_MAX / 1024}. Удалите лишние стикеры или нажмите «По датам».` };
+  return { text };
+}
+
+// «Загрузил» (at — момент) или «снять» (null); отметку, которую срезал бы лимит, не пишем.
+export function boardWithMark(raw: string | null | undefined, platform: Social, code: string, at: number | null): BoardWrite {
+  return writeBoard(raw, (s) => {
+    const marks = withBoardMark(s.marks, platform, code, at);
+    if (at !== null && marks[platform]?.[code] !== at) return `${SOCIAL_LABEL[platform]}: отметок уже ${STUDIO_MARKS_MAX}, а эта — самая ранняя, её не сохранить. Снимите старые отметки.`;
+    return { ...s, marks };
+  });
+}
+export const boardWithLayout = (raw: string | null | undefined, patch: unknown): BoardWrite =>
+  writeBoard(raw, (s) => {
+    const layout = patchLayout(s.layout, patch);
+    return layout ? { ...s, layout } : "Неверная раскладка — обновите страницу.";
+  });
+export const boardWithSticker = (raw: string | null | undefined, op: unknown): BoardWrite =>
+  writeBoard(raw, (s) => {
+    const stickers = patchStickers(s.stickers, op);
+    return typeof stickers === "string" ? stickers : { ...s, stickers };
+  });
 
 const DAY_MS = 86_400_000;
 
-export type ZoneKey = "ru" | "en" | Social;
-export const ZONE_KEYS: ZoneKey[] = ["ru", "en", "instagram", "tiktok"];
 export type BoardStatus = "published" | "scheduled" | "studio" | "ready" | "script";
 
 export interface BoardItem {
@@ -364,7 +433,11 @@ export type EnVideo = Pick<LangVideo, "code" | "file" | "title" | "texts" | "url
 
 // Всё, что нужно полотну и листу ролика (components/BoardCanvas.tsx).
 export interface BoardData {
-  plan: BoardPlan;
+  plan: BoardPlan; // по датам; раскладку (layout) полотно кладёт поверх само — двигать можно сразу
+  layout: BoardLayout;
+  stickers: Sticker[];
+  boardOk: boolean; // PANEL_BOARD прочиталась: двигать, стикеры и «загрузил» — можно
+  demo?: boolean; // демо на фикстуре: раскладка и стикеры — только в этой вкладке
   todayKey: string;
   nowIso: string; // момент данных: «вышел» / «впереди» для только что нажатых отметок
   timezone: string; // пояс русского канала (МСК) — «по Москве» у английского ролика
@@ -384,20 +457,25 @@ export function boardData(input: {
   enJson: unknown;
   enVideos: LangVideo[];
   enMarks: Record<string, number> | null;
-  boardMarks: StudioMarks | null;
+  board: BoardState | null; // PANEL_BOARD; null — не прочиталась
+  demo?: boolean;
 }): BoardData {
   const { now, state } = input;
   const zones = buildBoard({
     now,
     ru: state,
     en: { name: input.enName, json: input.enJson, released: input.enVideos.map((v) => ({ code: v.code, title: v.texts?.title || v.title, cover: coverOf(v) })), marks: input.enMarks },
-    marks: input.boardMarks,
+    marks: input.board?.marks ?? null,
   });
   const enPlan = startPlanOf(input.enJson).plan;
   const enTz = enPlan?.schedule.timezone ?? "America/New_York";
   const active = state.runs.filter((r) => r.active);
   return {
     plan: layoutBoard(zones, state.todayKey),
+    layout: input.board?.layout ?? emptyLayout(),
+    stickers: input.board?.stickers ?? [],
+    boardOk: input.board !== null,
+    ...(input.demo ? { demo: true } : {}),
     todayKey: state.todayKey,
     nowIso: now.toISOString(),
     timezone: state.timezone,

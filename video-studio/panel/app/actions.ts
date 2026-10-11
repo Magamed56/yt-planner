@@ -11,11 +11,12 @@ import { parsePlan, PLAN_CODE, scriptCode } from "../../src/pipeline/plan";
 import { applyUpdate, fillItemsOf, matchVideos, planUpdates, setThumbnail, THUMBNAIL_MAX_BYTES, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
-import { BOARD_VAR, isSocial, parseBoardMarks, SOCIAL_LABEL, withBoardMark } from "@/lib/board";
+import { BOARD_VAR, boardWithLayout, boardWithMark, boardWithSticker, isSocial, SOCIAL_LABEL, type BoardWrite } from "@/lib/board";
+import type { LayoutPatch, StickerOp } from "@/lib/board-state";
 import { dispatchOnce } from "@/lib/dispatch";
 import { buildFirstComment, commentBlocker, commentProblem, commentUrl, ctaQuestion, type OwnComment } from "@/lib/first-comment";
 import { assetBytes, assetText, dispatchWorkflow, getVariable, GithubError, listReleases, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
-import { parseStudioMarks, STUDIO_MARKS_MAX, STUDIO_MARKS_VAR, studioMarksText, withStudioMark } from "@/lib/lang-plan";
+import { parseStudioMarks, STUDIO_MARKS_VAR, studioMarksText, withStudioMark } from "@/lib/lang-plan";
 import { loadState, STUDIO_DIR } from "@/lib/load";
 import { canRetry, confirmStale } from "@/lib/ops";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
@@ -598,11 +599,21 @@ export async function studioMarkAction(lang: string, code: string, at: string | 
   });
 }
 
-// ---- «Доска»: «загрузил» в Instagram и TikTok ----
+// ---- «Доска»: «загрузил» в Instagram и TikTok, раскладка, стикеры — одна переменная PANEL_BOARD ----
+
+// Перечитать PANEL_BOARD прямо перед записью и поменять только свой раздел (lib/board.ts →
+// writeBoard): две вкладки сразу — побеждает последняя, но чужой раздел не стирается. Не
+// помещается в 48 КБ — ошибка, ничего не пишем.
+async function writeBoardVar(change: (raw: string | null) => BoardWrite): Promise<string | null> {
+  const r = change(await getVariable(BOARD_VAR));
+  if ("error" in r) return r.error;
+  await setVariable(BOARD_VAR, r.text);
+  return null;
+}
 
 // Ролик выложен (или поставлен в расписание) в Instagram или TikTok: at — его время на доске,
-// null — снять отметку. Как studioMarkAction: переменную перечитываем прямо перед записью. Код —
-// только из плана Shorts; отметку, которую срезал бы лимит (400 на площадку), не пишем.
+// null — снять отметку. Код — только из плана Shorts; отметку, которую срезал бы лимит (400 на
+// площадку), не пишем.
 export async function boardMarkAction(platform: string, code: string, at: string | null): Promise<ActionResult> {
   return guarded(async () => {
     const c = normCode(code);
@@ -610,12 +621,30 @@ export async function boardMarkAction(platform: string, code: string, at: string
     if (!(await planCodes([c])).length) return fail(`Ролика ${c} нет в плане — обновите страницу.`);
     const ms = at === null ? null : Date.parse(at);
     if (ms !== null && !(Number.isFinite(ms) && Math.abs(ms - Date.now()) < 400 * 86_400_000)) return fail("Неверное время — обновите страницу.");
-    const marks = parseBoardMarks(await getVariable(BOARD_VAR));
-    const next = withBoardMark(marks, platform, c, ms);
+    const problem = await writeBoardVar((raw) => boardWithMark(raw, platform, c, ms));
+    if (problem) return fail(problem);
     const where = SOCIAL_LABEL[platform];
-    if (ms !== null && next[platform]?.[c] !== ms) return fail(`${where}: отметок уже ${STUDIO_MARKS_MAX}, а эта — самая ранняя, её не сохранить. Снимите старые отметки.`);
-    await setVariable(BOARD_VAR, studioMarksText(next));
     return ok(ms === null ? `${where}, ${c}: отметка снята.` : `${where}, ${c}: загружен.`);
+  });
+}
+
+// Раскладка: новое место зоны или сдвиг карточки после перетаскивания (null — на место по датам),
+// reset — «По датам» (стикеры остаются). Одно действие на конец перетаскивания.
+export async function boardLayoutAction(patch: LayoutPatch): Promise<ActionResult> {
+  return guarded(async () => {
+    const problem = await writeBoardVar((raw) => boardWithLayout(raw, patch));
+    if (problem) return fail(problem);
+    return ok(patch?.reset ? "Доска снова по датам." : "Раскладка сохранена.");
+  });
+}
+
+// Стикер: put — добавить или изменить (место, текст, цвет), delete — убрать. До 100 штук, текст —
+// до 280 знаков.
+export async function boardStickerAction(op: StickerOp): Promise<ActionResult> {
+  return guarded(async () => {
+    const problem = await writeBoardVar((raw) => boardWithSticker(raw, op));
+    if (problem) return fail(problem);
+    return ok(op?.op === "delete" ? "Стикер удалён." : "Стикер сохранён.");
   });
 }
 

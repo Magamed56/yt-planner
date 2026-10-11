@@ -1,13 +1,12 @@
 // Фикстура «Доски» — без сети и файлов: свой маленький план, ролики на YouTube, релизы (русские и
-// en-…), отметки PANEL_BOARD и PANEL_LANG_STUDIO, свой channels/en.json. Очередь собирает
+// en-…), PANEL_BOARD (отметки, раскладка, стикеры) и PANEL_LANG_STUDIO, свой channels/en.json. Очередь собирает
 // настоящий buildState (state.ts), поэтому на демо-странице (app/board/demo, только в разработке)
 // работает и карточка ролика (VideoSheet). Её же проверяет scripts/board-test.ts — от того, докуда
 // дошёл настоящий план, тест не зависит.
 import ruChannel from "../../channel.json";
 import type { ChannelVideo } from "../../src/pipeline/youtube-fill";
 import type { GhRelease } from "./github";
-import { parseBoardMarks } from "./board";
-import type { StudioMarks } from "./lang-plan";
+import { parseBoardState, type BoardState } from "./board";
 import { buildState, parseAutopilot, type PanelState } from "./state";
 
 // Воскресенье, 11.10.2026, 13:00 по Москве.
@@ -155,6 +154,12 @@ const boardMarks = {
   ]),
   tiktok: Object.fromEntries(["01a", "01b", "02a", "02b", "03a"].map((c, i) => [c, at(slot(String(6 + Math.floor(i / 2)).padStart(2, "0"), i % 2 === 1))])),
 };
+// Раскладка: TikTok отодвинут вправо и вниз, у 12a в русской зоне — свой сдвиг; два стикера справа.
+const layout = { zones: { tiktok: { x: 1570, y: 60 } }, cards: { "ru:12a": { dx: 0, dy: 40 } } };
+const stickers = [
+  { id: "demo1", x: 2080, y: 160, text: "Проверить звук у 09b перед загрузкой в Reels", color: "yellow" },
+  { id: "demo2", x: 2080, y: 400, text: "TikTok: обложку ставить вручную", color: "pink" },
+];
 // В Studio английского канала отмечены 01a–02b (уже вышли) и 03a (впереди).
 const enMarks = { "01a": "2026-10-09T16:00:00Z", "01b": "2026-10-09T23:00:00Z", "02a": "2026-10-10T16:00:00Z", "02b": "2026-10-10T23:00:00Z", "03a": "2026-10-11T16:00:00Z" };
 
@@ -164,7 +169,7 @@ export interface BoardFixture {
   releases: GhRelease[];
   enJson: unknown;
   enMarks: Record<string, number>;
-  boardMarks: StudioMarks;
+  board: BoardState;
 }
 
 // youtubeError — YouTube «не ответил»: очередь без него, как на настоящей странице.
@@ -194,6 +199,6 @@ export function boardFixture(opts: { youtubeError?: string } = {}): BoardFixture
     releases,
     enJson: FIXTURE_EN_JSON,
     enMarks: Object.fromEntries(Object.entries(enMarks).map(([c, t]) => [c, Date.parse(t)])),
-    boardMarks: parseBoardMarks(JSON.stringify(boardMarks)),
+    board: parseBoardState(JSON.stringify({ ...boardMarks, layout, stickers })),
   };
 }
