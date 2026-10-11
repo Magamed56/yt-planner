@@ -1,15 +1,19 @@
 "use client";
 import { useState } from "react";
 import type { PanelState, Row } from "@/lib/state";
+import { holdLabel } from "@/lib/rebuild-hold";
 import { RATIO_CLASS, STAGE_LABEL, plural } from "@/lib/stages";
 import CoverMedia, { frameOf } from "./CoverMedia";
 import { usePending } from "@/lib/pending";
 import RunProgressBar from "./RunProgressBar";
 
-// Подпись на обложке: этап и, если нужно, что сделать.
+// Подпись на обложке: этап и, если нужно, что сделать. Ждущий пересборки — не «загрузить»: его
+// старая версия с ошибкой (content/rebuild.json).
 function chipText(r: Row, queued: boolean): string {
+  if (r.hold?.rebuilding) return holdLabel(r.hold);
   if (r.running) return r.running;
   if (queued) return "в очереди…";
+  if (r.hold) return holdLabel(r.hold);
   if (r.stage === "video") return "Видео — загрузить в Studio";
   if (r.stage === "studio") return "В Studio — нужно время";
   return STAGE_LABEL[r.stage];
@@ -29,13 +33,13 @@ function Cover({ row, mark, queued }: { row: Row; mark: Mark; queued: boolean })
   ) : null;
   const check = mark && (
     <span className={`check ${mark}`} aria-hidden="true">
-      {mark === "on" ? "✓" : mark === "none" ? "нет файлов" : ""}
+      {mark === "on" ? "✓" : mark === "none" ? (row.hold ? "старая версия" : "нет файлов") : ""}
     </span>
   );
   const blank = (
     <>
       {row.code}
-      <small>{row.localVideo ? "файл на компьютере" : STAGE_LABEL[row.stage]}</small>
+      <small>{row.hold ? holdLabel(row.hold) : row.localVideo ? "файл на компьютере" : STAGE_LABEL[row.stage]}</small>
     </>
   );
   // Ни обложка, ни кадр не открылись — плитка пустая: с кодом и этапом.
@@ -56,7 +60,7 @@ function Cover({ row, mark, queued }: { row: Row; mark: Mark; queued: boolean })
 
 // Лента: день — две обложки (12:00 и 19:00), как ролики встанут на канале; во вт/чт/сб — ещё
 // «Разбор» в 21:00 (значок «Разбор», обложка 16:9). В режиме выбора нажатие отмечает ролик для
-// скачивания (только с файлами в релизе), карточка не открывается.
+// скачивания (только с файлами в релизе и не ждущий пересборки), карточка не открывается.
 export default function FeedView({
   state,
   rows,
@@ -119,11 +123,12 @@ export default function FeedView({
             </h2>
             <div className="feed-cards">
               {d.rows.map((r) => {
-                const mark: Mark = chosen ? (!r.release ? "none" : chosen.has(r.code) ? "on" : "off") : null;
+                const mark: Mark = chosen ? (!r.release || r.hold ? "none" : chosen.has(r.code) ? "on" : "off") : null;
+                const hint = r.flags[0] ?? (r.hold && !r.hold.rebuilding ? "старую версию не загружайте" : null);
                 return (
                   <button
                     key={r.code}
-                    className={`vcard stage-${r.stage}${r.long ? " long" : ""}${r.code === selected && !chosen ? " active" : ""}${mark === "on" ? " chosen" : ""}${mark === "none" ? " nofiles" : ""}`}
+                    className={`vcard stage-${r.stage}${r.hold ? ` hold${r.hold.rebuilding ? " rebuilding" : ""}` : ""}${r.long ? " long" : ""}${r.code === selected && !chosen ? " active" : ""}${mark === "on" ? " chosen" : ""}${mark === "none" ? " nofiles" : ""}`}
                     aria-pressed={chosen ? mark === "on" : undefined}
                     disabled={mark === "none"}
                     onClick={() => (chosen ? onToggle?.(r.code) : onOpen(r.code))}
@@ -132,7 +137,7 @@ export default function FeedView({
                     <span className="code">{r.code}</span>
                     <span className="title">{r.title}</span>
                     {r.running && runOf(r.code)?.progress && <RunProgressBar progress={runOf(r.code)!.progress!} runId={runOf(r.code)!.id} compact />}
-                    {r.flags[0] && <span className="hint">{r.flags[0]}</span>}
+                    {hint && <span className="hint">{hint}</span>}
                   </button>
                 );
               })}
