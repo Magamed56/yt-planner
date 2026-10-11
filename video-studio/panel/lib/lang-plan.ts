@@ -27,6 +27,12 @@ export function parseMarks(raw: string | null | undefined, isKey: (key: string) 
   } catch {
     return {};
   }
+  return marksOf(j, isKey);
+}
+
+// То же по уже разобранному объекту: PANEL_BOARD держит рядом с отметками раскладку и стикеры
+// (lib/board.ts), и разбирает её один раз целиком.
+export function marksOf(j: unknown, isKey: (key: string) => boolean): StudioMarks {
   const out: StudioMarks = {};
   if (!j || typeof j !== "object" || Array.isArray(j)) return out;
   for (const [key, list] of Object.entries(j as Record<string, unknown>)) {
@@ -63,6 +69,9 @@ export const withStudioMark = (marks: StudioMarks, lang: string, code: string, a
 
 // ISO без миллисекунд: переменную удобно читать и на GitHub.
 export function studioMarksText(marks: StudioMarks): string {
+  return JSON.stringify(marksJson(marks));
+}
+export function marksJson(marks: StudioMarks): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {};
   for (const [lang, list] of Object.entries(marks)) {
     out[lang] = Object.fromEntries(
@@ -71,7 +80,7 @@ export function studioMarksText(marks: StudioMarks): string {
         .map(([c, at]) => [c, isoNoMs(new Date(at))]),
     );
   }
-  return JSON.stringify(out);
+  return out;
 }
 
 export interface LangPlan {

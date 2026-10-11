@@ -3,15 +3,17 @@
 // до полного, закрывается свайпом вниз или касанием фона), на компьютере — панель справа 380 px,
 // доска видна. Русский ролик, Instagram и TikTok — карточка очереди (VideoSheet); у Instagram и
 // TikTok сверху — «загрузил» и подпись instagram.txt. Английский — тексты для Studio, время по
-// Нью-Йорку и Москве, видео и отметка «запланирован в Studio» (как на странице English).
+// Нью-Йорку и Москве, видео и отметка «запланирован в Studio» (как на странице English). Тот же
+// лист — у стикера (StickerSheet): текст, цвет, удалить.
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { captionAction, studioMarkAction, type ActionResult } from "@/app/actions";
 import type { BoardData, BoardStatus, EnVideo, PlacedCard, ZoneKey } from "@/lib/board";
+import { STICKER_COLOR_LABEL, STICKER_COLORS, STICKER_TEXT_MAX, textLength, type Sticker } from "@/lib/board-state";
 import { markTime, STATUS_LABEL } from "@/lib/board-view";
 import { writeClipboard } from "@/lib/clipboard";
 import type { Row } from "@/lib/state";
-import { ZoneIcon } from "./BoardIcons";
+import { StickerIcon, ZoneIcon } from "./BoardIcons";
 import FilesSaver from "./FilesSaver";
 import VideoSheet from "./VideoSheet";
 import s from "./board.module.css";
@@ -34,8 +36,17 @@ interface Props {
 
 const failText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-export default function BoardSheet(p: Props) {
-  const { data, zone, code, card } = p;
+// Рамка листа — общая у ролика и стикера: снизу на телефоне, справа на компьютере.
+export function SheetFrame(p: {
+  desktop: boolean;
+  label: string;
+  icon: React.ReactNode;
+  title: React.ReactNode;
+  closeLabel: string;
+  onClose: () => void;
+  focusBox?: boolean; // false — фокус возьмёт поле внутри (текст стикера)
+  children: React.ReactNode;
+}) {
   const [full, setFull] = useState(false);
   const [drag, setDrag] = useState(0); // сдвиг пальцем: + вниз, − вверх
   const start = useRef<{ y: number; t: number; id: number } | null>(null);
@@ -43,11 +54,12 @@ export default function BoardSheet(p: Props) {
   // Лист открывается по отпусканию пальца: «щелчок», который телефон шлёт следом, попал бы в фон
   // под пальцем и тут же закрыл лист — первые 350 мс фон не закрывает.
   const openedAt = useRef(0);
+  const focusBox = p.focusBox !== false;
   // Открылся — фокус в лист: клавиатура и экранный диктор сразу в нём.
   useEffect(() => {
     openedAt.current = performance.now();
-    box.current?.focus({ preventScroll: true });
-  }, []);
+    if (focusBox) box.current?.focus({ preventScroll: true });
+  }, [focusBox]);
 
   // Шапка листа на телефоне — ручка: вниз — закрыть, вверх — во весь экран.
   function onDown(e: React.PointerEvent<HTMLElement>) {
@@ -71,49 +83,106 @@ export default function BoardSheet(p: Props) {
     } else if (dy < -50) setFull(true);
   }
 
-  const row = zone === "en" ? null : (data.state.rows.find((r) => r.code === code) ?? null);
-  const en = zone === "en" ? (data.en.videos.find((v) => v.code === code) ?? null) : null;
   const sheetStyle: React.CSSProperties | undefined =
     p.desktop || !drag ? undefined : drag > 0 ? { transform: `translateY(${drag}px)`, transition: "none" } : { maxHeight: "none", height: `calc(${full ? "100dvh" : "70dvh"} + ${-drag}px)`, transition: "none" };
 
   return (
     <>
       {!p.desktop && <div className={s.sheetBackdrop} onClick={() => performance.now() - openedAt.current > 350 && p.onClose()} aria-hidden="true" />}
-      <section
-        ref={box}
-        tabIndex={-1}
-        className={`${s.sheet} ${full ? s.sheetFull : ""}`}
-        style={sheetStyle}
-        role="dialog"
-        aria-modal={!p.desktop}
-        aria-label={`${p.zoneTitle} · ${code}`}
-      >
+      <section ref={box} tabIndex={-1} className={`${s.sheet} ${full ? s.sheetFull : ""}`} style={sheetStyle} role="dialog" aria-modal={!p.desktop} aria-label={p.label}>
         <header className={s.sheetHead} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
           {!p.desktop && <span className={s.grab} aria-hidden="true" />}
-          <ZoneIcon zone={zone} size={20} />
-          <span className={s.sheetTitle}>
-            {p.zoneTitle} · <b>{code}</b>
-          </span>
-          <button type="button" className={`btn small ghost ${s.sheetClose}`} onClick={p.onClose} aria-label="Закрыть лист ролика">
+          {p.icon}
+          <span className={s.sheetTitle}>{p.title}</span>
+          <button type="button" className={`btn small ghost ${s.sheetClose}`} onClick={p.onClose} aria-label={p.closeLabel}>
             ✕
           </button>
         </header>
-        <div className={s.sheetBody}>
-          {(zone === "instagram" || zone === "tiktok") && card && <SocialBlock {...p} card={card} row={row} />}
-          {zone === "en" ? (
-            en && card ? (
-              <EnSheet v={en} card={card} data={data} status={p.status ?? card.status} onEnMark={p.onEnMark} onToast={p.onToast} />
-            ) : (
-              <p className="muted">Английского ролика {code} в релизах нет — обновите страницу.</p>
-            )
-          ) : row ? (
-            <VideoSheet key={code} row={row} state={data.state} onClose={p.onClose} />
-          ) : (
-            <p className="muted">Ролика {code} нет в очереди — обновите страницу.</p>
-          )}
-        </div>
+        <div className={s.sheetBody}>{p.children}</div>
       </section>
     </>
+  );
+}
+
+export default function BoardSheet(p: Props) {
+  const { data, zone, code, card } = p;
+  const row = zone === "en" ? null : (data.state.rows.find((r) => r.code === code) ?? null);
+  const en = zone === "en" ? (data.en.videos.find((v) => v.code === code) ?? null) : null;
+
+  return (
+    <SheetFrame
+      desktop={p.desktop}
+      label={`${p.zoneTitle} · ${code}`}
+      icon={<ZoneIcon zone={zone} size={20} />}
+      title={
+        <>
+          {p.zoneTitle} · <b>{code}</b>
+        </>
+      }
+      closeLabel="Закрыть лист ролика"
+      onClose={p.onClose}
+    >
+      {(zone === "instagram" || zone === "tiktok") && card && <SocialBlock {...p} card={card} row={row} />}
+      {zone === "en" ? (
+        en && card ? (
+          <EnSheet v={en} card={card} data={data} status={p.status ?? card.status} onEnMark={p.onEnMark} onToast={p.onToast} />
+        ) : (
+          <p className="muted">Английского ролика {code} в релизах нет — обновите страницу.</p>
+        )
+      ) : row ? (
+        <VideoSheet key={code} row={row} state={data.state} onClose={p.onClose} />
+      ) : (
+        <p className="muted">Ролика {code} нет в очереди — обновите страницу.</p>
+      )}
+    </SheetFrame>
+  );
+}
+
+// Стикер: текст и цвет меняются на полотне сразу, сохраняет полотно один раз — при закрытии листа.
+// Поле — здесь, а не в масштабированном полотне: на телефоне текст обычного размера и без
+// приближения страницы.
+export function StickerSheet(p: { sticker: Sticker; desktop: boolean; onChange: (patch: Partial<Pick<Sticker, "text" | "color">>) => void; onDelete: () => void; onClose: () => void }) {
+  const { sticker } = p;
+  const left = STICKER_TEXT_MAX - textLength(sticker.text);
+  return (
+    <SheetFrame desktop={p.desktop} label="Стикер" icon={<StickerIcon size={20} />} title={<b>Стикер</b>} closeLabel="Закрыть стикер" onClose={p.onClose} focusBox={false}>
+      <div className={s.stickerEdit}>
+        <textarea
+          className={s.stickerField}
+          value={sticker.text}
+          maxLength={STICKER_TEXT_MAX}
+          rows={5}
+          autoFocus
+          placeholder="Что не забыть: проверить, выложить, переснять…"
+          aria-label="Текст стикера"
+          onChange={(e) => p.onChange({ text: e.target.value })}
+        />
+        <p className={`small ${left < 20 ? s.stickerLeftWarn : "muted"}`} aria-live="polite">
+          осталось {left} из {STICKER_TEXT_MAX}
+        </p>
+        <div className={s.swatches} role="radiogroup" aria-label="Цвет стикера">
+          {STICKER_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              role="radio"
+              aria-checked={sticker.color === c}
+              aria-label={STICKER_COLOR_LABEL[c]}
+              className={`${s.swatch} ${s[`sticker_${c}`] ?? ""}`}
+              onClick={() => p.onChange({ color: c })}
+            />
+          ))}
+        </div>
+        <div className="btn-row">
+          <button type="button" className="btn small primary" onClick={p.onClose}>
+            Готово
+          </button>
+          <button type="button" className="btn small ghost" onClick={p.onDelete}>
+            Удалить стикер
+          </button>
+        </div>
+      </div>
+    </SheetFrame>
   );
 }
 

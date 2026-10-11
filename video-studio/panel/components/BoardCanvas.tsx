@@ -2,13 +2,32 @@
 // «Доска» (/board) — бесконечное полотно на своих pointer-событиях и CSS transform, без пакетов:
 // палец или мышь — сдвиг, два пальца — щипок, колесо мыши и щипок тачпада — масштаб (два пальца
 // по тачпаду — сдвиг). Касание карточки — её лист прямо на доске (BoardSheet), адрес — ?v=зона:код.
-// Раскладку считает сервер (lib/board.ts → layoutBoard), здесь — только вид. Сдвиг и масштаб пишем
-// прямо в style.transform, без перерисовки React: на телефоне так плавно; липкие названия зон и
-// колонка дат поверх полотна берут сдвиг из переменных --vx, --vy, --k.
+// Раскладку по датам считает сервер (lib/board.ts → layoutBoard); свои места зон, сдвиги карточек и
+// стикеры (lib/board-state.ts) полотно кладёт поверх само: перетащили — видно сразу, сохраняем одним
+// действием на отпускание, без router.refresh. Мышь тащит сразу, палец — после удержания 400 мс
+// (иначе это сдвиг полотна). Сдвиг и масштаб пишем прямо в style.transform, без перерисовки React:
+// на телефоне так плавно; липкие названия зон и колонка дат поверх полотна берут сдвиг из
+// переменных --vx, --vy, --k.
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
-import { boardMarkAction, type ActionResult } from "@/app/actions";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { boardLayoutAction, boardMarkAction, boardStickerAction, type ActionResult } from "@/app/actions";
 import type { BoardData, BoardStatus, PlacedCard, PlacedZone, Social, ZoneKey } from "@/lib/board";
+import {
+  applyLayout,
+  boardBounds,
+  coord,
+  isLayoutEmpty,
+  patchLayout,
+  patchStickers,
+  STICKER_COLORS,
+  STICKER_H,
+  STICKER_MAX,
+  STICKER_W,
+  type BoardLayout,
+  type LayoutPatch,
+  type Sticker,
+  type StickerOp,
+} from "@/lib/board-state";
 import {
   cardVisible,
   clampK,
@@ -29,8 +48,8 @@ import {
 } from "@/lib/board-view";
 import { shiftDateKey } from "@/lib/stages";
 import AppShell from "./AppShell";
-import { ZoneIcon } from "./BoardIcons";
-import BoardSheet from "./BoardSheet";
+import { StickerIcon, ZoneIcon } from "./BoardIcons";
+import BoardSheet, { StickerSheet } from "./BoardSheet";
 import s from "./board.module.css";
 
 const LEGEND: BoardStatus[] = ["published", "scheduled", "ready", "script", "studio"];
@@ -40,15 +59,37 @@ const WEEKDAY = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 const MONTH = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
 const SHEET_W = 380; // лист ролика справа на компьютере
 const REFRESH_MS = 2500; // после последнего «загрузил» — одно обновление данных
+const HOLD_MS = 400; // палец: удержание без сдвига — перетаскивание, иначе сдвиг полотна
+const DOUBLE_TAP_MS = 350; // стикер: двойное касание или двойной щелчок — правка
+const MINI_W = 120;
+const MINI_H = 80;
 
 type Pt = { x: number; y: number };
-type Gesture =
-  | { kind: "pan"; id: number; sx: number; sy: number; vx: number; vy: number; moved: boolean; slop: number; tap: string | null }
-  | { kind: "pinch"; d0: number; k0: number; wx: number; wy: number };
+// Что можно перетащить: карточку, зону (за шапку) или стикер.
+type DragItem = { kind: "card"; zone: ZoneKey; code: string } | { kind: "zone"; zone: ZoneKey } | { kind: "sticker"; id: string };
+type PanGesture = {
+  kind: "pan";
+  id: number;
+  sx: number;
+  sy: number;
+  vx: number;
+  vy: number;
+  moved: boolean;
+  slop: number;
+  tap: string | null;
+  item: DragItem | null; // под указателем есть что перетащить
+  el: HTMLElement | null;
+  mouse: boolean; // мышь и перо — тащат сразу
+  hold: ReturnType<typeof setTimeout> | null;
+};
+// ox, oy — где элемент стоял (точки полотна), wx, wy — где он сейчас.
+type DragGesture = { kind: "drag"; id: number; sx: number; sy: number; item: DragItem; el: HTMLElement; ox: number; oy: number; wx: number; wy: number };
+type Gesture = PanGesture | DragGesture | { kind: "pinch"; d0: number; k0: number; wx: number; wy: number };
 type Toast = { text: string; ok: boolean; undo?: () => void };
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const keyOf = (zone: ZoneKey, code: string) => `${zone}:${code}`;
+const stickerId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 export function dayText(key: string) {
   const [y, m, d] = key.split("-").map(Number) as [number, number, number];
@@ -89,8 +130,20 @@ function CardThumb({ src, code }: { src: string | null; code: string }) {
 const ourSheet = () => typeof window !== "undefined" && typeof (window.history.state as { boardSheet?: unknown } | null)?.boardSheet === "string";
 const sheetUrl = (key: string | null) => (key ? `${window.location.pathname}?v=${encodeURIComponent(key)}` : window.location.pathname);
 
+// Раскладка и стикеры, изменённые в этой вкладке, — на уровне модуля: Next держит открытую минуту
+// назад страницу в кеше (staleTimes) и по «Назад» покажет её со старыми данными, а router.refresh
+// после перетаскивания мы не зовём. Пока данные те же (gen), берём своё, а не устаревшее серверное.
+let kept: { gen: string; layout: BoardLayout; stickers: Sticker[] } | null = null;
+
 export default function BoardCanvas({ data, initialSelected = null }: { data: BoardData; initialSelected?: string | null }) {
-  const { plan } = data;
+  // Раскладка и стикеры — своё состояние: перетащили — видно сразу, сервер только сохраняет.
+  const fromKept = kept && kept.gen === data.shell.generatedAt ? kept : null;
+  const [layout, setLayout] = useState<BoardLayout>(fromKept?.layout ?? data.layout);
+  const [stickers, setStickers] = useState<Sticker[]>(fromKept?.stickers ?? data.stickers);
+  const [stickerSel, setStickerSel] = useState<string | null>(null);
+  const plan = useMemo(() => applyLayout(data.plan, layout), [data.plan, layout]);
+  const bounds = useMemo(() => boardBounds(plan, stickers), [plan, stickers]);
+  const zonesBox = useMemo(() => boardBounds(plan), [plan]);
   const router = useRouter();
   const [, startTransition] = useTransition();
   const desktop = useDesktop();
@@ -110,14 +163,25 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   const [ready, setReady] = useState(false);
   const [seen, setSeen] = useState(data.shell.generatedAt);
   const wantRefresh = useRef(false);
+  const [touched, setTouched] = useState(fromKept !== null); // раскладку или стикеры меняли в этой вкладке
+  const stickerSaved = useRef<Sticker | null>(null); // стикер, каким был при открытии листа
+  const lastTap = useRef<{ id: string; t: number } | null>(null);
   if (seen !== data.shell.generatedAt) {
-    // Свежие данные с сервера — отметки в них уже есть.
+    // Свежие данные с сервера — отметки в них уже есть. Раскладку и стикеры берём оттуда, только
+    // если здесь их не трогали: иначе данные, прочитанные до нашей записи, вернули бы старое место.
     setSeen(data.shell.generatedAt);
     setMarks({});
+    if (!touched) {
+      setLayout(data.layout);
+      setStickers(data.stickers);
+    }
   }
   useEffect(() => {
     wantRefresh.current = false;
   }, [data.shell.generatedAt]);
+  useEffect(() => {
+    if (touched) kept = { gen: data.shell.generatedAt, layout, stickers };
+  }, [touched, layout, stickers, data.shell.generatedAt]);
 
   const headRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -133,8 +197,13 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   const timers = useRef<{ view?: ReturnType<typeof setTimeout>; will?: ReturnType<typeof setTimeout>; refresh?: ReturnType<typeof setTimeout>; toast?: ReturnType<typeof setTimeout> }>({});
   const planRef = useRef(plan);
   planRef.current = plan;
+  const boundsRef = useRef(bounds);
+  boundsRef.current = bounds;
+  const zonesBoxRef = useRef(zonesBox);
+  zonesBoxRef.current = zonesBox;
+  const stickerNow = stickerSel ? (stickers.find((x) => x.id === stickerSel) ?? null) : null;
   const sheetOpen = useRef(false);
-  sheetOpen.current = selected !== null;
+  sheetOpen.current = selected !== null || stickerNow !== null;
   const desktopRef = useRef(desktop);
   desktopRef.current = desktop;
   const nowMs = Date.parse(data.nowIso);
@@ -190,14 +259,15 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
       o.dataset.dense = rowH * k < 34 ? "1" : "";
       o.dataset.narrow = (planRef.current.zones[0]?.w ?? 0) * k < 200 ? "1" : "";
     }
+    // Мини-карта — по рамке всего на полотне: зоны могли уехать, стикеры — стоять за ними.
     const m = miniRef.current;
-    const p = planRef.current;
-    if (m && p.width && p.height) {
-      const sx = 120 / p.width;
-      const sy = 80 / p.height;
+    const b = boundsRef.current;
+    if (m) {
+      const sx = MINI_W / b.w;
+      const sy = MINI_H / b.h;
       const { w: vw, h: vh } = size();
-      m.style.left = `${(-x / k) * sx}px`;
-      m.style.top = `${(-y / k) * sy}px`;
+      m.style.left = `${(-x / k - b.x) * sx}px`;
+      m.style.top = `${(-y / k - b.y) * sy}px`;
       m.style.width = `${(vw / k) * sx}px`;
       m.style.height = `${(vh / k) * sy}px`;
     }
@@ -270,17 +340,18 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     return clamp((w - insets().left - 12) / Math.max(1, width), READABLE_K, 1);
   }
   function todayView(): View {
-    const { zones, width } = planRef.current;
+    const { zones } = planRef.current;
+    const b = zonesBoxRef.current;
     const { w } = size();
     const ins = insets();
-    const all = (w - ins.left - 12) / Math.max(1, width);
+    const all = (w - ins.left - 12) / b.w;
     if (all >= READABLE_K) {
       const k = Math.min(1, all);
-      return { k, x: ins.left + (w - ins.left - 12 - width * k) / 2, y: baseY(k) };
+      return { k, x: ins.left + (w - ins.left - 12 - b.w * k) / 2 - b.x * k, y: baseY(k) };
     }
     const first = zones[0];
-    const k = readableK(first?.w ?? width);
-    return { k, x: ins.left - (first?.x ?? 0) * k, y: baseY(k) };
+    const k = readableK(first?.w ?? b.w);
+    return { k, x: ins.left - (first?.x ?? b.x) * k, y: baseY(k) - (first?.y ?? 0) * k };
   }
   const goToday = () => flyTo(todayView());
   // Зона — по ширине и по высоте как «Сегодня».
@@ -291,19 +362,20 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     const ins = insets();
     const k = readableK(z.w);
     const free = w - ins.left - 12 - z.w * k;
-    return { k, x: ins.left + Math.max(0, free / 2) - z.x * k, y: baseY(k) };
+    // Зону могли передвинуть: её строка «сегодня» — на z.y ниже общей.
+    return { k, x: ins.left + Math.max(0, free / 2) - z.x * k, y: baseY(k) - z.y * k };
   }
   function goZone(key: ZoneKey) {
     const v = zoneView(key);
     if (v) flyTo(v);
   }
-  // «Вписать»: все зоны целиком.
+  // «Вписать»: все зоны и стикеры целиком.
   function fitAll() {
-    const { width, height } = planRef.current;
+    const b = boundsRef.current;
     const { w, h } = size();
     const ins = insets();
-    const k = clampK(Math.min((w - ins.left - 12) / Math.max(1, width), (h - ins.top - ins.bottom - 8) / Math.max(1, height), 1));
-    flyTo({ k, x: ins.left + (w - ins.left - 12 - width * k) / 2, y: ins.top });
+    const k = clampK(Math.min((w - ins.left - 12) / b.w, (h - ins.top - ins.bottom - 8) / b.h, 1));
+    flyTo({ k, x: ins.left + (w - ins.left - 12 - b.w * k) / 2 - b.x * k, y: ins.top - b.y * k });
   }
   // Карточка — в середину видимой части (лист справа её не закрывает).
   function showCard(zone: ZoneKey, code: string) {
@@ -406,15 +478,22 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   useEffect(
     () => () => {
       for (const t of Object.values(timers.current)) if (t) clearTimeout(t);
+      const g = gesture.current;
+      if (g?.kind === "pan" && g.hold) clearTimeout(g.hold);
       stopFly();
     },
     [],
   );
+  // Раскладка или стикеры поменялись — рамка мини-карты по новой рамке полотна.
+  useEffect(() => {
+    redraw();
+  }, [bounds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- лист ролика: в адресе (?v=зона:код), «Назад» закрывает ----
 
   function openSheet(key: string) {
     if (key === selected) return;
+    if (stickerSel) closeSticker();
     setSelected(key);
     if (ourSheet()) window.history.replaceState({ ...window.history.state, boardSheet: key }, "", sheetUrl(key));
     // Лист открыт по ссылке — только меняем адрес: иначе ✕ вернул бы «Назад» к первому листу.
@@ -448,7 +527,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   const chooseOpen = useRef(false);
   chooseOpen.current = choose !== null;
   useEffect(() => {
-    close.current = closeSheet;
+    close.current = stickerSel ? closeSticker : closeSheet;
     refresh.current = refreshAgainIfLost;
   });
   useEffect(() => {
@@ -535,6 +614,100 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     scheduleRefresh();
   }
 
+  // ---- раскладка и стикеры: на полотне сразу, на сервере — одним действием ----
+
+  // Не сохранилось — откатываем это изменение и перечитываем доску с сервера: после нескольких
+  // неудач подряд «обратные» правки легли бы не на то состояние, а сервер знает, что сохранено.
+  async function persist(run: () => Promise<ActionResult>, revert: () => void) {
+    setTouched(true);
+    if (data.demo) return; // демо на фикстуре: только в этой вкладке
+    const r: ActionResult = await run().catch((e: unknown) => ({ ok: false, message: e instanceof Error ? e.message : String(e) }));
+    if (r.ok) return;
+    revert();
+    showToast(`Не сохранилось: ${r.message}`, false);
+    kept = null;
+    setTouched(false);
+    startTransition(() => router.refresh());
+  }
+  function changeLayout(patch: LayoutPatch, undo: LayoutPatch) {
+    setLayout((l) => patchLayout(l, patch) ?? l);
+    void persist(
+      () => boardLayoutAction(patch),
+      () => setLayout((l) => patchLayout(l, undo) ?? l),
+    );
+  }
+  const stickersWith = (op: StickerOp) => (l: Sticker[]) => {
+    const n = patchStickers(l, op);
+    return typeof n === "string" ? l : n;
+  };
+  function changeSticker(op: StickerOp, undo: StickerOp) {
+    setStickers(stickersWith(op));
+    void persist(
+      () => boardStickerAction(op),
+      () => setStickers(stickersWith(undo)),
+    );
+  }
+  // «По датам»: зоны и карточки — на места по датам; стикеры остаются.
+  function resetLayout() {
+    if (isLayoutEmpty(layout)) return;
+    if (!window.confirm("Вернуть зоны и карточки на места по датам? Стикеры останутся.")) return;
+    changeLayout({ reset: true }, { reset: true, zones: layout.zones, cards: layout.cards });
+    showToast("Доска снова по датам.", true);
+  }
+  // Новый стикер — в центр видимой части полотна (между колонкой дат, названиями зон и панелью вида).
+  function addSticker() {
+    if (!data.boardOk) return;
+    if (stickers.length >= STICKER_MAX) return showToast(`Стикеров уже ${STICKER_MAX} — удалите лишние.`, false);
+    const { w, h } = size();
+    const ins = insets();
+    const v = view.current;
+    const cx = (ins.left + w) / 2;
+    const cy = (ins.top + h - ins.bottom) / 2;
+    const st: Sticker = { id: stickerId(), x: coord((cx - v.x) / v.k - STICKER_W / 2) ?? 0, y: coord((cy - v.y) / v.k - STICKER_H / 2) ?? 0, text: "", color: STICKER_COLORS[0] };
+    changeSticker({ op: "put", sticker: st }, { op: "delete", id: st.id });
+    openSticker(st);
+  }
+  function openSticker(st: Sticker) {
+    if (stickerSel === st.id) return; // уже открыт — правка продолжается
+    if (selected) closeSheet();
+    if (stickerSel) closeSticker(); // открытый — сохранить, прежде чем открыть другой
+    stickerSaved.current = st;
+    setStickerSel(st.id);
+  }
+  // Лист стикера закрылся — сохраняем, если текст или цвет поменялись (одно действие на правку).
+  function closeSticker() {
+    const was = stickerSaved.current;
+    stickerSaved.current = null;
+    setStickerSel(null);
+    if (stickerNow && was && (stickerNow.text !== was.text || stickerNow.color !== was.color)) changeSticker({ op: "put", sticker: stickerNow }, { op: "put", sticker: was });
+  }
+  function deleteSticker() {
+    const st = stickerNow;
+    stickerSaved.current = null;
+    setStickerSel(null);
+    if (!st) return;
+    changeSticker({ op: "delete", id: st.id }, { op: "put", sticker: st });
+    showToast("Стикер удалён.", true, () => changeSticker({ op: "put", sticker: st }, { op: "delete", id: st.id }));
+  }
+  // Ушли со страницы (вкладка меню, «Назад» на Android) с открытым листом стикера — правку сохраняем.
+  const flushSticker = useRef(() => {});
+  useEffect(() => {
+    flushSticker.current = () => {
+      if (stickerSel) closeSticker();
+    };
+  });
+  useEffect(() => () => flushSticker.current(), []);
+  // Двойное касание или двойной щелчок по стикеру — его лист.
+  function tapSticker(id: string) {
+    const now = performance.now();
+    const last = lastTap.current;
+    if (last && last.id === id && now - last.t < DOUBLE_TAP_MS) {
+      lastTap.current = null;
+      const st = stickers.find((x) => x.id === id);
+      if (st) openSticker(st);
+    } else lastTap.current = { id, t: now };
+  }
+
   // ---- жесты ----
 
   function startPinch() {
@@ -544,11 +717,67 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     const my = (a.y + b.y) / 2;
     gesture.current = { kind: "pinch", d0: Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), k0: v.k, wx: (mx - v.x) / v.k, wy: (my - v.y) / v.k };
   }
+  // Что под указателем можно перетащить: стикер, карточку или зону — за шапку. Переменная не
+  // прочиталась — ничего: раскладку некуда сохранить.
+  function dragItemAt(el: HTMLElement): { item: DragItem; el: HTMLElement } | null {
+    if (!data.boardOk) return null;
+    const st = el.closest<HTMLElement>("[data-sticker]");
+    if (st?.dataset.sticker) return { item: { kind: "sticker", id: st.dataset.sticker }, el: st };
+    const c = el.closest<HTMLElement>("[data-card]");
+    const p = c ? parseSelected(c.dataset.card, ZONES) : null;
+    if (c && p) return { item: { kind: "card", zone: p.zone as ZoneKey, code: p.code }, el: c };
+    const head = el.closest<HTMLElement>("[data-zonehead]");
+    const zone = head?.closest<HTMLElement>("section");
+    if (head && zone) return { item: { kind: "zone", zone: head.dataset.zonehead as ZoneKey }, el: zone };
+    return null;
+  }
+  function startDrag(g: PanGesture, at: Pt, touch: boolean) {
+    if (!g.item || !g.el) return;
+    if (g.hold) clearTimeout(g.hold);
+    g.el.classList.add(s.dragging);
+    // Где элемент стоит — по самой разметке (left/top в точках полотна): одинаково для всех трёх.
+    const ox = g.el.offsetLeft;
+    const oy = g.el.offsetTop;
+    gesture.current = { kind: "drag", id: g.id, sx: at.x, sy: at.y, item: g.item, el: g.el, ox, oy, wx: ox, wy: oy };
+    if (touch) navigator.vibrate?.(10);
+  }
+  function placeDragged(g: DragGesture, x: number, y: number) {
+    g.el.style.left = `${x}px`;
+    g.el.style.top = `${y}px`;
+    // Липкое название зоны едет вместе с ней.
+    if (g.item.kind === "zone") overlayRef.current?.querySelector<HTMLElement>(`[data-ztitle="${g.item.zone}"]`)?.style.setProperty("--zx", `${x}px`);
+  }
+  // Отпустили — новое место в состояние полотна и одно действие сервера.
+  function dropDragged(g: DragGesture) {
+    const x = coord(g.wx) ?? g.ox;
+    const y = coord(g.wy) ?? g.oy;
+    if (x === g.ox && y === g.oy) return placeDragged(g, g.ox, g.oy);
+    const it = g.item;
+    if (it.kind === "sticker") {
+      const was = stickers.find((st) => st.id === it.id);
+      if (was) changeSticker({ op: "put", sticker: { ...was, x, y } }, { op: "put", sticker: was });
+      return;
+    }
+    if (it.kind === "zone") {
+      // Вернули ровно на место по датам — записи нет.
+      const base = data.plan.zones.find((z) => z.key === it.zone);
+      const pos = base && base.x === x && base.y === y ? null : { x, y };
+      changeLayout({ zones: { [it.zone]: pos } }, { zones: { [it.zone]: layout.zones[it.zone] ?? null } });
+      return;
+    }
+    // Карточка хранит сдвиг от своего места по дате.
+    const base = data.plan.zones.find((z) => z.key === it.zone)?.cards.find((c) => c.code === it.code);
+    if (!base) return placeDragged(g, g.ox, g.oy);
+    const key = keyOf(it.zone, it.code);
+    const dx = x - base.x;
+    const dy = y - base.y;
+    changeLayout({ cards: { [key]: dx || dy ? { dx, dy } : null } }, { cards: { [key]: layout.cards[key] ?? null } });
+  }
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     const el = e.target as HTMLElement;
     if (el.closest("[data-nodrag]")) return; // кнопки работают как обычно
-    if (pointers.current.size >= 2) return;
+    if (pointers.current.size >= 2 || gesture.current?.kind === "drag") return; // тащим — второй палец не щиплет
     stopFly();
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -557,10 +786,36 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
     }
     const p = local(e.clientX, e.clientY);
     pointers.current.set(e.pointerId, p);
-    if (pointers.current.size === 2) return startPinch();
+    if (pointers.current.size === 2) {
+      const g = gesture.current;
+      if (g?.kind === "pan" && g.hold) clearTimeout(g.hold);
+      return startPinch();
+    }
     const tap = el.closest<HTMLElement>("[data-card]")?.dataset.card ?? null;
-    const slop = e.pointerType === "mouse" ? MOVE_PX.mouse : MOVE_PX.touch;
-    gesture.current = { kind: "pan", id: e.pointerId, sx: p.x, sy: p.y, vx: view.current.x, vy: view.current.y, moved: false, slop, tap };
+    const mouse = e.pointerType !== "touch";
+    const target = dragItemAt(el);
+    const g: PanGesture = {
+      kind: "pan",
+      id: e.pointerId,
+      sx: p.x,
+      sy: p.y,
+      vx: view.current.x,
+      vy: view.current.y,
+      moved: false,
+      slop: mouse ? MOVE_PX.mouse : MOVE_PX.touch,
+      tap,
+      item: target?.item ?? null,
+      el: target?.el ?? null,
+      mouse,
+      hold: null,
+    };
+    // Палец: перетаскивание — только после удержания без сдвига; сдвинулся раньше — это сдвиг полотна.
+    if (target && !mouse)
+      g.hold = setTimeout(() => {
+        g.hold = null;
+        if (gesture.current === g && !g.moved) startDrag(g, pointers.current.get(g.id) ?? { x: g.sx, y: g.sy }, true);
+      }, HOLD_MS);
+    gesture.current = g;
   }
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
     if (!pointers.current.has(e.pointerId)) return;
@@ -577,9 +832,23 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
       return;
     }
     if (e.pointerId !== g.id) return;
+    if (g.kind === "drag") {
+      const k = view.current.k;
+      g.wx = g.ox + (p.x - g.sx) / k;
+      g.wy = g.oy + (p.y - g.sy) / k;
+      placeDragged(g, g.wx, g.wy);
+      return;
+    }
     const dx = p.x - g.sx;
     const dy = p.y - g.sy;
     if (!g.moved && Math.hypot(dx, dy) < g.slop) return;
+    // Мышь над карточкой, зоной или стикером — тащим их сразу, а не полотно.
+    if (!g.moved && g.mouse && g.item) {
+      startDrag(g, { x: g.sx, y: g.sy }, false);
+      return onPointerMove(e);
+    }
+    if (g.hold) clearTimeout(g.hold);
+    g.hold = null;
     g.moved = true;
     view.current.x = g.vx + dx;
     view.current.y = g.vy + dy;
@@ -593,25 +862,35 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
       rememberView();
       // Один палец остался — дальше сдвиг от него, без скачка (и без касания карточки).
       const rest = [...pointers.current.entries()][0];
-      gesture.current = rest ? { kind: "pan", id: rest[0], sx: rest[1].x, sy: rest[1].y, vx: view.current.x, vy: view.current.y, moved: true, slop: 0, tap: null } : null;
+      gesture.current = rest
+        ? { kind: "pan", id: rest[0], sx: rest[1].x, sy: rest[1].y, vx: view.current.x, vy: view.current.y, moved: true, slop: 0, tap: null, item: null, el: null, mouse: false, hold: null }
+        : null;
       return;
     }
     if (e.pointerId !== g.id) return;
     gesture.current = null;
+    if (g.kind === "drag") {
+      g.el.classList.remove(s.dragging);
+      // Сорвалось (системный жест, звонок) — на старое место, ничего не пишем.
+      if (e.type !== "pointerup") return placeDragged(g, g.ox, g.oy);
+      return dropDragged(g);
+    }
+    if (g.hold) clearTimeout(g.hold);
     // Касание могло остановить перелёт — запоминаем вид, на котором он встал.
     rememberView();
     if (g.moved) return;
-    // Касание без сдвига по карточке — её лист прямо на доске.
+    // Касание без сдвига по карточке — её лист прямо на доске; по стикеру — ждём второго.
     if (e.type !== "pointerup") return;
+    if (g.item?.kind === "sticker") return tapSticker(g.item.id);
     if (g.tap) openSheet(g.tap);
   }
 
   // Мини-карта: касание — перелёт к этому месту полотна.
   function onMini(e: React.PointerEvent<HTMLDivElement>) {
     const r = e.currentTarget.getBoundingClientRect();
-    const p = planRef.current;
-    const wx = ((e.clientX - r.left) / r.width) * p.width;
-    const wy = ((e.clientY - r.top) / r.height) * p.height;
+    const b = boundsRef.current;
+    const wx = b.x + ((e.clientX - r.left) / r.width) * b.w;
+    const wy = b.y + ((e.clientY - r.top) / r.height) * b.h;
     const { w, h } = size();
     const k = view.current.k;
     flyTo({ k, x: w / 2 - wx * k, y: h / 2 - wy * k });
@@ -626,7 +905,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
   const visible = (c: { status: string; dateKey: string }) => !filtering || cardVisible(c, filters, data.todayKey, weekEnd);
 
   const zoneHead = (z: PlacedZone) => (
-    <header className={s.zoneHead}>
+    <header className={s.zoneHead} {...(data.boardOk ? { "data-zonehead": z.key, title: "Тяните шапку, чтобы передвинуть зону" } : {})}>
       <div className={s.zoneName}>
         <ZoneIcon zone={z.key} size={26} />
         <h2>{z.title}</h2>
@@ -766,12 +1045,12 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
           )}
         </div>
 
-        <div className={`${s.stage} ${selected && desktop ? s.withSheet : ""}`} ref={stageRef}>
+        <div className={`${s.stage} ${(selected || stickerNow) && desktop ? s.withSheet : ""}`} ref={stageRef}>
           <div
             ref={vpRef}
             className={s.viewport}
             role="application"
-            aria-label="Доска: тяните, чтобы сдвинуть; щипок или колесо — масштаб; Tab — по карточкам"
+            aria-label="Доска: тяните, чтобы сдвинуть; карточку, шапку зоны и стикер — перетащить (пальцем — после удержания); щипок или колесо — масштаб; Tab — по карточкам"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -797,6 +1076,25 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
                   ))}
                   {z.cards.map((c) => card(z, c))}
                 </section>
+              ))}
+              {stickers.map((st) => (
+                <div
+                  key={st.id}
+                  role="button"
+                  tabIndex={0}
+                  data-sticker={st.id}
+                  className={[s.sticker, s[`sticker_${st.color}`] ?? "", st.text.length > 140 ? s.stickerSmall : "", stickerSel === st.id ? s.stickerOn : ""].join(" ")}
+                  style={{ left: st.x, top: st.y, width: STICKER_W, height: STICKER_H }}
+                  aria-label={`Стикер: ${st.text || "пустой"}. Enter или двойное нажатие — изменить`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openSticker(st);
+                    }
+                  }}
+                >
+                  {st.text ? <p>{st.text}</p> : <p className={s.stickerHint}>Дважды нажмите, чтобы написать</p>}
+                </div>
               ))}
             </div>
           </div>
@@ -826,7 +1124,7 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
             </div>
             <div className={s.titles}>
               {plan.zones.map((z) => (
-                <div key={z.key} className={`${s.ztitle} ${s[`zone_${z.key}`] ?? ""}`} style={{ "--zx": `${z.x}px`, "--zw": `${z.w}px` } as React.CSSProperties}>
+                <div key={z.key} data-ztitle={z.key} className={`${s.ztitle} ${s[`zone_${z.key}`] ?? ""}`} style={{ "--zx": `${z.x}px`, "--zw": `${z.w}px` } as React.CSSProperties}>
                   <ZoneIcon zone={z.key} size={16} />
                   <span>{z.title}</span>
                 </div>
@@ -837,9 +1135,16 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
           {/* Мини-карта — для пальца и мыши; с клавиатуры то же делают кнопки зон и «Сегодня». */}
           <div className={s.mini} onPointerDown={onMini} aria-hidden="true" title="Мини-карта: нажмите, чтобы перелететь">
             {plan.zones.map((z) => (
-              <span key={z.key} className={`${s.miniZone} ${s[`zone_${z.key}`] ?? ""}`} style={{ left: (z.x / plan.width) * 120, width: Math.max(2, (z.w / plan.width) * 120) }} />
+              <span
+                key={z.key}
+                className={`${s.miniZone} ${s[`zone_${z.key}`] ?? ""}`}
+                style={{ left: ((z.x - bounds.x) / bounds.w) * MINI_W, top: ((z.y - bounds.y) / bounds.h) * MINI_H, width: Math.max(2, (z.w / bounds.w) * MINI_W), height: Math.max(2, (z.h / bounds.h) * MINI_H) }}
+              />
             ))}
-            <span className={s.miniToday} style={{ top: (plan.todayY / plan.height) * 80 }} />
+            {stickers.map((st) => (
+              <span key={st.id} className={`${s.miniSticker} ${s[`sticker_${st.color}`] ?? ""}`} style={{ left: ((st.x - bounds.x) / bounds.w) * MINI_W, top: ((st.y - bounds.y) / bounds.h) * MINI_H }} />
+            ))}
+            <span className={s.miniToday} style={{ top: ((plan.todayY - bounds.y) / bounds.h) * MINI_H }} />
             <span ref={miniRef} className={s.miniView} />
           </div>
 
@@ -863,6 +1168,17 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
             <button type="button" className={s.tool} onClick={fitAll}>
               Вписать
             </button>
+            {data.boardOk && (
+              <button type="button" className={s.tool} onClick={addSticker} aria-label="Добавить стикер" title="Стикер — в центр видимой части">
+                <StickerIcon size={18} />
+                <span className={s.long}>&nbsp;Стикер</span>
+              </button>
+            )}
+            {!isLayoutEmpty(layout) && (
+              <button type="button" className={s.tool} onClick={resetLayout} title="Зоны и карточки — на места по датам; стикеры останутся">
+                По датам
+              </button>
+            )}
             {!desktop && (
               <span className={s.zoneChips}>
                 {plan.zones.map((z) => (
@@ -890,6 +1206,19 @@ export default function BoardCanvas({ data, initialSelected = null }: { data: Bo
               onMark={(on) => selCard && (sel.zone === "instagram" || sel.zone === "tiktok") && requestMark(sel.zone, selCard, on)}
               onEnMark={noteEnMark}
               onToast={showToast}
+            />
+          )}
+          {stickerNow && (
+            <StickerSheet
+              key={stickerNow.id}
+              sticker={stickerNow}
+              desktop={desktop}
+              onChange={(patch) => {
+                setTouched(true);
+                setStickers((l) => l.map((x) => (x.id === stickerNow.id ? { ...x, ...patch } : x)));
+              }}
+              onDelete={deleteSticker}
+              onClose={closeSticker}
             />
           )}
         </div>

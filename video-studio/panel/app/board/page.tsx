@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import BoardCanvas from "@/components/BoardCanvas";
 import ErrorScreen from "@/components/ErrorScreen";
-import { BOARD_VAR, boardData, parseBoardMarks, type BoardData } from "@/lib/board";
+import { BOARD_VAR, boardData, parseBoardState, type BoardData } from "@/lib/board";
 import { getVariable, listReleases } from "@/lib/github";
 import { langChannel, langChannelJson } from "@/lib/lang-channels";
 import { parseStudioMarks, STUDIO_MARKS_VAR } from "@/lib/lang-plan";
@@ -18,7 +18,7 @@ import { loadState } from "@/lib/load";
 export const metadata: Metadata = { title: "Доска — панель" };
 
 // Переменная не прочиталась (сбой GitHub) — null: доска всё равно открывается, а кнопки, которые
-// могли бы затереть отметки, прячутся.
+// могли бы затереть отметки, прячутся, а раскладку и стикеры не двигаем.
 const variable = (name: string) =>
   getVariable(name).then(
     (raw) => ({ raw }),
@@ -43,7 +43,8 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
       enJson: langChannelJson("en"),
       enVideos: await withReleaseTexts(langVideosOf(await releases, "en")),
       enMarks: studioRaw ? (parseStudioMarks(studioRaw.raw).en ?? {}) : null,
-      boardMarks: boardRaw ? parseBoardMarks(boardRaw.raw) : null,
+      // PANEL_BOARD — один раз целиком: отметки, раскладка и стикеры.
+      board: boardRaw ? parseBoardState(boardRaw.raw) : null,
     });
   } catch (e) {
     return <ErrorScreen title="Не получилось собрать доску" message={e instanceof Error ? e.message : String(e)} />;
