@@ -3,7 +3,7 @@ name: "tmp: голос приглашения"
 on:
   push:
     branches: [claude/stats-probe]
-    paths: [tmp-voice/text.txt]
+    paths: [tmp-voice/text.txt, tmp-voice/voice.mts]
 permissions:
   contents: write
 jobs:
@@ -23,7 +23,7 @@ jobs:
         working-directory: main/video-studio
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
-      - run: npx tsx "$GITHUB_WORKSPACE/tmp-voice/voice.ts"
+      - run: npx tsx "$GITHUB_WORKSPACE/tmp-voice/voice.mts"
         working-directory: main/video-studio
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
