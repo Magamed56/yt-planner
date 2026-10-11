@@ -11,6 +11,7 @@ import { parsePlan, PLAN_CODE, scriptCode } from "../../src/pipeline/plan";
 import { applyUpdate, fillItemsOf, matchVideos, planUpdates, setThumbnail, THUMBNAIL_MAX_BYTES, type ChannelVideo, type FillItem, type PlannedUpdate } from "../../src/pipeline/youtube-fill";
 import { requireSession } from "@/lib/auth";
 import { runAutopilot } from "@/lib/autopilot";
+import { BOARD_VAR, isSocial, parseBoardMarks, SOCIAL_LABEL, withBoardMark } from "@/lib/board";
 import { dispatchOnce } from "@/lib/dispatch";
 import { buildFirstComment, commentBlocker, commentProblem, commentUrl, ctaQuestion, type OwnComment } from "@/lib/first-comment";
 import { assetBytes, assetText, dispatchWorkflow, getVariable, GithubError, listReleases, readFile, readFileWithSha, readJson, rerunFailedJobs, setVariable, writeFile } from "@/lib/github";
@@ -594,6 +595,23 @@ export async function studioMarkAction(lang: string, code: string, at: string | 
     const marks = parseStudioMarks(await getVariable(STUDIO_MARKS_VAR));
     await setVariable(STUDIO_MARKS_VAR, studioMarksText(withStudioMark(marks, l, c, ms)));
     return ok(ms === null ? `${l}-${c}: отметка снята — время снова по плану.` : `${l}-${c}: запланирован в Studio, время закреплено.`);
+  });
+}
+
+// ---- «Доска»: «загрузил» в Instagram и TikTok ----
+
+// Ролик выложен (или поставлен в расписание) в Instagram или TikTok: at — его время на доске,
+// null — снять отметку. Как studioMarkAction: переменную перечитываем прямо перед записью.
+export async function boardMarkAction(platform: string, code: string, at: string | null): Promise<ActionResult> {
+  return guarded(async () => {
+    const c = normCode(code);
+    if (!isSocial(platform) || !c || isLongCode(c)) return fail("Неверный ролик — обновите страницу.");
+    const ms = at === null ? null : Date.parse(at);
+    if (ms !== null && !(Number.isFinite(ms) && Math.abs(ms - Date.now()) < 400 * 86_400_000)) return fail("Неверное время — обновите страницу.");
+    const marks = parseBoardMarks(await getVariable(BOARD_VAR));
+    await setVariable(BOARD_VAR, studioMarksText(withBoardMark(marks, platform, c, ms)));
+    const where = SOCIAL_LABEL[platform];
+    return ok(ms === null ? `${where}, ${c}: отметка снята.` : `${where}, ${c}: загружен.`);
   });
 }
 

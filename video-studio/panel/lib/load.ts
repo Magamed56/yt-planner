@@ -1,6 +1,6 @@
 // Данные для очереди — всё параллельно: GitHub (план, канал, сценарии, тексты, релизы, запуски,
 // секреты, настройки автопилота) и YouTube. YouTube недоступен — очередь всё равно видна.
-import { branchName, getVariable, GithubError, listDir, listReleases, listRuns, listSecretNames, readJson, repoName, runSteps, type GhRun, type GhStep } from "./github";
+import { branchName, getVariable, GithubError, listDir, listReleases, listRuns, listSecretNames, readJson, repoName, runSteps, type GhRelease, type GhRun, type GhStep } from "./github";
 import { LONG_PLAN_FILE } from "../../src/pipeline/long-plan";
 import type { ChannelVideo } from "../../src/pipeline/youtube-fill";
 import { AUTOPILOT_LAST_VAR, AUTOPILOT_VAR, buildState, parseAutopilot, parseAutopilotLast, parseQueueOrder, QUEUE_ORDER_VAR, type PanelState } from "./state";
@@ -23,8 +23,9 @@ export async function runsWithSteps(): Promise<{ runs: GhRun[]; steps: Record<nu
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e)).replace(/^YouTube:\s*/, "");
 
 // videos — уже начатый запрос к YouTube: «Статистика» берёт ролики вместе с цифрами канала
-// и отдаёт их сюда, чтобы не проходить по каналу второй раз (квота).
-export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]> = channelVideos()): Promise<PanelState> {
+// и отдаёт их сюда, чтобы не проходить по каналу второй раз (квота). releaseList — так же: «Доске»
+// они нужны ещё и для английских роликов, второй раз по страницам релизов не ходим.
+export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]> = channelVideos(), releaseList: Promise<GhRelease[]> = listReleases()): Promise<PanelState> {
   const youtube = videos.then(
     (videos) => ({ videos, error: null as string | null }),
     (e: unknown) => ({ videos: null, error: errorText(e) }),
@@ -35,7 +36,7 @@ export async function loadState(now = new Date(), videos: Promise<ChannelVideo[]
     listDir(`${STUDIO_DIR}/scripts`),
     readJson(`${STUDIO_DIR}/content/week1-videos.json`),
     readJson(`${STUDIO_DIR}/content/videos.json`),
-    listReleases(),
+    releaseList,
     runsWithSteps(),
     listSecretNames().catch(() => null),
     getVariable(AUTOPILOT_VAR).catch(() => null),
