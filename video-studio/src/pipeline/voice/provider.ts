@@ -26,9 +26,11 @@ import { alignToTokens, analyzeSpeech, estimateWordTimings, estimateWordsUniform
 // переозвучились основной моделью и в ролике остался один голос.
 // aligned — слова, уже выровненные по распознанной речи (мс от начала audio):
 // нарезка общего звука или общий кэш; тогда распознавать сцену заново не нужно.
+// keyIndex — каким по счёту ключом озвучено (Gemini с GEMINI_API_KEY_2): только номер,
+// в кэш не пишется — голос у ключей один.
 export type RawAudio =
-  | { kind: "pcm"; audio: PcmAudio; words?: WordTiming[] | null; fallback?: string; aligned?: WordTiming[] | null }
-  | { kind: "mp3"; bytes: Uint8Array; words?: WordTiming[] | null; fallback?: string };
+  | { kind: "pcm"; audio: PcmAudio; words?: WordTiming[] | null; fallback?: string; aligned?: WordTiming[] | null; keyIndex?: number }
+  | { kind: "mp3"; bytes: Uint8Array; words?: WordTiming[] | null; fallback?: string; keyIndex?: number };
 
 export interface RawContext {
   voice: string;
@@ -147,7 +149,7 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       const parts = splitAudio(result.audio, cuts.cuts);
       for (const [k, i] of g.entries()) {
         const p = prepared[i]!;
-        out[i] = await finish({ kind: "pcm", audio: parts[k]!, fallback: result.fallback, aligned: cuts.words?.[k] ?? null }, p.clean, p.outFileBase, keyOf(voice, p.clean), voice);
+        out[i] = await finish({ kind: "pcm", audio: parts[k]!, fallback: result.fallback, aligned: cuts.words?.[k] ?? null, keyIndex: result.keyIndex }, p.clean, p.outFileBase, keyOf(voice, p.clean), voice);
       }
     }
     return out as VoiceResult[];
@@ -226,7 +228,7 @@ export function wrapProvider(raw: RawProvider): VoiceProvider {
       const refresh = !store && alignedRaw && !(result.kind === "pcm" && result.aligned?.length);
       const shared = (store || refresh) && !result.fallback ? sharedCacheDir() : null;
       if (shared) await writeShared(shared, key, result.kind === "pcm" ? { ...result, aligned: alignedRaw } : result, { provider: raw.name, voice, chars: clean.length });
-      return { ...out, voice, ...(result.fallback ? { fallbackModel: result.fallback } : {}) };
+      return { ...out, voice, ...(result.fallback ? { fallbackModel: result.fallback } : {}), ...(result.keyIndex ? { keyIndex: result.keyIndex } : {}) };
   }
 
   return raw.batchMaxChars ? { name: raw.name, synthesize, synthesizeMany } : { name: raw.name, synthesize };

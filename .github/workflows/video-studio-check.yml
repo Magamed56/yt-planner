@@ -51,15 +51,16 @@ jobs:
           persist-credentials: false
 
       - name: Какие секреты заданы (только имена)
-        # Ключи стоков нужны только здесь (есть/нет), дальше по шагам их не передаём.
+        # Ключи стоков и второй ключ Gemini нужны только здесь (есть/нет), дальше по шагам их не передаём.
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
         run: |
           {
             echo "### 🔑 Секреты video-studio"
             echo ""
-            for k in YT_CLIENT_ID YT_CLIENT_SECRET YT_REFRESH_TOKEN IG_USER_ID IG_ACCESS_TOKEN GEMINI_API_KEY ANTHROPIC_API_KEY PEXELS_API_KEY PIXABAY_API_KEY; do
+            for k in YT_CLIENT_ID YT_CLIENT_SECRET YT_REFRESH_TOKEN IG_USER_ID IG_ACCESS_TOKEN GEMINI_API_KEY GEMINI_API_KEY_2 ANTHROPIC_API_KEY PEXELS_API_KEY PIXABAY_API_KEY; do
               if [ -n "${!k}" ]; then echo "- \`$k\` — есть"; else echo "- \`$k\` — нет"; fi
             done
             if [ -z "$PEXELS_API_KEY" ] && [ -z "$PIXABAY_API_KEY" ]; then

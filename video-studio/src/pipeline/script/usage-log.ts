@@ -18,6 +18,7 @@ export interface UsageRecord {
   calls: number | null;
   chars: number | null;
   runId: string | null; // GITHUB_RUN_ID в Actions
+  keyIndex?: number; // озвучка Gemini при двух ключах: каким озвучено (2 — хоть одна сцена вторым); без второго ключа поля нет
 }
 
 // Один запрос к LLM (успешный или нет) — так его отдаёт генератор (ScriptDeps.onLlmCall).
@@ -56,10 +57,11 @@ export interface TtsUsage {
   calls: number | null;
   chars: number | null;
   costUsd: number | null;
+  keyIndex?: number | null; // номер ключа Gemini (1 | 2), не сам ключ
 }
 
 export function ttsUsageRecord(u: TtsUsage, code: string | null, env: Record<string, string | undefined> = process.env, at = usageNow()): UsageRecord {
-  return { at, kind: "tts", code, provider: u.provider, model: u.model, inputTokens: null, outputTokens: null, costUsd: u.costUsd, calls: u.calls, chars: u.chars, runId: runIdFrom(env) };
+  return { at, kind: "tts", code, provider: u.provider, model: u.model, inputTokens: null, outputTokens: null, costUsd: u.costUsd, calls: u.calls, chars: u.chars, runId: runIdFrom(env), ...(u.keyIndex ? { keyIndex: u.keyIndex } : {}) };
 }
 
 export function usageLogFile(root: string, env: Record<string, string | undefined> = process.env): string | null {

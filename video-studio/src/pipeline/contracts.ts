@@ -13,6 +13,8 @@
 //   TTS_CACHE_DIR     общий кэш озвучки между запусками (по умолчанию ./.cache/voice; none — выключить)
 //   TTS_CACHE_DAYS    сколько дней хранить записи общего кэша (по умолчанию 14)
 //   GEMINI_API_KEY    общий ключ AI Studio — и для сценариев, и для Gemini TTS
+//   GEMINI_API_KEY_2  второй ключ только для Gemini TTS — из ДРУГОГО проекта/аккаунта (лимиты на проект):
+//                     при 429 основного — та же модель вторым ключом; пусто — как с одним ключом
 //   GEMINI_TTS_MODEL, GEMINI_TTS_VOICE, GEMINI_TTS_STYLE
 //   ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL
 //   OPENAI_TTS_BASE_URL, OPENAI_TTS_MODEL, OPENAI_TTS_VOICE, OPENAI_TTS_API_KEY   (локальный Qwen3-TTS/Chatterbox)
@@ -49,6 +51,7 @@ export interface VoiceResult {
   wordsSource: "provider" | "estimated" | "aligned";
   voice?: string; // каким голосом озвучено (Charon, ru-RU-DmitryNeural, ru_RU-dmitri-medium)
   fallbackModel?: string; // запасная модель того же провайдера (Gemini после суточной квоты основной)
+  keyIndex?: number; // каким ключом Gemini озвучено (1 | 2) — только когда задан GEMINI_API_KEY_2; сам ключ — никогда
   cached?: boolean; // взято из кэша (папки ролика или общего) — запроса к сервису не было
 }
 
@@ -62,6 +65,7 @@ export interface VoiceUsed {
   fallback: boolean; // озвучил запасной провайдер, а не основной (квота или сбой)
   modelFallback: boolean; // тот же провайдер, но запасная модель (голос тот же, качество может отличаться)
   reason: string | null; // почему не основной: «квота Gemini закончилась», первая строка ошибки
+  keyIndex?: number; // ключ Gemini при двух ключах: 2 — хоть одна сцена озвучена вторым (тратилась его квота)
 }
 
 export interface VoiceOptions {
