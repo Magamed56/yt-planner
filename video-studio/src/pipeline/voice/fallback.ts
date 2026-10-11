@@ -61,6 +61,9 @@ export function voiceUsed(o: { requested: string; provider: string; results: Voi
     : fbModel
       ? `основная модель${o.model ? ` ${o.model}` : ""} не ответила (обычно кончилась её суточная квота) — озвучено запасной ${fbModel}`
       : null;
+  // Два ключа Gemini: 2 — хоть одна сцена озвучена вторым (тратилась квота его проекта).
+  // Из кэша номер не берётся; с одним ключом поля нет вовсе — qc.json как раньше.
+  const keyIndex = Math.max(0, ...o.results.map((r) => r.keyIndex ?? 0));
   return {
     provider: o.provider,
     name: o.results.find((r) => r.voice)?.voice ?? null,
@@ -69,15 +72,18 @@ export function voiceUsed(o: { requested: string; provider: string; results: Voi
     fallback,
     modelFallback: Boolean(fbModel),
     reason,
+    ...(keyIndex ? { keyIndex } : {}),
   };
 }
 
 // «gemini · Charon» или «⚠ edge · ru-RU-DmitryNeural — запасной вместо gemini: квота Gemini закончилась».
+// Второй ключ Gemini — «gemini · Charon · ключ 2» (голос тот же, квота другого проекта).
 export function describeVoice(u: VoiceUsed): string {
   const base = `${u.provider}${u.name ? ` · ${u.name}` : ""}`;
+  const key = u.keyIndex === 2 ? " · ключ 2" : "";
   if (u.fallback) return `⚠ ${base} — запасной вместо ${u.requested}${u.reason ? `: ${u.reason}` : ""}`;
-  if (u.modelFallback) return `${base} · запасная модель ${u.model ?? "?"}`;
-  return base;
+  if (u.modelFallback) return `${base} · запасная модель ${u.model ?? "?"}${key}`;
+  return base + key;
 }
 
 // Предупреждение в qc.json (не ошибка: ручной запуск с запасным голосом — осознанный выбор).

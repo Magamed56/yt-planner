@@ -22,7 +22,7 @@ interface ProviderInfo {
 export const VOICE_PROVIDERS: Record<VoiceProviderName, ProviderInfo> = {
   edge: { make: () => edgeProvider(), requires: [], about: "Microsoft Edge, бесплатно, без ключа, родные тайминги слов (TTS_VOICE, TTS_RATE)" },
   piper: { make: () => piperProvider(), requires: [], about: "локально и офлайн, модель скачается сама в MODELS_DIR (TTS_VOICE=ru_RU-dmitri-medium | irina | denis | ruslan)" },
-  gemini: { make: () => geminiProvider(), requires: ["GEMINI_API_KEY"], about: "Google AI Studio, бесплатно ≈ 10 запросов/сутки на модель, ролик = 1 запрос (GEMINI_TTS_VOICE=Charon…, GEMINI_TTS_STYLE)" },
+  gemini: { make: () => geminiProvider(), requires: ["GEMINI_API_KEY"], about: "Google AI Studio, бесплатно ≈ 10 запросов/сутки на модель (лимит на проект), ролик = 1 запрос (GEMINI_TTS_VOICE=Charon…, GEMINI_TTS_STYLE; второй ключ другого проекта — GEMINI_API_KEY_2)" },
   elevenlabs: { make: () => elevenLabsProvider(), requires: ["ELEVENLABS_API_KEY"], about: "лучшее качество, бесплатный план — без коммерческих прав (ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL)" },
   openai: { make: () => openAiProvider(), requires: [], about: "любой OpenAI-совместимый сервер /audio/speech: Qwen3-TTS (vLLM-Omni), Chatterbox (OPENAI_TTS_BASE_URL, OPENAI_TTS_VOICE, OPENAI_TTS_MODEL)" },
   fish: { make: () => fishProvider(), requires: [], about: "локальный Fish Speech, некоммерческая лицензия весов (FISH_TTS_BASE_URL, FISH_TTS_REFERENCE_ID)" },

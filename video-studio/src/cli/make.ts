@@ -28,7 +28,7 @@ import { generateScript, lintScript, ScriptGenerationError } from "../pipeline/s
 import { coveredCode, loadCovered } from "../pipeline/script/covered";
 import { searchPhrases } from "../pipeline/script/suggest";
 import { appendUsage, countPostRequests, llmUsageRecord, ttsUsageRecord, type LlmCallInfo, type UsageRecord } from "../pipeline/script/usage-log";
-import { GEMINI_DEFAULT_MODEL } from "../pipeline/voice/providers/gemini";
+import { GEMINI_DEFAULT_MODEL, geminiKeyCount } from "../pipeline/voice/providers/gemini";
 import { applyLanguageVoice } from "../pipeline/lang";
 import { slugify } from "../pipeline/slug";
 import { captionsToSrt } from "../pipeline/srt";
@@ -350,6 +350,7 @@ async function main() {
   let fallbackReason: string | null = null; // почему озвучил запасной провайдер
   voices = await steps.run("Озвучка", async () => {
     console.log(`  провайдер: ${voice.name}`);
+    if (voice.name === "gemini" && geminiKeyCount() > 1) console.log("  ключей Gemini: 2 — при суточной квоте первого та же модель озвучит вторым (GEMINI_API_KEY_2)");
     const fallbacks = fallbackProviderNames(voice.name);
     if (!fallbacks.length && fallbackDisabled()) console.log("  запасной голос выключен (TTS_FALLBACK=none): не вышло основным — запуск упадёт, а не выпустит ролик другим голосом");
     let primaryError: unknown = undefined;
@@ -361,7 +362,8 @@ async function main() {
           const fresh = run.value.map((v, i) => ({ v, i })).filter(({ v, i }) => !v.cached && script.scenes[i]!.narration.trim());
           const chars = fresh.reduce((a, { i }) => a + script.scenes[i]!.narration.length, 0);
           const calls = run.posts > 0 ? run.posts : fresh.length;
-          if (calls > 0) ttsUsage.push(ttsUsageRecord({ provider: voice.name, model: ttsModel(voice.name), calls, chars, costUsd: voice.name === "elevenlabs" ? null : 0 }, usageCode));
+          const keyIndex = Math.max(0, ...fresh.map(({ v }) => v.keyIndex ?? 0)); // только при GEMINI_API_KEY_2
+          if (calls > 0) ttsUsage.push(ttsUsageRecord({ provider: voice.name, model: ttsModel(voice.name), calls, chars, costUsd: voice.name === "elevenlabs" ? null : 0, keyIndex }, usageCode));
           const fromCache = run.value.filter((v) => v.cached).length; // пустые реплики (тишина) — не кэш
           if (fromCache && fresh.length === 0) console.log("  вся озвучка — из кэша: запросов к сервису не было");
           else if (fromCache) console.log(`  из кэша — ${fromCache} сцен, озвучено заново — ${fresh.length}`);

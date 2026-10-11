@@ -9,6 +9,10 @@
 // ту же модель, а не менять голос посреди ролика; на следующую модель идём
 // только при суточной квоте, 404/400 или повторном 5xx, и дальше весь ролик
 // озвучивает уже она (один голос, а не три).
+// Лимиты считаются на проект, а не на ключ, поэтому второй ключ (GEMINI_API_KEY_2)
+// берут из другого проекта/аккаунта. Порядок: модель за моделью, внутри модели —
+// ключ 1, затем ключ 2 (качество основной модели важнее, чей это проект). На
+// второй ключ переходим только при 429; 401/403 выключает свой ключ, если есть другой.
 // Таймингов слов нет — общая обвязка выравнивает текст по распознанной речи
 // (align.ts; она же уточняет границы сцен в общем звуке), иначе оценивает по звуку.
 
@@ -31,6 +35,22 @@ export function geminiModelChain(model: string): string[] {
   return [...new Set(chain)];
 }
 
+type Env = Record<string, string | undefined>;
+
+// Ключи по порядку: основной и, если задан и не совпадает с ним, второй. Без
+// основного второй не используется (auto выбирает Gemini только по GEMINI_API_KEY).
+function geminiKeys(env: Env): string[] {
+  const first = (env.GEMINI_API_KEY ?? env.GOOGLE_API_KEY ?? "").trim();
+  const second = (env.GEMINI_API_KEY_2 ?? "").trim();
+  if (!first) return [];
+  return second && second !== first ? [first, second] : [first];
+}
+
+// Сколько разных ключей задано — для строки в логе make (сами ключи наружу не отдаём).
+export const geminiKeyCount = (env: Env = process.env): number => geminiKeys(env).length;
+
+const KEY_VARS = ["GEMINI_API_KEY", "GEMINI_API_KEY_2"] as const;
+
 interface InteractionsResponse {
   steps?: { type?: string; content?: { type?: string; data?: string; mime_type?: string; sample_rate?: number }[] }[];
 }
@@ -49,14 +69,25 @@ export function geminiAudioToPcm(b64: string, mime: string, sampleRateHint?: num
 }
 
 export function geminiProvider(): RawProvider {
-  const key = (process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? "").trim();
+  const keys = geminiKeys(process.env);
   const model = process.env.GEMINI_TTS_MODEL?.trim() || GEMINI_DEFAULT_MODEL;
   const baseStyle = process.env.GEMINI_TTS_STYLE?.trim() || GEMINI_DEFAULT_STYLE;
   const timeoutMs = envInt("TTS_TIMEOUT_MS", 120_000);
   const chain = geminiModelChain(model);
   // Шорт ≈ 700–900 символов — один запрос; длинный ролик — по ~2500 символов.
   const batchMaxChars = envInt("GEMINI_TTS_BATCH_CHARS", 2500);
-  let start = 0; // с какой модели цепочки начинать (после перехода — с запасной)
+  // Пары (модель, ключ) по порядку попыток; с одним ключом — ровно цепочка моделей.
+  const pairs = chain.flatMap((m, mi) => keys.map((_, ki) => ({ m, mi, ki })));
+  // С какой пары начинать: после перехода — с той, что ответила («липко»: остальные
+  // сцены и запросы — тем же голосом и тем же проектом).
+  let start = 0;
+  const rejected = new Set<number>(); // ключи с 401/403 — дальше не пробуем (только если есть другой)
+  // Номер ключа — в подписях ошибок и логе, только когда ключей два (с одним — как раньше).
+  const labelOf = (m: string, ki: number) => (keys.length > 1 ? `${m}, ключ ${ki + 1}` : m);
+  const nextAlive = (p: number) => {
+    for (let q = p + 1; q < pairs.length; q++) if (!rejected.has(pairs[q]!.ki)) return q;
+    return -1;
+  };
   return {
     name: "gemini",
     output: "wav",
@@ -67,25 +98,36 @@ export function geminiProvider(): RawProvider {
       const cand = own || v;
       return cand && /^[A-Z][a-z]+$/.test(cand) ? cand : GEMINI_DEFAULT_VOICE;
     },
+    // Ключ сюда не входит: голос у обоих проектов тот же — общий кэш годится для любого.
     configKey: () => `gemini:${model}:${baseStyle}`,
     async synthesizeRaw(text, ctx) {
-      if (!key) throw new TtsError("Gemini TTS: не задан GEMINI_API_KEY (ключ бесплатно: https://aistudio.google.com/apikey).");
+      if (!keys.length) throw new TtsError("Gemini TTS: не задан GEMINI_API_KEY (ключ бесплатно: https://aistudio.google.com/apikey).");
       let lastErr: TtsError | null = null;
       let quotaErr: TtsError | null = null; // 429 хоть у одной модели — главная причина для сводки запуска
-      for (let idx = start; idx < chain.length; idx++) {
-        const m = chain[idx]!;
+      for (let p = start; p < pairs.length; p++) {
+        const { m, mi, ki } = pairs[p]!;
+        if (rejected.has(ki)) continue;
+        const label = labelOf(m, ki);
         for (let attempt = 1; ; attempt++) {
           try {
-            const audio = await callModel(m, text, ctx);
-            start = idx; // «липкий» запасной вариант: остальные сцены — той же моделью
-            return idx > 0 ? { ...audio, fallback: m } : audio;
-          } catch (e) {
-            if (!(e instanceof TtsError)) throw new TtsError(`Gemini TTS (${m}): ${(e as Error).message}`, { retryable: true, cause: e });
-            // Ключ неверный — другие модели не помогут.
-            if (e.status === 401 || e.status === 403) throw e;
+            const audio = await callModel(m, keys[ki]!, label, text, ctx);
+            start = p; // «липкий» запасной вариант: остальные сцены — той же парой
+            const out = mi > 0 ? { ...audio, fallback: m } : audio;
+            return keys.length > 1 ? { ...out, keyIndex: ki + 1 } : out;
+          } catch (err) {
+            const e = safeError(err, label, keys);
+            if (e.status === 401 || e.status === 403) {
+              // Ключ неверный — другие модели с ним не помогут. Есть второй рабочий — дальше им.
+              const other = keys.findIndex((_, i) => i !== ki && !rejected.has(i));
+              if (other < 0) throw e;
+              rejected.add(ki);
+              lastErr = e;
+              console.warn(`[озвучка] ${e.message} Ключ ${ki + 1} пропускаю (проверьте секрет ${KEY_VARS[ki]}) — продолжаю ключом ${other + 1}.`);
+              break;
+            }
             const wait = sameModelWait(e, attempt);
             if (wait !== null && !ctx.signal?.aborted) {
-              console.warn(`[озвучка] Gemini TTS (${m}): ${e.status === 429 ? "лимит запросов в минуту" : `сбой сервиса (HTTP ${e.status})`} — жду ${Math.ceil(wait / 1000)} с и повторяю…`);
+              console.warn(`[озвучка] Gemini TTS (${label}): ${e.status === 429 ? "лимит запросов в минуту" : `сбой сервиса (HTTP ${e.status})`} — жду ${Math.ceil(wait / 1000)} с и повторяю…`);
               await sleep(wait, ctx.signal);
               continue;
             }
@@ -93,7 +135,12 @@ export function geminiProvider(): RawProvider {
             if (!fallThrough) throw e;
             lastErr = e;
             if (e.status === 429) quotaErr ??= e;
-            if (idx + 1 < chain.length) console.warn(`[озвучка] ${e.message} Пробую следующую модель (${chain[idx + 1]}) — ею будет озвучен и остаток ролика…`);
+            // 404/400/5xx — дело в модели, а не в проекте: второй ключ той же модели пропускаем.
+            if (e.status !== 429) while (p + 1 < pairs.length && pairs[p + 1]!.mi === mi) p++;
+            const q = nextAlive(p);
+            const next = q >= 0 ? pairs[q]! : null;
+            if (next && next.mi === mi) console.warn(`[озвучка] Gemini: квота ключа ${ki + 1} исчерпана (${m}) — продолжаю ключом ${next.ki + 1} (та же модель)…`);
+            else if (next) console.warn(`[озвучка] ${e.message} Пробую следующую модель (${labelOf(next.m, next.ki)}) — ею будет озвучен и остаток ролика…`);
             break;
           }
         }
@@ -105,13 +152,13 @@ export function geminiProvider(): RawProvider {
     },
   };
 
-  async function callModel(m: string, text: string, ctx: RawContext): Promise<RawAudio> {
+  async function callModel(m: string, key: string, label: string, text: string, ctx: RawContext): Promise<RawAudio> {
     // Несколько сцен в одном запросе (абзацы) — просим явную паузу между ними:
     // по ней звук потом режется на сцены.
     const style = text.includes("\n\n") ? `${baseStyle.replace(/[.!?…\s]+$/u, "")}. Между абзацами — пауза около секунды.` : baseStyle;
-    const headers = { "x-goog-api-key": key, "Content-Type": "application/json" };
+    const headers = { "x-goog-api-key": key, "Content-Type": "application/json" }; // ключ — только в заголовке, не в адресе
     if (!isLegacy(m)) {
-      const r = await httpRequest(`Gemini TTS (${m})`, `${BASE}/interactions`, {
+      const r = await httpRequest(`Gemini TTS (${label})`, `${BASE}/interactions`, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -128,12 +175,12 @@ export function geminiProvider(): RawProvider {
         .flatMap((s) => s.content ?? [])
         .reverse()
         .find((c) => c.type === "audio" && c.data);
-      if (!audio?.data) throw new TtsError(`Gemini TTS (${m}): в ответе нет аудио.`, { retryable: true });
+      if (!audio?.data) throw new TtsError(`Gemini TTS (${label}): в ответе нет аудио.`, { retryable: true });
       return geminiAudioToPcm(audio.data, audio.mime_type ?? "audio/wav", audio.sample_rate);
     }
     // Старый путь: режиссура — фразой перед текстом в форме «Как читать: текст»,
     // как в примерах Google (модель выполняет указание, а не озвучивает его).
-    const r = await httpRequest(`Gemini TTS (${m})`, `${BASE}/models/${m}:generateContent`, {
+    const r = await httpRequest(`Gemini TTS (${label})`, `${BASE}/models/${m}:generateContent`, {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -143,9 +190,24 @@ export function geminiProvider(): RawProvider {
     }, { timeoutMs, signal: ctx.signal });
     const j = JSON.parse(r.body.toString("utf8")) as GenerateContentResponse;
     const part = j.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData;
-    if (!part?.data) throw new TtsError(`Gemini TTS (${m}): в ответе нет аудио.`, { retryable: true });
+    if (!part?.data) throw new TtsError(`Gemini TTS (${label}): в ответе нет аудио.`, { retryable: true });
     return geminiAudioToPcm(part.data, part.mimeType ?? "audio/L16;codec=pcm;rate=24000");
   }
+}
+
+// Ключ не должен попасть ни в лог, ни в qc.json, ни в сводку запуска. Google его в
+// ответе не повторяет, но текст ошибки всё равно проверяем: нашёлся — заменяем на «***»
+// и отбрасываем cause (там мог остаться исходный текст).
+function safeError(err: unknown, label: string, keys: string[]): TtsError {
+  const e = err instanceof TtsError ? err : new TtsError(`Gemini TTS (${label}): ${(err as Error).message}`, { retryable: true, cause: err });
+  if (!keys.some((k) => errorText(e).includes(k))) return e;
+  const message = keys.reduce((s, k) => s.split(k).join("***"), e.message);
+  return new TtsError(message, { retryable: e.retryable, status: e.status, retryAfterMs: e.retryAfterMs, quotaId: e.quotaId });
+}
+
+function errorText(e: unknown, depth = 0): string {
+  if (!(e instanceof Error)) return String(e);
+  return depth < 5 && e.cause !== undefined ? `${e.message}\n${errorText(e.cause, depth + 1)}` : e.message;
 }
 
 // Когда повторить ту же модель вместо перехода на следующую: 429 с квотой «в

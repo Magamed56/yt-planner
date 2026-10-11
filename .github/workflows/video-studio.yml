@@ -336,6 +336,8 @@ jobs:
         if: env.MODE == 'render'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          # Второй ключ Gemini TTS из другого проекта (лимиты на проект); пустой — как без него.
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -517,6 +519,8 @@ jobs:
         if: env.MODE == 'batch'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          # Второй ключ Gemini TTS из другого проекта (лимиты на проект); пустой — как без него.
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -581,15 +585,18 @@ jobs:
             exit 1
           fi
           # Квота Gemini TTS: Shorts — 1 запрос, «Разбор» (razbor-*) — ≈ 3 (~7000 символов по 2500).
+          # Второй ключ (другой проект) — ещё ~10 запросов в сутки основной модели.
           tts=0
           for f in "${files[@]}"; do
             if [[ "$(basename "$f")" == razbor-* ]]; then tts=$((tts + 3)); else tts=$((tts + 1)); fi
           done
-          if [ "$tts" -gt 10 ]; then
+          quota=10
+          if [ -n "$GEMINI_API_KEY_2" ]; then quota=20; fi
+          if [ "$tts" -gt "$quota" ]; then
             if [ "$TTS_FALLBACK" = "none" ]; then
-              echo "::warning::$n роликов за раз (≈ $tts запросов озвучки): бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные упадут (voice_fallback = none) и соберутся при повторе. Надёжнее по 8–10 Shorts (или 1 «Разбор» + 5–7 Shorts) за запуск."
+              echo "::warning::$n роликов за раз (≈ $tts запросов озвучки): бесплатной квоты Gemini TTS (~$quota запросов в сутки) не хватит — остальные упадут (voice_fallback = none) и соберутся при повторе. Надёжнее по 8–10 Shorts (или 1 «Разбор» + 5–7 Shorts) за запуск."
             else
-              echo "::warning::$n роликов за раз (≈ $tts запросов озвучки): бесплатной квоты Gemini TTS (~10 запросов в сутки) не хватит — остальные озвучит Edge. Надёжнее по 8–10 Shorts (или 1 «Разбор» + 5–7 Shorts) за запуск."
+              echo "::warning::$n роликов за раз (≈ $tts запросов озвучки): бесплатной квоты Gemini TTS (~$quota запросов в сутки) не хватит — остальные озвучит Edge. Надёжнее по 8–10 Shorts (или 1 «Разбор» + 5–7 Shorts) за запуск."
             fi
           fi
           # Точка отсчёта слотов фиксируется один раз: пока идёт пакет, номера слотов не сдвигаются.
