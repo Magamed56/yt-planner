@@ -490,8 +490,9 @@ function sentences(text: string): string[] {
 }
 
 // Хэштеги Reels: бренд, 2 по теме, затем вперемешку общие и «инстаграмные» —
-// 5–8 штук (больше Instagram сам не советует).
-export function instagramHashtags(script: Pick<VideoScript, "tags">, channel: ChannelConfig | null, max = 8): string[] {
+// не больше 5: с декабря 2025 Instagram ограничивает пост пятью хэштегами (по прессе),
+// поэтому общие идут последними и отрезаются первыми.
+export function instagramHashtags(script: Pick<VideoScript, "tags">, channel: ChannelConfig | null, max = 5): string[] {
   const topic = topicHashtags(script.tags ?? [], 2);
   if (!channel) return uniqueHashtags(topic).slice(0, max);
   const core = channel.hashtags.core;

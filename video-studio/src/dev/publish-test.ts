@@ -172,7 +172,7 @@ await test("YouTube: publishAt → privacyStatus=private и status.publishAt; п
 
 // ---- Instagram: подпись ----
 
-await test("подпись Reels: хук первой строкой, суть, призыв, 5–8 хэштегов, без ссылок и #shorts", () => {
+await test("подпись Reels: хук первой строкой, суть, призыв, 5 хэштегов, без ссылок и #shorts", () => {
   const c = buildInstagramCaption({ ...demo, description: demo.description + " Подробнее: https://example.com/x" }, channel);
   const lines = c.split("\n");
   assert.equal(lines[0], demo.scenes[0]!.narration);
@@ -182,8 +182,10 @@ await test("подпись Reels: хук первой строкой, суть, 
   assert.doesNotMatch(c, /https?:\/\/|www\./);
   assert.doesNotMatch(c, /#shorts/i);
   const tags = c.match(/#[\p{L}\p{N}_]+/gu) ?? [];
-  assert.ok(tags.length >= 5 && tags.length <= 8, tags.join(" "));
-  assert.equal(tags[0], "#сутьзаминуту");
+  // Лимит Instagram — 5 хэштегов: бренд, две темы ролика, остальное — общие канала.
+  assert.equal(tags.length, 5, tags.join(" "));
+  assert.deepEqual(tags.slice(0, 3), ["#сутьзаминуту", "#память", "#мозг"], tags.join(" "));
+  assert.deepEqual(instagramHashtags(demo, channel, 3), ["#сутьзаминуту", "#память", "#мозг"], "общие режутся первыми");
   assert.ok(Array.from(c).length <= 2200);
   assert.deepEqual(instagramHashtags({ tags: ["мозг учёба", "shorts", "космос"] }, null), ["#космос"]);
   const own = buildInstagramCaption({ ...demo, description: "Одно предложение. #shorts #космос" }, channel);

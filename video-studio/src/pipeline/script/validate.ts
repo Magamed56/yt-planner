@@ -356,8 +356,9 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
   if (shorts && (scenes.length < 5 || scenes.length > 12)) {
     out.push(`для Shorts лучше 6–8 сцен (сейчас ${scenes.length})`);
   }
-  // Викторина строится из раундов — там сцены media не к месту.
-  const quiz = scenes.some((s) => isObj(s) && s.kind === "quiz");
+  // Викторина строится из раундов — там сцены media не к месту. Викторина — от двух
+  // раундов: один вопрос внутри обычного ролика не освобождает его от правила.
+  const quiz = scenes.filter((s) => isObj(s) && s.kind === "quiz").length >= 2;
   if (shorts && !quiz && scenes.length) {
     const media = scenes.filter((s) => isObj(s) && s.kind === "media").length;
     const { min, max } = SHORTS_RULES.media;
