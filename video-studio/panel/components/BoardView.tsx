@@ -1,5 +1,6 @@
 "use client";
 import { useRef } from "react";
+import { holdLabel } from "@/lib/rebuild-hold";
 import type { PanelState, Row } from "@/lib/state";
 import { RATIO_CLASS, STAGE_LABEL, shiftDateKey } from "@/lib/stages";
 import { usePressDrag } from "@/lib/use-press-drag";
@@ -123,8 +124,11 @@ export default function BoardView({
                       );
                     }
                     const canMove = draggable(row) && !busy;
+                    // Ждущий пересборки — так и подписан (без «ориентира»: на телефоне не влезет), «Видео»
+                    // звало бы загрузить старую версию.
+                    const stageText = row.hold ? holdLabel(row.hold) : STAGE_LABEL[row.stage];
                     return (
-                      <div key={t} data-drop={cell.key} className={`bslot stage-${row.stage}${isTarget ? " target" : ""}${over ? " over" : ""}`}>
+                      <div key={t} data-drop={cell.key} className={`bslot stage-${row.stage}${row.hold ? ` hold${row.hold.rebuilding ? " rebuilding" : ""}` : ""}${isTarget ? " target" : ""}${over ? " over" : ""}`}>
                         <span className="t">{t}</span>
                         <button
                           type="button"
@@ -142,7 +146,7 @@ export default function BoardView({
                             <span className="code">{row.code}</span>
                             {row.long && <span className="long-badge">Разбор</span>}
                             <span className="title">{row.title}</span>
-                            {!movable(row) && <span className="mark">{row.whenExact ? STAGE_LABEL[row.stage] : `${STAGE_LABEL[row.stage]} · ориентир`}</span>}
+                            {!movable(row) && <span className="mark">{row.whenExact || row.hold ? stageText : `${stageText} · ориентир`}</span>}
                             {row.stage === "published" && row.stats?.ratioLabel && (
                               <span className={`ratio ${RATIO_CLASS[row.stats.verdict ?? "typical"]}`} title={row.stats.basis}>
                                 {row.stats.ratioLabel}

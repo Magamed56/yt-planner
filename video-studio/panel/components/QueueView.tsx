@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type NewUpload, fillNewUploadsAction, findNewUploadsAction, moveVideoAction, restoreQueueAction, swapQueueAction, undoMoveAction } from "@/app/actions";
 import { setBadge } from "@/lib/badge";
+import { holdLabel } from "@/lib/rebuild-hold";
 import type { CoverageLevel, PanelState, Reminder, Row } from "@/lib/state";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/stages";
 import { badgeCount, buildTodo } from "@/lib/todo";
@@ -319,18 +320,22 @@ export default function QueueView({ state, initialMode, initialSelected = null }
         : state.runwayLabel
           ? `Заполнено до ${state.runwayLabel}`
           : "Ближайший слот пуст";
+  // Ждущие пересборки (content/rebuild.json) — не «видео готово» и не «загрузить в Studio».
+  const gapHold = gap?.code ? state.rows.find((r) => r.code === gap.code)?.hold : undefined;
+  const heldCount = state.rows.filter((r) => r.hold).length;
   const heroSub = gap
-    ? `первая дыра: ${gapWhen}${gap.code && gap.stage ? ` (встанет ${gap.code} — ${GAP_STAGE[gap.stage]})` : ""}`
-    : `${state.counts.scheduled} ждут выхода · ${state.counts.video} загрузить в Studio`;
+    ? `первая дыра: ${gapWhen}${gap.code && gap.stage ? ` (встанет ${gap.code} — ${gapHold ? holdLabel(gapHold) : GAP_STAGE[gap.stage]})` : ""}`
+    : `${state.counts.scheduled} ждут выхода · ${state.counts.video - heldCount} загрузить в Studio${heldCount ? ` · ${heldCount} ждут пересборки` : ""}`;
   function pickLevel(level: CoverageLevel) {
     if (mode !== "feed") switchMode("feed");
     setFilter(level);
   }
 
-  // Скачивание пачкой: ролики с файлами в релизе (собранные на компьютере — без файлов).
-  const chosenRows = chosen ? state.rows.filter((r) => chosen.has(r.code) && r.release) : [];
+  // Скачивание пачкой: ролики с файлами в релизе (собранные на компьютере — без файлов). Старую
+  // версию ждущего пересборки — только из его карточки, с предупреждением.
+  const chosenRows = chosen ? state.rows.filter((r) => chosen.has(r.code) && r.release && !r.hold) : [];
   const chosenBytes = chosenRows.reduce((s, r) => s + rowBytes(r), 0);
-  const visibleWithFiles = rows.filter((r) => r.release);
+  const visibleWithFiles = rows.filter((r) => r.release && !r.hold);
   const allVisibleChosen = chosen !== null && visibleWithFiles.length > 0 && visibleWithFiles.every((r) => chosen.has(r.code));
   const choosingBar = chosen !== null && !saving;
 
@@ -459,7 +464,7 @@ export default function QueueView({ state, initialMode, initialSelected = null }
                   Все {state.rows.length}
                 </button>
               </div>
-              {chosen && <p className="board-hint">Нажимайте на ролики — отмеченные ✓ скачаются вместе: видео и обложки. Ролики без готового видео не выбираются.</p>}
+              {chosen && <p className="board-hint">Нажимайте на ролики — отмеченные ✓ скачаются вместе: видео и обложки. Ролики без готового видео и ждущие пересборки не выбираются.</p>}
               <FeedView
                 state={state}
                 rows={rows}

@@ -19,6 +19,7 @@ import {
 } from "@/app/actions";
 import { COMMENT_MAX, type OwnComment } from "@/lib/first-comment";
 import { DEFAULT_REBUILD, editLock, rebuildLabel, THEME_LABEL, THEMES, VOICE_LABEL, VOICES, type RebuildOptions } from "@/lib/rebuild";
+import { holdLabel } from "@/lib/rebuild-hold";
 import { checkScriptEdit, parseTags, SCRIPT_LIMITS, type SceneEdit, type ScriptEdit } from "@/lib/script-edit";
 import type { PanelState, Row, SlotCell } from "@/lib/state";
 import { STAGE_LABEL, shiftDateKey } from "@/lib/stages";
@@ -326,13 +327,13 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
   const cover = row.release?.cover ?? null;
 
   return (
-    <aside className={`sheet stage-${row.stage}`} aria-label={`Ролик ${row.code}`}>
+    <aside className={`sheet stage-${row.stage}${row.hold ? ` hold${row.hold.rebuilding ? " rebuilding" : ""}` : ""}`} aria-label={`Ролик ${row.code}`}>
       <div className="sheet-head">
         <Thumb src={row.cover} video={frameOf(row)} code={row.code} className="big" />
         <div className="sheet-title">
           <span className={`badge${row.long ? " long" : ""}`}>
             {row.code}
-            {row.long ? " · «Разбор» 16:9" : ""} · {STAGE_LABEL[row.stage]}
+            {row.long ? " · «Разбор» 16:9" : ""} · {row.hold ? holdLabel(row.hold) : STAGE_LABEL[row.stage]}
           </span>
           <h3>{row.title}</h3>
           <div className="muted small">
@@ -370,8 +371,9 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
         </p>
       )}
 
-      {/* До загрузки — первым делом: что не так с роликом. Уже на YouTube — ниже, у плеера. */}
-      {row.release && row.stage === "video" && (
+      {/* До загрузки — первым делом: что не так с роликом. Уже на YouTube — ниже, у плеера. Ждущему
+          пересборки проверка старой версии ни к чему. */}
+      {row.release && row.stage === "video" && !row.hold && (
         <ReleaseChecks release={row.release} voice={row.voice ?? null} realPhotos={row.realPhotos ?? false} missingSecrets={state.missingSecrets} title="Перед загрузкой проверьте" />
       )}
 
@@ -403,7 +405,38 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
             </div>
           </>
         )}
+        {/* Ждёт пересборки (content/rebuild.json): старую версию не грузить. Скачать её всё же можно —
+            вторым планом и с предупреждением. */}
+        {row.stage === "video" && row.hold && (
+          <>
+            <p className="flag">
+              {row.hold.rebuilding ? "⚙ Пересобирается — старую версию в Studio не загружайте, новое видео появится здесь само." : "⚠ Ждёт пересборки — старую версию в Studio не загружайте."}
+            </p>
+            <p className="muted small">
+              {row.hold.reason ? `Причина: ${row.hold.reason}. ` : ""}Как только появится релиз, собранный после {row.hold.sinceLabel}, ролик сам вернётся в «Загрузить в Studio».
+            </p>
+            {!row.hold.rebuilding && !lock && (
+              <div className="btn-row">
+                <button
+                  className="btn primary"
+                  disabled={locked}
+                  onClick={() => run(() => rebuildAction(row.code, DEFAULT_REBUILD), `Пересобрать ${row.code} (${buildTime} в GitHub Actions)? Старая версия останется в своём релизе.`)}
+                >
+                  Пересобрать
+                </button>
+              </div>
+            )}
+            {row.release && (
+              <details className="old-version">
+                <summary>Скачать старую версию</summary>
+                <p className="flag small">⚠ Это версия до пересборки{row.hold.reason ? ` (${row.hold.reason})` : ""}. Для Studio дождитесь новой.</p>
+                <FilesSaver items={[{ code: row.code, release: row.release }]} subtle />
+              </details>
+            )}
+          </>
+        )}
         {row.stage === "video" &&
+          !row.hold &&
           (row.release ? (
             <>
               <ol>
@@ -495,7 +528,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
 
       {row.release && (
         <section>
-          <h4>Посмотреть</h4>
+          <h4>{row.hold ? "Посмотреть старую версию" : "Посмотреть"}</h4>
           <Preview mp4Id={row.release.mp4.id} poster={cover ? `/api/asset/${cover.id}/file` : row.cover} />
         </section>
       )}

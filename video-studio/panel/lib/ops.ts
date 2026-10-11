@@ -57,12 +57,14 @@ export const retryCost = (r: RunInfo) =>
 // budget (общий с автопилотом).
 // Какие коды упавшего запуска ещё нужно сделать: не готовые и не запущенные заново позже (в том
 // числе только что этим же запуском автопилота — launched). Общее у автоповтора и «Повторить».
-function retryTodo(r: RunInfo, runs: RunInfo[], rows: Pick<Row, "code" | "stage">[], launched: { batch: string[]; draft: string[] }): { todo: string[]; covered: boolean } {
-  const stage = new Map(rows.map((x) => [x.code, x.stage]));
-  // Черновику достаточно сценария, сборке нужно видео (или ролик уже дальше по этапам).
+function retryTodo(r: RunInfo, runs: RunInfo[], rows: Pick<Row, "code" | "stage" | "hold">[], launched: { batch: string[]; draft: string[] }): { todo: string[]; covered: boolean } {
+  const byCode = new Map(rows.map((x) => [x.code, x]));
+  // Черновику достаточно сценария, сборке нужно видео (или ролик уже дальше по этапам). Видео,
+  // которое ждёт пересборки (content/rebuild.json), для сборки не в счёт — упавшую пересборку повторяем.
   const done = (code: string) => {
-    const st = stage.get(code);
-    return st !== undefined && st !== "topic" && (r.kind === "draft" || st !== "script");
+    const x = byCode.get(code);
+    const st = x?.stage;
+    return st !== undefined && st !== "topic" && (r.kind === "draft" || (st !== "script" && !x?.hold));
   };
   const t = Date.parse(r.createdAt);
   const later = runs.filter((x) => x.id !== r.id && RETRY_KINDS.has(x.kind) && Date.parse(x.createdAt) > t && (x.active || x.conclusion === "success"));
@@ -78,7 +80,7 @@ function retryTodo(r: RunInfo, runs: RunInfo[], rows: Pick<Row, "code" | "stage"
 // выходим за лимит озвучек budget (общий с автопилотом).
 export function pickRetries(
   runs: RunInfo[],
-  rows: Pick<Row, "code" | "stage">[],
+  rows: Pick<Row, "code" | "stage" | "hold">[],
   now: number,
   budget: number,
   launched: { batch: string[]; draft: string[] } = { batch: [], draft: [] },

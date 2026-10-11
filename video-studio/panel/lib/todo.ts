@@ -3,6 +3,7 @@
 // состоянию панели, без сети; проверяет scripts/todo-test.ts.
 import { plural, type Stage } from "./stages";
 import { canRetry, failedRun } from "./ops";
+import { holdLabel } from "./rebuild-hold";
 import type { PanelState, Row } from "./state";
 
 export type TodoLevel = "error" | "warn" | "info";
@@ -114,7 +115,8 @@ export function buildTodo(state: PanelState, now: Date): Todo[] {
   }
 
   // Ролики, собранные на компьютере (без релиза), скачать из панели нельзя — только назвать.
-  const upload = state.rows.filter((r) => r.stage === "video").sort(byWhen);
+  // Ждущие пересборки (content/rebuild.json) — не здесь: старую версию грузить не нужно.
+  const upload = state.rows.filter((r) => r.stage === "video" && !r.hold).sort(byWhen);
   if (upload.length) {
     const first = upload.find((r) => r.when);
     const downloadable = upload.filter((r) => r.release).map((r) => r.code);
@@ -165,16 +167,28 @@ export function buildTodo(state: PanelState, now: Date): Todo[] {
     } else if (gap && days < 2) {
       const gapRow = gap.code ? (rowOf.get(gap.code) ?? null) : null;
       const left = days < 1 ? "меньше суток" : `${days} ${plural(days, "день", "дня", "дней")}`;
+      // Ждёт пересборки — не «загрузите», а пересобрать (кнопка в карточке) или дождаться сборки.
+      const hold = gapRow?.hold ?? null;
+      const what = hold ? (hold.rebuilding ? holdLabel(hold) : `${holdLabel(hold)} — старую версию не загружайте`) : gap.stage ? GAP_STAGE[gap.stage] : "";
       todos.push({
         id: "runway",
         level: "warn",
         title: `Пустой слот: ${gapRow?.dateKey ? slotLabel(state, gapRow) : gap.label}`,
-        detail: `осталось ${left} · ${gap.code && gap.stage ? `встанет ${gap.code} — ${GAP_STAGE[gap.stage]}` : "роликов в очереди не хватает"}`,
+        detail: `осталось ${left} · ${gap.code && what ? `встанет ${gap.code} — ${what}` : "роликов в очереди не хватает"}`,
         push: `пустой слот ${gap.label}${gap.code ? ` — встанет ${gap.code}` : ""}`,
         pushOwnCodes: true,
         deadline: gap.iso,
         codes: gap.code ? [gap.code] : [],
-        action: gapRow?.stage === "studio" ? { kind: "find", label: "Найти новые загрузки" } : gapRow?.stage === "video" && gapRow.release ? { kind: "download", label: "⬇ Скачать", codes: [gapRow.code] } : null,
+        action:
+          gapRow?.stage === "studio"
+            ? { kind: "find", label: "Найти новые загрузки" }
+            : hold
+              ? hold.rebuilding
+                ? null
+                : { kind: "open", label: `Открыть ${gapRow!.code}`, code: gapRow!.code }
+              : gapRow?.stage === "video" && gapRow.release
+                ? { kind: "download", label: "⬇ Скачать", codes: [gapRow.code] }
+                : null,
       });
     }
   }
