@@ -8,6 +8,7 @@ import { DEFAULT_LANG, LANGS } from "../../src/pipeline/lang";
 import type { BrandKit } from "./brand-kit";
 import type { GhAsset, GhRelease } from "./github";
 import type { LangChannel, NavLang } from "./lang-channels";
+import type { LangPlan } from "./lang-plan";
 import type { RunInfo } from "./state";
 
 // Файл ролика другого языка: «en-08a-<имя>.mp4» (src/pipeline/lang.ts → langVideoName).
@@ -193,6 +194,7 @@ export interface LangPageData {
   geminiVoice: boolean; // голос языка — Gemini TTS: квота озвучки общая с русским каналом
   langs: NavLang[]; // переключатель языков (показываем, если их больше одного)
   brand: BrandKit | null; // бренд-кит brand/<язык>/ — блок «Оформление канала»; нет кита — null
+  plan: LangPlan; // время выхода каждого ролика (schedule.start); не посчитан — plan.problem
   mainChannel: string; // русский канал (channel.json): «не перепутайте с ним» в инструкции
   actionsUrl: string; // workflow «video-studio: ролик» на GitHub
   shell: { updated: string; generatedAt: string; activeRuns: number; activeIds: number[] };
