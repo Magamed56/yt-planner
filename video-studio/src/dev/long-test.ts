@@ -96,8 +96,24 @@ await test("длинный план: пустой файл, проверка к�
 const MSK = "Europe/Moscow";
 const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z");
 
-await test("слоты «Разборов»: channel.json → вт/чт/сб 21:00, умолчание, DST-безопасно, Shorts как раньше", () => {
+// Расписание, на котором проверяется логика слотов: 2 Shorts (12:00, 19:00) и «Разборы» вт/чт/сб 21:00 —
+// так было до 13.10.2026. Своё, а не channel.json: смена расписания канала не ломает проверки логики.
+const LEGACY = { schedule: { publishTimesLocal: ["12:00", "19:00"], timezone: MSK }, longSlots: { days: ["tue", "thu", "sat"], time: "21:00" } };
+
+await test("channel.json: 3 Shorts в день (12:00, 16:00, 19:00) и «Разбор» каждый день в 20:00 МСК", () => {
   const ch = channelFromJson(readJson("channel.json"));
+  assert.deepEqual(ch.schedule, { perDay: 3, publishTimesLocal: ["12:00", "16:00", "19:00"], timezone: MSK });
+  assert.deepEqual(longScheduleOf(ch), { perDay: 1, publishTimesLocal: ["20:00"], timezone: MSK, weekdays: [0, 1, 2, 3, 4, 5, 6] });
+  // Пн 12.10.2026 10:00 МСК → «Разборы» пн, вт, ср в 20:00 МСК (17:00 UTC); Shorts — 12:00, 16:00, 19:00.
+  const from = new Date("2026-10-12T07:00:00Z");
+  assert.deepEqual(upcomingSlots(longScheduleOf(ch), 3, { from }).map(iso), ["2026-10-12T17:00:00Z", "2026-10-13T17:00:00Z", "2026-10-14T17:00:00Z"]);
+  assert.deepEqual(upcomingSlots(ch.schedule, 4, { from }).map(iso), ["2026-10-12T09:00:00Z", "2026-10-12T13:00:00Z", "2026-10-12T16:00:00Z", "2026-10-13T09:00:00Z"]);
+  // Время «Разбора» не совпадает ни с одним слотом Shorts: занятые моменты общие, совпавший слот пропускался бы.
+  assert.ok(!ch.schedule.publishTimesLocal.some((t) => longScheduleOf(ch).publishTimesLocal.includes(t)));
+});
+
+await test("слоты «Разборов»: longSlots → вт/чт/сб 21:00, умолчание, DST-безопасно, Shorts как раньше", () => {
+  const ch = channelFromJson(LEGACY);
   assert.deepEqual(ch.schedule, { perDay: 2, publishTimesLocal: ["12:00", "19:00"], timezone: MSK }, "Shorts не изменились");
   assert.deepEqual(longScheduleOf(ch), { perDay: 1, publishTimesLocal: ["21:00"], timezone: MSK, weekdays: [2, 4, 6] });
   // Без longSlots — те же вт/чт/сб 21:00, в поясе канала.
@@ -166,7 +182,7 @@ await test("youtube-fill: L01 находится по файлу, «Разбор
     ["L02", "l2", "файл"],
   ]);
   assert.deepEqual(report.missing.map((i) => i.id), ["09b"]);
-  const ch = channelFromJson(readJson("channel.json"));
+  const ch = channelFromJson(LEGACY);
   const now = new Date("2026-10-12T07:00:00Z");
   const plan = planUpdates(report, { schedule: ch.schedule, longSchedule: longScheduleOf(ch), mode: "slots", now });
   const at = new Map(plan.map((p) => [p.match.item.id, p.publishAt]));

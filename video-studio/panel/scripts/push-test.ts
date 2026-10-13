@@ -28,6 +28,7 @@ import {
 } from "../lib/push";
 import { dailySummary } from "../lib/push-summary";
 import { buildState, parseAutopilot, type StateInput } from "../lib/state";
+import { withFixtureSchedule } from "../lib/fixture-channel";
 
 const b = (s: string) => Buffer.from(s, "base64url");
 const b64 = (x: Uint8Array) => Buffer.from(x).toString("base64url");
@@ -326,7 +327,7 @@ async function main() {
   const base: StateInput = {
     now,
     planJson: json("content/plan.json"),
-    channelJson: json("channel.json"),
+    channelJson: withFixtureSchedule(json("channel.json")),
     scriptFiles: [],
     fillLists: [],
     releases: [release(1, "08a"), release(2, "08b")],

@@ -18,7 +18,7 @@ const HELP = `Тексты и расписание для роликов, заг
 
   --items <файлы>             списки роликов через запятую (по умолчанию content/week1-videos.json
                               и content/videos.json — его пополняет workflow после рендера)
-  --schedule slots|none       slots — время выхода по слотам channel.json, 2 в день (по умолчанию);
+  --schedule slots|none       slots — время выхода по слотам channel.json (по умолчанию);
                               none — только тексты, видимость не трогать
   --schedule-start <дата>     считать слоты с этой даты: 2026-10-09 (по умолчанию — с ближайшего)
   --only 01a,01b              только эти ролики

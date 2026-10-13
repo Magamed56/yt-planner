@@ -4,7 +4,7 @@
 #   1. mode = draft, topic = «тема» → сценарий scripts/<имя>.json коммитится в эту ветку.
 #      Проверьте и поправьте его на github.com (карандаш ✏️ в файле).
 #   2. mode = render, script = video-studio/scripts/<имя>.json → готовое видео в артефакте,
-#      по желанию — в релизе GitHub, на YouTube (сразу или в слот 12:00/19:00 МСК) и в Instagram.
+#      по желанию — в релизе GitHub, на YouTube (сразу или в слот 12:00/16:00/19:00 МСК) и в Instagram.
 #   3. mode = batch, script = video-studio/scripts/sut-01*.json (маска или список через запятую) →
 #      ролики по очереди, на YouTube — каждый в свой слот подряд (schedule = slots), в Instagram —
 #      в очередь: её публикует workflow «video-studio: Instagram по расписанию».
@@ -85,7 +85,7 @@ on:
         options: [private, unlisted, public]
         default: private
       schedule:
-        description: "YouTube по расписанию: slots — слоты 12:00/19:00 МСК из channel.json (render — ближайший свободный, batch — по одному подряд)"
+        description: "YouTube по расписанию: slots — слоты из channel.json (12:00/16:00/19:00 МСК) (render — ближайший свободный, batch — по одному подряд)"
         type: choice
         options: [none, slots]
         default: none

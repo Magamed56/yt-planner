@@ -20,7 +20,7 @@
 - Не используй `@remotion/google-fonts`: без доступа к хосту шрифтов рендер висит до таймаута.
   Шрифты лежат в `assets/fonts` и подключаются через webpack.
 - **Канал — `channel.json`** («Суть за минуту»): имя, голос, тема, хэштеги, призывы, ссылки,
-  дисклеймер, слоты 12:00/19:00 Europe/Moscow. С диска читает только `src/pipeline/channel-file.ts`
+  дисклеймер, слоты Shorts 12:00/16:00/19:00 Europe/Moscow. С диска читает только `src/pipeline/channel-file.ts`
   (`loadChannel`), разбирает `channel.ts` (`channelFromJson`, `applyChannelDefaults`, слоты — без
   файловой системы: его импортирует веб-панель); переменные окружения сильнее файла. Название
   канала не хардкодь — бери из `channel.json`.
@@ -58,7 +58,7 @@
   --plan 08a,08b` пишет сценарии по плану. `google-api.ts` — access token и разбор ошибок API без
   googleapis. `src/cli/videos-list.ts` — после рендера в релиз дописывает тексты ролика в
   `content/videos.json` (youtube-fill читает его вместе с `week1-videos.json`).
-- **«Разборы»** — третий поток: 16:9, ~7 мин, вт/чт/сб 21:00 (`channel.json` → `longSlots`,
+- **«Разборы»** — третий поток: 16:9, ~7 мин, каждый день в 20:00 (`channel.json` → `longSlots`,
   `longScheduleOf` в `channel.ts`), свои темы в `content/long-plan.json` (`src/pipeline/long-plan.ts`,
   коды `L01`…, `npm run plan-extend -- --long`, `npm run script -- --long-plan L01` →
   `scripts/razbor-L01-….json`, видео `L01-….mp4`). Коды обоих видов — **только через**

@@ -10,6 +10,7 @@ import type { GhRelease, GhRun } from "../lib/github";
 import { dailySummary } from "../lib/push-summary";
 import { buildState, parseAutopilot, type StateInput } from "../lib/state";
 import { badgeCount, buildTodo, pushLine, STUDIO_URL } from "../lib/todo";
+import { withFixtureSchedule } from "../lib/fixture-channel";
 
 let passed = 0;
 function test(name: string, fn: () => void) {
@@ -73,7 +74,7 @@ const full = fullSlots.map((iso, i) => video(`other${i}`, { publishAt: iso }));
 const base: StateInput = {
   now,
   planJson: json("content/plan.json"),
-  channelJson: json("channel.json"),
+  channelJson: withFixtureSchedule(json("channel.json")),
   scriptFiles: [],
   fillLists: [],
   releases: [],

@@ -7,7 +7,7 @@
                                    ──стоки/AI──▶ визуал сцен
                                    ──▶ музыка, звук переходов
                     ──Remotion (моушен-графика)──▶ video.mp4 + обложки + субтитры + описание
-                                                   ──▶ YouTube (в слоты 12:00/19:00) + Instagram Reels + канал Telegram
+                                                   ──▶ YouTube (в слоты 12:00/16:00/19:00) + Instagram Reels + канал Telegram
 ```
 
 - **Основной формат — Shorts 1080×1920**, есть и горизонтальный 1920×1080.
@@ -21,7 +21,7 @@
 Проект отдельный от Next.js-приложения в родительской папке и ничего у него не берёт.
 
 **Канал «Суть за минуту».** Название, голос (Gemini Charon), палитра, хэштеги, призывы, ссылки,
-дисклеймер и время выхода (2 ролика в день: 12:00 и 19:00 по Москве) записаны в `channel.json`.
+дисклеймер и время выхода (3 Shorts в день: 12:00, 16:00 и 19:00 по Москве, «Разбор» — каждый день в 20:00) записаны в `channel.json`.
 Конвейер берёт их оттуда сам. Переменные окружения (`CHANNEL_NAME`, `GEMINI_TTS_VOICE`,
 `PUBLISH_TIMES`…) сильнее файла. Пошаговые инструкции для человека:
 
@@ -143,7 +143,7 @@ npm run make -- --topic "Почему мы забываем выученное"
 | `npm run script -- --long-plan L01` | «Разбор» по теме длинного плана → `scripts/razbor-L01-<имя>.json` (см. «Разборы») |
 | `npm run plan-extend -- --long --count 6` | Новые темы «Разбора» в `content/long-plan.json` (без `--long` — темы Shorts в `plan.json`) |
 | `npm run make -- --script scripts/<имя>.json` | Видео по вашему (отредактированному) сценарию |
-| `npm run upload -- out/<имя> [--privacy unlisted] [--schedule]` | Загрузить готовый ролик на YouTube (`--schedule` — в ближайший слот 12:00/19:00 МСК) |
+| `npm run upload -- out/<имя> [--privacy unlisted] [--schedule]` | Загрузить готовый ролик на YouTube (`--schedule` — в ближайший слот из `channel.json`) |
 | `npm run upload -- out/<имя> --to instagram` | Опубликовать Reels в Instagram (`--to youtube,instagram` — в оба) |
 | `npm run upload -- out/<имя> --to telegram` | Отправить ролик в канал Telegram (можно вместе: `--to youtube,telegram`) |
 | `npm run youtube-auth` | Разовая настройка входа в YouTube (печатает `YT_REFRESH_TOKEN`) |
@@ -260,7 +260,7 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
    - **upload = release** — ещё и в релизе GitHub: mp4 можно скачать и посмотреть прямо с телефона,
      хранится, пока вы не удалите релиз. **Удобнее всего с телефона;**
    - **upload = youtube** — на YouTube с выбранной видимостью (см. ограничения ниже); с
-     **schedule = slots** — приватно до ближайшего свободного слота 12:00/19:00 МСК, потом YouTube
+     **schedule = slots** — приватно до ближайшего свободного слота из `channel.json` (12:00/16:00/19:00 МСК), потом YouTube
      опубликует сам;
    - **upload = instagram** — сразу в Instagram Reels (варианты `youtube+instagram`, `release+…` —
      в несколько мест сразу).
@@ -308,7 +308,7 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
 
 Третий поток канала рядом с двумя Shorts в день: **«Разбор»** — горизонтальный ролик на ~7 минут
 (25–45 сцен, главы с карточками и таймкодами в описании) **на свою тему, которой нет среди Shorts**.
-Выход — **вт, чт, сб в 21:00 МСК** (`channel.json` → `longSlots`; часовой пояс — из `schedule`).
+Выход — **каждый день в 20:00 МСК** (до 13.10.2026 — вт, чт, сб в 21:00) (`channel.json` → `longSlots`; часовой пояс — из `schedule`).
 
 | Шаг | Как |
 |---|---|

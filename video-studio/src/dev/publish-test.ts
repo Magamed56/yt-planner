@@ -47,7 +47,7 @@ const channel: ChannelConfig = loadChannel({ file: path.join(root, "channel.json
 await test("channel.json: имя, голос, расписание, хэштеги; CHANNEL_NAME из окружения сильнее", () => {
   assert.equal(channel.name, "Суть за минуту");
   assert.equal(channel.voice.name, "Charon");
-  assert.deepEqual(channel.schedule.publishTimesLocal, ["12:00", "19:00"]);
+  assert.deepEqual(channel.schedule.publishTimesLocal, ["12:00", "16:00", "19:00"]);
   assert.equal(channel.schedule.timezone, "Europe/Moscow");
   assert.ok(channel.hashtags.brand.includes("#сутьзаминуту"));
   assert.equal(channel.theme, "midnight");
@@ -74,15 +74,16 @@ await test("умолчания канала: голос Gemini и «облачк
 
 // ---- слоты ----
 
-await test("слоты 12:00/19:00 МСК: ближайший, запас 30 мин, пропуск занятых, N-й", () => {
+await test("слоты 12:00/16:00/19:00 МСК: ближайший, запас 30 мин, пропуск занятых, N-й", () => {
   const s = channel.schedule;
-  // 11:00 МСК → 12:00 МСК (09:00Z)
-  assert.deepEqual(upcomingSlots(s, 3, { from: new Date("2026-10-07T08:00:00Z") }).map(iso), ["2026-10-07T09:00:00Z", "2026-10-07T16:00:00Z", "2026-10-08T09:00:00Z"]);
-  // 11:45 МСК — до 12:00 меньше 30 минут → 19:00
-  assert.equal(iso(upcomingSlots(s, 1, { from: new Date("2026-10-07T08:45:00Z") })[0]!), "2026-10-07T16:00:00Z");
+  // 11:00 МСК → 12:00, 16:00, 19:00 МСК (09:00Z, 13:00Z, 16:00Z)
+  assert.deepEqual(upcomingSlots(s, 3, { from: new Date("2026-10-07T08:00:00Z") }).map(iso), ["2026-10-07T09:00:00Z", "2026-10-07T13:00:00Z", "2026-10-07T16:00:00Z"]);
+  // 11:45 МСК — до 12:00 меньше 30 минут → 16:00
+  assert.equal(iso(upcomingSlots(s, 1, { from: new Date("2026-10-07T08:45:00Z") })[0]!), "2026-10-07T13:00:00Z");
   // занятый слот пропускается
-  assert.equal(iso(upcomingSlots(s, 1, { from: new Date("2026-10-07T08:00:00Z"), taken: ["2026-10-07T09:00:00Z"] })[0]!), "2026-10-07T16:00:00Z");
-  assert.equal(iso(nthSlot(s, 4, { from: new Date("2026-10-07T20:00:00Z") })), "2026-10-09T16:00:00Z");
+  assert.equal(iso(upcomingSlots(s, 1, { from: new Date("2026-10-07T08:00:00Z"), taken: ["2026-10-07T09:00:00Z"] })[0]!), "2026-10-07T13:00:00Z");
+  // 23:00 МСК 7-го → 8-го три слота, 4-й — 9-го в 12:00
+  assert.equal(iso(nthSlot(s, 4, { from: new Date("2026-10-07T20:00:00Z") })), "2026-10-09T09:00:00Z");
   assert.throws(() => nthSlot(s, 0), /от 1/);
   assert.equal(iso(parseScheduleStart("2026-10-14", "Europe/Moscow")), "2026-10-13T21:00:00Z");
 });
@@ -510,6 +511,8 @@ await test("youtube-fill: находим по имени файла, по заг
 });
 
 await test("youtube-fill: расписание — 2 в день по слотам, прежнее время не сдвигаем, опубликованные не трогаем", () => {
+  // Своё расписание 12:00/19:00, а не channel.json: проверяем логику раздачи слотов, а не текущий канал.
+  const two = { perDay: 2, publishTimesLocal: ["12:00", "19:00"], timezone: "Europe/Moscow" };
   const now = new Date("2026-10-08T15:00:00Z"); // 18:00 МСК — ближайший слот 19:00
   const items = week1.slice(0, 5);
   const videos = [
@@ -520,14 +523,14 @@ await test("youtube-fill: расписание — 2 в день по слота
     vid({ videoId: "D", fileName: `${items[3]!.file}.mp4`, privacyStatus: "public", title: items[3]!.title, description: items[3]!.description, tags: [...items[3]!.tags].reverse(), categoryId: "27" }),
     vid({ videoId: "E", fileName: `${items[4]!.file}.mp4`, embeddable: false, license: "creativeCommon", publicStatsViewable: false }),
   ];
-  const plan = planUpdates(matchVideos(items, videos), { schedule: channel.schedule, mode: "slots", now });
+  const plan = planUpdates(matchVideos(items, videos), { schedule: two, mode: "slots", now });
   const at = Object.fromEntries(plan.map((p) => [p.match.video.videoId, p.publishAt]));
   assert.deepEqual(at, { A: "2026-10-08T16:00:00Z", B: "2026-10-09T09:00:00Z", C: "2026-10-09T16:00:00Z", D: null, E: "2026-10-10T09:00:00Z" });
   // Слот, занятый другим роликом канала (не из списка), пропускается.
-  const busy = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: channel.schedule, mode: "slots", now, taken: ["2026-10-08T16:00:00Z"] });
+  const busy = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: two, mode: "slots", now, taken: ["2026-10-08T16:00:00Z"] });
   assert.equal(busy[0]!.publishAt, "2026-10-09T09:00:00Z");
   // Unlisted — только тексты: publishAt YouTube у него не примет.
-  const unl = planUpdates(matchVideos(items.slice(0, 1), [vid({ videoId: "U", fileName: `${items[0]!.file}.mp4`, privacyStatus: "unlisted" })]), { schedule: channel.schedule, mode: "slots", now });
+  const unl = planUpdates(matchVideos(items.slice(0, 1), [vid({ videoId: "U", fileName: `${items[0]!.file}.mp4`, privacyStatus: "unlisted" })]), { schedule: two, mode: "slots", now });
   assert.deepEqual([unl[0]!.privacyStatus, unl[0]!.publishAt], ["unlisted", null]);
   assert.equal(plan.find((p) => p.match.video.videoId === "B")!.keptPublishAt, true);
   assert.equal(plan.find((p) => p.match.video.videoId === "D")!.skip, true); // опубликован и тексты уже наши
@@ -546,9 +549,9 @@ await test("youtube-fill: расписание — 2 в день по слота
     publishAt: "2026-10-10T09:00:00Z",
   });
   // С даты старта и без расписания.
-  const fromStart = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: channel.schedule, mode: "slots", now, start: parseScheduleStart("2026-10-12", "Europe/Moscow") });
+  const fromStart = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: two, mode: "slots", now, start: parseScheduleStart("2026-10-12", "Europe/Moscow") });
   assert.equal(fromStart[0]!.publishAt, "2026-10-12T09:00:00Z");
-  const none = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: channel.schedule, mode: "none", now });
+  const none = planUpdates(matchVideos(items.slice(0, 1), videos.slice(0, 1)), { schedule: two, mode: "none", now });
   assert.equal(none[0]!.publishAt, null);
   assert.equal(none[0]!.privacyStatus, "private");
   assert.equal(none[0]!.skip, false); // тексты ещё не наши
