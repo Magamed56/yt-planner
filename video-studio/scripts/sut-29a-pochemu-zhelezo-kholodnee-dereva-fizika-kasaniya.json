@@ -1,0 +1,109 @@
+{
+  "title": "Почему железо холоднее дерева: физика касания",
+  "description": "Почему металлическая ложка кажется холоднее деревянной доски, хотя у них одинаковая температура. Разбираем, что на самом деле чувствует кожа, и почему теплопроводность стали в сотни раз выше, чем у дерева. Заодно станет понятно, почему на морозе язык примерзает к металлу.\n#shorts #физика #теплопроводность #наука",
+  "tags": [
+    "железо холоднее",
+    "железо холоднее видео",
+    "почему железо холоднее дерева",
+    "теплопроводность",
+    "физика",
+    "наука",
+    "металл и дерево",
+    "язык примерз к металлу",
+    "температура",
+    "кожа",
+    "physics",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Ложка и доска в комнате одинаково тёплые. Рука думает иначе.",
+      "onScreen": "Одна температура. Разные *ощущения*",
+      "icon": "hand",
+      "visualQuery": "metal spoon wooden cutting board",
+      "imagePrompt": "cinematic close-up of a steel spoon lying on a wooden cutting board, cool blue rim light on metal, warm tones on wood, shallow depth of field, dark background"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Термометр покажет одно и то же. Но кожа не меряет температуру. Самое опасное — в конце.",
+      "onScreen": "Кожа — *не* термометр",
+      "icon": "thermometer",
+      "visualQuery": "thermometer kitchen table",
+      "imagePrompt": "cinematic shot of a simple thermometer between a steel spoon and a wooden board, moody blue and amber palette, soft side light"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Она чувствует, как быстро из неё уходит тепло. Быстро — значит холодно.",
+      "onScreen": "Кожа чувствует *поток* тепла",
+      "icon": "zap",
+      "visualQuery": "hand touching metal railing",
+      "imagePrompt": "macro shot of fingertips touching a cold steel surface, faint glowing heat flowing from skin into metal, blue and amber palette, dramatic rim light"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "У стали теплопроводность около пятидесяти единиц. У дерева — десятые доли. Разница в сотни раз.",
+      "onScreen": "Сталь против дерева: *×сотни*",
+      "stat": {
+        "value": 50,
+        "prefix": "≈",
+        "suffix": " Вт/(м·К)",
+        "label": "теплопроводность стали"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Сталь",
+            "value": 50
+          },
+          {
+            "label": "Дерево",
+            "value": 0.2
+          }
+        ],
+        "suffix": " Вт/(м·К)"
+      }
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Металл мгновенно уводит тепло ладони вглубь. Дерево держит его у кожи.",
+      "onScreen": "Дерево *держит* тепло у кожи",
+      "icon": "leaf",
+      "visualQuery": "wooden plank grain texture",
+      "imagePrompt": "split composition: heat glow spreading fast through a steel bar versus staying at the surface of a wooden plank, dark background, blue and amber palette"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Теперь мороз. Мокрый язык касается стального столба. Металл забирает тепло так быстро, что влага замерзает.",
+      "onScreen": "Влага *замерзает* мгновенно",
+      "icon": "snowflake",
+      "visualQuery": "frozen metal pole winter",
+      "imagePrompt": "cinematic shot of a frosty steel lamp post in a snowy winter street at dusk, ice crystals on metal, cold blue light with warm streetlight glow"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "И язык примерзает намертво. Так что знание есть, а проверять не надо.",
+      "onScreen": "Знай физику. *Не проверяй*",
+      "icon": "triangle-alert",
+      "visualQuery": "icy metal fence snow",
+      "imagePrompt": "close-up of frost covered metal fence in heavy snow, sharp ice texture, cold blue palette with amber accent light"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Какой предмет у тебя дома самый холодный?",
+      "onScreen": "Что дома *холоднее* всего?",
+      "icon": "message-circle"
+    }
+  ]
+}

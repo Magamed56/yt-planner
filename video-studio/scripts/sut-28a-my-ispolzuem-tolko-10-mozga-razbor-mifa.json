@@ -1,0 +1,114 @@
+{
+  "title": "Мы используем только 10% мозга? Разбор мифа",
+  "description": "Откуда взялся миф о десяти процентах мозга и почему он не выдерживает проверки. Разбираем энергетический бюджет мозга, данные томографии и последствия повреждений любых его областей.\n#shorts #мозг #мифы #наука",
+  "tags": [
+    "мозг",
+    "10 процентов мозга",
+    "миф о мозге",
+    "нейробиология",
+    "мифы психологии",
+    "энергия мозга",
+    "томография",
+    "наука",
+    "факты",
+    "brain myth",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Ты используешь весь мозг. Десять процентов — это миф.",
+      "onScreen": "10% мозга — это *миф*",
+      "icon": "brain",
+      "visualQuery": "human brain model",
+      "imagePrompt": "cinematic close-up of a glowing human brain fully lit with blue neural light, dark background, soft rim light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Психологи Барри Бейерстайн и Скотт Лилиенфельд разобрали этот миф по косточкам. Научной основы у него нет.",
+      "onScreen": "Научной основы — *ноль*",
+      "icon": "book-open",
+      "visualQuery": "psychology books library shelf",
+      "imagePrompt": "cinematic shot of old psychology books on a dark wooden shelf, cool blue light, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Теперь посмотри на энергию. Мозг весит около двух процентов тела. А потребляет около двадцати процентов всей энергии.",
+      "onScreen": "2% веса — *20%* энергии",
+      "stat": {
+        "value": 20,
+        "prefix": "≈",
+        "suffix": "%",
+        "label": "энергии организма уходит на мозг"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Масса тела",
+            "value": 2
+          },
+          {
+            "label": "Энергия",
+            "value": 20
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Эволюция не стала бы кормить орган, который на девять десятых простаивает.",
+      "onScreen": "Бездельника *не кормят*",
+      "icon": "battery-low",
+      "visualQuery": "neurons microscope",
+      "imagePrompt": "macro view of glowing neurons firing electric blue signals, dark background, cinematic depth"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Томография показывает работу всех отделов мозга. Просто не всех одновременно.",
+      "onScreen": "Работают *все* отделы",
+      "icon": "scan",
+      "visualQuery": "MRI brain scan monitor",
+      "imagePrompt": "cinematic hospital scene with a brain MRI scan glowing on a monitor, blue ambient light, shallow depth of field"
+    },
+    {
+      "id": "s6",
+      "kind": "list",
+      "narration": "А повреди любую область — и последствия будут. Речь, движение, зрение или память.",
+      "onScreen": "Любая травма *заметна*",
+      "items": [
+        "Речь",
+        "Движение",
+        "Зрение",
+        "Память"
+      ],
+      "icon": "triangle-alert",
+      "visualQuery": "stroke patient rehabilitation",
+      "imagePrompt": "cinematic illustration of a human brain with one region dimmed red among blue glowing areas, dark background"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Так что скрытых девяноста процентов нет. Твой мозг уже работает на полную.",
+      "onScreen": "Мозг уже на *полную*",
+      "icon": "zap",
+      "visualQuery": "person thinking window",
+      "imagePrompt": "cinematic portrait silhouette of a person by a window at night, faint blue glow around the head, moody lighting"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Где ты впервые услышал про десять процентов?",
+      "onScreen": "Где ты услышал про *10%*?",
+      "icon": "message-circle"
+    }
+  ]
+}

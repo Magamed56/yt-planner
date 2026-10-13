@@ -1157,7 +1157,8 @@
           "source": "Ji Z. et al. Survey of hallucination in natural language generation. ACM Computing Surveys 55(12), 1–38 (2023)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-25a-kak-neyroset-pishet-tekst-ugadyvaet-po-kusochku.json"
     },
     {
       "id": "25b",
@@ -1177,7 +1178,8 @@
           "source": "NOAA Ocean Service, «Why is the ocean salty?»"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-25b-pochemu-more-solenoe-a-reki-presnye.json"
     },
     {
       "id": "26a",
@@ -1197,7 +1199,8 @@
           "source": "Furnham A., Boo H. C. A literature review of the anchoring effect. Journal of Socio-Economics 40(1), 35–42 (2011)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-26a-zacherknutaya-tsena-kak-rabotaet-effekt-yakorya.json"
     },
     {
       "id": "26b",
@@ -1217,7 +1220,8 @@
           "source": "Hoover D. W., Milich R. Effects of sugar ingestion expectancies on mother-child interactions. Journal of Abnormal Child Psychology 22(4), 501–515 (1994)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-26b-sakhar-u-detey-pravda-li-ot-nego-giperaktivnost.json"
     },
     {
       "id": "27a",
@@ -1241,7 +1245,8 @@
           "source": "Seymour L. M. et al. Hot mixing: Mechanistic insights into the durability of ancient Roman concrete. Science Advances 9(1), eadd1602 (2023)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-27a-rimskiy-beton-pochemu-on-stoit-2000-let.json"
     },
     {
       "id": "27b",
@@ -1257,7 +1262,8 @@
           "source": "NASA Human Research Program; NASA, «Twins Study» (2019); Sayson J. V., Hargens A. R. Pathophysiology of low back pain during exposure to microgravity. Aviation, Space, and Environmental Medicine 79(4), 365–373 (2008)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-27b-pochemu-kosmonavty-v-kosmose-stanovyatsya-vyshe.json"
     },
     {
       "id": "28a",
@@ -1277,7 +1283,8 @@
           "source": "Beyerstein B. L. Whence cometh the myth that we only use 10% of our brains? In: Della Sala S. (ed.) Mind Myths. Wiley, 1999; Lilienfeld S. O. et al. 50 Great Myths of Popular Psychology. Wiley-Blackwell, 2010"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-28a-my-ispolzuem-tolko-10-mozga-razbor-mifa.json"
     },
     {
       "id": "28b",
@@ -1297,7 +1304,8 @@
           "source": "ISO/IEC 18004:2015; DENSO WAVE, qrcode.com"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-28b-qr-kod-kak-rabotaet-i-zachem-ego-pridumali.json"
     },
     {
       "id": "29a",
@@ -1317,7 +1325,8 @@
           "source": "Ho H.-N., Jones L. A. Contribution of thermal cues to material discrimination and localization. Perception & Psychophysics 68(1), 118–128 (2006)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-29a-pochemu-zhelezo-kholodnee-dereva-fizika-kasaniya.json"
     },
     {
       "id": "29b",
@@ -1337,7 +1346,8 @@
           "source": "Бернардино де Саагун. Флорентийский кодекс, кн. 10; Coe & Coe 1996"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-29b-dengi-na-derevyakh-kak-atsteki-platili-kakao.json"
     },
     {
       "id": "30a",
@@ -1357,7 +1367,8 @@
           "source": "Shwartz Y. et al. Cell types promoting goosebumps form a niche to regulate hair follicle stem cells. Cell 182(3), 578–593 (2020)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-30a-murashki-po-kozhe-zachem-oni-nuzhny-cheloveku.json"
     },
     {
       "id": "30b",
@@ -1377,7 +1388,8 @@
           "source": "Pascual-Torner M. et al. Comparative genomics of mortal and immortal cnidarians unveils novel keys behind rejuvenation. PNAS 119(36), e2118763119 (2022)"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-30b-meduza-kotoraya-zhivet-vechno-ne-sovsem.json"
     }
   ]
 }

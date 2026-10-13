@@ -1,0 +1,99 @@
+{
+  "title": "Почему море солёное, а реки пресные",
+  "description": "Откуда в океане соль, если реки пресные? Разбираем, как слегка кислый дождь растворяет горные породы, реки несут соли в океан, а испарение и гидротермальные источники делают воду солёной. И насколько велик запас соли в океане.\n#shorts #наука #океан #почемуморесолёное",
+  "tags": [
+    "почему море солёное",
+    "почему море соленое а реки пресные",
+    "солёное море",
+    "океан",
+    "соль",
+    "реки",
+    "география",
+    "наука",
+    "гидротермальные источники",
+    "испарение",
+    "shorts",
+    "ocean salt"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Соль в море принесли реки. Пресные реки.",
+      "onScreen": "Соль в море принесли *реки*",
+      "icon": "droplet",
+      "visualQuery": "river mouth ocean aerial",
+      "imagePrompt": "cinematic aerial view of a winding river flowing into a deep blue ocean, glittering salt crystals in the foreground, teal and gold palette"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Всё начинается с дождя. Он слегка кислый и понемногу растворяет горные породы.",
+      "onScreen": "Дождь *растворяет* камень",
+      "icon": "cloud-rain",
+      "visualQuery": "rain on granite rocks",
+      "imagePrompt": "cinematic macro of raindrops hitting dark granite rock, tiny mineral particles dissolving, moody teal light, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Реки подхватывают растворённые соли и несут в океан. Их так мало, что речная вода кажется пресной.",
+      "onScreen": "Соли есть. Просто их *мало*",
+      "icon": "waves",
+      "visualQuery": "mountain river stream stones",
+      "imagePrompt": "cinematic clear mountain river over smooth stones, faint glowing mineral particles in the water, cool teal palette"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "А в океане вода испаряется. Уходит только вода, а соль остаётся. И так снова и снова.",
+      "onScreen": "Вода уходит. Соль *остаётся*",
+      "icon": "sun",
+      "visualQuery": "sea evaporation sunrise",
+      "imagePrompt": "cinematic ocean surface at sunrise with mist rising, salt crust on wet rocks, warm gold rim light against teal water"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Есть и второй источник: горячие гидротермальные источники на дне океана.",
+      "onScreen": "Второй источник — *на дне*",
+      "icon": "flame",
+      "visualQuery": "Hydrothermal vent black smoker",
+      "imagePrompt": "cinematic deep sea hydrothermal vent releasing dark mineral plumes, faint bioluminescent glow, deep teal darkness"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "В итоге в каждом литре морской воды около тридцати пяти граммов соли.",
+      "onScreen": "Около 35 г соли на *литр*",
+      "stat": {
+        "value": 35,
+        "prefix": "≈",
+        "suffix": " г",
+        "label": "соли в литре морской воды"
+      },
+      "icon": "flask-conical",
+      "visualQuery": "glass of seawater salt",
+      "imagePrompt": "cinematic glass of seawater beside a small pile of white salt crystals, backlit with teal and gold tones"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "А теперь самое невероятное. Разложи всю соль океана по суше, и слой будет толще ста пятидесяти метров.",
+      "onScreen": "Слой соли толще *150 метров*",
+      "icon": "mountain",
+      "visualQuery": "Salar de Uyuni salt flat",
+      "imagePrompt": "cinematic endless white salt plain stretching to the horizon under a teal twilight sky, tiny human silhouette for scale"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А какую соль принесла твоя ближайшая река?",
+      "onScreen": "Что несёт *твоя* река?",
+      "icon": "message-circle"
+    }
+  ]
+}

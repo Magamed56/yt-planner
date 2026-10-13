@@ -1,0 +1,84 @@
+{
+  "title": "Сахар у детей: правда ли от него гиперактивность",
+  "description": "Делает ли сахар детей гиперактивными? Разбираем метаанализ Уолрайха 1995 года в журнале JAMA и эксперимент Хувера и Милича 1994 года. Ты узнаешь, почему родители видят сахарное буйство даже там, где сахара не было.\n#shorts #сахар #дети #мифы #психология",
+  "tags": [
+    "сахар у детей",
+    "сахар и гиперактивность",
+    "гиперактивность",
+    "дети",
+    "мифы о сахаре",
+    "эффект ожидания",
+    "плацебо",
+    "психология",
+    "родители",
+    "наука",
+    "sugar hyperactivity",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Дети не бесятся от сахара. Это проверили ещё в девяностых.",
+      "onScreen": "Сахар *не делает* детей гиперактивными",
+      "icon": "circle-x",
+      "visualQuery": "children birthday party cake",
+      "imagePrompt": "cinematic shot of a colorful birthday cake with candles on a table, kids blurred in background running, warm golden light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "В тысяча девятьсот девяносто пятом году команда Марка Уолрайха свела вместе двойные слепые исследования. Ни дети, ни взрослые не знали, где сахар.",
+      "onScreen": "Метаанализ, JAMA, *1995*",
+      "icon": "microscope",
+      "visualQuery": "scientific journal pages desk",
+      "imagePrompt": "stack of medical journals and research papers on a wooden desk, warm lamp light, soft shadows, nostalgic 1990s mood"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Вердикт: сахар не менял ни поведение детей, ни их внимание и мышление.",
+      "onScreen": "Поведение и внимание — *без изменений*",
+      "icon": "circle-check",
+      "visualQuery": "child drinking juice glass",
+      "imagePrompt": "calm child sipping juice from a glass at a kitchen table, warm afternoon sunlight, gentle cinematic tones"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Откуда тогда миф? Ответ нашли годом раньше. Половине мам сказали, что ребёнок выпил сахар. А сахара не было.",
+      "onScreen": "Хувер и Милич, 1994: *сахара не было*",
+      "icon": "flask-conical",
+      "visualQuery": "mother child kitchen table",
+      "imagePrompt": "mother and young child sitting at a kitchen table with a plain drink, warm sunset light through window, soft focus, intimate mood"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "И именно эти мамы видели гиперактивного ребёнка. Хотя он пил плацебо.",
+      "onScreen": "Плацебо, а ребёнок *«гиперактивный»*",
+      "icon": "eye",
+      "visualQuery": "child playing living room",
+      "imagePrompt": "child playing energetically on a living room rug while a parent watches from the sofa, warm orange light, cinematic composition"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Выходит, сахар меняет не ребёнка, а взгляд взрослого. Ожидание дорисовывает то, чего нет.",
+      "onScreen": "Меняется не ребёнок, а *взгляд*",
+      "icon": "lightbulb",
+      "visualQuery": "parent watching child playground",
+      "imagePrompt": "silhouette of a parent watching a child on a playground at golden hour, warm rim light, reflective mood"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "А ты видел сахарное буйство своими глазами?",
+      "onScreen": "Видел *сахарное буйство* сам?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "title": "QR-код: как работает и зачем его придумали",
+  "description": "QR-код создала японская компания Denso Wave в 1994 году для учёта автозапчастей на заводах. Узнаешь, сколько данных вмещает QR-код, почему он читается даже поцарапанным и почему им пользуются бесплатно.\n#shorts #qrкод #технологии #факты",
+  "tags": [
+    "qr код",
+    "qr код как работает",
+    "как работает qr код",
+    "история qr кода",
+    "denso wave",
+    "автозапчасти",
+    "технологии",
+    "изобретения",
+    "интересные факты",
+    "коррекция ошибок",
+    "qr code",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "QR-код придумали не для меню, а для автозапчастей.",
+      "onScreen": "Не для меню, а для *автозапчастей*",
+      "icon": "cpu",
+      "visualQuery": "QR code restaurant menu",
+      "imagePrompt": "cinematic close-up of a glowing QR code on a metal car part, cool blue neon light, dark industrial background, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Его создала японская компания Денсо Вэйв в тысяча девятьсот девяносто четвёртом году.",
+      "onScreen": "Denso Wave, *1994*",
+      "icon": "calendar-check",
+      "visualQuery": "Japanese factory engineers",
+      "imagePrompt": "1990s Japanese engineering office with computer monitors and printed square codes on desk, cool blue tones, cinematic soft light"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Задача была приземлённой: вести учёт деталей на автозаводах. Быстро и без ошибок.",
+      "onScreen": "Учёт деталей на *заводе*",
+      "icon": "briefcase",
+      "visualQuery": "car factory assembly line",
+      "imagePrompt": "cinematic wide shot of an automotive assembly line with robotic arms, blue industrial lighting, sparks, moody atmosphere"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "Поэтому код получился вместительным. В один квадрат влезает до семи тысяч восьмидесяти девяти цифр.",
+      "onScreen": "До *7089* цифр в квадрате",
+      "stat": {
+        "value": 7089,
+        "label": "цифр вмещает один QR-код"
+      },
+      "icon": "atom",
+      "visualQuery": "QR code printed label",
+      "imagePrompt": "macro shot of a dense QR code pattern made of tiny glowing squares, blue light, shallow depth of field"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Но самое интересное впереди. Код можно поцарапать, испачкать, даже оторвать кусок.",
+      "onScreen": "Поцарапан, испачкан, *порван*",
+      "icon": "triangle-alert",
+      "visualQuery": "scratched sticker metal part",
+      "imagePrompt": "cinematic close-up of a torn and dirty QR code sticker on greasy metal, blue rim light, gritty texture"
+    },
+    {
+      "id": "s6",
+      "kind": "stat",
+      "narration": "На уровне коррекции аш он всё равно прочитается, даже если повреждено около тридцати процентов.",
+      "onScreen": "Читается даже *повреждённым*",
+      "stat": {
+        "value": 30,
+        "prefix": "≈",
+        "suffix": "%",
+        "label": "кода можно повредить"
+      },
+      "icon": "shield",
+      "visualQuery": "smartphone scanning code",
+      "imagePrompt": "smartphone camera scanning a partly damaged QR code, holographic scan line, blue glow, dark background"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "А ещё Денсо Вэйв не берёт плату за стандарт. Поэтому код ушёл с завода в каждое меню.",
+      "onScreen": "Стандарт *бесплатный* для всех",
+      "icon": "gift",
+      "visualQuery": "cafe table menu smartphone",
+      "imagePrompt": "cozy cafe table at night with a small QR code stand and a phone, cool blue and warm accent light, cinematic"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Где ты в последний раз сканировал QR-код?",
+      "onScreen": "Где ты сканировал *последний*?",
+      "icon": "smartphone"
+    }
+  ]
+}

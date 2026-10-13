@@ -131,3 +131,15 @@
 {"at":"2026-10-12T20:34:26Z","kind":"tts","code":"23b","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":2,"chars":644,"runId":"38289281904","keyIndex":2}
 {"at":"2026-10-12T20:42:03Z","kind":"tts","code":"24a","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":2,"chars":560,"runId":"38289435876","keyIndex":2}
 {"at":"2026-10-12T20:46:14Z","kind":"tts","code":"24b","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":3,"chars":611,"runId":"38289435876","keyIndex":1}
+{"at":"2026-10-13T16:45:53Z","kind":"script","code":"25a","provider":"claude","model":"claude-opus-5-5","inputTokens":10921,"outputTokens":2469,"costUsd":0.101641,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:46:15Z","kind":"script","code":"25b","provider":"claude","model":"claude-opus-5-5","inputTokens":10829,"outputTokens":2174,"costUsd":0.054203,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:46:44Z","kind":"script","code":"26a","provider":"claude","model":"claude-opus-5-5","inputTokens":10772,"outputTokens":2847,"costUsd":0.067435,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:47:14Z","kind":"script","code":"26b","provider":"claude","model":"claude-opus-5-5","inputTokens":10845,"outputTokens":3120,"costUsd":0.073187,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:47:41Z","kind":"script","code":"27a","provider":"claude","model":"claude-opus-5-5","inputTokens":10997,"outputTokens":2691,"costUsd":0.065215,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:48:05Z","kind":"script","code":"27b","provider":"claude","model":"claude-opus-5-5","inputTokens":10750,"outputTokens":2329,"costUsd":0.056987,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:48:26Z","kind":"script","code":"28a","provider":"claude","model":"claude-opus-5-5","inputTokens":10827,"outputTokens":2181,"costUsd":0.054335,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:48:53Z","kind":"script","code":"28b","provider":"claude","model":"claude-opus-5-5","inputTokens":10732,"outputTokens":2799,"costUsd":0.066315,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:49:22Z","kind":"script","code":"29a","provider":"claude","model":"claude-opus-5-5","inputTokens":10911,"outputTokens":3032,"costUsd":0.071691,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:49:50Z","kind":"script","code":"29b","provider":"claude","model":"claude-opus-5-5","inputTokens":10731,"outputTokens":2848,"costUsd":0.067291,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:50:22Z","kind":"script","code":"30a","provider":"claude","model":"claude-opus-5-5","inputTokens":10949,"outputTokens":3213,"costUsd":0.075463,"calls":1,"chars":null,"runId":"38432966003"}
+{"at":"2026-10-13T16:51:03Z","kind":"script","code":"30b","provider":"claude","model":"claude-opus-5-5","inputTokens":10795,"outputTokens":3132,"costUsd":0.073227,"calls":1,"chars":null,"runId":"38432966003"}
