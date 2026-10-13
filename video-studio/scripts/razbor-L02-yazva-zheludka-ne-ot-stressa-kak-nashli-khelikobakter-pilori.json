@@ -1,0 +1,440 @@
+{
+  "title": "Язва желудка — не от стресса? Как нашли хеликобактер пилори",
+  "description": "Почему язву желудка десятилетиями объясняли стрессом и лишней кислотой и как патологоанатом Робин Уоррен и врач Барри Маршалл нашли настоящего виновника — бактерию хеликобактер пилори. Отвергнутая работа, пасхальная случайность в лаборатории, опыт врача на себе и Нобелевская премия 2005 года. А в конце — сколько тысяч лет эта бактерия живёт вместе с людьми.\n#хеликобактер #язважелудка #историямедицины #нобелевскаяпремия #наука",
+  "tags": [
+    "хеликобактер пилори",
+    "хеликобактер",
+    "язва желудка",
+    "язва желудка причины",
+    "язва от стресса",
+    "барри маршалл",
+    "робин уоррен",
+    "нобелевская премия 2005",
+    "история медицины",
+    "гастрит",
+    "постулаты коха",
+    "бактерии",
+    "helicobacter pylori",
+    "barry marshall"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Чтобы ему поверили, врач выпил бульон с живыми бактериями.",
+      "onScreen": "Врач выпил бактерии *нарочно*",
+      "icon": "flask-conical",
+      "visualQuery": "glass beaker cloudy liquid",
+      "imagePrompt": "a hand raising a small glass laboratory beaker a quarter full of cloudy brown broth in a 1980s hospital laboratory, petri dishes and an old microscope on the bench behind, soft side light, muted emerald and warm amber palette",
+      "chapter": "Язва от нервов и кислоты"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это реальная история: Австралия, восемьдесят четвёртый год, врач Барри Маршалл. А в конце узнаешь, сколько тысяч лет бактерия путешествует с людьми.",
+      "onScreen": "Сколько тысяч лет *она с нами*?",
+      "icon": "search",
+      "visualQuery": "Perth Australia skyline",
+      "imagePrompt": "wide view of a sunny Australian coastal city skyline across a broad calm river at golden hour, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Эта бактерия — хеликобактер пилори. Международная группа гастроэнтерологов посчитала её носителей. В две тысячи пятнадцатом их было около четырёх миллиардов четырёхсот миллионов.",
+      "onScreen": "*Больше половины* человечества",
+      "stat": {
+        "value": 4.4,
+        "suffix": " млрд",
+        "label": "носителей в 2015 году"
+      },
+      "icon": "users",
+      "visualQuery": "crowd people city street",
+      "imagePrompt": "a dense crowd of people crossing a wide city street seen from high above, tiny figures in every direction, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "А теперь восьмидесятые. Если у тебя язва, врач назовёт виноватых. Стресс и нервы. Острая еда. Курение и алкоголь. А в итоге — лишняя кислота.",
+      "onScreen": "Кого винили в *язве*",
+      "items": [
+        "Стресс и нервы",
+        "Острая еда",
+        "Курение и алкоголь",
+        "Лишняя кислота"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "stressed man office desk",
+      "imagePrompt": "a tense man in a 1980s office rubbing his temples at a cluttered desk with an overflowing ashtray and coffee cups, face turned away, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s5",
+      "kind": "quiz",
+      "narration": "Проверь себя. Язву желудка вызывает острая еда. Правда или миф?",
+      "onScreen": "Острая еда вызывает *язву*",
+      "icon": "flame",
+      "visualQuery": "red chili peppers",
+      "imagePrompt": "a heap of fiery red chili peppers next to a bowl of spicy sauce on a dark wooden table, muted emerald and warm amber palette",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Важной роли питания в язве исследователи не нашли",
+        "question": "А ты винил острую еду?"
+      }
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Миф! Важной роли еды в появлении язвы исследователи не нашли. Так пишут Национальные институты здоровья США. А врачи тогда верили старой формуле: нет кислоты — нет язвы.",
+      "onScreen": "1910: «нет кислоты — *нет язвы*»",
+      "icon": "circle-x",
+      "visualQuery": "old medical textbook",
+      "imagePrompt": "an old open medical textbook with anatomical drawings of a stomach on a wooden desk under a brass lamp, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s7",
+      "kind": "stat",
+      "narration": "В конце семидесятых появились таблетки, снижающие выработку кислоты. Язвы под ними заживали. Одно такое лекарство первым в истории стало приносить больше миллиарда долларов в год.",
+      "onScreen": "Первое лекарство-*миллиардер*",
+      "stat": {
+        "prefix": ">",
+        "value": 1,
+        "suffix": " млрд $",
+        "label": "продаж в год у одного лекарства"
+      },
+      "icon": "pill",
+      "visualQuery": "pills blister pack",
+      "imagePrompt": "rows of pale green tablets in blister packs stacked on a pharmacy counter, soft light, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s8",
+      "kind": "media",
+      "narration": "Только стоило бросить таблетки, и язва почти всегда возвращалась. А насовсем избавляла лишь операция: хирурги удаляли нижнюю треть желудка. Но разгадка уже лежала под микроскопом.",
+      "onScreen": "Таблетки лечат, но *не излечивают*",
+      "icon": "hospital",
+      "visualQuery": "surgeons operating room",
+      "imagePrompt": "surgeons in green gowns working under a large round surgical lamp in a dim operating theatre, seen from behind, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Июнь тысяча девятьсот семьдесят девятого, Перт, Западная Австралия. Патологоанатом Робин Уоррен рассматривает срез слизистой желудка. И замечает на поверхности тонкую синюю линию.",
+      "onScreen": "Перт, июнь *1979*",
+      "icon": "microscope",
+      "visualQuery": "Royal Perth Hospital",
+      "imagePrompt": "a pathologist's hands adjusting an old optical microscope over a glass slide in a quiet hospital laboratory, muted emerald and warm amber palette",
+      "map": {
+        "lat": -31.95,
+        "lon": 115.86,
+        "label": "Перт",
+        "zoom": "world"
+      },
+      "chapter": "Бактерии, которых не было"
+    },
+    {
+      "id": "s10",
+      "kind": "media",
+      "narration": "Уоррену показалось, что это скопление бактерий. Коллеги ничего не разглядели. Тогда он окрасил срез серебром — и проступило множество крошечных изогнутых палочек.",
+      "onScreen": "Серебро *проявило* бактерии",
+      "icon": "eye",
+      "visualQuery": "bacteria under microscope",
+      "imagePrompt": "microscope view of a pale tissue section with many tiny dark curved spiral bacteria lining its surface, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "Но врачи отмахивались. Все знают, что желудок стерилен, — так Уоррен вспоминал их довод. А если бактерии есть, почему их не описали раньше?",
+      "onScreen": "«Желудок *стерилен*»",
+      "icon": "shield-x",
+      "visualQuery": "doctors hospital corridor",
+      "imagePrompt": "two doctors in white coats talking at the far end of a long hospital corridor, one shrugging, seen from a distance, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s12",
+      "kind": "media",
+      "narration": "Описывали! Спиральные бактерии в желудке видели ещё в девятнадцатом веке. В тысяча девятьсот сороковом их нашёл гарвардский врач Стоун Фридберг. У сорока процентов прооперированных больных.",
+      "onScreen": "1940: спирали у *40%* больных",
+      "icon": "history",
+      "visualQuery": "old library medical books",
+      "imagePrompt": "dusty shelves of old leather-bound medical journals in a quiet library, a beam of light across the spines, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Тысяча девятьсот пятьдесят четвёртый. Американец Эдди Палмер проверил пробы больше чем у тысячи человек. Бактерий не нашёл и решил: это посмертное загрязнение. Только срезы он серебром не красил.",
+      "onScreen": "Без серебра их *не видно*",
+      "icon": "search-x",
+      "visualQuery": "glass microscope slides",
+      "imagePrompt": "a tray of glass microscope slides with pale pink tissue sections under cold laboratory light, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s14",
+      "kind": "media",
+      "narration": "Идея на четверть века ушла в тень. Уоррен два года копил случаи в одиночку. В восемьдесят первом к нему зашёл молодой ординатор Барри Маршалл — первый, кому стало интересно.",
+      "onScreen": "1981: появляется *Маршалл*",
+      "icon": "user-plus",
+      "visualQuery": "hospital doctor white coat",
+      "imagePrompt": "a young doctor in a white coat knocking on an office door in an old hospital corridor, seen from behind, muted emerald and warm amber palette",
+      "chapter": "Пасхальная случайность"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "В восемьдесят втором они взяли пробы у ста пациентов подряд. Под микроскопом бактерий тучи. А в чашках Петри месяцами пусто.",
+      "onScreen": "В чашках Петри — *пусто*",
+      "icon": "test-tubes",
+      "visualQuery": "petri dishes laboratory",
+      "imagePrompt": "a stack of empty petri dishes with clean red agar on a laboratory bench, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s16",
+      "kind": "media",
+      "narration": "Перед Пасхой восемьдесят второго лаборатория завалена срочной работой. Чашки с пробой стоят в инкубаторе с четверга до вторника. Пять дней. И на них вырастают прозрачные колонии!",
+      "onScreen": "*5 дней* вместо двух",
+      "icon": "timer",
+      "visualQuery": "bacterial colonies agar plate",
+      "imagePrompt": "a petri dish on a lab bench with tiny translucent bacterial colonies glistening on red agar, warm incubator light, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s17",
+      "kind": "statement",
+      "narration": "Тут микробиолог признался: пробы выбрасывали через двое суток, как мазки из горла. А этой бактерии нужно больше времени. Маршалл писал, что полгода работал впустую.",
+      "onScreen": "Пробы *выбрасывали* через 48 часов",
+      "icon": "trash-2",
+      "visualQuery": "lab technician gloves petri dish",
+      "imagePrompt": "gloved hands dropping used petri dishes into a laboratory waste bin, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s18",
+      "kind": "stat",
+      "narration": "К сентябрю пришли итоги по ста пациентам. Бактерия нашлась у всех тринадцати больных с язвой двенадцатиперстной кишки. Маршалл сравнивал это с монеткой, упавшей орлом тринадцать раз подряд.",
+      "onScreen": "Случайность? Шанс *меньше 1/1000*",
+      "stat": {
+        "value": 13,
+        "suffix": " из 13",
+        "label": "больных язвой кишки — с бактерией"
+      },
+      "icon": "coins",
+      "visualQuery": "coin toss hand",
+      "imagePrompt": "a coin spinning in the air above an open palm, frozen motion, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "В восемьдесят третьем их тезисы отвергло Гастроэнтерологическое общество Австралии. Работу сочли одной из худших за год.",
+      "onScreen": "Одна из *худших* работ года",
+      "icon": "file-x",
+      "visualQuery": "empty conference hall chairs",
+      "imagePrompt": "an empty conference hall with rows of chairs and a lonely lectern under a single spotlight, muted emerald and warm amber palette",
+      "chapter": "Никто не поверил"
+    },
+    {
+      "id": "s20",
+      "kind": "statement",
+      "narration": "Зато в июне журнал Ланцет напечатал их два коротких письма. В своём Маршалл осторожно добавил: бактерии могут быть причастны к язве и раку желудка.",
+      "onScreen": "Ланцет, июнь *1983*",
+      "icon": "newspaper",
+      "visualQuery": "medical journal pages",
+      "imagePrompt": "an open medical journal on a desk with a pair of reading glasses and a cup of tea, pages without readable text, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s21",
+      "kind": "quote",
+      "narration": "Маршалл потом описал реакцию коллег так. Для гастроэнтерологов мысль, что язву вызывает микроб, была всё равно что сказать: Земля плоская.",
+      "onScreen": "«Как сказать, что Земля *плоская*»",
+      "icon": "earth",
+      "visualQuery": "antique world map",
+      "imagePrompt": "an antique hand-drawn world map spread on a desk beside a stethoscope, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s22",
+      "kind": "statement",
+      "narration": "Скептики считали: бактерия просто селится в уже больном желудке. Да и как выжить в кислоте? Позже выяснили: она прячется под слизью и выделяет аммиак, который гасит кислоту вокруг.",
+      "onScreen": "Щит из слизи и *аммиака*",
+      "icon": "shield",
+      "visualQuery": "Helicobacter pylori",
+      "imagePrompt": "macro illustration of spiral bacteria with whip-like tails burrowing into a glossy layer of mucus, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s23",
+      "kind": "list",
+      "narration": "Доказать вину микроба помогает классическая проверка — постулаты Коха. Микроб есть у каждого больного. Его выращивают отдельно. Он заражает здорового. И его снова находят у заболевшего.",
+      "onScreen": "Постулаты *Коха*",
+      "items": [
+        "Есть у каждого больного",
+        "Выращен отдельно",
+        "Заражает здорового",
+        "Снова найден у заболевшего"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "Robert Koch portrait",
+      "imagePrompt": "a 19th-century laboratory desk with a brass microscope, glass flasks and handwritten notes, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s24",
+      "kind": "media",
+      "narration": "Первые два пункта у Маршалла были. Не хватало третьего. В январе восемьдесят четвёртого он попробовал заразить четырёх поросят. Бактерия не прижилась. Оставался один подопытный — он сам.",
+      "onScreen": "Поросята *не заболели*",
+      "icon": "ban",
+      "visualQuery": "piglets farm straw",
+      "imagePrompt": "a group of pink piglets in fresh straw in a sunlit barn, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s25",
+      "kind": "quote",
+      "narration": "Позже он написал: единственным человеком в мире, кто тогда мог осознанно согласиться на этот риск, был я. Заявку в этический комитет Маршалл подавать не стал.",
+      "onScreen": "«Согласие мог дать *только я*»",
+      "icon": "user",
+      "visualQuery": "doctor writing notebook night",
+      "imagePrompt": "a doctor's hand writing in a notebook at night by a desk lamp, a small glass beaker beside it, muted emerald and warm amber palette",
+      "chapter": "Опыт на себе"
+    },
+    {
+      "id": "s26",
+      "kind": "media",
+      "narration": "Сначала — контрольная эндоскопия: желудок чист. Июль восемьдесят четвёртого. Утром Маршалл нарочно принимает то самое лекарство-миллиардер против кислоты, чтобы бактериям было легче. И выпивает мутный бульон с ними одним глотком.",
+      "onScreen": "Июль 1984: *один глоток*",
+      "icon": "glass-water",
+      "visualQuery": "pouring broth into beaker",
+      "imagePrompt": "close-up of a small glass beaker with cloudy brown broth being lifted from a laboratory bench, morning light through a window, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "Примерно с пятого дня его рвёт по утрам, причём без кислоты. На десятый день — эндоскопия. Пробы кишат бактериями и клетками воспаления. Гастрит! Третий и четвёртый пункты Коха выполнены.",
+      "onScreen": "День 10: *гастрит*",
+      "icon": "activity",
+      "visualQuery": "endoscopy procedure hospital",
+      "imagePrompt": "an endoscopy suite with a glowing monitor beside an empty examination bed, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "Часто пишут, что антибиотики его заставила пить жена. Маршалл писал: не совсем так. К четырнадцатому дню бактерия, похоже, исчезла сама. Язвы не было, но гастрит от бактерии доказан.",
+      "onScreen": "Бактерия исчезла *сама*",
+      "icon": "badge-check",
+      "visualQuery": "doctor reviewing test results",
+      "imagePrompt": "a doctor's hands holding a pathology report next to a microscope on a desk, face out of frame, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s29",
+      "kind": "stat",
+      "narration": "До признания — ещё десять лет. В восемьдесят восьмом вышли итоги испытания группы Маршалла. Чтобы вылечить десятерых старым способом, приходилось лечить сто четыре человека. Если уничтожить бактерию — четырнадцать.",
+      "onScreen": "На 10 излеченных: 104 против *14*",
+      "stat": {
+        "prefix": "104 → ",
+        "value": 14,
+        "label": "лечили, чтобы излечить десятерых"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Старое лечение",
+            "value": 104
+          },
+          {
+            "label": "Против бактерии",
+            "value": 14
+          }
+        ],
+        "suffix": " чел."
+      },
+      "icon": "pill-bottle",
+      "visualQuery": "pharmacy pill bottles shelf",
+      "imagePrompt": "rows of pill bottles on a pharmacy shelf, soft light, muted emerald and warm amber palette",
+      "chapter": "Нобелевка и древний попутчик"
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "В девяносто четвёртом Национальные институты здоровья США признали: при язве главное — найти и уничтожить бактерию. Тогда же агентство ВОЗ по изучению рака признало её канцерогеном.",
+      "onScreen": "1994: бактерию *признали*",
+      "icon": "stamp",
+      "visualQuery": "medical conference audience",
+      "imagePrompt": "a large conference auditorium filled with doctors listening to a speaker, warm stage light, seen from the back rows, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s31",
+      "kind": "media",
+      "narration": "Третьего октября две тысячи пятого года объявили: Нобелевская премия по физиологии и медицине — Маршаллу и Уоррену. За открытие бактерии хеликобактер пилори и её роли в гастрите и язве.",
+      "onScreen": "2005: *Нобелевская* премия",
+      "icon": "award",
+      "visualQuery": "Stockholm Concert Hall",
+      "imagePrompt": "a grand concert hall stage decorated with flowers for an award ceremony, empty chairs, golden light, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s32",
+      "kind": "stat",
+      "narration": "В пресс-релизе Нобелевской ассамблеи сказано: эта бактерия вызывает больше девяноста процентов язв двенадцатиперстной кишки. И до восьмидесяти процентов язв желудка. Но как это вяжется с половиной человечества?",
+      "onScreen": "Язвы кишки: *больше 90%* от неё",
+      "stat": {
+        "prefix": ">",
+        "value": 90,
+        "suffix": "%",
+        "label": "язв двенадцатиперстной кишки — от неё"
+      },
+      "icon": "target",
+      "visualQuery": "stomach anatomy model",
+      "imagePrompt": "a medical anatomical model of a human stomach and duodenum on a white desk, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s33",
+      "kind": "stat",
+      "narration": "Ответ — в том же пресс-релизе. Обычно заражение идёт без симптомов. Язву за жизнь получают от десяти до пятнадцати процентов носителей. Важны и штамм, и сам человек.",
+      "onScreen": "Язва — лишь у *10–15%* носителей",
+      "stat": {
+        "prefix": "10–",
+        "value": 15,
+        "suffix": "%",
+        "label": "носителей когда-нибудь получат язву"
+      },
+      "icon": "percent",
+      "visualQuery": "people walking park",
+      "imagePrompt": "people of different ages walking through a green city park on a calm sunny day, seen from a distance, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "А стресс? В Дании больше десяти лет наблюдали за тремя с лишним тысячами взрослых. У самых напряжённых язва появлялась примерно вдвое чаще. Но учёные спорят, насколько это важно.",
+      "onScreen": "Стресс *не оправдан* полностью",
+      "icon": "brain",
+      "visualQuery": "Copenhagen street crowd",
+      "imagePrompt": "a busy Scandinavian street with cyclists and pedestrians on a grey morning, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s35",
+      "kind": "media",
+      "narration": "Обещанный сюрприз. Генетики заметили: разнообразие этой бактерии падает с удалением от Восточной Африки — как у людей. Похоже, она вышла оттуда вместе с нами около пятидесяти восьми тысяч лет назад.",
+      "onScreen": "Из Африки — *вместе с нами*",
+      "icon": "footprints",
+      "visualQuery": "East African savanna",
+      "imagePrompt": "a small group of human silhouettes walking across a vast East African savanna at sunrise, acacia trees on the horizon, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s36",
+      "kind": "statement",
+      "narration": "Её геном нашли даже в желудке Эци. Это ледяная мумия из Альп возрастом пять тысяч триста лет. Десятки тысяч лет бактерия жила в людях. А всерьёз её разглядели только в восьмидесятые.",
+      "onScreen": "Эци, 5300 лет: *уже* с ней",
+      "icon": "mountain-snow",
+      "visualQuery": "Ötztal Alps glacier",
+      "imagePrompt": "a high alpine glacier pass between snowy peaks under a clear sky, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Почему так долго? Маршалл объяснял: в восемьдесят втором причина язвы считалась уже известной. Нового никто не искал. Иногда главная помеха знанию — уверенность, что ты уже всё знаешь.",
+      "onScreen": "Мешает *уверенность*, что всё знаешь",
+      "icon": "lightbulb",
+      "visualQuery": "microscope sunlight laboratory",
+      "imagePrompt": "an old microscope on a laboratory bench lit by a warm beam of morning sunlight, muted emerald and warm amber palette"
+    },
+    {
+      "id": "s38",
+      "kind": "cta",
+      "narration": "Ты бы поверил Маршаллу до его опыта?",
+      "onScreen": "Ты бы *поверил* Маршаллу?",
+      "icon": "message-circle"
+    }
+  ]
+}

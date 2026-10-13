@@ -1,0 +1,419 @@
+{
+  "title": "Почему летает самолёт: Бернулли, Ньютон и миф из учебника",
+  "description": "Почему летает самолёт на самом деле? Разбираем популярное объяснение подъёмной силы крыла про «равное время» и закон Бернулли, смотрим дымовой эксперимент из Кембриджа и вспоминаем формулу Жуковского и провальное крыло Эйнштейна. А в конце выясняем, почему Бернулли и Ньютон — не соперники, а два взгляда на одно и то же течение воздуха.\n#почемулетаетсамолёт #подъёмнаясила #аэродинамика #физика #бернулли",
+  "tags": [
+    "почему летает самолёт",
+    "подъёмная сила крыла",
+    "как летает самолёт",
+    "закон бернулли",
+    "третий закон ньютона",
+    "аэродинамика",
+    "физика простыми словами",
+    "крыло самолёта",
+    "миф о равном времени",
+    "жуковский",
+    "эйнштейн",
+    "научпоп",
+    "how do planes fly",
+    "lift force",
+    "equal transit time"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Пилоты летают вверх ногами. А теория полёта из учебников этого не объясняет.",
+      "onScreen": "Учебник объясняет полёт *неверно*",
+      "icon": "plane",
+      "visualQuery": "aerobatic airplane inverted flight",
+      "imagePrompt": "small aerobatic propeller airplane flying upside down across an evening sky, thin white smoke trail curling behind it, deep navy and electric cyan palette with warm amber accents",
+      "chapter": "Загадка крыла"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Эйрбас А триста восемьдесят — самый большой пассажирский самолёт в истории. На взлёте он весит до пятисот семидесяти пяти тонн, и всё это держит воздух.",
+      "onScreen": "До *575 тонн* на крыльях",
+      "icon": "plane-takeoff",
+      "visualQuery": "Airbus A380 takeoff",
+      "imagePrompt": "giant double-deck four-engine airliner lifting off a runway at dusk, landing gear still down, heat shimmer behind the engines, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Как это возможно? К концу ролика ты узнаешь ответ. И поймёшь, почему знаменитый спор Бернулли против Ньютона выдуманный.",
+      "onScreen": "Бернулли против Ньютона: *ложный* спор?",
+      "icon": "scale",
+      "visualQuery": "brass balance scale",
+      "imagePrompt": "antique brass balance scale on a dark wooden desk, both pans perfectly level, soft rim light, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Начнём с объяснения, которое ты наверняка слышал. Крыло сверху выпуклое, снизу почти плоское. У передней кромки воздух делится: часть идёт сверху, часть снизу.",
+      "onScreen": "Воздух *делится* у передней кромки",
+      "icon": "wind",
+      "visualQuery": "airplane wing window view",
+      "imagePrompt": "view through an airliner window of a long swept wing above a sea of clouds, soft morning light, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s5",
+      "kind": "list",
+      "narration": "Путь поверху длиннее. Значит, верхний воздух спешит, чтобы встретиться с нижним у задней кромки одновременно. А по закону Бернулли, где поток быстрее, там давление ниже. И крыло тянет вверх.",
+      "onScreen": "Объяснение из учебника: *три* шага",
+      "items": [
+        "Путь сверху длиннее",
+        "Воздух сверху спешит",
+        "Давление сверху ниже"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "airfoil cross section model",
+      "imagePrompt": "cutaway model of an aircraft wing profile on a workshop table, curved top and flat bottom clearly visible, two thin streams of smoke flowing around it, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Звучит логично. Так объясняют в учебниках, по телевизору и даже в пособиях для пилотов. Вот только с этим объяснением большая проблема.",
+      "onScreen": "Учебники, ТВ и даже *пилоты*",
+      "icon": "book-open",
+      "visualQuery": "physics textbook open pages",
+      "imagePrompt": "open physics textbook on a school desk with a hand-drawn wing diagram and a pencil beside it, warm desk lamp, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s7",
+      "kind": "stat",
+      "narration": "Профессор Кембриджа Хольгер Бабински начинает с него лекции для школьников и спрашивает, кто его слышал. Каждый раз руку поднимают девяносто пять процентов зала. А что оно неверно, знают единицы.",
+      "onScreen": "Слышали почти *все*",
+      "stat": {
+        "value": 95,
+        "suffix": "%",
+        "label": "зала слышали эту версию"
+      },
+      "icon": "users",
+      "visualQuery": "students raising hands lecture",
+      "imagePrompt": "school lecture hall seen from the stage, dozens of raised hands in silhouette against warm light, no faces visible, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s8",
+      "kind": "quiz",
+      "narration": "Проверь себя. Главное допущение этой теории: воздух сверху и снизу встречается у задней кромки ровно в один момент. Правда или миф?",
+      "onScreen": "Встреча у задней кромки *одновременно*",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Верхний поток приходит к задней кромке раньше нижнего",
+        "question": "Ты тоже верил в равное время?",
+        "pauseSec": 3
+      },
+      "icon": "hourglass",
+      "visualQuery": "airplane wing trailing edge",
+      "imagePrompt": "close view of the sharp trailing edge of an airliner wing in flight, thin vapor streaming off it, deep navy and electric cyan palette with warm amber accents",
+      "chapter": "Трещины в теории"
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Миф! Никакой закон природы не заставляет две порции воздуха встретиться снова. В НАСА это допущение прямо называют нефизичным.",
+      "onScreen": "Встречаться они *не обязаны*",
+      "icon": "circle-x",
+      "visualQuery": "smoke wisps dark background",
+      "imagePrompt": "two thin wisps of smoke splitting around a dark wing silhouette and drifting apart at different speeds, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s10",
+      "kind": "list",
+      "narration": "Против теории три неудобных факта. У пилотажных самолётов крыло часто симметричное: верх и низ одной длины. Бумажный самолётик летает на плоском листе. А вверх ногами длинный путь оказывается снизу.",
+      "onScreen": "Три *неудобных* факта",
+      "items": [
+        "Симметричное крыло",
+        "Плоский бумажный лист",
+        "Полёт вверх ногами"
+      ],
+      "icon": "triangle-alert",
+      "visualQuery": "paper airplane flying",
+      "imagePrompt": "white paper airplane gliding through sunlit air in a quiet room, slight motion blur, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s11",
+      "kind": "media",
+      "narration": "По логике равного пути такие крылья не должны держать, а перевёрнутое должно тянуть к земле. Но пилотажники крутят петли, а бумажный самолётик спокойно планирует.",
+      "onScreen": "Не должны летать — но *летают*",
+      "icon": "plane",
+      "visualQuery": "aerobatic plane loop airshow",
+      "imagePrompt": "aerobatic airplane drawing a vertical loop with a white smoke trail over an airfield, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s12",
+      "kind": "statement",
+      "narration": "В НАСА добавляют ещё довод: бывают крылья, у которых низ длиннее верха. А если посчитать по правилу равного времени, подъёмная сила выйдет намного меньше настоящей.",
+      "onScreen": "Расчёт даёт *слишком мало* силы",
+      "icon": "calculator",
+      "visualQuery": "NASA Glenn Research Center",
+      "imagePrompt": "aerospace research center with a large wind tunnel building at twilight, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Но лучше один раз увидеть. Бабински показал это на видео: крыло в аэродинамической трубе, а в поток короткими порциями подают дым.",
+      "onScreen": "Кембридж: крыло в *дыму*",
+      "icon": "fan",
+      "visualQuery": "University of Cambridge",
+      "imagePrompt": "old university town on a river with stone college buildings at dusk, deep navy and electric cyan palette with warm amber accents",
+      "chapter": "Проверка дымом",
+      "map": {
+        "lat": 52.2053,
+        "lon": 0.1218,
+        "label": "Кембридж",
+        "zoom": "city"
+      }
+    },
+    {
+      "id": "s14",
+      "kind": "media",
+      "narration": "Дым летит пунктиром. Порции, подошедшие к крылу вместе, расходятся над ним и под ним. Если теория верна, у задней кромки они поравняются.",
+      "onScreen": "Порции дыма *расходятся*",
+      "icon": "waves",
+      "visualQuery": "wind tunnel smoke airfoil",
+      "imagePrompt": "laboratory wind tunnel with a wing profile inside, parallel dashed lines of white smoke flowing toward it from the left, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "А теперь стоп-кадр. Верхние порции уже пролетели заднюю кромку, а нижние ещё ползут под крылом. Никакой встречи нет.",
+      "onScreen": "Верх уже *ушёл*, низ отстаёт",
+      "icon": "eye",
+      "visualQuery": "smoke flow visualization",
+      "imagePrompt": "frozen frame of smoke streaks around a wing profile, the upper streaks already far past the trailing edge while the lower ones lag behind, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "Вот ирония: воздух сверху и правда быстрее, даже быстрее, чем требует сама теория. Она ошибается не в выводе, а в причине.",
+      "onScreen": "Сверху воздух ещё *быстрее*",
+      "icon": "zap",
+      "visualQuery": "jet airliner wing sky",
+      "imagePrompt": "jet airliner wing slicing through thin clouds at high speed, streaks of condensation over the top surface, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s17",
+      "kind": "media",
+      "narration": "Сам Бабински говорит: подъёмную силу создаёт кривизна, а не расстояние. Посмотри на парус. Обе его стороны одной длины. Но слегка изогнутый парус работает как крыло.",
+      "onScreen": "Важна *кривизна*, а не длина",
+      "icon": "sailboat",
+      "visualQuery": "sailboat sailing wind",
+      "imagePrompt": "sailboat heeling in a fresh breeze, the curved white sail full of wind, sea spray, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s18",
+      "kind": "statement",
+      "narration": "Но кривизна чего? И почему воздух сверху так разгоняется? Ответ искали долго, и даже один из величайших физиков здесь промахнулся.",
+      "onScreen": "Почему сверху *быстрее*?",
+      "icon": "circle-help",
+      "visualQuery": "physicist chalkboard equations",
+      "imagePrompt": "dusty blackboard covered with hand-written fluid equations and a sketched wing profile, chalk on the ledge, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Начнём издалека: сам Бернулли о крыльях не писал. Его книга о жидкостях вышла в тысяча семьсот тридцать восьмом году. Ньютон крыльев тоже не объяснял.",
+      "onScreen": "Бернулли о крыльях *не писал*",
+      "icon": "scroll",
+      "visualQuery": "Daniel Bernoulli portrait",
+      "imagePrompt": "eighteenth-century scholar's desk with a quill, an open Latin book with fluid diagrams and a candle, deep navy and electric cyan palette with warm amber accents",
+      "chapter": "Даже Эйнштейн ошибся"
+    },
+    {
+      "id": "s20",
+      "kind": "stat",
+      "narration": "Первый самолёт взлетел через сто шестьдесят пять лет. В декабре тысяча девятьсот третьего Орвилл Райт продержался в воздухе двенадцать секунд. А теория крыла ещё только складывалась.",
+      "onScreen": "Книга 1738, полёт *1903*",
+      "stat": {
+        "value": 165,
+        "suffix": " лет",
+        "label": "от книги Бернулли до самолёта"
+      },
+      "icon": "calendar",
+      "visualQuery": "Wright Flyer 1903 first flight",
+      "imagePrompt": "fragile wooden biplane with fabric wings lifting off sandy dunes on a cold windy morning, a figure running alongside, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s21",
+      "kind": "statement",
+      "narration": "В тысяча девятьсот шестом русский профессор Николай Жуковский вывел формулу подъёмной силы, а немец Мартин Кутта пришёл к ней независимо. В их расчёте крыло словно окружено вихрем: сверху он ускоряет поток, снизу тормозит.",
+      "onScreen": "Теорема Кутты — *Жуковского*",
+      "icon": "sigma",
+      "visualQuery": "Nikolay Zhukovsky portrait",
+      "imagePrompt": "early twentieth-century professor's desk with handwritten formulas, a slide rule and a small wooden wing model, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s22",
+      "kind": "quote",
+      "narration": "Через десять лет за крыло взялся сам Эйнштейн. В статье о полёте тысяча девятьсот шестнадцатого года он отметил: в этих вопросах много неясного.",
+      "onScreen": "Эйнштейн, 1916: «много *неясного*»",
+      "icon": "quote",
+      "visualQuery": "Albert Einstein portrait",
+      "imagePrompt": "1910s physicist's study with chalk sketches of a wing profile on a blackboard and papers on a desk, no people, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s23",
+      "kind": "statement",
+      "narration": "Он предложил крыло с горбом посередине, прозванное кошачьей спиной. В тысяча девятьсот семнадцатом берлинская авиафирма построила такое крыло и подняла его в воздух.",
+      "onScreen": "Крыло «*кошачья* спина»",
+      "icon": "cat",
+      "visualQuery": "cat arching back",
+      "imagePrompt": "black cat arching its back on a wooden fence at night, silhouette against a pale sky, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s24",
+      "kind": "media",
+      "narration": "Вышел провал. Лётчик-испытатель Пауль Эрхардт спустя десятилетия вспоминал в письме Эйнштейну: после взлёта он висел в воздухе, как беременная утка. Эйнштейн ответил, что часто стыдился той глупости.",
+      "onScreen": "Летело, как *беременная* утка",
+      "icon": "bird",
+      "visualQuery": "duck flying over water",
+      "imagePrompt": "heavy duck flapping low and clumsily over a misty pond, wings spread, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s25",
+      "kind": "statement",
+      "narration": "Так что же происходит на самом деле? Крыло встречает воздух под небольшим углом и своим изгибом поворачивает поток вниз.",
+      "onScreen": "Крыло *поворачивает* поток вниз",
+      "icon": "wind-arrow-down",
+      "visualQuery": "airliner wing flaps landing",
+      "imagePrompt": "airliner wing with flaps extended on final approach, misty air bending downward behind the trailing edge, deep navy and electric cyan palette with warm amber accents",
+      "chapter": "Как работает крыло"
+    },
+    {
+      "id": "s26",
+      "kind": "media",
+      "narration": "Чтобы повернуть поток, нужна сила, как машине на повороте. Для воздуха это разница давлений: с внутренней стороны изгиба давление ниже, с внешней выше.",
+      "onScreen": "Поворот потока = *разница* давлений",
+      "icon": "route",
+      "visualQuery": "car turning curved road",
+      "imagePrompt": "car taking a sweeping curve on a mountain road at dusk, light trails following the bend, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "Над крылом поток огибает выпуклую спинку, и крыло оказывается внутри изгиба. Значит, над ним давление ниже, чем вокруг, а под ним выше. Эта разница и толкает крыло вверх.",
+      "onScreen": "Давление сверху *ниже*, снизу выше",
+      "icon": "gauge",
+      "visualQuery": "airplane wing over clouds",
+      "imagePrompt": "wing profile in cross-section with a soft glowing haze of thin air above and denser air below, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s28",
+      "kind": "stat",
+      "narration": "В цифрах это внушительно: у того же Эйрбаса на взлёте каждый квадратный метр крыла держит почти семьсот килограммов. Это как девять взрослых человек.",
+      "onScreen": "≈ 9 взрослых на *каждый* м²",
+      "stat": {
+        "prefix": "≈",
+        "value": 680,
+        "suffix": " кг",
+        "label": "на каждый м² крыла A380"
+      },
+      "icon": "weight",
+      "visualQuery": "Airbus A380 wing",
+      "imagePrompt": "underside of an enormous airliner wing seen from the ground during takeoff, engines glowing, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s29",
+      "kind": "media",
+      "narration": "Теперь ясен и полёт вверх ногами. Пилот подбирает угол, под которым крыло встречает воздух, и оно снова поворачивает поток вниз. Длина пути ни при чём.",
+      "onScreen": "Решает *угол*, а не путь",
+      "icon": "rotate-ccw",
+      "visualQuery": "inverted flight airshow plane",
+      "imagePrompt": "aerobatic biplane flying inverted low over a green airfield, pilot's helmet visible upside down in the open cockpit, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "А где же скорость? В зоне низкого давления над крылом воздух разгоняется. Отсюда и быстрый поток, и закон Бернулли. Скорость — не первопричина, а часть картины.",
+      "onScreen": "Скорость — *часть* картины",
+      "icon": "activity",
+      "visualQuery": "jet airliner cruising sky",
+      "imagePrompt": "jet airliner cruising high above the clouds in clear thin air, long contrails behind it, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Инженер Боинга Дуг Маклин описал это так: поворот потока, разгон сверху, низкое давление над крылом и высокое под ним поддерживают друг друга. Ни одно не существовало бы без остальных.",
+      "onScreen": "Всё держится *друг на друге*",
+      "icon": "link-2",
+      "visualQuery": "aircraft assembly hangar",
+      "imagePrompt": "vast aircraft assembly hangar with a half-built airliner fuselage under work lights, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s32",
+      "kind": "media",
+      "narration": "Теперь глазами Ньютона. На знаменитом снимке бизнес-джет летит низко над туманом на озере Тахо, и туман позади него продавлен вниз. Это след воздуха, отброшенного крылом.",
+      "onScreen": "Туман *продавлен* вниз",
+      "icon": "cloud-fog",
+      "visualQuery": "airplane flying above fog",
+      "imagePrompt": "small business jet flying just above a flat layer of fog over a mountain lake, a long trough pressed into the fog behind it, deep navy and electric cyan palette with warm amber accents",
+      "chapter": "Бернулли и Ньютон заодно"
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Это третий закон Ньютона: крыло толкает вниз огромную массу воздуха, а воздух в ответ толкает крыло вверх.",
+      "onScreen": "Воздух вниз — крыло *вверх*",
+      "icon": "arrow-up-down",
+      "visualQuery": "airplane takeoff runway",
+      "imagePrompt": "airliner rotating off a wet runway, spray and mist swirling downward beneath the wings, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s34",
+      "kind": "media",
+      "narration": "Не путай это с теорией прыгающего камня, где воздух просто бьёт в низ крыла. В НАСА её считают неверной: верх крыла поворачивает поток даже сильнее низа.",
+      "onScreen": "Верх крыла работает *сильнее*",
+      "icon": "triangle-alert",
+      "visualQuery": "stone skipping on lake",
+      "imagePrompt": "flat stone skipping across a calm lake leaving a chain of ripples, low sun, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s35",
+      "kind": "statement",
+      "narration": "Так кто же прав, Бернулли или Ньютон? Оба. Закон Бернулли следует из второго закона Ньютона, а в привычном виде его вывел Леонард Эйлер в тысяча семьсот пятьдесят втором.",
+      "onScreen": "Бернулли выводится *из Ньютона*",
+      "icon": "git-merge",
+      "visualQuery": "Leonhard Euler portrait",
+      "imagePrompt": "eighteenth-century mathematician's study with a quill, ink and pages of handwritten equations by candlelight, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s36",
+      "kind": "media",
+      "narration": "Сложи давление по всей поверхности крыла — получишь подъёмную силу. Посчитай воздух, отброшенный вниз, — получишь ту же силу. Это два описания одного течения.",
+      "onScreen": "Два подсчёта — *одна* сила",
+      "icon": "scale",
+      "visualQuery": "glider soaring sky",
+      "imagePrompt": "long-winged sailplane soaring silently over hills under towering clouds, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Почему же спорят до сих пор? Уравнения известны, компьютеры по ним рассчитывают крылья. Спорят о простых словах. Джон Андерсон из Национального музея авиации и космонавтики США сказал: простого ответа в одну строчку нет.",
+      "onScreen": "«Ответа в одну *строчку* нет»",
+      "icon": "message-circle-question",
+      "visualQuery": "National Air and Space Museum",
+      "imagePrompt": "grand museum hall with historic aircraft hanging from the ceiling, soft evening light through tall windows, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s38",
+      "kind": "statement",
+      "narration": "Теперь ты знаешь главное. Воздуху над крылом не нужно ни с кем встречаться. Крыло поворачивает поток вниз и этим же создаёт низкое давление сверху. Бернулли и Ньютон смотрят на это с двух сторон.",
+      "onScreen": "Одно течение, *два* взгляда",
+      "icon": "lightbulb",
+      "visualQuery": "airplane landing sunset",
+      "imagePrompt": "airliner on final approach against a glowing sunset, wings catching the last light, deep navy and electric cyan palette with warm amber accents"
+    },
+    {
+      "id": "s39",
+      "kind": "cta",
+      "narration": "А как тебе объясняли полёт в школе?",
+      "onScreen": "Как тебе объясняли *полёт*?",
+      "icon": "message-circle"
+    }
+  ]
+}

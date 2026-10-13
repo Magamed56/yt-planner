@@ -3,10 +3,11 @@
 // Печатает ошибки схемы/структуры (блокируют сборку), замечания lint, число слов и оценку длительности.
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const VS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const { validateScript, lintScript, countWords, WORDS_PER_SECOND } = await import(path.join(VS, "src/pipeline/script/validate.ts"));
+// file:// — иначе на Windows путь «C:\…» в import() падает с ERR_UNSUPPORTED_ESM_URL_SCHEME.
+const { validateScript, lintScript, countWords, WORDS_PER_SECOND } = await import(pathToFileURL(path.join(VS, "src/pipeline/script/validate.ts")).href);
 
 let bad = 0;
 for (const f of process.argv.slice(2)) {

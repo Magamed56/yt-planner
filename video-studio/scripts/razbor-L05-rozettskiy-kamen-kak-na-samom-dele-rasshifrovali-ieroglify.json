@@ -1,0 +1,430 @@
+{
+  "title": "Розеттский камень: как на самом деле расшифровали иероглифы",
+  "description": "Как на самом деле расшифровали египетские иероглифы: от находки Розеттского камня в 1799 году до гонки Томаса Юнга и Жана-Франсуа Шампольона. Ты узнаешь, почему камень сам по себе не дал перевода, при чём тут обелиск с острова Филе и коптский язык и что случилось 14 сентября 1822 года.\n#розеттскийкамень #иероглифы #шампольон #древнийегипет #история",
+  "tags": [
+    "розеттский камень",
+    "как расшифровали иероглифы",
+    "египетские иероглифы",
+    "расшифровка иероглифов",
+    "шампольон",
+    "томас юнг",
+    "древний египет",
+    "история древнего египта",
+    "картуш",
+    "коптский язык",
+    "птолемей",
+    "rosetta stone",
+    "champollion",
+    "egyptian hieroglyphs"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Четырнадцать веков никто на Земле не мог прочитать иероглифы.",
+      "onScreen": "Два гения. Одна *загадка*",
+      "icon": "pyramid",
+      "visualQuery": "Egyptian hieroglyphs temple wall",
+      "imagePrompt": "an ancient Egyptian temple wall covered in carved relief symbols, raking evening sunlight and drifting dust, warm sand gold and deep lapis blue palette",
+      "chapter": "Четырнадцать веков тишины"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "А потом за разгадку взялись двое: английский врач и французский знаток языков. К концу ты узнаешь, кто победил. И почему знаменитый камень сам ответа не дал.",
+      "onScreen": "Врач против *лингвиста*",
+      "icon": "users",
+      "visualQuery": "quill pen old manuscript",
+      "imagePrompt": "two silhouetted scholars at opposite ends of a long candlelit desk strewn with papers, a dark stone slab between them, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Последнюю известную надпись иероглифами вырезал жрец на острове Филе. Это было в триста девяносто четвёртом году. А снова читать их научились только в тысяча восемьсот двадцать втором.",
+      "onScreen": "От 394 до *1822* года",
+      "stat": {
+        "prefix": "≈",
+        "value": 1400,
+        "suffix": " лет",
+        "label": "иероглифы никто не мог прочитать"
+      },
+      "icon": "hourglass",
+      "visualQuery": "Philae temple",
+      "imagePrompt": "the island temple of Philae on the Nile at dusk, stone colonnades reflected in still water, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Ещё в древности некий Гораполлон объяснял иероглифы как символы. Гусь у него означает сына: гуси якобы любят птенцов. На деле «гусь» и «сын» по-египетски писались одними согласными.",
+      "onScreen": "Гусь = *сын*?",
+      "icon": "bird",
+      "visualQuery": "Egyptian goose",
+      "imagePrompt": "an Egyptian goose walking along the reedy bank of the Nile in soft morning mist, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "В семнадцатом веке Афанасий Кирхер пошёл ещё дальше. В короткой формуле с именем умершего он вычитывал трактат о тайнах природы. Пока знаки считали символами, иероглифы молчали.",
+      "onScreen": "Имя умершего → *трактат* о природе",
+      "icon": "wand-sparkles",
+      "visualQuery": "Athanasius Kircher portrait",
+      "imagePrompt": "a seventeenth-century scholar's study with a large open folio of engraved obelisk drawings, candle smoke curling in the dark, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Ключ нашёлся случайно. Лето тысяча семьсот девяносто девятого года. Французские солдаты разбирают старую стену в форте у города Рашид. Французы звали его Розеттой.",
+      "onScreen": "Рашид, июль *1799*",
+      "icon": "map-pin",
+      "visualQuery": "Rashid Egypt Nile",
+      "imagePrompt": "a weathered old fort wall of brick and stone on the Nile delta under a hot summer sky, tools resting against it, warm sand gold and deep lapis blue palette",
+      "map": {
+        "lat": 31.404,
+        "lon": 30.416,
+        "label": "Рашид (Розетта)",
+        "zoom": "region"
+      },
+      "chapter": "Находка в стене форта"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Офицер Пьер-Франсуа Бушар заметил в кладке тёмную плиту с тремя блоками знаков. Нижний блок был по-гречески. А древнегреческий учёные читать умели.",
+      "onScreen": "Внизу — *греческий*",
+      "icon": "search",
+      "visualQuery": "Fort Julien Rashid",
+      "imagePrompt": "a dark inscribed stone slab half-exposed in a crumbling brick wall, a lantern beside it, three bands of carved marks catching the light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s8",
+      "kind": "stat",
+      "narration": "Это обломок серого гранодиорита высотой больше метра. Весит он около семисот шестидесяти килограммов. А когда-то плита была ещё выше.",
+      "onScreen": "Высота *112* см",
+      "stat": {
+        "prefix": "≈",
+        "value": 760,
+        "suffix": " кг",
+        "label": "весит обломок Розеттского камня"
+      },
+      "icon": "stone",
+      "visualQuery": "Rosetta Stone",
+      "imagePrompt": "a heavy dark grey granite stela fragment with a faint pink vein on a plain plinth, soft gallery light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s9",
+      "kind": "list",
+      "narration": "Текст на плите один, но записан трижды. Сверху иероглифы. В середине демотика, быстрое повседневное письмо египтян. Внизу древнегреческий, язык тогдашних правителей Египта.",
+      "onScreen": "Один текст — *три* письма",
+      "items": [
+        "Иероглифы",
+        "Демотическое письмо",
+        "Древнегреческий"
+      ],
+      "icon": "layers",
+      "visualQuery": "Rosetta Stone hieroglyphic text",
+      "imagePrompt": "three horizontal bands of different carved ancient marks on a dark stone surface, the top band broken away, soft raking light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Что это за текст? Указ жрецов, собравшихся в Мемфисе. Шёл сто девяносто шестой год до нашей эры. Жрецы славили юного царя Птолемея Пятого.",
+      "onScreen": "Мемфис, *196* год до н. э.",
+      "icon": "scroll-text",
+      "visualQuery": "Ptolemy V coin",
+      "imagePrompt": "an assembly of ancient Egyptian priests in white linen inside a columned temple hall seen from behind, faces not visible, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "А в конце указ сам говорит, как его записать. Выбить на твёрдом камне священными, местными и греческими знаками. И поставить в храмах трёх рангов.",
+      "onScreen": "Три письма велел *сам* указ",
+      "icon": "landmark",
+      "visualQuery": "Egyptian temple courtyard columns",
+      "imagePrompt": "a stone mason's chisel and mallet resting on a freshly carved dark stela in a sunlit temple courtyard, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s12",
+      "kind": "media",
+      "narration": "В сентябре французская газета в Каире предположила: надпись станет ключом к иероглифам. Камень покрыли типографской краской, приложили бумагу и прокатали валиком. Оттиски разослали учёным Европы.",
+      "onScreen": "Камень стал *печатной* формой",
+      "icon": "printer",
+      "visualQuery": "printing press ink roller",
+      "imagePrompt": "hands rolling paper over an inked dark stone slab with a rubber roller in a cluttered print workshop, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s13",
+      "kind": "quiz",
+      "narration": "У учёных был тот же текст по-гречески. Значит, Розеттский камень сразу дал готовый перевод иероглифов. Правда или миф?",
+      "onScreen": "Камень *сразу* дал перевод?",
+      "icon": "circle-help",
+      "visualQuery": "Rosetta Stone Greek inscription",
+      "imagePrompt": "a brass magnifying glass hovering over a dark inscribed stone surface beside an open notebook, lamp light, warm sand gold and deep lapis blue palette",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Смысл был известен, но какой знак что значит — нет",
+        "question": "Ты бы справился по одному камню?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s14",
+      "kind": "statement",
+      "narration": "Миф! Греческий давал смысл, но не говорил, какой знак что значит. А иероглифов уцелело меньше всего: четырнадцать строк против пятидесяти четырёх греческих. И все обломаны по краю.",
+      "onScreen": "Сколько строк *уцелело*",
+      "icon": "book-text",
+      "imagePrompt": "the broken top edge of a dark inscribed stone slab with missing chunks, dramatic side light, warm sand gold and deep lapis blue palette",
+      "compare": {
+        "items": [
+          {
+            "label": "Иероглифы",
+            "value": 14
+          },
+          {
+            "label": "Демотика",
+            "value": 32
+          },
+          {
+            "label": "Греческий",
+            "value": 54
+          }
+        ],
+        "suffix": " стр."
+      },
+      "chapter": "Юнг и картуши"
+    },
+    {
+      "id": "s15",
+      "kind": "media",
+      "narration": "Всерьёз за иероглифы взялся Томас Юнг, лондонский врач и физик. Тот самый, чьи опыты показали: свет — это волна.",
+      "onScreen": "Юнг: от света к *иероглифам*",
+      "icon": "waves",
+      "visualQuery": "water ripples interference",
+      "imagePrompt": "two sets of concentric ripples overlapping on a calm dark pond, interference pattern glinting in low golden light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "Летом тысяча восемьсот четырнадцатого года Юнг поехал отдыхать к морю. С собой взял копию надписи. И подошёл к ней как физик: начал считать повторы.",
+      "onScreen": "Уэртинг, 1814: отпуск с *копией*",
+      "icon": "calendar",
+      "visualQuery": "Worthing beach",
+      "imagePrompt": "a pebble beach on the English south coast on a summer afternoon, a folded sheet of copied inscriptions weighed down by a stone on a wooden bench, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s17",
+      "kind": "statement",
+      "narration": "В иероглифах есть овальные рамки, картуши. Юнг заметил: знаки в них стоят там, где в греческом имя Птолемея. Значит, в рамке царское имя.",
+      "onScreen": "Картуш = *имя* царя",
+      "icon": "frame",
+      "visualQuery": "Ptolemy cartouche hieroglyphs",
+      "imagePrompt": "an oval carved cartouche frame enclosing relief signs on sandstone, side-lit, close view, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s18",
+      "kind": "stat",
+      "narration": "Итоги он изложил в тысяча восемьсот девятнадцатом году в Британской энциклопедии. Звуки он подобрал к тринадцати знакам. Шесть догадок оказались верными, ещё три — отчасти.",
+      "onScreen": "Британская энциклопедия, *1819*",
+      "stat": {
+        "value": 6,
+        "suffix": " из 13",
+        "label": "звуков Юнг определил верно"
+      },
+      "icon": "book-open",
+      "visualQuery": "Encyclopaedia Britannica old volumes",
+      "imagePrompt": "a stack of leather-bound encyclopedia volumes on a Georgian writing desk beside a quill and inkwell, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Но дальше Юнг сам себя остановил. Он решил, что звуками пишут лишь иноземные имена вроде Птолемея. А египетские слова — символы. Дверь осталась приоткрытой.",
+      "onScreen": "Звуки — только для *чужих* имён?",
+      "icon": "lock",
+      "visualQuery": "Thomas Young portrait",
+      "imagePrompt": "a Regency-era gentleman seen from behind at a rain-streaked window holding papers, face not visible, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s20",
+      "kind": "media",
+      "narration": "А во Франции у Юнга был соперник — Жан-Франсуа Шампольон. В шестнадцать лет он выступил с докладом: язык фараонов дожил в коптском. Через два года он сел за копию камня.",
+      "onScreen": "Шампольон: *коптский* — наследник египетского",
+      "icon": "graduation-cap",
+      "visualQuery": "Jean-François Champollion portrait",
+      "imagePrompt": "a young scholar's desk in an early nineteenth-century French study, stacks of grammars and a candle, chair empty, warm sand gold and deep lapis blue palette",
+      "chapter": "Подсказка с обелиска"
+    },
+    {
+      "id": "s21",
+      "kind": "statement",
+      "narration": "Коптский — поздняя форма египетского языка, записанная в основном греческими буквами. Шампольон, по рассказам, свободно на нём говорил. Это и станет его главным инструментом.",
+      "onScreen": "Египетский язык *греческими* буквами",
+      "icon": "languages",
+      "visualQuery": "Coptic manuscript",
+      "imagePrompt": "an old leather-bound manuscript lying closed on a monastery reading desk with a ribbon bookmark, soft window light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s22",
+      "kind": "stat",
+      "narration": "Ещё Шампольон посчитал знаки. Иероглифов на камне тысяча четыреста девятнадцать. А слов в греческом тексте всего четыреста восемьдесят шесть. Будь каждый знак словом, их было бы примерно поровну. Значит, многие знаки — звуки.",
+      "onScreen": "Знаков почти *втрое* больше слов",
+      "stat": {
+        "value": 1419,
+        "label": "иероглифов на 486 греческих слов"
+      },
+      "icon": "scale",
+      "visualQuery": "hieroglyphs carved stone close",
+      "imagePrompt": "a hand with a pencil tallying marks in a notebook beside a dark inscribed stone fragment, lamp light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s23",
+      "kind": "media",
+      "narration": "В тысяча восемьсот двадцать первом в Англию привезли обелиск с острова Филе. На постаменте греческий текст, на колонне иероглифы. Владелец обелиска Уильям Бэнкс пометил, где может стоять имя Клеопатры.",
+      "onScreen": "Обелиск с острова *Филе*",
+      "icon": "landmark",
+      "visualQuery": "Philae obelisk Kingston Lacy",
+      "imagePrompt": "a slender granite obelisk on an English country estate lawn under a pale sky, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Шампольон положил рядом картуши Птолемея и Клеопатры. Звуки пэ, о и эль есть в обоих именах. И знаки для них совпали. Эль — лежащий лев. А для тэ нашлись два разных знака.",
+      "onScreen": "П, О, Л — *совпали*",
+      "icon": "puzzle",
+      "visualQuery": "Cleopatra cartouche hieroglyphs",
+      "imagePrompt": "two oval carved cartouches side by side on pale stone, a lion relief sign in each catching the light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s25",
+      "kind": "media",
+      "narration": "Но Птолемей и Клеопатра — имена греческие. Это ещё укладывалось в идею Юнга. Всё решило утро четырнадцатого сентября тысяча восемьсот двадцать второго года.",
+      "onScreen": "Париж, *14 сентября* 1822",
+      "icon": "sun",
+      "visualQuery": "Paris Seine morning",
+      "imagePrompt": "early morning mist over the Seine and old Paris rooftops, first sunlight on stone embankments, warm sand gold and deep lapis blue palette",
+      "chapter": "Утро четырнадцатого сентября"
+    },
+    {
+      "id": "s26",
+      "kind": "statement",
+      "narration": "Шампольон разбирал копии надписей из храма Абу-Симбел, их прислал архитектор Жан-Николя Юйо. Храм высекли в скале почти за тысячу лет до Птолемеев. Греческих имён там быть не могло.",
+      "onScreen": "Абу-Симбел: *задолго* до греков",
+      "icon": "mountain",
+      "visualQuery": "Abu Simbel temple",
+      "imagePrompt": "colossal seated statues carved into a sandstone cliff at sunrise, tiny palm trees at the base, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s27",
+      "kind": "list",
+      "narration": "В одном картуше первый знак — солнечный диск, а солнце по-коптски — ре. Второй знак он связал с коптским мисе, родить: это звук эм. В конце дважды эс. Получилось Рамсес!",
+      "onScreen": "Как прочитался *Рамсес*",
+      "items": [
+        "Солнце — «ре»",
+        "«Мисе» — звук «м»",
+        "Дважды «с»"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "Ramesses II cartouche",
+      "imagePrompt": "a carved royal cartouche with a sun disc sign at the top on a sunlit temple wall, close view, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "Следом он прочитал второй картуш. Ибис, птица бога Тота, и знакомые знаки. Тутмос! Коренные египетские фараоны, а имена записаны звуками. Идея Юнга о чужих именах рухнула.",
+      "onScreen": "Свои имена — тоже *звуками*",
+      "icon": "bird",
+      "visualQuery": "African sacred ibis",
+      "imagePrompt": "an African sacred ibis wading in shallow water among reeds at golden hour, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s29",
+      "kind": "media",
+      "narration": "По преданию, Шампольон бросился к брату в библиотеку Института Франции. Крикнул: «Я понял!» — и упал без чувств. Сцену знают по поздним биографиям, документов мало.",
+      "onScreen": "«Je tiens *l'affaire*!»",
+      "icon": "zap",
+      "visualQuery": "Institut de France library",
+      "imagePrompt": "a long old library hall with tall bookcases, scattered papers on the parquet floor and a toppled chair, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "Через тринадцать дней, двадцать седьмого сентября, он выступил в Академии надписей. Он читал «Письмо господину Дасье». В зале сидел Томас Юнг. Так соперники впервые встретились.",
+      "onScreen": "27 сентября: Юнг *в зале*",
+      "icon": "users",
+      "visualQuery": "Institut de France Paris",
+      "imagePrompt": "a domed classical academy building on the Seine embankment in autumn light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s31",
+      "kind": "quote",
+      "narration": "В тысяча восемьсот двадцать четвёртом Шампольон описал систему так: «Письмо одновременно образное, символическое и звуковое. В одном тексте, в одной фразе, я бы сказал, почти в одном слове».",
+      "onScreen": "Образ, символ и *звук*",
+      "icon": "quote",
+      "visualQuery": "painted hieroglyphs tomb wall",
+      "imagePrompt": "brightly painted ancient wall reliefs in a dim tomb lit by a single oil lamp, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Юнг сначала хвалил успех соперника. Но в тысяча восемьсот двадцать третьем выпустил книгу. В подзаголовке стояло: оригинальный алфавит автора, расширенный господином Шампольоном. Тот долга не признал.",
+      "onScreen": "Чей это *алфавит*?",
+      "icon": "split",
+      "visualQuery": "antique book title page",
+      "imagePrompt": "an antique book lying open at a blank title page beside a quill on a dark desk, warm sand gold and deep lapis blue palette",
+      "chapter": "Кто же победил"
+    },
+    {
+      "id": "s33",
+      "kind": "media",
+      "narration": "А Шампольон в тысяча восемьсот двадцать восьмом отправился в Египет. Там он читал надписи прямо на стенах храмов. В тысяча восемьсот тридцать втором его не стало. Ему был сорок один год.",
+      "onScreen": "Египет, 1828: надписи *на месте*",
+      "icon": "compass",
+      "visualQuery": "Karnak temple hieroglyphs",
+      "imagePrompt": "a lone traveller's silhouette with a notebook among giant carved temple columns at dusk, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "Юнг умер ещё раньше, в тысяча восемьсот двадцать девятом. Ему посвящена доска в Вестминстерском аббатстве. Там сказано: он первым проник сквозь тьму, веками скрывавшую иероглифы Египта.",
+      "onScreen": "«*Первым* проник сквозь тьму»",
+      "icon": "award",
+      "visualQuery": "Westminster Abbey interior",
+      "imagePrompt": "a white marble memorial tablet with a carved profile medallion on an old abbey wall, soft stained-glass light, no lettering, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s35",
+      "kind": "quote",
+      "narration": "Историки спорят до сих пор. Британский египтолог Паркинсон подвёл итог одной фразой. «Юнг открыл часть алфавита — ключ, но Шампольон отпер целый язык».",
+      "onScreen": "Ключ — Юнга, *язык* — Шампольона",
+      "icon": "key",
+      "visualQuery": "antique brass key lock",
+      "imagePrompt": "an antique brass key turning in an ornate old lock, warm light, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s36",
+      "kind": "media",
+      "narration": "А сам камень с тысяча восемьсот второго года хранится в Британском музее. Годом раньше он по договору перешёл к британцам. По данным музея, это самый посещаемый его экспонат.",
+      "onScreen": "Самый *посещаемый* экспонат музея",
+      "icon": "building-2",
+      "visualQuery": "British Museum London",
+      "imagePrompt": "visitors gathered around a glass case with a dark stone slab in a grand museum gallery, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Вот и разгадка. Розеттский камень был не словарём, а замочной скважиной. Ключ сложили из греческого текста, обелиска, коптского языка и одной смелой мысли. Картинка может означать звук, как тот самый гусь.",
+      "onScreen": "Камень — *скважина*, а не ключ",
+      "icon": "lock-keyhole-open",
+      "visualQuery": "Luxor temple sunset",
+      "imagePrompt": "a beam of warm light passing through an ornate old keyhole onto a wall of carved ancient symbols, warm sand gold and deep lapis blue palette"
+    },
+    {
+      "id": "s38",
+      "kind": "cta",
+      "narration": "А кто, по-твоему, победил: Юнг или Шампольон?",
+      "onScreen": "Юнг или *Шампольон*?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -1,0 +1,446 @@
+{
+  "title": "Стэнфордский тюремный эксперимент: что нашли в архиве Зимбардо",
+  "description": "Стэнфордский тюремный эксперимент Филипа Зимбардо полвека учил, что форма и власть за несколько дней превращают обычных студентов в мучителей. Разбираем, что на самом деле нашли в архиве опыта: инструктаж охранников, скопированные правила, запись «будь жёстким» и слова заключённого 8612 о своём срыве. И что этот знаменитый эксперимент на самом деле говорит о жестокости и власти.\n#стэнфордскийтюремныйэксперимент #зимбардо #психология #социальнаяпсихология",
+  "tags": [
+    "стэнфордский тюремный эксперимент",
+    "эксперимент зимбардо",
+    "филип зимбардо",
+    "тюремный эксперимент",
+    "стэнфордский эксперимент правда",
+    "психологические эксперименты",
+    "социальная психология",
+    "психология",
+    "эффект люцифера",
+    "кристина маслак",
+    "тибо ле тексье",
+    "разоблачение эксперимента",
+    "stanford prison experiment",
+    "zimbardo"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Этот срыв почти полвека показывали студентам. А заключённый говорит: притворялся.",
+      "onScreen": "Срыв №8612 был *игрой*?",
+      "icon": "drama",
+      "visualQuery": "jail cell bars",
+      "imagePrompt": "a barred cell door at the end of a narrow basement corridor, a single bare bulb overhead, a crumpled nylon stocking cap lying on the concrete floor, no people, cold teal and warm amber palette",
+      "chapter": "Подвал под Стэнфордом"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Его зовут Дуглас Корпи, заключённый восемь шесть один два. Разберём, что в Стэнфордском тюремном эксперименте правда. А в конце узнаешь, когда Корпи впервые сказал, что играет.",
+      "onScreen": "Когда он *впервые* признался?",
+      "icon": "circle-help",
+      "visualQuery": "police mugshot board",
+      "imagePrompt": "an empty police booking room with a height chart painted on the wall and a blank placard resting on a wooden stool, harsh overhead light, cold teal and warm amber palette"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Август тысяча девятьсот семьдесят первого, Стэнфорд. Профессор психологии Филип Зимбардо даёт объявление: нужны студенты-мужчины. Пятнадцать долларов в день за исследование тюремной жизни.",
+      "onScreen": "Объявление: *$15* в день",
+      "icon": "newspaper",
+      "visualQuery": "Stanford University Main Quad",
+      "imagePrompt": "sunlit sandstone arcades of an old California university quad in summer, palm trees and empty paths, cold teal and warm amber palette"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Откликнулись больше семидесяти человек. После собеседований и тестов осталось двадцать четыре обычных здоровых студента. Роли им раздала монетка: охранник или заключённый.",
+      "onScreen": "24 студента. Роли — *монеткой*",
+      "icon": "coins",
+      "visualQuery": "coin flip hand",
+      "imagePrompt": "a hand flipping a silver coin above a wooden table with two stacks of folded clothes, khaki shirts and pale smocks, cold teal and warm amber palette"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Утром в воскресенье, пятнадцатого августа, в дело вступила настоящая полиция Пало-Альто. Девятерых арестовали прямо дома: обыск, наручники, соседи смотрят.",
+      "onScreen": "Арест — *настоящей* полицией",
+      "icon": "siren",
+      "visualQuery": "police car siren lights",
+      "imagePrompt": "a 1970s American police sedan parked outside a quiet suburban house on a sunny Sunday morning, a red light on the roof, no people visible, cold teal and warm amber palette"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Их привезли в подвал корпуса психологии. Коридор заколотили с двух концов, двери лабораторий заменили решётками. Карцером стал чулан шириной около шестидесяти сантиметров.",
+      "onScreen": "Тюрьма в *подвале* Джордан-холла",
+      "icon": "door-closed",
+      "visualQuery": "basement corridor doors",
+      "imagePrompt": "a narrow basement corridor boarded up at both ends with plywood, laboratory doors replaced by steel-barred doors, flickering fluorescent tubes, cold teal and warm amber palette",
+      "map": {
+        "lat": 37.4283,
+        "lon": -122.1712,
+        "label": "Стэнфорд",
+        "zoom": "city"
+      }
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Заключённым выдали халаты с номерами на голое тело. На голове — шапочка из нейлонового чулка, на лодыжке — цепь, даже ночью. Звать друг друга можно было только по номерам.",
+      "onScreen": "Номер вместо *имени*",
+      "icon": "link",
+      "visualQuery": "ankle chain shackle",
+      "imagePrompt": "a heavy steel chain locked around a bare ankle above a rubber sandal on a concrete floor, cold teal and warm amber palette"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Охранникам дали форму цвета хаки, дубинки и зеркальные очки. Идею очков Зимбардо, по его признанию, взял из фильма Хладнокровный Люк. Сам профессор стал суперинтендантом тюрьмы.",
+      "onScreen": "Очки — прямо из *кино*",
+      "icon": "glasses",
+      "visualQuery": "mirrored aviator sunglasses",
+      "imagePrompt": "mirrored aviator sunglasses resting on a folded khaki uniform shirt next to a wooden baton and a whistle, cold teal and warm amber palette"
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Первый день прошёл скучно. Но утром второго заключённые взбунтовались: сорвали номера и забаррикадировали камеры койками. Охранники подавили бунт и взялись за наказания.",
+      "onScreen": "День второй — *бунт*",
+      "icon": "flame",
+      "visualQuery": "prison cell bunk beds",
+      "imagePrompt": "metal cots pushed hard against a barred cell door from the inside, torn cloth patches on the floor, cold teal and warm amber palette",
+      "chapter": "Шесть дней и легенда"
+    },
+    {
+      "id": "s10",
+      "kind": "stat",
+      "narration": "Меньше чем через тридцать шесть часов сорвался заключённый восемь шесть один два. Он кричал, рыдал и требовал выпустить его. Его отпустили.",
+      "onScreen": "Срыв — меньше чем за *36 часов*",
+      "stat": {
+        "prefix": "<",
+        "value": 36,
+        "suffix": " ч",
+        "label": "до срыва заключённого 8612"
+      },
+      "icon": "hourglass",
+      "visualQuery": "hourglass sand timer",
+      "imagePrompt": "an hourglass with the last grains of sand running out, standing on a steel cot in a dim cell, cold teal and warm amber palette"
+    },
+    {
+      "id": "s11",
+      "kind": "media",
+      "narration": "А охранники входили во вкус, особенно ночью. Самого жёсткого из них заключённые прозвали Джоном Уэйном, в честь киношного ковбоя.",
+      "onScreen": "Охранник по прозвищу *Джон Уэйн*",
+      "icon": "shield-alert",
+      "visualQuery": "prison corridor night",
+      "imagePrompt": "the silhouette of a guard with a baton walking down a dim prison corridor at night, long shadows on the walls, cold teal and warm amber palette"
+    },
+    {
+      "id": "s12",
+      "kind": "statement",
+      "narration": "В конце недели в тюрьму заглянула Кристина Маслак, молодой психолог из Стэнфорда. Заключённых при ней вели в туалет: на головах мешки, ноги скованы.",
+      "onScreen": "Взгляд *со стороны*",
+      "icon": "eye",
+      "visualQuery": "dim hallway fluorescent light",
+      "imagePrompt": "a line of hooded figures in pale smocks walking with hands on each other's shoulders down a dim corridor, seen from behind, ankles chained together, cold teal and warm amber palette"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Она возмутилась: это ужасно, что вы делаете с этими мальчиками. Зимбардо потом писал: из пятидесяти с лишним посторонних возразила только она.",
+      "onScreen": "Из 50+ гостей возразила *одна*",
+      "icon": "hand",
+      "visualQuery": "office desk lamp night",
+      "imagePrompt": "two silhouettes arguing across a desk in a dim university office at night, a single desk lamp between them, cold teal and warm amber palette"
+    },
+    {
+      "id": "s14",
+      "kind": "media",
+      "narration": "Наутро эксперимент остановили. Вместо двух недель — шесть дней. Позже Маслак стала женой Зимбардо. А опыт почти сразу превратился в легенду.",
+      "onScreen": "*6 дней* вместо 14",
+      "icon": "calendar-x",
+      "visualQuery": "Jordan Hall Stanford University",
+      "imagePrompt": "morning light on the sandstone facade of an old university building with arched windows, an empty courtyard in front, cold teal and warm amber palette"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "В октябре о нём уже писал журнал Лайф. Потом пришли учебники и фильмы. Вывод запомнили все: дай обычным людям власть — и они станут мучителями.",
+      "onScreen": "Из подвала — в *учебники*",
+      "icon": "film",
+      "visualQuery": "old magazines stack",
+      "imagePrompt": "a stack of early 1970s magazines and newspapers on a desk beside a film reel, warm lamp light, cold teal and warm amber palette"
+    },
+    {
+      "id": "s16",
+      "kind": "stat",
+      "narration": "В две тысячи четырнадцатом психолог Ричард Григгс проверил тринадцать популярных учебников психологии. Опыт был в одиннадцати, в пяти — без слова критики.",
+      "onScreen": "Критику учебники *пропускают*",
+      "stat": {
+        "value": 5,
+        "suffix": " из 11",
+        "label": "учебников — без слова критики"
+      },
+      "icon": "book-open",
+      "visualQuery": "psychology textbook pages",
+      "imagePrompt": "an open psychology textbook on a lecture hall desk, pages fanned, soft window light, cold teal and warm amber palette"
+    },
+    {
+      "id": "s17",
+      "kind": "list",
+      "narration": "Но присмотрись к деталям. Сам Зимбардо делил охранников на три типа. Строгие, но честные. Добрые, делавшие поблажки. И жестокие — примерно треть.",
+      "onScreen": "Три *типа* охранников",
+      "items": [
+        "Строгие, но честные",
+        "Добрые",
+        "Жестокие — около трети"
+      ],
+      "icon": "users",
+      "visualQuery": "khaki uniform shirts",
+      "imagePrompt": "three khaki guard shirts hanging on wall hooks in a locker room, one with mirrored sunglasses clipped to the pocket, cold teal and warm amber palette",
+      "chapter": "Охранник из кино"
+    },
+    {
+      "id": "s18",
+      "kind": "media",
+      "narration": "Самым жестоким был Джон Уэйн, студент Дэйв Эшелман. Он рассказывал: образ лепил с начальника тюрьмы из того самого Хладнокровного Люка.",
+      "onScreen": "Роль — *из кино*",
+      "icon": "clapperboard",
+      "visualQuery": "film projector reel",
+      "imagePrompt": "an old film projector beam cutting through dust in a dark room, the silhouette of a cowboy hat on the distant screen, cold teal and warm amber palette"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Он признавался, что ставил собственный эксперимент. Как далеко можно зайти? Сколько издевательств люди стерпят, прежде чем скажут: хватит?",
+      "onScreen": "Его *собственный* эксперимент",
+      "icon": "flask-conical",
+      "visualQuery": "wooden police baton",
+      "imagePrompt": "a wooden police baton lying on a metal desk next to a whistle on a lanyard, harsh overhead light, cold teal and warm amber palette"
+    },
+    {
+      "id": "s20",
+      "kind": "statement",
+      "narration": "В последний день он признался исследователям: я всё время был актёром. Играл роль, думая, что так будет лучше для исследования.",
+      "onScreen": "Злодей? Нет — *актёр*",
+      "icon": "venetian-mask",
+      "visualQuery": "theater masks",
+      "imagePrompt": "a pair of theatre masks lying on a folded khaki guard uniform on a wooden bench, cold teal and warm amber palette"
+    },
+    {
+      "id": "s21",
+      "kind": "stat",
+      "narration": "Понять, чего ждут учёные, было несложно. В тысяча девятьсот семьдесят пятом ста пятидесяти студентам просто описали этот опыт. Восемьдесят один процент угадал, что хотят доказать авторы.",
+      "onScreen": "Цель опыта угадывали *заранее*",
+      "stat": {
+        "value": 81,
+        "suffix": "%",
+        "label": "угадали гипотезу по описанию"
+      },
+      "icon": "percent",
+      "visualQuery": "students questionnaire classroom",
+      "imagePrompt": "rows of students filling out paper questionnaires in a 1970s lecture hall, seen from behind, cold teal and warm amber palette"
+    },
+    {
+      "id": "s22",
+      "kind": "statement",
+      "narration": "Участники ловят намёки и подыгрывают учёным — известная ловушка психологии. Выходит, главный злодей играл роль. Но, может, хотя бы срыв был настоящим?",
+      "onScreen": "Подыгрывать учёным — *ловушка*",
+      "icon": "triangle-alert",
+      "visualQuery": "marionette puppet strings",
+      "imagePrompt": "a marionette in a pale smock hanging on strings held by unseen hands above a small model of a prison cell, cold teal and warm amber palette"
+    },
+    {
+      "id": "s23",
+      "kind": "media",
+      "narration": "В две тысячи семнадцатом журналист Бен Блум разыскал Дугласа Корпи. Тот шёл в эксперимент с расчётом: в камере можно готовиться к экзаменам.",
+      "onScreen": "План: в камере — *учебники*",
+      "icon": "graduation-cap",
+      "visualQuery": "textbooks study desk lamp",
+      "imagePrompt": "a stack of exam preparation textbooks and a pencil on a cot inside a barred cell, lit by a small lamp, cold teal and warm amber palette",
+      "chapter": "Срыв под вопросом"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Но учебники ему не дали. Тогда он изобразил боль в животе. Не сработало. И он решил разыграть срыв, чтобы его отпустили.",
+      "onScreen": "Книг нет — значит, *срыв*",
+      "icon": "circle-x",
+      "visualQuery": "empty prison cot",
+      "imagePrompt": "a figure in a pale smock curled up on a steel cot, face hidden in shadow, a closed cell door behind, cold teal and warm amber palette"
+    },
+    {
+      "id": "s25",
+      "kind": "quote",
+      "narration": "Его фраза Блуму: любой клиницист понял бы, что я притворяюсь. И ещё: это была скорее истерика, чем психоз.",
+      "onScreen": "«Я *притворялся*»",
+      "icon": "quote",
+      "visualQuery": "reel to reel tape recorder",
+      "imagePrompt": "an old reel-to-reel tape recorder with spinning reels on a wooden desk, a microphone beside it, cold teal and warm amber palette"
+    },
+    {
+      "id": "s26",
+      "kind": "statement",
+      "narration": "Зимбардо с этим не согласился. В документальном фильме Корпи называл тюрьму самым тяжёлым опытом в жизни. А рассказ Корпи, по мнению профессора, не раз менялся.",
+      "onScreen": "Зимбардо *не согласен*",
+      "icon": "scale",
+      "visualQuery": "documentary film camera",
+      "imagePrompt": "a 16mm documentary film camera on a tripod facing an empty chair in a dim studio, cold teal and warm amber palette"
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "Так кому верить? Рассказу спустя сорок шесть лет или крику на плёнке семьдесят первого? Ответ лежал в архиве. Только туда почти никто не заглядывал.",
+      "onScreen": "Ответ — в *архиве*",
+      "icon": "archive",
+      "visualQuery": "archive shelves boxes",
+      "imagePrompt": "long rows of grey archive boxes on metal shelves fading into darkness, a single beam of light falling across them, cold teal and warm amber palette"
+    },
+    {
+      "id": "s28",
+      "kind": "media",
+      "narration": "В две тысячи одиннадцатом Зимбардо передал архив библиотеке Стэнфорда. Французский исследователь Тибо Ле Тексье разобрал его коробку за коробкой. И поговорил с пятнадцатью участниками.",
+      "onScreen": "Архив: *16 коробок*",
+      "icon": "folder-open",
+      "visualQuery": "Green Library Stanford",
+      "imagePrompt": "hands in white cotton gloves lifting a yellowed typed page from a grey archive box on a reading-room table, the text blurred and unreadable, cold teal and warm amber palette",
+      "chapter": "Что нашли в архиве"
+    },
+    {
+      "id": "s29",
+      "kind": "quote",
+      "narration": "Первая находка — запись инструктажа охранников накануне арестов. Зимбардо говорит им: мы можем вызвать у них скуку, раздражение, страх. У нас вся власть. У них — никакой. Бить, правда, запретил.",
+      "onScreen": "Цель — *бессилие* заключённых",
+      "icon": "megaphone",
+      "visualQuery": "chalkboard classroom empty",
+      "imagePrompt": "a blank chalkboard in a basement room, a few folding chairs facing it and a film camera on a tripod in the corner, cold teal and warm amber palette"
+    },
+    {
+      "id": "s30",
+      "kind": "quiz",
+      "narration": "Официальный сайт эксперимента и сегодня утверждает: правила охранники придумали сами, без подсказок. Правда или миф?",
+      "onScreen": "Правила придумали *сами* охранники?",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "11 из 17 правил взяли из студенческого опыта",
+        "question": "Кто на самом деле писал правила?",
+        "pauseSec": 3
+      },
+      "icon": "scroll-text",
+      "visualQuery": "paper notice cork board",
+      "imagePrompt": "a single sheet of paper pinned to a cork board in a dim corridor, completely out of focus, a guard's whistle hanging beside it, cold teal and warm amber palette"
+    },
+    {
+      "id": "s31",
+      "kind": "stat",
+      "narration": "Миф! В мае семьдесят первого студенты Зимбардо устроили похожую тюрьму в общежитии. Из семнадцати правил Стэнфордской тюрьмы одиннадцать скопировали оттуда.",
+      "onScreen": "Правила *скопировали* заранее",
+      "stat": {
+        "value": 11,
+        "suffix": " из 17",
+        "label": "правил взяли из студенческого опыта"
+      },
+      "icon": "files",
+      "visualQuery": "college dormitory hallway",
+      "imagePrompt": "a 1970s college dormitory hallway with doors turned into makeshift cells with cardboard bars, cold teal and warm amber palette"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Вторая находка — запись, где надзиратель Дэвид Джаффе уговаривает мягкого охранника. Каждый, объясняет он, должен быть, как мы говорим, жёстким охранником. Ради реформы тюрем и выхода в прессу.",
+      "onScreen": "«Каждый должен быть *жёстким*»",
+      "icon": "mic",
+      "visualQuery": "radio microphone desk",
+      "imagePrompt": "two silhouettes talking in a narrow corridor, one leaning in persuasively, a small microphone on a stand in the foreground, cold teal and warm amber palette"
+    },
+    {
+      "id": "s33",
+      "kind": "stat",
+      "narration": "Психологи Хаслам, Райхер и Ван Бавел разобрали этот разговор. Надзиратель пятьдесят семь раз произносит мы, нас и наш. Их вывод: это не приказ, а вербовка в общую миссию.",
+      "onScreen": "«Мы» — *57 раз* за разговор",
+      "stat": {
+        "value": 57,
+        "suffix": " раз",
+        "label": "«мы» в одном коротком разговоре"
+      },
+      "icon": "users-round",
+      "visualQuery": "headphones cassette desk",
+      "imagePrompt": "a pair of headphones and an audio cassette on a wooden desk under a lamp, cold teal and warm amber palette"
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "Третья находка — заявка для комиссии по этике. Заключённых там обещают отговаривать от ухода. Выйти можно было, только заболев, сорвавшись или получив разрешение.",
+      "onScreen": "Выход: болезнь, срыв или *разрешение*",
+      "icon": "door-open",
+      "visualQuery": "prison door open",
+      "imagePrompt": "a heavy cell door standing slightly ajar with a narrow strip of light on the floor, cold teal and warm amber palette"
+    },
+    {
+      "id": "s35",
+      "kind": "media",
+      "narration": "И четвёртая — про Корпи. На записи августа семьдесят первого он сам объясняет исследователям план. Самый простой способ выйти — изобразить безумие. Через год он повторил это Зимбардо.",
+      "onScreen": "Признание на плёнке *1971 года*",
+      "icon": "cassette-tape",
+      "visualQuery": "cassette tape spinning",
+      "imagePrompt": "a 1970s cassette recorder playing on a desk, tape reels turning, a small red recording light glowing, cold teal and warm amber palette"
+    },
+    {
+      "id": "s36",
+      "kind": "statement",
+      "narration": "Выходит, это не позднее признание. Слова Корпи лежали в архиве с самого начала. Был ли срыв целиком игрой, уже не проверить. Но план сыграть его был.",
+      "onScreen": "Не через 46 лет, а *сразу*",
+      "icon": "search",
+      "visualQuery": "magnifying glass documents",
+      "imagePrompt": "a magnifying glass resting on a stack of yellowed papers with blurred unreadable lines, warm desk lamp light, cold teal and warm amber palette"
+    },
+    {
+      "id": "s37",
+      "kind": "media",
+      "narration": "А без подсказок? Райхер и Хаслам проверили и это. Их опыт показали по Би-би-си в две тысячи втором. Охранникам ничего не подсказывали. Они так и не сплотились, и заключённые их одолели.",
+      "onScreen": "Без подсказок — *без тирании*",
+      "icon": "tv",
+      "visualQuery": "television studio cameras",
+      "imagePrompt": "a television studio built as a prison set, cameras on tripods facing empty barred cells, cold teal and warm amber palette",
+      "chapter": "Чему учит этот опыт"
+    },
+    {
+      "id": "s38",
+      "kind": "list",
+      "narration": "Отсюда главный вывод. Сама роль не делает человека жестоким. Жестокость направляли руководители, убеждая, что это ради благой цели. И часть охранников этому сопротивлялась.",
+      "onScreen": "Не роль, а *лидер*",
+      "items": [
+        "Роль сама не делает жестоким",
+        "Жестокость направляли лидеры",
+        "Часть охранников сопротивлялась"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "silhouette speaker crowd",
+      "imagePrompt": "a silhouetted figure addressing a small group of uniformed silhouettes in a dim hall, one figure standing apart with arms crossed, cold teal and warm amber palette"
+    },
+    {
+      "id": "s39",
+      "kind": "statement",
+      "narration": "Зимбардо защищал опыт до конца. Он умер в октябре две тысячи двадцать четвёртого, в девяносто один год. Через месяц вышел сериал Нэшнл Джиографик, где участники рассказывают свою версию.",
+      "onScreen": "Филип Зимбардо, *1933–2024*",
+      "icon": "user-round",
+      "visualQuery": "Philip Zimbardo portrait",
+      "imagePrompt": "an empty lecture hall at dusk with a single lit lectern and a stack of old papers on it, cold teal and warm amber palette"
+    },
+    {
+      "id": "s40",
+      "kind": "statement",
+      "narration": "Так что показал Стэнфордский эксперимент? Не то, что власть сама делает людей монстрами. А то, как легко толкнуть к жестокости словами: это ради великой цели. Услышишь такое — остановись.",
+      "onScreen": "Опасней всего — *великая цель*",
+      "icon": "lightbulb",
+      "visualQuery": "open cell door light",
+      "imagePrompt": "an open cell door in an empty basement corridor with morning light flooding in, cold teal and warm amber palette"
+    },
+    {
+      "id": "s41",
+      "kind": "cta",
+      "narration": "А ты стал бы жёстким охранником?",
+      "onScreen": "Ты стал бы *жёстким* охранником?",
+      "icon": "message-circle"
+    }
+  ]
+}

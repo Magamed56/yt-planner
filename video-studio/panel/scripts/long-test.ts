@@ -98,7 +98,8 @@ const base: StateInput = {
   now,
   planJson: read("content/plan.json"),
   channelJson: withFixtureSchedule(read("channel.json")),
-  scriptFiles: fs.readdirSync(path.join(studio, "scripts")),
+  // Настоящие razbor-L*.json не берём: этапы «Разборов» задаёт фикстура withLong ниже.
+  scriptFiles: fs.readdirSync(path.join(studio, "scripts")).filter((f) => !f.startsWith("razbor-")),
   fillLists: [read("content/week1-videos.json"), { videos: [fill("L01", 421), fill("L04", 433)] }],
   releases,
   runs: [],
