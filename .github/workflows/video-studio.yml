@@ -147,7 +147,10 @@ jobs:
       TTS_RATE: ${{ vars.TTS_RATE }}
       LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
       LLM_MODEL: ${{ vars.LLM_MODEL }}
-      VISUALS: ${{ vars.VISUALS }}
+      # Порядок источников кадров. Без переменной — стоки, реальные фото, затем генерация картинки по
+      # imagePrompt (Cloudflare FLUX при ключе, иначе бесключевой Pollinations) — только для сцены, где
+      # не нашлось ничего по теме. Без генерации: переменная VISUALS = pexels,pixabay,wikimedia,openverse.
+      VISUALS: ${{ vars.VISUALS || 'pexels,pixabay,wikimedia,openverse,cloudflare,pollinations' }}
       # Кнопка «Пересобрать» в панели может выключить музыку (music = none) для одного запуска.
       MUSIC: ${{ inputs.music == 'none' && 'none' || vars.MUSIC }}
       CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
@@ -168,8 +171,9 @@ jobs:
       LLM_FALLBACKS: ${{ vars.LLM_FALLBACKS }}
       LLM_EFFORT: ${{ vars.LLM_EFFORT }}
       VISUALS_PREFER: ${{ vars.VISUALS_PREFER }}
-      # Судья Claude для кадров (платно, по умолчанию выключен): VISUALS_JUDGE=claude + секрет ANTHROPIC_API_KEY.
-      VISUALS_JUDGE: ${{ vars.VISUALS_JUDGE }}
+      # Судья Claude для кадров (платно, ≈ $0.01–0.02 за Shorts, ≈ $0.1–0.2 за «Разбор»): включён по умолчанию,
+      # нужен секрет ANTHROPIC_API_KEY; выключить — переменная VISUALS_JUDGE = off.
+      VISUALS_JUDGE: ${{ vars.VISUALS_JUDGE || 'claude' }}
       VISUALS_JUDGE_MODEL: ${{ vars.VISUALS_JUDGE_MODEL }}
       VISUALS_MIN_PHOTO_PX: ${{ vars.VISUALS_MIN_PHOTO_PX }}
       MUSIC_MOOD: ${{ vars.MUSIC_MOOD }}
