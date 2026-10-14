@@ -10,6 +10,7 @@ import { decideAutopilot } from "../lib/autopilot";
 import { autopilotPreview, nextCronAt } from "../lib/autopilot-rules";
 import type { GhRelease, GhRun } from "../lib/github";
 import { buildState, parseAutopilot, type StateInput } from "../lib/state";
+import { withFixtureSchedule } from "../lib/fixture-channel";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 // План и сценарии «как на 08b»: автопилот каждый день дописывает сценарии в plan.json и scripts/,
@@ -98,7 +99,7 @@ const run = (over: Partial<GhRun>): GhRun => ({
 const input: StateInput = {
   now,
   planJson: json("content/plan.json"),
-  channelJson: json("channel.json"),
+  channelJson: withFixtureSchedule(json("channel.json")),
   scriptFiles: [...frozenScripts(fs.readdirSync(path.join(studio, "scripts"))), "sut-08a-test.json"],
   fillLists: [json("content/week1-videos.json"), null],
   releases,

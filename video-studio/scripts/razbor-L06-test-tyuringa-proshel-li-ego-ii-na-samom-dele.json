@@ -1,0 +1,463 @@
+{
+  "title": "Тест Тьюринга: прошёл ли его ИИ на самом деле",
+  "description": "Прошёл ли искусственный интеллект тест Тьюринга на самом деле? Разбираем игру в имитацию Алана Тьюринга 1950 года, программу-психотерапевта ELIZA, громкую «победу» чат-бота Жени Густмана в 2014 году и строгий эксперимент Джонса и Бергена, где GPT-4.5 сочли человеком в 73% игр. А потом честно смотрим, где в этом результате подвох и что тест Тьюринга измеряет на самом деле.\n#тесттьюринга #искусственныйинтеллект #нейросети #chatgpt #наука",
+  "tags": [
+    "тест тьюринга",
+    "прошел ли ии тест тьюринга",
+    "тест тьюринга пройден",
+    "искусственный интеллект",
+    "нейросети",
+    "алан тьюринг",
+    "игра в имитацию",
+    "может ли машина думать",
+    "элиза чат-бот",
+    "женя густман",
+    "китайская комната",
+    "turing test",
+    "gpt-4.5",
+    "chatgpt"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Кто из двух собеседников человек? Люди чаще выбирали нейросеть.",
+      "onScreen": "Кто здесь *человек*?",
+      "icon": "bot",
+      "visualQuery": "person typing smartphone chat",
+      "imagePrompt": "two glowing smartphones lying side by side on a dark desk, each screen showing soft abstract message bubbles without any letters, a human hand hesitating between them, deep navy and warm amber palette",
+      "chapter": "Игра в имитацию"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это не байка, а строгий эксперимент. В мае двадцать шестого года его опубликовал журнал Национальной академии наук США. Так прошёл ли ИИ тест Тьюринга?",
+      "onScreen": "Не байка, а *эксперимент*",
+      "icon": "flask-conical",
+      "visualQuery": "academic journal open desk",
+      "imagePrompt": "an open scientific journal on a wooden desk next to a laptop showing two blank chat windows, warm desk lamp light, deep navy and warm amber palette"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "К концу ролика ты узнаешь, какую маску надела машина, чтобы обмануть людей. И почему похожий трюк срабатывает ещё с шестидесятых.",
+      "onScreen": "Весь секрет — в *маске*",
+      "icon": "venetian-mask",
+      "visualQuery": "Venetian carnival mask",
+      "imagePrompt": "an ornate Venetian carnival mask lying on a dark computer keyboard, soft rim light from a monitor, deep navy and warm amber palette"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Октябрь тысяча девятьсот пятидесятого года. Британский математик Алан Тьюринг публикует статью Вычислительные машины и разум. Она открывается вопросом: могут ли машины думать?",
+      "onScreen": "1950: могут ли машины *думать*?",
+      "icon": "brain",
+      "visualQuery": "Alan Turing portrait",
+      "imagePrompt": "a 1950s scholar's desk with a fountain pen, a stack of typed manuscript pages and a cup of tea by a rainy window, no readable text, deep navy and warm amber palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Но о словах машина и думать можно спорить бесконечно. Поэтому Тьюринг заменяет вопрос игрой. И называет её игрой в имитацию.",
+      "onScreen": "Вместо вопроса — *игра*",
+      "icon": "drama",
+      "visualQuery": "chess board pieces",
+      "imagePrompt": "a wooden chess board with pieces mid-game on a desk beside a typewriter, low warm light, deep navy and warm amber palette"
+    },
+    {
+      "id": "s6",
+      "kind": "quiz",
+      "narration": "И вот неожиданность: в первой версии этой игры машины вообще не было. Правда или миф?",
+      "onScreen": "Сначала в игре не было *машины*",
+      "icon": "circle-help",
+      "visualQuery": "three empty chairs room",
+      "imagePrompt": "three empty wooden chairs in a dim 1950s room, two of them behind a half-open door, a single lamp lighting the third, deep navy and warm amber palette",
+      "quiz": {
+        "answer": "truth",
+        "explanation": "Сначала угадывали, кто из игроков мужчина, а кто женщина",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Правда! Играют трое: мужчина, женщина и судья в отдельной комнате. Судья задаёт вопросы и угадывает, кто есть кто. А мужчина старается его запутать.",
+      "onScreen": "Мужчина, женщина и *судья*",
+      "icon": "users",
+      "visualQuery": "vintage office desk lamp",
+      "imagePrompt": "a person seen from behind writing questions at a desk in a closed 1950s room, a wall separating them from two other rooms, warm lamp light, deep navy and warm amber palette"
+    },
+    {
+      "id": "s8",
+      "kind": "media",
+      "narration": "Чтобы не выдал голос, отвечать нужно письменно, а лучше через телетайп. И тут главный ход Тьюринга: что будет, если место мужчины займёт машина?",
+      "onScreen": "А если вместо игрока — *машина*?",
+      "icon": "keyboard",
+      "visualQuery": "vintage typewriter typing",
+      "imagePrompt": "an old teleprinter machine printing onto a paper roll in a dark room, amber light on metal keys, deep navy and warm amber palette"
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Тьюринг сделал и прогноз на полвека вперёд. Пять минут вопросов. И средний судья угадает машину не чаще, чем семь раз из десяти. Запомни эти цифры.",
+      "onScreen": "К 2000-му: угадают не чаще *70%*",
+      "icon": "hourglass",
+      "visualQuery": "hourglass sand timer",
+      "imagePrompt": "an hourglass with falling sand on a desk beside a stack of typed pages, warm side light, deep navy and warm amber palette"
+    },
+    {
+      "id": "s10",
+      "kind": "media",
+      "narration": "А первой людей заставила поверить в понимающую машину совсем простая программа. Массачусетский технологический институт, середина шестидесятых. Учёный Джозеф Вейценбаум пишет программу Элиза.",
+      "onScreen": "MIT, 1966: программа *ELIZA*",
+      "icon": "cpu",
+      "visualQuery": "IBM 7094 computer",
+      "imagePrompt": "a room-sized 1960s mainframe computer with spinning tape reels and blinking control panels, a lone terminal in the foreground, deep navy and warm amber palette",
+      "chapter": "Психотерапевт из MIT"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "Её самый известный сценарий изображает психотерапевта школы Карла Роджерса. Такой терапевт почти ничего не утверждает. Он переспрашивает и возвращает человеку его же слова.",
+      "onScreen": "Терапевт, который *переспрашивает*",
+      "icon": "message-circle-question",
+      "visualQuery": "therapist couch office",
+      "imagePrompt": "an empty psychotherapist's office with a leather couch and an armchair facing it, soft afternoon light through blinds, deep navy and warm amber palette"
+    },
+    {
+      "id": "s12",
+      "kind": "statement",
+      "narration": "Пользователь пишет: все мужчины одинаковые. Элиза отвечает: в каком смысле? Понимания тут нет. Программа ловит ключевые слова и подставляет их в готовые шаблоны.",
+      "onScreen": "«Все мужчины одинаковые» → «В каком *смысле*?»",
+      "icon": "messages-square",
+      "visualQuery": "ELIZA chatbot conversation",
+      "imagePrompt": "an old green-on-black computer terminal screen glowing in a dark room, lines of text blurred beyond reading, deep navy and warm amber palette"
+    },
+    {
+      "id": "s13",
+      "kind": "media",
+      "narration": "Автора поразило другое. Его секретарь месяцами видела, как он пишет эту программу. Но после нескольких реплик с Элизой попросила его выйти из комнаты.",
+      "onScreen": "Секретарь просит автора *выйти*",
+      "icon": "door-open",
+      "visualQuery": "woman typing vintage computer",
+      "imagePrompt": "a woman seen from behind typing at a 1960s computer terminal, an office door standing open, warm lamp light, deep navy and warm amber palette"
+    },
+    {
+      "id": "s14",
+      "kind": "quote",
+      "narration": "В книге тысяча девятьсот семьдесят шестого года он признался. Я не осознавал, что даже очень короткое общение с довольно простой программой может вызвать сильные иллюзии у вполне нормальных людей.",
+      "onScreen": "Простая программа может вызвать *иллюзии*",
+      "icon": "quote",
+      "visualQuery": "Joseph Weizenbaum portrait",
+      "imagePrompt": "an old hardcover book lying open on a desk beside reading glasses, warm lamp light, no readable text, deep navy and warm amber palette"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "Это потом назовут эффектом Элизы. Мы сами дорисовываем понимание там, где его нет. Запомни первую маску — терапевт, который отвечает вопросом на вопрос. Следующая будет хитрее.",
+      "onScreen": "Маска №1: *терапевт*",
+      "icon": "venetian-mask",
+      "visualQuery": "mirror reflection woman",
+      "imagePrompt": "a hand-held mirror reflecting a glowing computer screen in a dark room, deep navy and warm amber palette"
+    },
+    {
+      "id": "s16",
+      "kind": "media",
+      "narration": "Седьмое июня две тысячи четырнадцатого года, Лондон, Королевское общество. Ровно шестьдесят лет со дня смерти Тьюринга. Здесь устраивают большое состязание по его тесту.",
+      "onScreen": "Лондон, 7 июня *2014*",
+      "icon": "landmark",
+      "visualQuery": "Royal Society London building",
+      "imagePrompt": "a grand white stucco London terrace building at dusk with lit windows and a quiet street, deep navy and warm amber palette",
+      "map": {
+        "lat": 51.5062,
+        "lon": -0.1318,
+        "label": "Лондон",
+        "zoom": "city"
+      },
+      "chapter": "Скандал вокруг Жени Густмана"
+    },
+    {
+      "id": "s17",
+      "kind": "statement",
+      "narration": "Пять программ, тридцать судей, переписка по пять минут. Судья пишет одновременно человеку и машине. Порог — обмануть больше тридцати процентов судей, как в прогнозе Тьюринга.",
+      "onScreen": "Порог: обмануть *30%* судей",
+      "icon": "scale",
+      "visualQuery": "people typing computers hall",
+      "imagePrompt": "rows of people typing on computers in a quiet hall, screens glowing in the dim light, seen from behind, deep navy and warm amber palette"
+    },
+    {
+      "id": "s18",
+      "kind": "media",
+      "narration": "Победил чат-бот Женя Густман. Он изображал тринадцатилетнего мальчика из Одессы. У него морская свинка, а папа — гинеколог.",
+      "onScreen": "Женя, 13 лет, и *морская свинка*",
+      "icon": "smile",
+      "visualQuery": "guinea pig",
+      "imagePrompt": "a fluffy guinea pig sitting next to a laptop keyboard on a teenager's cluttered desk, deep navy and warm amber palette"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Женя убедил треть судей. Организаторы объявили: тест Тьюринга пройден впервые в истории. Но критики сразу заметили фокус. Создатели и не скрывали: тринадцатилетнему простительно чего-то не знать.",
+      "onScreen": "Подростку *простительно* не знать",
+      "icon": "trophy",
+      "visualQuery": "teenager typing laptop",
+      "imagePrompt": "a teenager's hands typing on a laptop in a messy bedroom at night, posters out of focus, deep navy and warm amber palette"
+    },
+    {
+      "id": "s20",
+      "kind": "statement",
+      "narration": "Да и тридцать процентов — не порог Тьюринга, а его прогноз. Экзаменом эту цифру сделали организаторы. Вторая маска — ребёнок, которому прощают ошибки.",
+      "onScreen": "Маска №2: *ребёнок*",
+      "icon": "triangle-alert",
+      "visualQuery": "paper mask craft",
+      "imagePrompt": "a simple handmade paper mask lying on a school desk next to a laptop, deep navy and warm amber palette"
+    },
+    {
+      "id": "s21",
+      "kind": "media",
+      "narration": "Строгий эксперимент поставили когнитивисты Кэмерон Джонс и Бенджамин Берген. Калифорнийский университет в Сан-Диего. Они не первый год проверяют нейросети тестом Тьюринга.",
+      "onScreen": "Сан-Диего: тест по всем *правилам*",
+      "icon": "graduation-cap",
+      "visualQuery": "Geisel Library UC San Diego",
+      "imagePrompt": "a futuristic concrete library building on a university campus at golden hour surrounded by eucalyptus trees, deep navy and warm amber palette",
+      "chapter": "Эксперимент в Сан-Диего"
+    },
+    {
+      "id": "s22",
+      "kind": "statement",
+      "narration": "В их опыте двадцать четвёртого года GPT-четыре сочли человеком в пятидесяти четырёх процентах бесед. Живых людей — в шестидесяти семи. Но собеседник был один.",
+      "onScreen": "2024: тест с *одним* собеседником",
+      "icon": "message-square",
+      "visualQuery": "smartphone chat app typing",
+      "compare": {
+        "items": [
+          {
+            "label": "GPT-4",
+            "value": 54
+          },
+          {
+            "label": "Люди",
+            "value": 67
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s23",
+      "kind": "media",
+      "narration": "А у Тьюринга судья сравнивает сразу двоих. В двадцать пятом году так и сделали. У судьи два чата: человек и машина. Пять минут — и вердикт.",
+      "onScreen": "284 участника, два чата, *5 минут*",
+      "icon": "split",
+      "visualQuery": "students laptops lecture hall",
+      "imagePrompt": "a laptop screen split into two blank chat windows on a desk in a lecture hall, students out of focus behind, deep navy and warm amber palette"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Соперников четверо. Для сравнения — старушка Элиза и GPT-четыре-о. Главные участники — открытая модель Llama и новейшая тогда GPT-четыре точка пять.",
+      "onScreen": "Четыре *соперника* за ширмой",
+      "icon": "bot",
+      "visualQuery": "server room blinking lights",
+      "imagePrompt": "a dim server room with rows of racks and blinking amber lights, deep navy and warm amber palette"
+    },
+    {
+      "id": "s25",
+      "kind": "statement",
+      "narration": "Главная хитрость — в подсказке. Части моделей дали роль. Молодой интроверт, который знает интернет-культуру и пишет со сленгом. Другим дали те же правила игры, но без роли.",
+      "onScreen": "Роль: *интроверт* со сленгом",
+      "icon": "drama",
+      "visualQuery": "young man hoodie smartphone",
+      "imagePrompt": "a silhouette of a young person in a hoodie scrolling a phone in a dark room lit only by the screen, face not visible, deep navy and warm amber palette"
+    },
+    {
+      "id": "s26",
+      "kind": "stat",
+      "narration": "Результат. GPT-четыре точка пять в этой роли назвали человеком в семидесяти трёх процентах игр. Чаще, чем настоящих людей.",
+      "onScreen": "Машину выбрали в *73%* игр",
+      "stat": {
+        "value": 73,
+        "suffix": "%",
+        "label": "игр: GPT-4.5 сочли человеком"
+      },
+      "icon": "bot",
+      "visualQuery": "humanoid robot face",
+      "imagePrompt": "a humanoid robot head with a calm expression facing a glowing chat screen in a dark room, deep navy and warm amber palette"
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "Вдумайся. Настоящего человека в этих играх выбирали лишь в двадцати семи процентах. А Llama в той же роли набрала пятьдесят шесть — вровень с людьми.",
+      "onScreen": "Машина *человечнее* человека",
+      "icon": "user-x",
+      "visualQuery": "lonely man laptop dark",
+      "compare": {
+        "items": [
+          {
+            "label": "GPT-4.5",
+            "value": 73
+          },
+          {
+            "label": "Живой человек",
+            "value": 27
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s28",
+      "kind": "stat",
+      "narration": "А вот главная улика. Без роли та же модель набрала лишь тридцать шесть процентов. Llama — тридцать восемь. Побеждала не просто модель, а модель в маске.",
+      "onScreen": "Без маски — лишь *36%*",
+      "stat": {
+        "value": 36,
+        "suffix": "%",
+        "label": "GPT-4.5 без роли"
+      },
+      "icon": "venetian-mask",
+      "visualQuery": "mask removed table",
+      "imagePrompt": "a carnival mask lying face down on a desk next to a glowing laptop, deep navy and warm amber palette"
+    },
+    {
+      "id": "s29",
+      "kind": "stat",
+      "narration": "Так где же подвох? Посмотрим, как судьи вычисляли машину. В шестидесяти одном проценте игр они просто болтали о жизни.",
+      "onScreen": "Главная тактика — *болтовня*",
+      "stat": {
+        "value": 61,
+        "suffix": "%",
+        "label": "игр: судьи вели светскую беседу"
+      },
+      "icon": "message-circle",
+      "visualQuery": "friends texting smartphones",
+      "imagePrompt": "two hands holding smartphones with colorful abstract message bubbles and no letters, cozy cafe table, deep navy and warm amber palette",
+      "chapter": "Где здесь подвох"
+    },
+    {
+      "id": "s30",
+      "kind": "media",
+      "narration": "О знаниях и логике спрашивали лишь двенадцать процентов участников. Решали стиль и ощущение живого собеседника. Точнее всего машину ловили странными выходками, например набором случайных букв.",
+      "onScreen": "Про знания спросили лишь *12%*",
+      "icon": "dices",
+      "visualQuery": "person reading phone messages",
+      "imagePrompt": "a person on a sofa reading messages on a phone in a dim room, face in shadow, deep navy and warm amber palette"
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Старую Элизу сочли человеком в двадцати трёх процентах игр. Многие объясняли: она язвит и грубит, а ИИ так не стал бы. Мы судим по собственному образу машины.",
+      "onScreen": "ИИ не был бы так *груб*",
+      "icon": "circle-x",
+      "visualQuery": "frustrated man laptop",
+      "imagePrompt": "a hand hovering over a laptop keyboard next to a cold cup of coffee in a dark room, a blunt glowing chat window, deep navy and warm amber palette"
+    },
+    {
+      "id": "s32",
+      "kind": "list",
+      "narration": "Есть и честные оговорки. Переписка длилась всего пять минут. Судьями были обычные люди, а не эксперты. А без особой роли результаты резко падали.",
+      "onScreen": "Три честные *оговорки*",
+      "items": [
+        "Всего 5 минут",
+        "Судьи — не эксперты",
+        "Без роли — заметно хуже"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "stopwatch hand",
+      "imagePrompt": "a hand holding a vintage stopwatch in front of a glowing laptop screen, deep navy and warm amber palette"
+    },
+    {
+      "id": "s33",
+      "kind": "stat",
+      "narration": "Первую оговорку авторы проверили. Партию продлили до пятнадцати минут. Вместо снятой с поддержки GPT-четыре точка пять в той же роли играла GPT-пять. Итог — пятьдесят девять процентов.",
+      "onScreen": "15 минут: *59%*",
+      "stat": {
+        "value": 59,
+        "suffix": "%",
+        "label": "GPT-5 в 15-минутной партии"
+      },
+      "icon": "timer",
+      "visualQuery": "clock ticking wall",
+      "imagePrompt": "a wall clock above a desk with a laptop showing two blank chat windows, late evening light, deep navy and warm amber palette"
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "Это на грани статистической значимости. Явной победы нет, но и надёжно отличить машину судьи не смогли. Формально тест пройден. Но что он измеряет?",
+      "onScreen": "Пройден. Но *что* он измеряет?",
+      "icon": "scale",
+      "visualQuery": "balance scale weights",
+      "imagePrompt": "an old brass balance scale almost level on a desk, dramatic side light, deep navy and warm amber palette"
+    },
+    {
+      "id": "s35",
+      "kind": "media",
+      "narration": "В тысяча девятьсот восьмидесятом году философ Джон Сёрл предложил мысленный опыт. Человек, не знающий китайского, сидит в комнате с книгой правил на английском.",
+      "onScreen": "1980: *китайская* комната",
+      "icon": "languages",
+      "visualQuery": "Chinese calligraphy brush writing",
+      "imagePrompt": "a person seen from behind in a small closed room sorting paper slips with ink brush strokes using a thick rule book, single lamp, deep navy and warm amber palette",
+      "chapter": "Что тест не измеряет"
+    },
+    {
+      "id": "s36",
+      "kind": "statement",
+      "narration": "Ему просовывают записки с иероглифами. По правилам он подбирает иероглифы для ответа. Снаружи кажется, что внутри знаток китайского. А он не понимает ни слова.",
+      "onScreen": "Отвечает верно, но *не понимает*",
+      "icon": "eye-off",
+      "visualQuery": "Chinese characters paper",
+      "imagePrompt": "a paper note with ink brush strokes being slipped under a closed door, warm light leaking from the gap, deep navy and warm amber palette"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Авторы эксперимента и сами пишут: тест Тьюринга проверяет не интеллект, а человекоподобие. Машины выигрывали не знаниями, а манерой общения и вполне человеческими промахами.",
+      "onScreen": "Тест на *человекоподобие*",
+      "icon": "scan-face",
+      "visualQuery": "crowd people walking street",
+      "imagePrompt": "a crowd of people walking on a city street at dusk, motion blur, one figure glowing faintly like a hologram, deep navy and warm amber palette"
+    },
+    {
+      "id": "s38",
+      "kind": "list",
+      "narration": "Теперь сложи улики. Терапевт, который отвечает вопросом. Подросток, которому прощают ошибки. Молодой интроверт со сленгом. Каждый раз побеждала маска, в которую мы сами готовы поверить.",
+      "onScreen": "Три маски — один *трюк*",
+      "items": [
+        "1966: терапевт",
+        "2014: подросток",
+        "2025: интроверт со сленгом"
+      ],
+      "icon": "venetian-mask",
+      "visualQuery": "carnival masks display",
+      "imagePrompt": "three different masks hanging side by side on a dark wall, a classic white theatre mask, a child's paper mask and a dark hood, deep navy and warm amber palette"
+    },
+    {
+      "id": "s39",
+      "kind": "quote",
+      "narration": "Любопытно, что сам Тьюринг и не обещал ответа, думают ли машины. Этот вопрос он назвал слишком бессмысленным, чтобы его обсуждать. Потому и заменил его игрой.",
+      "onScreen": "Слишком бессмысленный, чтобы его *обсуждать*",
+      "icon": "quote",
+      "visualQuery": "Alan Turing Memorial Manchester",
+      "imagePrompt": "an empty wooden chair facing a glowing old computer terminal in a dark room, deep navy and warm amber palette"
+    },
+    {
+      "id": "s40",
+      "kind": "statement",
+      "narration": "Выходит, сегодня тест Тьюринга измеряет не машину, а нас. Наш образ живого человека в переписке. И нейросеть в маске попадает в него не хуже нас. Порой даже лучше.",
+      "onScreen": "Тест измеряет *нас*",
+      "icon": "users",
+      "visualQuery": "people texting phones city",
+      "imagePrompt": "many people on a night city street looking at glowing phones, their faces lit softly from below, deep navy and warm amber palette"
+    },
+    {
+      "id": "s41",
+      "kind": "cta",
+      "narration": "А ты отличил бы ИИ за пять минут?",
+      "onScreen": "Отличишь ИИ за *5 минут*?",
+      "icon": "message-circle"
+    }
+  ]
+}

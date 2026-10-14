@@ -1,0 +1,100 @@
+{
+  "title": "Фальшивые деньги ацтеков: какао с землёй внутри",
+  "description": "Как какао-бобы служили мелкой монетой в Мезоамерике, сколько бобов стоила индейка по прейскуранту из Тласкалы 1545 года и как мошенники подделывали эти деньги. Короткая история денег, которые росли на деревьях.\n#shorts #история #ацтеки #деньги #какао",
+  "tags": [
+    "ацтеки",
+    "какао",
+    "какао-бобы",
+    "история денег",
+    "деньги",
+    "фальшивые деньги",
+    "мезоамерика",
+    "шоколад",
+    "тласкала",
+    "саагун",
+    "факты",
+    "shorts",
+    "aztec",
+    "cacao money"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "У ацтеков деньги буквально росли на деревьях.",
+      "onScreen": "Деньги, которые *росли* на деревьях",
+      "icon": "leaf",
+      "visualQuery": "cacao tree pods",
+      "imagePrompt": "cinematic shot of ripe golden cacao pods hanging on a tropical tree trunk, warm sunset light filtering through leaves, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Это какао. Его бобы в Мезоамерике были мелкой монетой. А где деньги — там и подделки.",
+      "onScreen": "Какао-боб — это *монета*",
+      "icon": "coins",
+      "visualQuery": "cacao beans hands",
+      "imagePrompt": "cinematic close-up of hands holding a pile of dried cacao beans, warm amber light, rustic wooden background"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Есть прейскурант из Тласкалы тысяча пятьсот сорок пятого года. Хорошая индейка там стоит сто бобов.",
+      "onScreen": "Тласкала, *1545*: цена индейки",
+      "stat": {
+        "value": 100,
+        "suffix": " бобов",
+        "label": "за хорошую индейку"
+      },
+      "icon": "wallet",
+      "visualQuery": "wild turkey",
+      "imagePrompt": "cinematic portrait of a wild turkey beside a small heap of cacao beans on a woven mat, warm golden light, earthy palette"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Получается, ужин отсчитывали поштучно. Боб за бобом, как копейки из кошелька.",
+      "onScreen": "Ужин — *боб* за бобом",
+      "icon": "utensils",
+      "visualQuery": "counting cacao beans",
+      "imagePrompt": "top-down cinematic view of fingers counting cacao beans one by one into rows on a clay surface, warm side light"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Монах Бернардино де Саагун описал подделки во Флорентийском кодексе.",
+      "onScreen": "Флорентийский кодекс, *книга 10*",
+      "icon": "book-open",
+      "visualQuery": "Florentine Codex",
+      "imagePrompt": "cinematic close-up of an old illustrated manuscript page with colorful painted figures, candle light, warm sepia tones, no readable text"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Мошенники брали пустую оболочку боба и набивали её землёй. Снаружи какао, внутри грязь.",
+      "onScreen": "Снаружи какао, внутри *земля*",
+      "icon": "triangle-alert",
+      "visualQuery": "cacao bean shell soil",
+      "imagePrompt": "cinematic macro shot of a cracked cacao bean shell revealing dark soil inside, dramatic warm rim light, dark background"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Вывод простой: подделывают всё, что ценят. Даже если это растёт на дереве.",
+      "onScreen": "Подделывают всё, что *ценно*",
+      "icon": "shield",
+      "visualQuery": "cacao beans market basket",
+      "imagePrompt": "cinematic shot of a woven basket full of cacao beans at an old market stall, warm sunset glow, soft haze"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты бы распознал фальшивый боб?",
+      "onScreen": "Распознал бы *фальшивку*?",
+      "icon": "eye"
+    }
+  ]
+}

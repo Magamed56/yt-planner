@@ -1,0 +1,437 @@
+{
+  "title": "Почему Плутон больше не планета: история одного голосования",
+  "description": "Почему Плутон больше не планета и что на самом деле решили астрономы в Праге в 2006 году. История от охоты за планетой X и фермерского парня Клайда Томбо до открытия Эриды, голосования жёлтыми карточками и трёх признаков планеты. А в конце — живой ледяной мир, который увидел зонд New Horizons, и планета, которую разжаловали задолго до Плутона.\n#плутон #космос #астрономия #карликоваяпланета #солнечнаясистема",
+  "tags": [
+    "почему плутон не планета",
+    "почему плутон больше не планета",
+    "плутон",
+    "плутон карликовая планета",
+    "карликовая планета",
+    "эрида",
+    "планета x",
+    "клайд томбо",
+    "пояс койпера",
+    "new horizons",
+    "солнечная система",
+    "астрономия",
+    "космос",
+    "pluto dwarf planet",
+    "why pluto is not a planet"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Семьдесят шесть лет Плутон был планетой. А потом поднялись жёлтые карточки.",
+      "onScreen": "Плутон *разжалован* за соседей",
+      "icon": "orbit",
+      "visualQuery": "Pluto New Horizons",
+      "imagePrompt": "the small icy world Pluto with a pale heart-shaped plain on its surface hanging in black space, a faint distant Sun behind it, deep navy and icy cyan palette with warm amber highlights",
+      "chapter": "Охота за планетой X"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Сам Плутон при этом не изменился ни на грамм. К концу ролика ты поймёшь, за что его разжаловали. И узнаешь, с кем это случилось задолго до него.",
+      "onScreen": "Плутон тот же. Что *изменилось*?",
+      "icon": "circle-help",
+      "visualQuery": "orrery solar system model",
+      "imagePrompt": "an antique brass orrery with nine small planet spheres on thin arms in a dim study, the outermost tiny sphere set slightly apart from the rest, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Всё началось с охоты. В тысяча девятьсот шестом году астроном Персиваль Лоуэлл начал искать из своей обсерватории в Аризоне неизвестную планету за Нептуном. Планету икс.",
+      "onScreen": "1906: охота на *планету X*",
+      "icon": "telescope",
+      "visualQuery": "Lowell Observatory Flagstaff",
+      "imagePrompt": "a white historic observatory dome among tall pine trees on a hilltop at dusk, the first stars appearing above, deep navy and icy cyan palette with warm amber highlights",
+      "map": {
+        "lat": 35.2029,
+        "lon": -111.6646,
+        "label": "Флагстафф",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Ему казалось, что Уран сбивается с курса, будто его тянет кто-то в шесть с лишним раз тяжелее Земли. Но в тысяча девятьсот шестнадцатом Лоуэлл умер, так и не найдя её.",
+      "onScreen": "Невидимка в *6,6* раза тяжелее Земли",
+      "icon": "calculator",
+      "visualQuery": "Percival Lowell portrait",
+      "imagePrompt": "an empty wooden desk in an old observatory office with a brass telescope eyepiece, compass dividers and a cold oil lamp, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Охоту продолжил фермерский парень из Канзаса Клайд Томбо. Телескопы он собирал сам, даже из оси отцовского бьюика. Его рисунки планет впечатлили обсерваторию, и в двадцать два года его взяли на работу.",
+      "onScreen": "Телескоп из *бьюика* и фермерских деталей",
+      "icon": "tractor",
+      "visualQuery": "Kansas wheat field farm",
+      "imagePrompt": "a homemade wooden reflecting telescope standing in a Kansas wheat field at twilight next to an old farm truck, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Метод был изнурительным. Один участок неба снимали дважды с разницей в несколько дней. Потом снимки быстро чередовали в специальном приборе — блинк-компараторе. Звёзды стоят на месте. Планета прыгает.",
+      "onScreen": "Блинк-компаратор: ищем *прыжок*",
+      "icon": "eye",
+      "visualQuery": "Blink comparator Lowell Observatory",
+      "imagePrompt": "a vintage brass blink comparator microscope with two glass photographic plates of a star field under a desk lamp, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "По его же оценке, Томбо просмотрел полтора миллиона звёзд. И восемнадцатого февраля тысяча девятьсот тридцатого года на январских снимках сдвинулась крошечная точка. Планета нашлась.",
+      "onScreen": "1,5 млн звёзд — и *одна* точка",
+      "icon": "search",
+      "visualQuery": "night sky stars timelapse",
+      "imagePrompt": "a dark star field on an old glass photographic plate, one tiny dot glowing slightly brighter among thousands of stars, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Имя предложила одиннадцатилетняя школьница из Оксфорда Венеция Берни: Плутон, в честь римского бога подземного царства. Первые буквы совпали с инициалами Персиваля Лоуэлла. Так планет стало девять.",
+      "onScreen": "Имя дала *11-летняя* школьница",
+      "icon": "pen-line",
+      "visualQuery": "Oxford Radcliffe Camera",
+      "imagePrompt": "a sunny breakfast table in an old English house with a folded newspaper and a teacup, a child's hand resting on the paper, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s9",
+      "kind": "media",
+      "narration": "Но с новой планетой что-то не сходилось. Оценки её массы с годами только падали. А в тысяча девятьсот семьдесят восьмом Джеймс Кристи нашёл у Плутона спутник — Харон.",
+      "onScreen": "1978: у Плутона *спутник*",
+      "icon": "moon",
+      "visualQuery": "Charon moon New Horizons",
+      "imagePrompt": "a grey icy moon hanging close beside a larger pale icy world in black space, deep navy and icy cyan palette with warm amber highlights",
+      "chapter": "Подозрительно маленький Плутон"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "По орбите спутника наконец вычислили массу Плутона: около двух десятых процента земной. Лоуэлл ждал тело примерно в три тысячи раз тяжелее.",
+      "onScreen": "В *3000* раз легче прогноза",
+      "icon": "weight",
+      "visualQuery": "balance scale weights",
+      "imagePrompt": "an antique brass balance scale with a tiny icy pebble resting on one pan, dramatic side light, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "Плутон меньше даже нашей Луны. Его диаметр — около двух тысяч трёхсот восьмидесяти километров. А вся его поверхность примерно как площадь России.",
+      "onScreen": "Меньше нашей *Луны*",
+      "icon": "ruler",
+      "visualQuery": "full moon night sky",
+      "imagePrompt": "a bright full Moon beside a much smaller pale icy sphere against a black sky, deep navy and icy cyan palette with warm amber highlights",
+      "compare": {
+        "items": [
+          {
+            "label": "Земля",
+            "value": 12756
+          },
+          {
+            "label": "Луна",
+            "value": 3474
+          },
+          {
+            "label": "Плутон",
+            "value": 2377
+          }
+        ],
+        "suffix": " км"
+      }
+    },
+    {
+      "id": "s12",
+      "kind": "media",
+      "narration": "А главный сюрприз преподнёс Вояджер два. В тысяча девятьсот восемьдесят девятом он пролетел мимо Нептуна и взвесил его точнее прежнего. Нептун оказался на полпроцента легче.",
+      "onScreen": "Вояджер-2 *взвесил* Нептун",
+      "icon": "satellite",
+      "visualQuery": "Voyager 2 Neptune",
+      "imagePrompt": "a small spacecraft with a large white dish antenna flying past a deep blue gas giant, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Астроном Майлз Стэндиш пересчитал с новой массой движение Урана, и странности исчезли. Планеты икс не было. А Плутон нашли рядом с предсказанным местом по чистому везению.",
+      "onScreen": "Планеты X *не было*",
+      "icon": "circle-x",
+      "visualQuery": "Uranus planet Voyager",
+      "imagePrompt": "the pale cyan planet Uranus floating alone in deep space with a smooth unbroken orbital path around it, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s14",
+      "kind": "media",
+      "narration": "Но настоящая угроза пришла от соседей. В тысяча девятьсот девяносто втором году Дэвид Джуитт и Джейн Лу нашли за Нептуном ледяное тельце. Потом сотни других. Плутон оказался жителем огромного пояса Койпера.",
+      "onScreen": "Пояс Койпера: Плутон *не один*",
+      "icon": "telescope",
+      "visualQuery": "Mauna Kea Observatories",
+      "imagePrompt": "a wide ring of countless small icy bodies far beyond a distant blue planet, one slightly larger icy sphere among them, deep navy and icy cyan palette with warm amber highlights",
+      "chapter": "Эрида меняет всё"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "В январе две тысячи пятого года команда Майка Брауна заметила на старых снимках ещё одну точку. Программа поиска её пропустила: точка ползла слишком медленно.",
+      "onScreen": "Точку *пропустил* компьютер",
+      "icon": "scan-eye",
+      "visualQuery": "Palomar Observatory",
+      "imagePrompt": "a large white telescope dome on a forested mountain under a starry night sky, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "НАСА объявило о десятой планете. Позже выяснили: размером она почти как Плутон, а по массе тяжелее на двадцать семь процентов. Её назовут Эридой, в честь богини раздора.",
+      "onScreen": "Эрида на 27% *тяжелее*",
+      "icon": "scale",
+      "visualQuery": "Eris dwarf planet Dysnomia",
+      "imagePrompt": "two pale icy dwarf worlds of almost the same size floating side by side in black space, deep navy and icy cyan palette with warm amber highlights",
+      "compare": {
+        "items": [
+          {
+            "label": "Плутон",
+            "value": 100
+          },
+          {
+            "label": "Эрида",
+            "value": 127
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s17",
+      "kind": "list",
+      "narration": "У астрономов осталось два пути. Либо принимать в планеты всех крупных соседей Плутона. Либо наконец записать, что такое планета.",
+      "onScreen": "Десятки планет или *правила*?",
+      "items": [
+        "Принять всех в планеты",
+        "Записать определение"
+      ],
+      "icon": "split",
+      "visualQuery": "fork in road",
+      "imagePrompt": "a lonely road splitting into two paths under a starry night sky, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s18",
+      "kind": "media",
+      "narration": "Прага, август две тысячи шестого. На съезд Международного астрономического союза приехали больше двух с половиной тысяч астрономов. Им предложили черновик: двенадцать планет, включая Цереру, Эриду и даже Харон.",
+      "onScreen": "Прага, 2006: *12* планет?",
+      "icon": "landmark",
+      "visualQuery": "Prague Old Town Square",
+      "imagePrompt": "Prague old town rooftops and Gothic towers at dusk with warm street lights, deep navy and icy cyan palette with warm amber highlights",
+      "chapter": "Голосование в Праге"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Но после недели споров черновик заменили совсем другим. Двадцать четвёртого августа участники подняли над головами жёлтые карточки.",
+      "onScreen": "24 августа: *жёлтые* карточки",
+      "icon": "vote",
+      "visualQuery": "audience raising hands",
+      "imagePrompt": "a crowded lecture hall seen from behind as many hands raise yellow cards into the air, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s20",
+      "kind": "statement",
+      "narration": "Новое определение планеты приняли подавляющим большинством, голоса даже не считали. А вот отдельный пункт о Плутоне посчитали до одного.",
+      "onScreen": "Определение приняли *без подсчёта*",
+      "icon": "hand",
+      "visualQuery": "yellow ballot cards",
+      "imagePrompt": "a sea of raised yellow cards above rows of conference seats, soft stage light, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s21",
+      "kind": "stat",
+      "narration": "Двести тридцать семь — за то, что Плутон теперь карликовая планета. Сто пятьдесят семь — против. Семнадцать воздержались.",
+      "onScreen": "Плутон — *карликовая* планета",
+      "stat": {
+        "prefix": "237 : ",
+        "value": 157,
+        "label": "голосов за и против"
+      },
+      "icon": "gavel",
+      "visualQuery": "ballot counting table",
+      "imagePrompt": "a long table with two uneven stacks of yellow voting cards under warm conference lights, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s22",
+      "kind": "stat",
+      "narration": "Голосовали около четырёхсот человек, примерно каждый шестой участник съезда. А через несколько дней протест подписали триста учёных. Среди организаторов — Алан Стерн, руководитель миссии к Плутону.",
+      "onScreen": "Учёные *против* определения",
+      "stat": {
+        "value": 300,
+        "label": "учёных подписали протест"
+      },
+      "icon": "megaphone",
+      "visualQuery": "signing petition pen",
+      "imagePrompt": "many hands signing a long paper petition on a wooden table, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s23",
+      "kind": "list",
+      "narration": "Что же записали в Праге? Планета обращается вокруг Солнца. Гравитация сделала её почти круглой. И она расчистила окрестности своей орбиты. На третьем пункте Плутон и спотыкается.",
+      "onScreen": "Три *условия* планеты",
+      "items": [
+        "Обращается вокруг Солнца",
+        "Почти круглая",
+        "Расчистила свою орбиту"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "solar system planets",
+      "imagePrompt": "the Sun with planets on clean concentric orbits, one tiny icy body on a tilted path crowded with small rocks, deep navy and icy cyan palette with warm amber highlights",
+      "chapter": "Три признака планеты"
+    },
+    {
+      "id": "s24",
+      "kind": "stat",
+      "narration": "Что значит расчистить? Планетолог Стивен Сотер предложил это посчитать. Земля тяжелее всех тел, пересекающих её путь, вместе взятых, примерно в миллион семьсот тысяч раз.",
+      "onScreen": "Земля — *хозяйка* своей орбиты",
+      "stat": {
+        "prefix": "×",
+        "value": 1.7,
+        "suffix": " млн",
+        "label": "Земля тяжелее соседей по орбите"
+      },
+      "icon": "earth",
+      "visualQuery": "Earth from space",
+      "imagePrompt": "planet Earth glowing in space with a few tiny distant rocks along its orbit, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s25",
+      "kind": "statement",
+      "narration": "А Плутон, по оценке Сотера, весит лишь около семи процентов пояса Койпера. Соседи вместе тяжелее его примерно в тринадцать раз.",
+      "onScreen": "Соседи тяжелее в *13* раз",
+      "icon": "layers",
+      "visualQuery": "Kuiper belt",
+      "imagePrompt": "a small icy sphere surrounded by a dense swarm of icy rocks drifting along the same orbit, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s26",
+      "kind": "media",
+      "narration": "Плутон даже заходит внутрь орбиты Нептуна. Но столкнуться они не могут: пока Нептун делает три оборота, Плутон делает два. Этот резонанс держит их порознь.",
+      "onScreen": "Резонанс 3 : 2 — *защита*",
+      "icon": "orbit",
+      "visualQuery": "Neptune planet",
+      "imagePrompt": "a deep blue gas giant and a tiny icy world on crossing orbits that never meet, glowing orbital lines, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "Но и к определению есть вопросы. Сколько именно надо расчистить, в нём не сказано. А требование кружить вокруг Солнца формально лишает статуса все планеты у других звёзд.",
+      "onScreen": "Экзопланеты — *не планеты*?",
+      "icon": "triangle-alert",
+      "visualQuery": "exoplanet star system",
+      "imagePrompt": "a distant alien star with a single planet orbiting it, seen from deep space, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "Самое ироничное случилось в космосе. В январе две тысячи шестого к Плутону стартовал зонд Нью Хорайзонс. Летел он к планете, а через семь месяцев её разжаловали.",
+      "onScreen": "Летел к планете, прилетел к *карлику*",
+      "icon": "rocket",
+      "visualQuery": "Atlas V rocket launch",
+      "imagePrompt": "a tall rocket lifting off from a seaside launch pad at dusk with a bright plume of fire, deep navy and icy cyan palette with warm amber highlights",
+      "chapter": "Спор не окончен"
+    },
+    {
+      "id": "s29",
+      "kind": "stat",
+      "narration": "Девять с половиной лет полёта, и четырнадцатого июля две тысячи пятнадцатого года зонд пронёсся в двенадцати с половиной тысячах километров от поверхности Плутона.",
+      "onScreen": "14 июля 2015: *пролёт*",
+      "stat": {
+        "value": 12500,
+        "suffix": " км",
+        "label": "от поверхности Плутона"
+      },
+      "icon": "satellite",
+      "visualQuery": "New Horizons spacecraft",
+      "imagePrompt": "a small spacecraft with a white dish antenna speeding past a pale icy world with a bright heart-shaped plain, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "На борту летели около тридцати граммов праха Клайда Томбо: он умер в девяносто седьмом, до голосования. А прибор для подсчёта пыли назвали в честь Венеции Берни.",
+      "onScreen": "Томбо всё-таки *долетел*",
+      "icon": "heart",
+      "visualQuery": "Clyde Tombaugh telescope",
+      "imagePrompt": "a small plain metal capsule mounted on the gold-foil side of a spacecraft drifting in deep space, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s31",
+      "kind": "quote",
+      "narration": "Сама она голосование застала. В интервью Би-би-си она призналась: в моём возрасте этот спор мне почти безразличен. Хотя, пожалуй, я бы предпочла, чтобы он остался планетой.",
+      "onScreen": "Я бы предпочла, чтобы он *остался* планетой",
+      "icon": "quote",
+      "visualQuery": "Oxford University street",
+      "imagePrompt": "an elderly woman's hands holding a cup of tea beside a window with a night sky full of stars, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "А зонд увидел живой мир: горы из водяного льда и огромное светлое сердце, названное в честь Томбо. Его левая часть — азотный ледник без единого кратера.",
+      "onScreen": "Ледяное *сердце* Плутона",
+      "icon": "mountain",
+      "visualQuery": "Pluto Tombaugh Regio",
+      "imagePrompt": "a vast smooth plain of pale nitrogen ice bordered by jagged water-ice mountains under a black sky with a thin blue haze, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Значит, этой поверхности меньше десяти миллионов лет. Плутон геологически жив. Для его защитников это важный довод: судить планету надо по ней самой, а не по соседям.",
+      "onScreen": "Моложе *10 млн* лет",
+      "icon": "flame",
+      "visualQuery": "Sputnik Planitia Pluto",
+      "imagePrompt": "close view of polygonal cells of nitrogen ice on a frozen plain glowing under faint sunlight, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s34",
+      "kind": "media",
+      "narration": "Спор не утих и сейчас. В две тысячи двадцать четвёртом группа Жан-Люка Марго предложила более точное определение. Голосовать за него, возможно, будут в Риме в две тысячи двадцать седьмом. Но и по нему Плутон — карлик.",
+      "onScreen": "Рим, 2027: *новый* раунд?",
+      "icon": "calendar",
+      "visualQuery": "Rome aerial view",
+      "imagePrompt": "Rome rooftops and domes at twilight seen from above, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s35",
+      "kind": "statement",
+      "narration": "А теперь обещанное. Плутон не первый. В тысяча восемьсот первом году Джузеппе Пьяцци открыл Цереру, и её встретили как недостающую планету между Марсом и Юпитером.",
+      "onScreen": "1801: Церера — *планета*",
+      "icon": "history",
+      "visualQuery": "Ceres dwarf planet Dawn",
+      "imagePrompt": "a grey cratered dwarf world with a few bright white spots floating between a red planet and a striped giant in the distance, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s36",
+      "kind": "media",
+      "narration": "Но рядом нашли Палладу, Юнону и Весту. Около сорока лет учебники звали их планетами. А когда таких тел набралось пятнадцать, их без всякого голосования записали в астероиды.",
+      "onScreen": "Без голосования — в *астероиды*",
+      "icon": "rotate-ccw",
+      "visualQuery": "asteroid belt space",
+      "imagePrompt": "a swarm of rocky asteroids drifting between the orbits of a red planet and a giant striped planet, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Видишь закономерность? Ни Церера, ни Плутон не изменились. Просто у обоих нашлись соседи. Сегодня оба — карликовые планеты. Планета — это граница, которую проводят люди. И её сдвигают, когда узнают о небе больше.",
+      "onScreen": "Небо то же. Изменились *мы*",
+      "icon": "eye",
+      "visualQuery": "Milky Way night sky",
+      "imagePrompt": "a lone observer silhouette on a hill under a vast Milky Way, one faint dot of light far above the horizon, deep navy and icy cyan palette with warm amber highlights"
+    },
+    {
+      "id": "s38",
+      "kind": "cta",
+      "narration": "А для тебя Плутон — планета?",
+      "onScreen": "Для тебя Плутон — *планета*?",
+      "icon": "message-circle"
+    }
+  ]
+}

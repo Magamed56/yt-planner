@@ -1,0 +1,87 @@
+{
+  "title": "Медуза, которая живёт вечно? Не совсем",
+  "description": "Медуза Turritopsis dohrnii умеет превращаться обратно в полип с помощью трансдифференцировки клеток. Рассказываем, что нашли биологи в её геноме и почему биологическое бессмертие не спасает её от хищников и болезней.\n#shorts #медуза #биология #бессмертие",
+  "tags": [
+    "медуза которая живет вечно",
+    "бессмертная медуза",
+    "turritopsis dohrnii",
+    "медуза виды",
+    "медуза",
+    "биология",
+    "омоложение",
+    "трансдифференцировка",
+    "морские животные",
+    "наука",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Эта медуза умеет возвращаться в детство. И не раз.",
+      "onScreen": "Медуза, которая *молодеет*",
+      "icon": "hourglass",
+      "visualQuery": "Turritopsis dohrnii",
+      "imagePrompt": "cinematic macro shot of a tiny translucent jellyfish with a glowing red core drifting in deep blue water, soft rim light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Это туритопсис дорни. Обычно жизнь медузы идёт в одну сторону: от полипа к взрослой медузе.",
+      "onScreen": "Полип → медуза. *Только* вперёд",
+      "icon": "arrow-right",
+      "visualQuery": "jellyfish swimming ocean",
+      "imagePrompt": "cinematic underwater scene of small transparent jellyfish pulsing in teal water, sunbeams from above, calm mood"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "А эта при стрессе оседает на дно и снова становится полипом. Но есть подвох.",
+      "onScreen": "Стресс — и *обратно* в полип",
+      "icon": "rotate-ccw",
+      "visualQuery": "hydrozoan polyp colony",
+      "imagePrompt": "macro view of tiny branching polyps on a rocky seabed, delicate tentacles, soft teal light, shallow depth of field"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Её клетки меняют профессию. Это трансдифференцировка, её описала группа Стефано Пираино в тысяча девятьсот девяносто шестом году.",
+      "onScreen": "Клетки меняют *профессию*",
+      "icon": "microscope",
+      "visualQuery": "jellyfish under microscope",
+      "imagePrompt": "cinematic microscope view of glowing cells reorganizing inside a translucent organism, teal and emerald palette, dark background"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "А в две тысячи двадцать втором году геном туритопсис сравнили со смертными родственниками, чтобы найти ключи к омоложению.",
+      "onScreen": "Геном «бессмертной» против *смертных*",
+      "icon": "dna",
+      "visualQuery": "DNA sequencing laboratory",
+      "imagePrompt": "glowing DNA double helix floating beside a translucent jellyfish in dark water, teal and emerald light, cinematic"
+    },
+    {
+      "id": "s6",
+      "kind": "list",
+      "narration": "Подвох такой: бессмертие у неё только биологическое. Её едят хищники. Её губят болезни.",
+      "onScreen": "Не стареет, но *погибает*",
+      "items": [
+        "Её едят хищники",
+        "Её губят болезни"
+      ],
+      "icon": "triangle-alert",
+      "visualQuery": "fish eating jellyfish",
+      "imagePrompt": "dramatic underwater shot of a fish approaching a tiny glowing jellyfish, dim emerald water, tense mood"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "А ты бы согласился вернуться в детство?",
+      "onScreen": "Вернулся бы в *детство*?",
+      "icon": "message-circle"
+    }
+  ]
+}

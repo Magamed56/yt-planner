@@ -1,0 +1,98 @@
+{
+  "title": "Как работает ChatGPT и почему он ошибается",
+  "description": "Как языковые модели вроде GPT пишут текст: они предсказывают следующий токен, а в основе лежит архитектура трансформер 2017 года. Объясняем, откуда берутся галлюцинации нейросетей и почему уверенный ответ стоит проверять.\n#shorts #нейросеть #chatgpt #ии #технологии",
+  "tags": [
+    "нейросеть",
+    "как нейросеть пишет текст",
+    "нейросеть пишет текст",
+    "нейросеть пишет код",
+    "нейросеть пишет книгу",
+    "языковая модель",
+    "токен",
+    "трансформер",
+    "галлюцинации нейросети",
+    "искусственный интеллект",
+    "gpt",
+    "chatgpt",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Нейросеть пишет ответ по одному кусочку слова за раз.",
+      "onScreen": "Ответ рождается *по кусочку*",
+      "icon": "cpu",
+      "visualQuery": "laptop screen typing text",
+      "imagePrompt": "cinematic close-up of glowing text fragments appearing one by one on a dark screen, deep blue and cyan light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Этот кусочек называют токеном. И из-за него же она порой уверенно ошибается.",
+      "onScreen": "Кусочек текста — это *токен*",
+      "icon": "puzzle",
+      "visualQuery": "scrabble letter tiles table",
+      "imagePrompt": "floating translucent puzzle pieces with soft blue glow in dark space, cinematic rim light, no letters"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Модели GPT обучали ровно этому: предсказывать следующий токен текста. Снова и снова.",
+      "onScreen": "Задача одна: угадать *следующий* токен",
+      "icon": "target",
+      "visualQuery": "server room data center",
+      "imagePrompt": "cinematic wide shot of a vast data center corridor with blinking blue lights, cool teal palette, moody atmosphere"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "Основа таких моделей — трансформер. Эту архитектуру предложили в две тысячи семнадцатом году.",
+      "onScreen": "Трансформер появился в *2017*",
+      "stat": {
+        "value": 2017,
+        "label": "год появления архитектуры трансформер"
+      },
+      "icon": "calendar-check",
+      "visualQuery": "scientific paper printed pages",
+      "imagePrompt": "stack of printed research papers on a dark desk lit by a cold blue monitor glow, cinematic shallow depth of field, no readable text"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Статья авторов так и называлась: внимание — это всё, что нужно.",
+      "onScreen": "«Внимание — это *всё*, что нужно»",
+      "icon": "eye",
+      "visualQuery": "neural network diagram whiteboard",
+      "imagePrompt": "abstract web of glowing lines connecting points of light, some connections brighter than others, dark blue background, cinematic"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Но у модели нет цели сказать правду. Есть цель продолжить текст правдоподобно.",
+      "onScreen": "Цель — не правда, а *правдоподобие*",
+      "icon": "triangle-alert",
+      "visualQuery": "person reading phone screen night",
+      "imagePrompt": "person in a dark room lit only by a smartphone screen, cold blue light on face, cinematic moody portrait"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Отсюда галлюцинации: гладкий, уверенный, но фактически неверный текст. Уверенный тон — не доказательство. Проверяй факты.",
+      "onScreen": "Гладко ≠ *верно*",
+      "icon": "shield",
+      "visualQuery": "magnifying glass documents desk",
+      "imagePrompt": "magnifying glass over blurred documents on a dark desk, cool cyan rim light, cinematic shallow depth of field"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты отличишь гладкий ответ от верного?",
+      "onScreen": "Отличишь гладкое от *верного*?",
+      "icon": "message-circle"
+    }
+  ]
+}

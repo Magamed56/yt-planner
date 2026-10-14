@@ -12,6 +12,7 @@ import type { GhRelease, GhRun } from "../lib/github";
 import { decideReserve, releaseVideosOf, retryCost } from "../lib/ops";
 import { runLabel } from "../lib/stages";
 import { buildState, parseAutopilot, parseQueueOrder, type RunInfo, type StateInput } from "../lib/state";
+import { withFixtureSchedule } from "../lib/fixture-channel";
 
 const studio = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (p: string) => JSON.parse(fs.readFileSync(path.join(studio, p), "utf8").replace(/^﻿/, "")) as unknown;
@@ -96,8 +97,9 @@ const run = (over: Partial<GhRun>): GhRun => ({
 const base: StateInput = {
   now,
   planJson: read("content/plan.json"),
-  channelJson: read("channel.json"),
-  scriptFiles: fs.readdirSync(path.join(studio, "scripts")),
+  channelJson: withFixtureSchedule(read("channel.json")),
+  // Настоящие razbor-L*.json не берём: этапы «Разборов» задаёт фикстура withLong ниже.
+  scriptFiles: fs.readdirSync(path.join(studio, "scripts")).filter((f) => !f.startsWith("razbor-")),
   fillLists: [read("content/week1-videos.json"), { videos: [fill("L01", 421), fill("L04", 433)] }],
   releases,
   runs: [],

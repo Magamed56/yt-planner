@@ -1,0 +1,89 @@
+{
+  "title": "Римский бетон: почему он стоит 2000 лет",
+  "description": "Почему римский бетон и римский цемент живут тысячелетиями: купол Пантеона без арматуры, морской бетон, который крепнет в воде, и горячий замес с известью, залечивающий трещины. Коротко и по научным работам.\n#shorts #римскийбетон #пантеон #история #наука",
+  "tags": [
+    "римский бетон",
+    "римский цемент",
+    "как сделать римский бетон",
+    "делаем римский бетон",
+    "пантеон",
+    "древний рим",
+    "бетон",
+    "история",
+    "архитектура",
+    "наука",
+    "самовосстанавливающийся бетон",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Купол Пантеона без арматуры стоит почти два тысячелетия.",
+      "onScreen": "Без арматуры. *Почти 2000 лет*",
+      "icon": "hourglass",
+      "visualQuery": "Pantheon Rome dome interior",
+      "imagePrompt": "cinematic upward view of the Pantheon dome interior in Rome, sunbeam through the oculus, warm golden dust, ancient coffered concrete"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "Его построили около сто двадцать пятого года. Диаметр — сорок три метра. И до сих пор это крупнейший купол из бетона без арматуры.",
+      "onScreen": "Крупнейший *неармированный* купол мира",
+      "stat": {
+        "value": 43.3,
+        "suffix": " м",
+        "label": "диаметр купола Пантеона"
+      },
+      "icon": "trophy",
+      "visualQuery": "Pantheon Rome exterior",
+      "imagePrompt": "cinematic wide shot of the Roman Pantheon facade at golden hour, warm stone tones, soft haze, low angle"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Но ещё удивительнее римские причалы. Их бетон веками омывает море.",
+      "onScreen": "Бетон, который живёт *в море*",
+      "icon": "droplet",
+      "visualQuery": "ancient Roman harbor ruins sea",
+      "imagePrompt": "cinematic shot of ancient Roman harbor concrete ruins washed by turquoise waves, warm sunset light, spray in the air"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Вода его не разрушает, а укрепляет. В бетоне растут новые кристаллы: тоберморит и филлипсит.",
+      "onScreen": "Морская вода его *укрепляет*",
+      "icon": "atom",
+      "visualQuery": "mineral crystals microscope",
+      "imagePrompt": "macro view of tiny mineral crystals growing inside grey stone pores, warm amber rim light, shallow depth of field"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "А главный трюк спрятан в белых крошках извести внутри бетона.",
+      "onScreen": "Секрет — в *белых крошках*",
+      "icon": "eye",
+      "visualQuery": "lime powder hands mixing",
+      "imagePrompt": "cinematic close-up of hands mixing white quicklime with volcanic ash, steam rising, warm torchlight, ancient workshop"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Это горячий замес. Трещина доходит до такой крошки — и бетон заделывает её сам.",
+      "onScreen": "Бетон *сам* залечивает трещины",
+      "icon": "shield",
+      "visualQuery": "cracked concrete wall",
+      "imagePrompt": "cinematic macro of a hairline crack in ancient concrete filling with white mineral, warm golden light, sense of healing"
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "А твой дом простоит хотя бы сто лет?",
+      "onScreen": "Твой дом простоит *100 лет*?",
+      "icon": "house"
+    }
+  ]
+}

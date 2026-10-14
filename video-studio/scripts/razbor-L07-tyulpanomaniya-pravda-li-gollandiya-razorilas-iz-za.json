@@ -1,0 +1,458 @@
+{
+  "title": "Тюльпаномания: правда ли Голландия разорилась из-за тюльпанов",
+  "description": "Разбираем тюльпаноманию 1637 года простыми словами: почему пёстрые тюльпаны стоили как дом, как в голландских тавернах торговали луковицами, которые ещё сидели в земле, и что на самом деле случилось в феврале. А потом проверяем легенду о разорённой стране — от памфлетов моралистов и книги Чарльза Маккея до расчётов экономиста Питера Гарбера и архивов историка Энн Голдгар.\n#тюльпаномания #финансовыйпузырь #историяэкономики #нидерланды",
+  "tags": [
+    "тюльпаномания",
+    "тюльпановая лихорадка",
+    "тюльпанная лихорадка",
+    "тюльпаномания 1637",
+    "первый финансовый пузырь",
+    "финансовый пузырь",
+    "история экономики",
+    "золотой век нидерландов",
+    "голландия 17 век",
+    "чарльз маккей",
+    "энн голдгар",
+    "фьючерсы история",
+    "tulip mania",
+    "tulipmania",
+    "economic bubble"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Одна луковица тюльпана стоила как хороший дом с обстановкой.",
+      "onScreen": "Луковица по цене *дома*",
+      "icon": "flower",
+      "visualQuery": "tulip bulbs",
+      "imagePrompt": "a single brown tulip bulb resting on a red velvet cushion on a dark oak table inside a 17th-century Dutch room, soft light from a leaded window, deep emerald and warm gold palette",
+      "chapter": "Луковица по цене дома"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Голландия, тридцатые годы семнадцатого века. Самые дорогие луковицы шли примерно по пять тысяч гульденов. А мастер-ремесленник зарабатывал около трёхсот гульденов в год.",
+      "onScreen": "Больше 16 лет *работы* мастера",
+      "icon": "coins",
+      "visualQuery": "Dutch guilder coins",
+      "imagePrompt": "a small pile of old silver coins next to a single tulip bulb on a wooden merchant counter, candlelight, deep emerald and warm gold palette",
+      "compare": {
+        "items": [
+          {
+            "label": "Редкая луковица",
+            "value": 5000
+          },
+          {
+            "label": "Мастер за год",
+            "value": 300
+          }
+        ],
+        "suffix": " гульденов"
+      }
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "В феврале тысяча шестьсот тридцать седьмого рынок рухнул за считаные дни. Первым, судя по всему, замер Харлем: покупатели перестали давать цену.",
+      "onScreen": "Февраль 1637: *обвал*",
+      "icon": "trending-down",
+      "visualQuery": "Haarlem canal",
+      "imagePrompt": "a quiet canal in an old Dutch brick town on a grey winter morning, empty quay, bare trees, deep emerald and warm gold palette",
+      "map": {
+        "lat": 52.381,
+        "lon": 4.637,
+        "label": "Харлем",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Дальше рассказ знаком по учебникам: купцы разорены, люди бросаются в каналы, экономика надолго подорвана. Первый финансовый пузырь в истории.",
+      "onScreen": "Разорение, каналы, *крах*",
+      "icon": "triangle-alert",
+      "visualQuery": "Amsterdam canal night",
+      "imagePrompt": "a dark canal at night between narrow gabled houses, a few lantern reflections on black water, mist, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Но историки, засевшие в архивах, не нашли главного, на чём держится легенда. Чего именно — узнаешь в конце.",
+      "onScreen": "В архивах нет *главного*",
+      "icon": "search",
+      "visualQuery": "old archive documents",
+      "imagePrompt": "stacks of old handwritten documents tied with string on archive shelves, a magnifying glass on top, dust in a beam of light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Тюльпан пришёл в Европу из Османской империи в середине шестнадцатого века. А в тысяча пятьсот девяносто четвёртом Карл Клузиус вырастил в Лейдене одни из первых тюльпанов Голландии.",
+      "onScreen": "Лейден, 1594: тюльпаны *Клузиуса*",
+      "icon": "sprout",
+      "visualQuery": "Hortus botanicus Leiden",
+      "imagePrompt": "a small walled Renaissance botanical garden with neat rectangular flower beds of early tulips, brick paths, spring morning, deep emerald and warm gold palette",
+      "chapter": "Красота от вируса"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Ценились не простые тюльпаны, а пёстрые: по белым или жёлтым лепесткам будто бегут огненные языки. Про такой цветок говорили, что он сломался.",
+      "onScreen": "Ценились *пёстрые* лепестки",
+      "icon": "palette",
+      "visualQuery": "striped tulip flower",
+      "imagePrompt": "a single white tulip with crimson flame-like streaks on its petals against a dark background, botanical still life, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Почему цветок ломается, три с лишним века не знал никто. В тысяча девятьсот двадцать восьмом году англичанка Дороти Кейли опубликовала ответ: пестроту вызывает вирус.",
+      "onScreen": "1928: виновник — *вирус*",
+      "icon": "microscope",
+      "visualQuery": "tulip petals macro",
+      "imagePrompt": "a brass laboratory microscope beside a striped tulip petal on a glass slide in a 1920s laboratory, warm lamp light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s9",
+      "kind": "media",
+      "narration": "Вирус разносит тля. Он рисует узор, но ослабляет луковицу, и детки она даёт хуже. А узор семенами не передаётся, только детками той же луковицы.",
+      "onScreen": "Красота, которая *ослабляет*",
+      "icon": "bug",
+      "visualQuery": "aphids on plant",
+      "imagePrompt": "tiny green aphids crawling on a fresh green tulip stem, morning dew, macro view, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Отсюда и цена. Хронист Николас ван Вассенар отмечал: в тысяча шестьсот двадцать четвёртом году луковиц знаменитого Семпер Августуса было около дюжины. И все у одного владельца.",
+      "onScreen": "Семпер Августус: около *12* луковиц",
+      "icon": "crown",
+      "visualQuery": "Semper Augustus tulip",
+      "imagePrompt": "an antique botanical watercolor of a white tulip with carmine flames lying open on a wooden table beside a quill, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "Продавать их он не хотел даже по тысяче двести гульденов за штуку. А это за тринадцать лет до краха. Что же изменилось потом?",
+      "onScreen": "Дорогие *задолго* до мании",
+      "icon": "hourglass",
+      "visualQuery": "tulip garden Netherlands",
+      "imagePrompt": "a private walled garden with a few rare striped tulips in terracotta pots, an iron gate closed, late afternoon light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s12",
+      "kind": "media",
+      "narration": "Изменились покупатели. С конца тысяча шестьсот тридцать четвёртого в торговлю пошли непрофессионалы. А летом тридцать шестого сделки переехали в таверны.",
+      "onScreen": "Торговля уходит *в таверны*",
+      "icon": "beer",
+      "visualQuery": "old tavern interior candles",
+      "imagePrompt": "a crowded 17th-century Dutch tavern interior with long wooden tables, candles and clay pipes, silhouettes of traders seen from behind, deep emerald and warm gold palette",
+      "chapter": "Торговля ветром"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Торговцы собирались компаниями, которые называли коллегиями. За сделку покупатель доплачивал продавцу винные деньги, но не больше трёх гульденов.",
+      "onScreen": "Коллегии и *винные* деньги",
+      "icon": "wine",
+      "visualQuery": "Dutch tavern painting",
+      "imagePrompt": "a pewter wine jug, a few coins and a handwritten slip of paper on a tavern table, candlelight, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s14",
+      "kind": "statement",
+      "narration": "Только луковицы с осени до лета сидят в земле. Поэтому продавали обещание: заплачу в июне, когда выкопают. Залога не брали. Голландцы называли это торговлей ветром.",
+      "onScreen": "Windhandel — торговля *ветром*",
+      "icon": "wind",
+      "visualQuery": "tulip bulbs planting soil",
+      "imagePrompt": "tulip bulbs half buried in dark garden soil under a light frost, a wooden stake marking the bed, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s15",
+      "kind": "stat",
+      "narration": "В ноябре тысяча шестьсот тридцать шестого в игру вошли и простые сорта. Один из них, Витте Кронен, за январь подорожал примерно в двадцать шесть раз.",
+      "onScreen": "Простой сорт: *×26* за месяц",
+      "icon": "trending-up",
+      "visualQuery": "white tulips field",
+      "imagePrompt": "a bunch of plain white tulips in a clay jug on a windowsill, a steeply rising shadow on the wall behind, deep emerald and warm gold palette",
+      "stat": {
+        "prefix": "×",
+        "value": 26,
+        "label": "рост цены за январь 1637"
+      }
+    },
+    {
+      "id": "s16",
+      "kind": "media",
+      "narration": "Пятого февраля в Алкмаре продали луковицы покойного трактирщика Воутера Винкеля, в пользу его детей. Торги шли под надзором городского сиротского совета.",
+      "onScreen": "Алкмар, *5 февраля* 1637",
+      "icon": "gavel",
+      "visualQuery": "Alkmaar canal",
+      "imagePrompt": "an old Dutch hall with an auction table covered in a green cloth, a wooden gavel and a list of tulip names, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s17",
+      "kind": "stat",
+      "narration": "Выручка — около девяноста тысяч гульденов, а луковица сорта Вице-король ушла за четыре тысячи двести. Это был пик: вскоре рынок рухнул.",
+      "onScreen": "Вице-король: *4200* гульденов",
+      "icon": "banknote",
+      "visualQuery": "Viceroy tulip",
+      "imagePrompt": "a single red and white striped tulip in a crystal vase on an auction table, gold coins scattered around, dramatic side light, deep emerald and warm gold palette",
+      "stat": {
+        "prefix": "≈",
+        "value": 90000,
+        "label": "гульденов за одни торги"
+      }
+    },
+    {
+      "id": "s18",
+      "kind": "media",
+      "narration": "Через несколько дней покупатели перестали платить. Но вот деталь, которую легенда пропускает: луковицы ещё сидели в земле, а деньги почти никто не передал. Убытки остались в основном на бумаге.",
+      "onScreen": "Убытки — *на бумаге*",
+      "icon": "file-text",
+      "visualQuery": "tulip field spring",
+      "imagePrompt": "a bare winter flower field with rows of soil and no flowers yet, a torn paper contract caught on a fence, deep emerald and warm gold palette",
+      "chapter": "Обвал на бумаге"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Двадцать четвёртого февраля цветоводы собрались в Амстердаме. Предложили: сделки, заключённые до конца ноября, исполнять, а от поздних покупатель откупается десятью процентами цены.",
+      "onScreen": "Предложение: откуп за *10%*",
+      "icon": "handshake",
+      "visualQuery": "Amsterdam Herengracht",
+      "imagePrompt": "a long wooden table in a 17th-century Dutch meeting room with papers, inkwells and hats, seen from above, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s20",
+      "kind": "statement",
+      "narration": "Власти это не утвердили. В конце апреля все такие сделки заморозили, а спорщикам посоветовали договариваться самим, без судов.",
+      "onScreen": "Суд: *договаривайтесь* сами",
+      "icon": "scale",
+      "visualQuery": "Binnenhof The Hague",
+      "imagePrompt": "an old brass balance scale on a court desk with sealed documents, a tulip bulb on one pan, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s21",
+      "kind": "stat",
+      "narration": "А в мае тысяча шестьсот тридцать восьмого Харлем разрешил расторгнуть сделку за три с половиной процента цены. Многие города поступили так же. Откуда же легенда о разорённой стране?",
+      "onScreen": "Харлем, 1638: *3,5%* за выход",
+      "icon": "percent",
+      "visualQuery": "Haarlem city hall",
+      "imagePrompt": "the facade of an old Dutch town hall on a market square at dawn, wet cobblestones, deep emerald and warm gold palette",
+      "stat": {
+        "value": 3.5,
+        "suffix": "%",
+        "label": "отступные за отказ от сделки"
+      }
+    },
+    {
+      "id": "s22",
+      "kind": "media",
+      "narration": "Сразу после краха вышли памфлеты и песни, высмеивающие торговцев. Самый известный — диалог Правдоуста и Жадины, изданный в Харлеме в тысяча шестьсот тридцать седьмом.",
+      "onScreen": "Памфлеты *моралистов*",
+      "icon": "newspaper",
+      "visualQuery": "old printing press",
+      "imagePrompt": "an old wooden printing press with freshly printed pages hanging to dry in a dim workshop, deep emerald and warm gold palette",
+      "chapter": "Кто сочинил катастрофу"
+    },
+    {
+      "id": "s23",
+      "kind": "statement",
+      "narration": "Это не хроника, а нравоучение: смотрите, до чего доводит жадность. Но цены из этих диалогов потом перекочевали почти во все книги о тюльпаномании.",
+      "onScreen": "Нравоучение вместо *хроники*",
+      "icon": "scroll",
+      "visualQuery": "Satire on Tulip Mania",
+      "imagePrompt": "an old printed pamphlet lying open beside a wilted striped tulip and a jester's cap, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "В восемнадцатом веке их пересказал немецкий учёный Иоганн Бекман. А в тысяча восемьсот сорок первом году его рассказ, добавив красок, взял британский журналист Чарльз Маккей.",
+      "onScreen": "Памфлет → Бекман → *Маккей*",
+      "icon": "book-open",
+      "visualQuery": "Charles Mackay portrait",
+      "imagePrompt": "a Victorian writing desk with an open leather-bound book, a quill and a stack of older German volumes, gas lamp light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s25",
+      "kind": "list",
+      "narration": "Его книга о безумии толпы стала классикой. По Маккею, тюльпанами торговали все: дворяне, моряки, служанки и даже трубочисты.",
+      "onScreen": "По Маккею, торговали *все*",
+      "items": [
+        "Дворяне",
+        "Моряки",
+        "Служанки",
+        "Трубочисты"
+      ],
+      "icon": "users",
+      "visualQuery": "Extraordinary Popular Delusions book",
+      "imagePrompt": "a row of small symbolic objects on a table: a noble's feathered hat, a sailor's rope, a maid's apron and a chimney sweep's brush, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s26",
+      "kind": "quote",
+      "narration": "И его приговор: торговля страны получила тяжёлый удар, от которого оправлялась много лет. Этот вывод повторяли даже экономисты двадцатого века.",
+      "onScreen": "Удар, от которого оправлялись *много лет*",
+      "icon": "quote",
+      "visualQuery": "Victorian library books",
+      "imagePrompt": "a tall Victorian library with leather-bound books and a reading lamp glowing on an empty desk, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s27",
+      "kind": "quiz",
+      "narration": "Самая яркая сцена у Маккея — про матроса. Он принял редкую луковицу за лук и съел её с селёдкой. А стоила она три тысячи флоринов. Правда или миф?",
+      "onScreen": "Съел луковицу за *3000* флоринов",
+      "icon": "ship",
+      "visualQuery": "herring and onion",
+      "imagePrompt": "a pickled herring and a bulb that looks like an onion on a rough wooden plate on a ship's deck, harbor in the background, deep emerald and warm gold palette",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Байка без надёжного источника",
+        "question": "Ты слышал историю про этого матроса?",
+        "pauseSec": 3
+      }
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "Миф! Точнее, байка без надёжного источника. Маккей сослался на записки путешественника Бленвиля. Но тот побывал в Голландии в тысяча семьсот пятом году, через семьдесят лет. И о тюльпанах написал одну фразу.",
+      "onScreen": "Свидетель — через *70 лет*",
+      "icon": "book-x",
+      "visualQuery": "old travel journal",
+      "imagePrompt": "an 18th-century leather travel diary open on a coach seat, a few handwritten lines and a pressed flower, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s29",
+      "kind": "media",
+      "narration": "Так же и со знаменитым списком: быки, свиньи, вино, сыр и кровать за одну луковицу. Исследователи считают: это не сделка, а пример из памфлета, что можно купить на такие деньги.",
+      "onScreen": "Список товаров — *не сделка*",
+      "icon": "receipt",
+      "visualQuery": "cattle grazing Dutch meadow",
+      "imagePrompt": "fat cattle and sheep grazing on a flat green Dutch meadow with a windmill on the horizon, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "За цифры взялся экономист Питер Гарбер. В тысяча девятьсот восемьдесят девятом году он свёл цены из нотариальных договоров, аукционов и тех самых диалогов.",
+      "onScreen": "Гарбер, 1989: *проверка* цен",
+      "icon": "notebook-pen",
+      "visualQuery": "old ledger handwriting",
+      "imagePrompt": "an old ledger with columns of handwritten numbers next to a modern pencil and a printed price chart, desk lamp light, deep emerald and warm gold palette",
+      "chapter": "Что нашли в архивах"
+    },
+    {
+      "id": "s31",
+      "kind": "media",
+      "narration": "Вывод неожиданный: новый редкий сорт обычно сначала безумно дорог, а когда его размножат, дешевеет. Так вели себя и гиацинты в восемнадцатом веке.",
+      "onScreen": "Редкость дешевеет — это *норма*",
+      "icon": "flower-2",
+      "visualQuery": "hyacinth flowers",
+      "imagePrompt": "rows of blooming blue and pink hyacinths in a greenhouse, soft morning light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Загадкой остался лишь последний месяц, когда взлетели простые сорта. Позже Гарбер сравнил его с бессмысленной зимней игрой за выпивкой в городах, измученных чумой.",
+      "onScreen": "Последний месяц — *пузырь*?",
+      "icon": "beer",
+      "visualQuery": "beer mugs wooden table",
+      "imagePrompt": "clay beer mugs and scattered playing tokens on a tavern table in a cold winter evening, frost on the window, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Историк Энн Голдгар возражает: резче всего цены росли в январе, когда чума, болезнь в основном летняя, уже отступала. И она годами разбирала голландские архивы.",
+      "onScreen": "Голдгар: чума уже *отступала*",
+      "icon": "calendar",
+      "visualQuery": "old Dutch manuscript",
+      "imagePrompt": "hands in white cotton gloves turning the pages of a 17th-century Dutch notarial register in a reading room, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s34",
+      "kind": "stat",
+      "narration": "В две тысячи седьмом вышла её книга. Голдгар нашла всего тридцать семь человек, потративших на луковицы больше трёхсот гульденов. Это примерно годовой заработок мастера.",
+      "onScreen": "Крупных покупателей — *37*",
+      "icon": "user-check",
+      "visualQuery": "Dutch Golden Age merchants painting",
+      "imagePrompt": "a small circle of 17th-century merchants' hats and gloves laid on a table around a single tulip, seen from above, deep emerald and warm gold palette",
+      "stat": {
+        "value": 37,
+        "label": "потратили больше 300 гульденов"
+      }
+    },
+    {
+      "id": "s35",
+      "kind": "list",
+      "narration": "И это не трубочисты, а в основном купцы, пивовары и мастера-ремесленники, часто связанные родством, верой и соседством. Цепочки перепродаж — не длиннее пяти человек.",
+      "onScreen": "Кто торговал *на самом деле*",
+      "items": [
+        "Купцы",
+        "Пивовары",
+        "Мастера-ремесленники"
+      ],
+      "icon": "store",
+      "visualQuery": "old brewery copper kettle",
+      "imagePrompt": "a merchant's scale, a brewer's copper kettle and a craftsman's tools arranged on a workshop bench, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s36",
+      "kind": "stat",
+      "narration": "А теперь то главное, чего в архивах не нашлось. Голдгар не нашла ни одного банкрота тех лет, которого добили бы именно тюльпаны. Ни одного.",
+      "onScreen": "Разорённых тюльпанами: *0*",
+      "icon": "circle-x",
+      "visualQuery": "old court records books",
+      "imagePrompt": "an empty bankruptcy register page with a wilted striped tulip lying across it, archive desk, deep emerald and warm gold palette",
+      "stat": {
+        "value": 0,
+        "label": "банкротов, разорённых тюльпанами"
+      }
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Даже художник Ян ван Гойен, которого часто называют жертвой тюльпанов, умер банкротом лишь в тысяча шестьсот пятьдесят шестом году. А деньги он терял и на сделках с землёй.",
+      "onScreen": "Ван Гойен: долги *через 20 лет*",
+      "icon": "paintbrush",
+      "visualQuery": "Jan van Goyen painting",
+      "imagePrompt": "a painter's easel with an unfinished river landscape in brown and grey tones, brushes and a palette on a stool, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s38",
+      "kind": "quote",
+      "narration": "А вот вывод Голдгар из введения к её книге: тюльпаномания не разрушила ни экономику, ни даже благополучие большинства участников.",
+      "onScreen": "Тюльпаномания не разрушила *экономику*",
+      "icon": "quote",
+      "visualQuery": "Haarlem Grote Markt",
+      "imagePrompt": "a busy 17th-century Dutch market square with stalls, ships' masts in the distance, prosperous daylight, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s39",
+      "kind": "statement",
+      "narration": "Пострадало другое — доверие. Уважаемые люди отказывались платить по устным договорам. А на честном слове держалась вся торговля, и это был настоящий шок.",
+      "onScreen": "Кризис не денег, а *доверия*",
+      "icon": "heart-crack",
+      "visualQuery": "two hands handshake",
+      "imagePrompt": "two hands in 17th-century lace cuffs pulling apart from a handshake over a table with a contract, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s40",
+      "kind": "media",
+      "narration": "Так что самый знаменитый финансовый пузырь оказался прежде всего пузырём рассказа. Пузырь цен был, но небольшой. Огромной вышла легенда, которую веками пересказывали почти без проверки.",
+      "onScreen": "Пузырь маленький. Легенда — *огромная*",
+      "icon": "flower-2",
+      "visualQuery": "tulip field aerial",
+      "imagePrompt": "endless stripes of red, yellow and white tulip fields seen from high above, a windmill at the edge, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s41",
+      "kind": "cta",
+      "narration": "Ты бы отдал за луковицу цену дома?",
+      "onScreen": "Отдал бы *дом* за тюльпан?",
+      "icon": "message-circle"
+    }
+  ]
+}

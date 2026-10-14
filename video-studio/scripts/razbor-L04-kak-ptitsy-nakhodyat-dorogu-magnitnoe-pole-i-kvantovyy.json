@@ -1,0 +1,443 @@
+{
+  "title": "Как птицы находят дорогу: магнитное поле и квантовый компас",
+  "description": "Как перелётные птицы находят дорогу за десятки тысяч километров? Разбираем научный детектив длиной в полвека: компас, который не знает севера, железо в клюве голубя, оказавшееся ложным следом, и квантовая химия в глазу зарянки. Честно о том, что доказано, что пока спорно и почему слабый радиошум от электроники сбивает птичий магнитный компас.\n#птицы #магнитноеполе #миграцияптиц #квантоваябиология #наука",
+  "tags": [
+    "как птицы находят дорогу",
+    "как птицы ориентируются",
+    "магнитное поле",
+    "миграция птиц",
+    "перелётные птицы",
+    "магниторецепция",
+    "квантовый компас",
+    "птицы видят магнитное поле",
+    "криптохром",
+    "зарянка",
+    "полярная крачка",
+    "квантовая биология",
+    "bird migration",
+    "magnetoreception",
+    "quantum biology"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Полярная крачка за год пролетает около семидесяти тысяч километров.",
+      "onScreen": "Птичий компас спрятан *в глазу*",
+      "icon": "bird",
+      "visualQuery": "Arctic tern flight",
+      "imagePrompt": "an Arctic tern in flight over a dark icy ocean at dawn, wings fully spread, drifting sea ice below, deep emerald and warm gold palette",
+      "chapter": "Навигатор без карты"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "В две тысячи десятом году это показали крошечные датчики на лапках. Крачки летели из Гренландии к морю Уэдделла у Антарктиды и обратно. Над океаном, без дорог и указателей.",
+      "onScreen": "Гренландия → *Антарктида* → обратно",
+      "icon": "route",
+      "visualQuery": "Arctic terns flying ocean",
+      "imagePrompt": "a small flock of Arctic terns flying low over a vast grey ocean toward distant Antarctic icebergs, tiny against the horizon, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "В среднем — семьдесят тысяч девятьсот километров за год. Больше полутора экваторов. На тот момент — самая длинная миграция, записанная приборами.",
+      "onScreen": "Почти *1,8* экватора за год",
+      "stat": {
+        "value": 70900,
+        "suffix": " км",
+        "label": "в среднем за год"
+      },
+      "icon": "globe",
+      "visualQuery": "Earth globe rotating",
+      "imagePrompt": "a slowly turning globe of the Earth with a thin glowing line looping from the Arctic down to Antarctica and back, dark background, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s4",
+      "kind": "list",
+      "narration": "Как она не сбивается с курса? У перелётных птиц не один компас, а несколько. Солнце. Звёзды. И магнитное поле Земли.",
+      "onScreen": "Три *компаса* перелётных птиц",
+      "items": [
+        "Солнце",
+        "Звёзды",
+        "Магнитное поле"
+      ],
+      "icon": "compass",
+      "visualQuery": "starry night sky timelapse",
+      "imagePrompt": "a migrating songbird silhouette crossing a night sky full of stars above a calm sea, faint glow on the horizon, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Магнитный — самый загадочный, его ищут больше полувека. К концу ролика узнаешь три вещи. Где он спрятан, почему он квантовый и что его ломает.",
+      "onScreen": "Где он, почему квантовый, что *ломает*",
+      "icon": "magnet",
+      "visualQuery": "compass needle forest",
+      "imagePrompt": "an old brass compass lying on a mossy rock in a forest at dusk, needle trembling, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Первые улики нашли в шестидесятых во Франкфурте. Фридрих Меркель и его студент Вольфганг Вильчко изучали зарянок. Это певчие птицы, которые мигрируют ночью.",
+      "onScreen": "Франкфурт, *1960-е*: зарянки",
+      "icon": "bird",
+      "visualQuery": "European robin",
+      "imagePrompt": "a European robin with an orange breast perched on a branch at twilight, soft bokeh of a forest behind, deep emerald and warm gold palette",
+      "chapter": "Компас без севера"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "В сезон перелёта зарянка в клетке не находит себе места. Она рвётся туда, куда полетела бы на воле. Получается живая стрелка компаса.",
+      "onScreen": "Птица в клетке — *живая* стрелка",
+      "icon": "navigation",
+      "visualQuery": "songbird in cage",
+      "imagePrompt": "a small songbird inside a round wire cage at night, restlessly facing one side, moonlight through a window, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Вокруг клеток ставили катушки с током и поворачивали магнитное поле. Повернёшь магнитный север — птицы разворачиваются следом. Значит, поле они чувствуют.",
+      "onScreen": "Повернули поле — птицы *развернулись*",
+      "icon": "rotate-ccw",
+      "visualQuery": "Helmholtz coil",
+      "imagePrompt": "large copper wire coils on wooden frames surrounding a small bird cage in a dim laboratory room, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Тысяча девятьсот семьдесят второй год, журнал Сайенс. Вольфганг и Росвита Вильчко описали странность. Компас птиц устроен не так, как наш.",
+      "onScreen": "1972: *странный* компас",
+      "icon": "book-open",
+      "visualQuery": "old scientific journal",
+      "imagePrompt": "an open vintage science journal on a wooden desk next to a small bird feather and reading glasses, warm lamp light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s10",
+      "kind": "quiz",
+      "narration": "Проверь себя. Птичий компас, как и обычный, показывает, где север, а где юг. Правда или миф?",
+      "onScreen": "Птичий компас различает *север* и юг",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Он различает «к полюсу» и «к экватору»",
+        "question": "Чем птичий компас отличается от обычного?",
+        "pauseSec": 3
+      },
+      "icon": "circle-help",
+      "visualQuery": "magnetic compass map",
+      "imagePrompt": "a classic magnetic compass with a red north needle on a weathered paper map beside a small bird feather, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "Миф! Обычная стрелка чувствует, куда направлено поле. Птице это безразлично. Переверни только наклон силовых линий — и весной зарянки рвутся на юг. Хотя для стрелки север на месте.",
+      "onScreen": "Перевернули *наклон* — птицы на юг",
+      "icon": "flip-vertical-2",
+      "visualQuery": "migrating birds flock sky",
+      "imagePrompt": "a small bird in a cage turning to face the opposite direction while faint curved lines tilt around it, no text, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s12",
+      "kind": "media",
+      "narration": "Птица читает наклон линий поля. У полюсов они круто уходят в землю, у экватора лежат почти горизонтально. Так она отличает путь к полюсу от пути к экватору.",
+      "onScreen": "Не север и юг, а *к полюсу*",
+      "icon": "compass",
+      "visualQuery": "iron filings magnet",
+      "imagePrompt": "iron filings forming curved magnetic field lines around a bar magnet on white paper, macro detail, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Хитрый прибор. Но где он у птицы? Ни стрелки, ни магнита снаружи не видно. Первым подозреваемым стало железо.",
+      "onScreen": "Подозреваемый номер один: *железо*",
+      "icon": "search",
+      "visualQuery": "Magnetite",
+      "imagePrompt": "black magnetite crystals on a dark stone surface, glinting metallic edges, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s14",
+      "kind": "media",
+      "narration": "Логика простая: компас — это магнит. В две тысячи третьем году учёные из Франкфурта изучили надклювье почтовых голубей. Там нашлись нервные окончания с крупинками железа.",
+      "onScreen": "Железо в клюве *голубя*",
+      "icon": "magnet",
+      "visualQuery": "Homing pigeon",
+      "imagePrompt": "a grey homing pigeon head and beak in profile against a soft blurred loft background, deep emerald and warm gold palette",
+      "chapter": "Магнитный клюв: ложный след"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "Красивая версия: магнитики в нервах как стрелки. Но в две тысячи девятом году это проверили в Ольденбурге. Зарянкам перерезали нерв от клюва к мозгу. Компас работал.",
+      "onScreen": "Нерв перерезан — компас *работает*",
+      "icon": "circle-check",
+      "visualQuery": "robin bird forest",
+      "imagePrompt": "a European robin standing alert on a mossy log in an autumn forest, head turned, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "В две тысячи двенадцатом группа Дэвида Киза из Вены изучила клювы голубей по тончайшим срезам. Железо было. Но не в нервах, а в тысячах макрофагов — клеток иммунитета.",
+      "onScreen": "Не нейроны, а *макрофаги*",
+      "icon": "microscope",
+      "visualQuery": "microscope slide cells",
+      "imagePrompt": "a microscope view of stained tissue with round immune cells full of tiny dark iron granules, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s17",
+      "kind": "quote",
+      "narration": "Макрофаги не подают электрических сигналов. Киз подвёл итог: загадка того, как животные чувствуют магнитное поле, стала ещё загадочнее.",
+      "onScreen": "«Загадка стала *ещё загадочнее*»",
+      "icon": "quote",
+      "visualQuery": "pigeons flying city square",
+      "imagePrompt": "a flock of pigeons taking off from an old European square at dusk, motion in the wings, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s18",
+      "kind": "statement",
+      "narration": "А на роль компаса был кандидат страннее. Тысяча девятьсот семьдесят восьмой год. Физик Клаус Шультен из Гёттингена предположил: компас — это химическая реакция.",
+      "onScreen": "1978: компас — это *химия*",
+      "icon": "flask-conical",
+      "visualQuery": "Klaus Schulten portrait",
+      "imagePrompt": "a 1970s physics office with a chalkboard full of equations and a desk lamp over scattered papers, empty chair, deep emerald and warm gold palette",
+      "chapter": "Квантовая химия в глазу"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Он отправил статью в Сайенс и получил отказ. Рецензент написал: учёный поскромнее выбросил бы такую работу в корзину. Статья вышла в немецком журнале.",
+      "onScreen": "Science ответил *отказом*",
+      "icon": "circle-x",
+      "visualQuery": "crumpled paper wastebasket",
+      "imagePrompt": "crumpled typewritten manuscript pages in a wire wastepaper basket beside an old wooden desk, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s20",
+      "kind": "media",
+      "narration": "Идея такая. Свет попадает в особую молекулу, и в ней перескакивает электрон. Получаются два радикала с одинокими электронами. Это радикальная пара.",
+      "onScreen": "Свет рождает *радикальную пару*",
+      "icon": "atom",
+      "visualQuery": "sunlight rays forest",
+      "imagePrompt": "a beam of blue light striking a glowing molecular structure in darkness, two bright particles splitting apart, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s21",
+      "kind": "stat",
+      "narration": "Живёт такая пара около миллионной доли секунды. За это время спины двух электронов — их крошечные магнитики — успевают качнуться между двумя состояниями.",
+      "onScreen": "Миллионная доля *секунды*",
+      "stat": {
+        "prefix": "≈",
+        "value": 1,
+        "suffix": " мкс",
+        "label": "живёт радикальная пара"
+      },
+      "icon": "timer",
+      "visualQuery": "stopwatch ticking",
+      "imagePrompt": "a vintage stopwatch frozen at the first tick with tiny sparks of light around it, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s22",
+      "kind": "statement",
+      "narration": "Спин — квантовое свойство. Поле Земли чуть-чуть меняет ритм качаний. От ритма зависит, что получится в конце. А эффект зависит от угла молекулы к силовым линиям.",
+      "onScreen": "Угол к полю меняет *химию*",
+      "icon": "activity",
+      "visualQuery": "pendulum swinging",
+      "imagePrompt": "two tiny glowing spinning tops linked by a thread of light, tilted against faint curved field lines, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s23",
+      "kind": "statement",
+      "narration": "Выходит, химия сама становится компасом. Но ей нужен свет. В девяносто третьем году Вильчко с коллегами это проверили. Под красным светом птицы сбиваются. Под синим и зелёным — держат курс.",
+      "onScreen": "Красный свет *сбивает* компас",
+      "icon": "lightbulb",
+      "visualQuery": "red light dark room",
+      "imagePrompt": "a small bird cage lit half by red light and half by blue-green light in a dark room, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s24",
+      "kind": "media",
+      "narration": "Какая же молекула ловит свет? В двухтысячном году Шультен с коллегами назвал кандидата: криптохром. Этот белок чувствует синий свет и есть в глазах птиц.",
+      "onScreen": "Кандидат: белок *криптохром*",
+      "icon": "eye",
+      "visualQuery": "bird eye",
+      "imagePrompt": "a songbird's dark glossy eye reflecting a blue twilight sky, fine feathers around it, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s25",
+      "kind": "statement",
+      "narration": "Тогда птица, возможно, видит поле. Например, как светлые и тёмные пятна поверх картинки. Но это гипотеза: спросить зарянку, что она видит, нельзя.",
+      "onScreen": "Поле как *пятна* перед глазами?",
+      "icon": "scan-eye",
+      "visualQuery": "aerial view forest river",
+      "imagePrompt": "a bird's-eye view of a dusk landscape with a faint translucent darker patch overlaid across the sky, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s26",
+      "kind": "statement",
+      "narration": "Улика была и в мозге. В две тысячи пятом году её нашли Хенрик Моуритсен и коллеги. Это зона, связанная со зрением и активная ночью. Её назвали кластер Эн.",
+      "onScreen": "Кластер N — *ночной* центр",
+      "icon": "brain",
+      "visualQuery": "birds flying full moon",
+      "imagePrompt": "silhouettes of small songbirds flying across a full moon at night, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s27",
+      "kind": "stat",
+      "narration": "В той же работе девятого года зарянкам повреждали кластер Эн. Магнитный компас пропадал, солнечный и звёздный — нет. Моуритсен уверен на девяносто девять процентов: здесь центр компаса.",
+      "onScreen": "Кластер N — *центр* компаса",
+      "stat": {
+        "value": 99,
+        "suffix": "%",
+        "label": "уверенность: кластер N — компас"
+      },
+      "icon": "target",
+      "visualQuery": "sunset sky clouds",
+      "imagePrompt": "a robin perched under a night sky with stars and a fading sunset glow on the horizon, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "Но главный поворот случился в Ольденбурге. Моуритсен переехал туда работать, и опыты вдруг перестали получаться. Зарянки в клетках рвались в случайные стороны. Годами искали ошибку.",
+      "onScreen": "Ольденбург: компас *отказал*",
+      "icon": "triangle-alert",
+      "visualQuery": "Oldenburg city",
+      "imagePrompt": "a quiet north German university town at dusk with brick buildings and a canal, deep emerald and warm gold palette",
+      "map": {
+        "lat": 53.14,
+        "lon": 8.21,
+        "label": "Ольденбург",
+        "zoom": "city"
+      },
+      "chapter": "Шум большого города"
+    },
+    {
+      "id": "s29",
+      "kind": "media",
+      "narration": "Наконец деревянные домики с птицами обшили алюминием и заземлили. Магнитное поле Земли проходит сквозь такой экран. А вот радиошум от электроники — нет.",
+      "onScreen": "Алюминиевый экран *против* шума",
+      "icon": "shield",
+      "visualQuery": "wooden hut garden",
+      "imagePrompt": "a small wooden hut on a university lawn wrapped in shiny aluminium sheets with a grounding cable running into the soil, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s30",
+      "kind": "stat",
+      "narration": "Экран ослаблял шум от пятидесяти килогерц до пяти мегагерц примерно в сто раз. И компас вернулся. Моуритсен сравнил это со щелчком выключателя.",
+      "onScreen": "Шум тише — компас *вернулся*",
+      "stat": {
+        "prefix": "в ",
+        "value": 100,
+        "suffix": " раз",
+        "label": "тише радиошум за экраном"
+      },
+      "icon": "shield-check",
+      "visualQuery": "light switch flipping",
+      "imagePrompt": "a hand flipping an old toggle switch on a wooden wall, a small bird silhouette lit up beyond a window, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Сняли заземление — птицы снова сбились. Пустили шум внутрь экрана — то же самое. Опыты шли семь лет, вслепую: проверяющие не знали, подключено ли заземление.",
+      "onScreen": "7 лет двойных *слепых* проверок",
+      "icon": "list-checks",
+      "visualQuery": "scientist writing notebook",
+      "imagePrompt": "a researcher's hands recording data in a notebook beside a funnel-shaped bird cage inside a dim wooden hut, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Причём шум был в сотни раз слабее норм, допустимых для людей. Вредит ли он нам, эта работа не проверяла. А компас зарянки он выключал.",
+      "onScreen": "Ниже норм — но компас *гаснет*",
+      "icon": "zap",
+      "visualQuery": "city lights night",
+      "imagePrompt": "a night city skyline glowing with countless lights and rooftop antennas, faint ripples in the air above, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s33",
+      "kind": "media",
+      "narration": "И это ключ. Крупинка железа такой слабый шум не заметила бы. А спины радикальной пары заметят: шум сбивает их ритм. Сильный довод за квантовый компас.",
+      "onScreen": "Радиошум сбивает *спины*",
+      "icon": "radio-tower",
+      "visualQuery": "radio tower antenna",
+      "imagePrompt": "a tall radio transmission tower against a dusk sky with faint concentric waves spreading through the air, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "Так какая молекула — стрелка? В две тысячи восемнадцатом году криптохром четыре нашли в колбочках сетчатки зарянки. В сезон перелёта его становится больше.",
+      "onScreen": "Главный подозреваемый: *криптохром 4*",
+      "icon": "dna",
+      "visualQuery": "eye retina",
+      "imagePrompt": "a stylized cross-section of a bird retina with rows of cone cells glowing softly, one type highlighted in gold, deep emerald and warm gold palette",
+      "chapter": "Что пока неизвестно"
+    },
+    {
+      "id": "s35",
+      "kind": "media",
+      "narration": "В две тысячи двадцать первом году в Нейчер вышел опыт из Ольденбурга и Оксфорда. В пробирке белок зарянки отзывался на поле сильнее, чем у курицы и голубя.",
+      "onScreen": "Мигрант *чувствительнее* курицы и голубя",
+      "icon": "test-tube",
+      "visualQuery": "laboratory test tubes pipette",
+      "imagePrompt": "a gloved hand holding a small glass vial of pale yellow protein solution under blue laboratory light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s36",
+      "kind": "statement",
+      "narration": "Но это пробирка, а не живая птица. И поле было сильнее земного. Проверить то же в глазу тогда было технически невозможно.",
+      "onScreen": "Пробирка — ещё *не птица*",
+      "icon": "triangle-alert",
+      "visualQuery": "glass vials laboratory rack",
+      "imagePrompt": "a rack of small glass vials on a lab bench next to an empty bird perch, soft light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "В две тысячи двадцать пятом году отпал вариант криптохром четыре бэ. Он не удерживает светочувствительную часть, и в сетчатке его не нашли. Кандидатом остаётся криптохром четыре а.",
+      "onScreen": "Криптохром 4b *выбыл*",
+      "icon": "circle-x",
+      "visualQuery": "European robin singing",
+      "imagePrompt": "a European robin singing on a frosty branch in early morning light, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s38",
+      "kind": "media",
+      "narration": "Сейчас идею проверяют на живых птицах. В молекулах глаза углерод подменяют на более тяжёлый. Если реакция на радиошум изменится, как предсказывает расчёт, это станет прямым доказательством.",
+      "onScreen": "Тяжёлый углерод — *решающий* тест",
+      "icon": "atom",
+      "visualQuery": "European robin flying",
+      "imagePrompt": "a European robin taking off from a branch into the evening air, wings blurred, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s39",
+      "kind": "list",
+      "narration": "Итак, ответы. Где компас? Судя по всему, в глазу. Почему квантовый? Его стрелка, вероятно, — спины электронов. Что его ломает? Слабый радиошум от электроники.",
+      "onScreen": "Три *ответа*",
+      "items": [
+        "Где: в глазу",
+        "Стрелка: спины электронов",
+        "Враг: слабый радиошум"
+      ],
+      "icon": "circle-check",
+      "visualQuery": "birds flying sunset sky",
+      "imagePrompt": "a flock of small songbirds crossing a golden sunset sky over dark hills, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s40",
+      "kind": "statement",
+      "narration": "Какая молекула держит эти спины, ещё выясняют. Но вдумайся. Квантовая физика — не только лаборатории и компьютеры. Возможно, каждую осень она ведёт зарянок над ночной Европой.",
+      "onScreen": "Квантовая физика *в полёте*",
+      "icon": "sparkles",
+      "visualQuery": "Milky Way night sky",
+      "imagePrompt": "a small robin flying across a starry night sky above a sleeping European countryside with scattered village lights, deep emerald and warm gold palette"
+    },
+    {
+      "id": "s41",
+      "kind": "cta",
+      "narration": "А ты нашёл бы юг без телефона?",
+      "onScreen": "Нашёл бы *юг* без телефона?",
+      "icon": "message-circle"
+    }
+  ]
+}

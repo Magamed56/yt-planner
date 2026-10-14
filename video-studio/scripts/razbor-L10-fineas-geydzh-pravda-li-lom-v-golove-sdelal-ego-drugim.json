@@ -1,0 +1,425 @@
+{
+  "title": "Финеас Гейдж: правда ли лом в голове сделал его другим человеком",
+  "description": "История Финеаса Гейджа — одного из самых известных пациентов в истории науки о мозге: в 1848 году железный стержень прошёл сквозь его голову, а врачи потом спорили, что стало с его личностью. Разбираем отчёты Харлоу и Бигелоу, спор о лобных долях по черепу из Гарварда и то, что учебники психологии обычно пропускают, — годы Гейджа кучером дилижанса в Чили.\n#финеасгейдж #мозг #лобныедоли #историямедицины #психология",
+  "tags": [
+    "финеас гейдж",
+    "финеас гейдж история",
+    "лом в голове",
+    "лобные доли",
+    "лобная доля мозга",
+    "мозг и личность",
+    "черепно-мозговая травма история",
+    "история медицины",
+    "нейронаука",
+    "психология",
+    "пластичность мозга",
+    "дагеротип",
+    "phineas gage",
+    "frontal lobe"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "emerald",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Лом длиннее метра прошёл сквозь его голову. Через несколько минут он заговорил.",
+      "onScreen": "Лом сквозь голову — и он *выжил*",
+      "icon": "brain",
+      "visualQuery": "Phineas Gage tamping iron",
+      "imagePrompt": "a long tapered iron rod resting on weathered planks at an 1840s railroad construction site in green Vermont hills, rock piles and wooden carts, soft late afternoon light, no people, muted emerald and warm brass palette",
+      "chapter": "Взрыв в Кавендише"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Эту историю пересказывают почти все учебники психологии: мозг повреждён — человек стал другим навсегда. Но ты узнаешь, что было с ним дальше. И почему учебники об этом молчат.",
+      "onScreen": "Что *не пишут* в учебниках",
+      "icon": "book-open",
+      "visualQuery": "psychology textbooks stack",
+      "imagePrompt": "a tall stack of old and new textbooks on a library table, one book open with blank pages, warm reading lamp, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Вермонт, тринадцатое сентября тысяча восемьсот сорок восьмого года. У городка Кавендиш прокладывают железную дорогу и взрывают скалы порохом. Бригадир — двадцатипятилетний Финеас Гейдж.",
+      "onScreen": "Кавендиш, Вермонт, *1848*",
+      "icon": "train-track",
+      "visualQuery": "Cavendish Vermont",
+      "imagePrompt": "wide view of a 19th-century railroad cut through rocky green Vermont hills along a river, tools and a wooden handcart on the gravel, golden afternoon light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Порядок такой: в скале сверлят отверстие, засыпают порох, сверху песок — и трамбуют железным стержнем. Около половины пятого вечера Гейдж начал трамбовать. А песок ещё не засыпали.",
+      "onScreen": "Порох есть. *Песка* нет",
+      "icon": "triangle-alert",
+      "visualQuery": "rock drilling blast hole",
+      "imagePrompt": "close view of a drilled hole in grey granite with a small heap of black powder beside it and an iron tamping bar leaning nearby, no people, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Искра — и взрыв. Стержень вылетел из отверстия, как снаряд. Длина — сто девять сантиметров, толщина — больше трёх, вес — около шести килограммов.",
+      "onScreen": "Почти *6 кг* железа",
+      "stat": {
+        "value": 109,
+        "suffix": " см",
+        "label": "длина железного стержня"
+      },
+      "icon": "ruler",
+      "visualQuery": "iron bar blacksmith forge",
+      "imagePrompt": "a long smooth tapered iron bar lying beside an old folding wooden ruler on a dark workbench, soft side light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Стержень вошёл под левой скулой, вышел через макушку и упал далеко позади. Гейдж повалился на спину. И вскоре уже говорил с окружающими.",
+      "onScreen": "Насквозь. И *в сознании*",
+      "icon": "zap",
+      "visualQuery": "Phineas Gage skull diagram",
+      "imagePrompt": "a plain anatomical plaster skull model on a museum shelf with a thin brass pointer tracing a straight line from cheekbone to crown, clean diffuse light, no injuries, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Его посадили в воловью повозку. Сидя, он проехал больше километра до гостиницы, где жил. А там поднялся по длинной лестнице.",
+      "onScreen": "1,2 км в повозке — *сидя*",
+      "icon": "footprints",
+      "visualQuery": "ox cart wooden wheels",
+      "imagePrompt": "an old wooden ox cart with two oxen on a dirt road through green Vermont hills at dusk, seen from behind, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s8",
+      "kind": "quote",
+      "narration": "Первым из врачей пришёл доктор Уильямс. Гейдж встретил его словами: Доктор, тут для вас работы хватит. Так вспоминал сам Уильямс.",
+      "onScreen": "«Доктор, тут для вас *работы* хватит»",
+      "icon": "quote",
+      "visualQuery": "antique doctor bag",
+      "imagePrompt": "an antique leather doctor's bag and brass medical instruments on a wooden chair in a 19th-century inn room, oil lamp glow, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Около шести вечера приехал местный врач Джон Харлоу. Гейдж выжил, хоть и ослеп на левый глаз. В декабре Харлоу описал случай в журнале, а о психике пациента обещал рассказать позже.",
+      "onScreen": "О психике — *потом*",
+      "icon": "stethoscope",
+      "visualQuery": "John Martyn Harlow portrait",
+      "imagePrompt": "an open 19th-century medical journal with dense columns on a wooden desk beside a quill, an oil lamp and a stethoscope, no readable text, muted emerald and warm brass palette",
+      "chapter": "Два врача — два отчёта"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "А гарвардский профессор хирургии Генри Бигелоу, осмотрев Гейджа в Бостоне, в тысяча восемьсот пятидесятом году написал: пациент полностью оправился, и телом, и умом.",
+      "onScreen": "Гарвард, 1850: *здоров*",
+      "icon": "graduation-cap",
+      "visualQuery": "Henry Jacob Bigelow portrait",
+      "imagePrompt": "the facade of an old 19th-century Boston medical college building with columns, early morning light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s11",
+      "kind": "media",
+      "narration": "Сам стержень Гейдж отдал в музей Гарвардского медицинского колледжа. На нём выгравировали надпись: он полностью оправился от травмы. И дату — январь тысяча восемьсот пятидесятого.",
+      "onScreen": "«Он полностью *оправился*»",
+      "icon": "scroll-text",
+      "visualQuery": "Warren Anatomical Museum",
+      "imagePrompt": "an old iron bar displayed horizontally in a glass museum case on dark velvet, engraved lettering too small to read, soft spotlight, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s12",
+      "kind": "statement",
+      "narration": "Казалось бы, счастливый конец. Но через восемнадцать лет Харлоу выпустил новый отчёт. И прославил Гейджа совсем другим.",
+      "onScreen": "1868: *новый* отчёт",
+      "icon": "file-text",
+      "visualQuery": "old manuscript pages candle",
+      "imagePrompt": "a handwritten 19th-century manuscript on a desk lit by a single candle, ink pen resting on it, no readable text, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s13",
+      "kind": "list",
+      "narration": "Харлоу записал: после травмы Гейдж стал капризным и непочтительным. Сквернословил, чего раньше за ним не водилось. И не терпел ничьих советов.",
+      "onScreen": "Портрет из отчёта *1868*",
+      "items": [
+        "Капризный",
+        "Непочтительный",
+        "Сквернословит",
+        "Глух к советам"
+      ],
+      "icon": "list",
+      "visualQuery": "old notebook handwriting quill",
+      "imagePrompt": "an old leather-bound notebook open with handwritten lines and a pair of round spectacles on top, warm desk lamp, no readable text, muted emerald and warm brass palette",
+      "chapter": "Больше не Гейдж"
+    },
+    {
+      "id": "s14",
+      "kind": "quote",
+      "narration": "Подрядчики считали его лучшим бригадиром, но обратно не взяли. А друзья и знакомые, по записи Харлоу, говорили: он больше не Гейдж.",
+      "onScreen": "«Больше не *Гейдж*»",
+      "icon": "user-x",
+      "visualQuery": "railroad workers 19th century",
+      "imagePrompt": "silhouettes of 19th-century railroad workers with shovels standing on a rocky cut at sunset, seen from afar, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "Важно: этот отчёт Харлоу прочитал коллегам в тысяча восемьсот шестьдесят восьмом, когда Гейджа уже не было в живых. А описывал он его таким вскоре после травмы.",
+      "onScreen": "Отчёт вышел *после* его смерти",
+      "icon": "hourglass",
+      "visualQuery": "19th century lecture hall",
+      "imagePrompt": "an empty 19th-century lecture hall with wooden benches and a lectern lit by tall windows, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s16",
+      "kind": "media",
+      "narration": "Дальше история зажила своей жизнью. С каждым пересказом Гейдж становился хуже: пьяница, драчун, хвастун. Писали, что он скитался по балаганам и умер без гроша.",
+      "onScreen": "Пьяница, драчун, *бродяга*?",
+      "icon": "tent",
+      "visualQuery": "old circus tent",
+      "imagePrompt": "an empty vintage circus tent at dusk on a muddy fairground with a single glowing lantern, no people, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s17",
+      "kind": "statement",
+      "narration": "Но что именно разрушил стержень? Гейдж умер в мае тысяча восемьсот шестидесятого в Сан-Франциско, вскрытия не делали. Через семь лет родные передали Харлоу его череп вместе со стержнем.",
+      "onScreen": "1867: череп — *Харлоу*",
+      "icon": "archive",
+      "visualQuery": "San Francisco 1860s",
+      "imagePrompt": "a 19th-century wooden box tied with twine on a doctor's table next to a long iron bar, dim window light, muted emerald and warm brass palette",
+      "chapter": "Спор о черепе"
+    },
+    {
+      "id": "s18",
+      "kind": "media",
+      "narration": "Харлоу отдал их в Анатомический музей Уоррена при Гарвардской медицинской школе. Там они и сейчас. Мозга нет — только кость и полтора века споров.",
+      "onScreen": "Гарвард хранит *улики*",
+      "icon": "landmark",
+      "visualQuery": "Countway Library of Medicine",
+      "imagePrompt": "a quiet museum gallery with glass cases of old medical instruments and a long iron bar under a spotlight, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "В тысяча девятьсот девяносто четвёртом Ханна Дамасио с коллегами смоделировала путь стержня. Вывод в журнале Science: пострадали обе лобные доли. А с ними — принятие решений и эмоции.",
+      "onScreen": "1994: *обе* лобные доли",
+      "icon": "brain",
+      "visualQuery": "brain frontal lobe model",
+      "imagePrompt": "a translucent anatomical brain model on a lab bench with the front part softly highlighted in green, clean studio light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s20",
+      "kind": "media",
+      "narration": "В две тысячи четвёртом группа Ратиу сделала томографию самого черепа. Вывод другой: повреждена только левая лобная доля. Правую стержень не задел.",
+      "onScreen": "2004: только *левая*",
+      "icon": "scan-line",
+      "visualQuery": "CT scanner hospital",
+      "imagePrompt": "a modern CT scanner ring in a clean hospital room with soft green ambient light, no patient, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s21",
+      "kind": "stat",
+      "narration": "А в две тысячи двенадцатом группа Джека Ван Хорна вписала в цифровой череп снимки мозга ста десяти мужчин. Итог: задето около четырёх процентов коры и почти одиннадцать — белого вещества.",
+      "onScreen": "Кора 4%, связи — *11%*",
+      "stat": {
+        "prefix": "≈",
+        "value": 11,
+        "suffix": "%",
+        "label": "белого вещества повредил стержень"
+      },
+      "icon": "network",
+      "visualQuery": "diffusion MRI tractography",
+      "imagePrompt": "a glowing 3D visualization of brain fiber pathways as green and gold threads floating in darkness, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s22",
+      "kind": "statement",
+      "narration": "Белое вещество — это провода между областями мозга. Удар пришёлся на левое полушарие, но задел связи, ведущие далеко за его пределы. А как Гейдж жил дальше, череп не расскажет.",
+      "onScreen": "Череп *молчит* о жизни",
+      "icon": "file-search",
+      "visualQuery": "old archive letters",
+      "imagePrompt": "stacks of yellowed 19th-century letters and newspapers in an archive box under a desk lamp, no readable text, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s23",
+      "kind": "quiz",
+      "narration": "Это выяснял психолог из Мельбурна Малкольм Макмиллан. Начнём с легенды: Гейдж до конца жизни выставлял себя в балаганах. Правда или миф?",
+      "onScreen": "Всю жизнь — в *балаганах*?",
+      "icon": "circle-help",
+      "visualQuery": "circus wagon antique",
+      "imagePrompt": "an old painted circus wagon standing alone in a misty field at dawn, muted emerald and warm brass palette",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Выступал недолго, а потом годами работал с лошадьми",
+        "question": "Ты тоже слышал про цирк?",
+        "pauseSec": 3
+      },
+      "chapter": "Кучер шестёрки лошадей"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Миф! Поначалу он и правда показывал себя со стержнем публике, по Харлоу — даже у Барнума в Нью-Йорке. Но потом полтора года работал в конюшне в Ганновере.",
+      "onScreen": "Не цирк, а *конюшня*",
+      "icon": "circle-check",
+      "visualQuery": "Barnum's American Museum",
+      "imagePrompt": "a row of horses in wooden stalls of an old New England livery stable, morning light through the open doors, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s25",
+      "kind": "media",
+      "narration": "В августе тысяча восемьсот пятьдесят второго Гейдж уезжает в Чили. Его заранее нанял человек, открывавший там линию дилижансов. Странный выбор для того, кто якобы потерял себя.",
+      "onScreen": "1852: билет в *Чили*",
+      "icon": "ship",
+      "visualQuery": "Valparaíso harbor",
+      "imagePrompt": "a 19th-century harbor town on steep green hills above a Pacific bay with sailing ships, morning haze, muted emerald and warm brass palette",
+      "map": {
+        "lat": -33.05,
+        "lon": -71.62,
+        "label": "Вальпараисо",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s26",
+      "kind": "stat",
+      "narration": "Там он почти семь лет правил дилижансом на дороге между Вальпараисо и Сантьяго. И часто — с упряжкой из шести лошадей.",
+      "onScreen": "Шестёрка лошадей в *одних* руках",
+      "stat": {
+        "prefix": "≈",
+        "value": 7,
+        "suffix": " лет",
+        "label": "кучером дилижанса в Чили"
+      },
+      "icon": "route",
+      "visualQuery": "stagecoach six horses",
+      "imagePrompt": "a heavy 19th-century stagecoach pulled by six horses on a dusty mountain road in central Chile, distant Andes peaks, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s27",
+      "kind": "list",
+      "narration": "Макмиллан расписал его рабочий день. Запрячь лошадей к четырём утра. Погрузить багаж, собрать плату. И тринадцать часов пути — около ста шестидесяти километров плохих дорог.",
+      "onScreen": "Рабочий день *кучера*",
+      "items": [
+        "Запрячь к 4:00",
+        "Багаж и плата",
+        "13 часов пути"
+      ],
+      "icon": "clock",
+      "visualQuery": "horses harness stable",
+      "imagePrompt": "a groom harnessing horses by lantern light in an old stable before dawn, seen from behind, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "И всё это в стране, где он поначалу не знал ни языка, ни обычаев. Такая работа требует выдержки, расчёта и умения ладить с пассажирами.",
+      "onScreen": "То, что он якобы *потерял*",
+      "icon": "users",
+      "visualQuery": "stagecoach passengers road",
+      "imagePrompt": "travelers in 19th-century clothes climbing into a stagecoach at a dusty roadside station, seen from behind, warm dawn light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s29",
+      "kind": "statement",
+      "narration": "А вот свидетельство. В тысяча восемьсот шестидесятом году американский врач, знавший Гейджа в Чили, сообщил: тот правит дилижансом, здоров и без каких-либо нарушений умственных способностей.",
+      "onScreen": "Врач, 1860: «никаких *нарушений*»",
+      "icon": "badge-check",
+      "visualQuery": "antique stethoscope",
+      "imagePrompt": "an antique wooden monaural stethoscope and a folded handwritten letter on a desk in a sunlit colonial room, no readable text, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s30",
+      "kind": "media",
+      "narration": "А теперь последняя улика. Коллекционеры Джек и Беверли Уилгус больше тридцати лет хранили старый дагеротип. Они думали, что на нём китобой с гарпуном.",
+      "onScreen": "Портрет *китобоя*?",
+      "icon": "camera",
+      "visualQuery": "daguerreotype case antique",
+      "imagePrompt": "an open antique daguerreotype case with an ornate brass frame on dark velvet cloth, the image inside softly blurred, muted emerald and warm brass palette",
+      "chapter": "Лицо на дагеротипе"
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Снимок выложили на Фликр, и знатоки китобойного дела ответили: это не гарпун. А в декабре две тысячи восьмого кто-то спросил: может, это Финеас Гейдж?",
+      "onScreen": "Не гарпун, а *стержень*",
+      "icon": "search",
+      "visualQuery": "harpoon whaling museum",
+      "imagePrompt": "an old whaling harpoon mounted on a wooden wall in a maritime museum, soft window light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s32",
+      "kind": "media",
+      "narration": "В две тысячи девятом надпись на стержне в его руках сверили с настоящим стержнем из музея. Совпало. С портрета смотрит хорошо одетый, уверенный человек с закрытым левым глазом.",
+      "onScreen": "Уверенный. *Гордый*. Это Гейдж",
+      "icon": "image",
+      "visualQuery": "Phineas Gage portrait",
+      "imagePrompt": "a 19th-century photo studio with an empty wooden chair, a dark suit jacket draped over it and a long iron bar leaning against it, soft window light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Вывод Макмиллана и его соавтора Лены: со временем Гейдж удивительно хорошо приспособился к жизни после травмы. И помогла, похоже, сама работа с жёстким распорядком.",
+      "onScreen": "Помог *распорядок* дня",
+      "icon": "sunrise",
+      "visualQuery": "sunrise mountain road",
+      "imagePrompt": "an empty dirt road winding through green Chilean hills at sunrise with fresh wheel tracks, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s34",
+      "kind": "stat",
+      "narration": "Но в учебниках этого почти нет. В две тысячи пятнадцатом Ричард Григгс проверил двадцать три учебника психологии. Гейджа упоминает двадцать один. Про Чили — лишь четыре.",
+      "onScreen": "Про Чили — *4* учебника из 21",
+      "stat": {
+        "value": 4,
+        "suffix": " из 21",
+        "label": "учебников пишут про годы в Чили"
+      },
+      "icon": "graduation-cap",
+      "visualQuery": "university library bookshelves",
+      "imagePrompt": "long rows of textbooks on library shelves with one gap where a book is missing, soft afternoon light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s35",
+      "kind": "statement",
+      "narration": "Ирония: про Чили и шестёрку лошадей писал сам Харлоу, в том же отчёте шестьдесят восьмого года. Эту часть просто пересказывали куда реже.",
+      "onScreen": "Про Чили писал *сам* Харлоу",
+      "icon": "scroll",
+      "visualQuery": "old medical report pages",
+      "imagePrompt": "a 19th-century printed medical pamphlet lying open on a desk next to a small brass horse figurine, soft window light, no readable text, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s36",
+      "kind": "statement",
+      "narration": "Почему так? Макмиллан объяснил это ещё в двухтысячном году: авторы плохо знают первоисточники. И приписывают Гейджу черты других пациентов с повреждением лобных долей.",
+      "onScreen": "Первоисточники *забыты*",
+      "icon": "book-x",
+      "visualQuery": "dusty archive documents",
+      "imagePrompt": "dusty bound volumes of old medical journals stacked on an archive shelf, a single beam of light across them, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s37",
+      "kind": "media",
+      "narration": "Помнишь надпись на стержне — он полностью оправился? Похоже, истина посередине. Перемены были, но самые резкие со временем ослабли.",
+      "onScreen": "Истина — *посередине*",
+      "icon": "scale",
+      "visualQuery": "stagecoach road sunset",
+      "imagePrompt": "a lone 19th-century stagecoach on a winding road through green hills at golden sunset, seen from far away, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s38",
+      "kind": "statement",
+      "narration": "Так что Гейдж — история не только о том, как травма может изменить человека. Но и о том, что со временем человек способен приспособиться. Даже после такого.",
+      "onScreen": "Со временем — *приспособился*",
+      "icon": "brain",
+      "visualQuery": "human brain model",
+      "imagePrompt": "an anatomical brain model on a wooden desk beside an old leather harness and a pocket watch, warm morning light, muted emerald and warm brass palette"
+    },
+    {
+      "id": "s39",
+      "kind": "cta",
+      "narration": "А ты бы сел в дилижанс Гейджа?",
+      "onScreen": "Сел бы в его *дилижанс*?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "title": "Зачёркнутая цена: как работает эффект якоря",
+  "description": "Разбираем эксперимент Тверски и Канемана с колесом фортуны и узнаём, почему зачёркнутая старая цена в магазине действует на тебя как якорь. В конце — простой способ не попадаться на эффект якоря при покупках.\n#shorts #психология #эффектякоря #маркетинг #деньги",
+  "tags": [
+    "эффект якоря",
+    "зачёркнутая цена",
+    "скидки",
+    "психология покупок",
+    "тверски и канеман",
+    "когнитивные искажения",
+    "маркетинг",
+    "магазин",
+    "деньги",
+    "экономия",
+    "anchoring effect",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "mono",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Случайное число на колесе меняло ответы людей. Так работает якорь.",
+      "onScreen": "Случайное число *меняло* ответы",
+      "icon": "target",
+      "visualQuery": "wheel of fortune spinning",
+      "imagePrompt": "cinematic close-up of a spinning wheel of fortune in a dim room, single spotlight, monochrome palette with one warm red accent, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Тверски и Канеман крутили колесо. Оно останавливалось на десяти или шестидесяти пяти.",
+      "onScreen": "1974: колесо выдаёт *10* или 65",
+      "icon": "rotate-cw",
+      "visualQuery": "roulette wheel spinning",
+      "imagePrompt": "cinematic shot of a vintage numbered wheel slowing down, motion blur on numbers, monochrome with warm red accent, dramatic side light"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Потом спрашивали: какая доля стран ООН — африканские? После десяти медиана была двадцать пять процентов, после шестидесяти пяти — сорок пять.",
+      "onScreen": "Одно число — *разные* ответы",
+      "stat": {
+        "value": 45,
+        "suffix": "%",
+        "label": "медиана ответов после числа 65"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "После 10",
+            "value": 25
+          },
+          {
+            "label": "После 65",
+            "value": 45
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Число явно случайное. Но мозг за него зацепился.",
+      "onScreen": "Случайно, но мозг *зацепился*",
+      "icon": "brain",
+      "visualQuery": "ship anchor chain",
+      "imagePrompt": "cinematic close-up of a heavy iron anchor on a chain sinking into dark water, monochrome with warm red rim light"
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Позже эффект нашли в оценках цен и в переговорах.",
+      "onScreen": "Цены и переговоры — *тоже*",
+      "icon": "handshake",
+      "visualQuery": "business negotiation table",
+      "imagePrompt": "cinematic shot of two people negotiating across a table, hands and documents in focus, monochrome palette with warm red accent, soft overhead light"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Зачёркнутая цена — такой же якорь. Ты сравниваешь с ней, а не с ценностью товара.",
+      "onScreen": "Старая цена — это *якорь*",
+      "icon": "tag",
+      "visualQuery": "price tag discount store",
+      "imagePrompt": "cinematic close-up of a store price tag with a crossed out old price, shallow depth of field, monochrome with warm red accent, soft shop lighting"
+    },
+    {
+      "id": "s7",
+      "kind": "list",
+      "narration": "Защита простая. Назови свою цену до ценника. И сравнивай с другими магазинами.",
+      "onScreen": "Как *не попасться* на якорь",
+      "items": [
+        "Своя цена до ценника",
+        "Сравнение с другими магазинами"
+      ],
+      "icon": "shield",
+      "visualQuery": "shopper comparing prices supermarket",
+      "imagePrompt": "cinematic shot of a shopper holding a product and looking at a shelf, thoughtful mood, monochrome palette with warm red accent, soft light"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Какой ценник зацепил тебя на этой неделе?",
+      "onScreen": "Какой ценник *зацепил* тебя?",
+      "icon": "message-circle"
+    }
+  ]
+}

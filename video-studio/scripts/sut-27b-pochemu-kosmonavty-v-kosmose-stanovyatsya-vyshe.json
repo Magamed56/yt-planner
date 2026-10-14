@@ -1,0 +1,99 @@
+{
+  "title": "Почему космонавты вырастают на орбите",
+  "description": "Почему в невесомости астронавты вытягиваются до 3% и куда этот рост девается после посадки. Простое объяснение того, как гравитация каждый день сжимает твой позвоночник.\n#shorts #космос #космонавт #наука #тело",
+  "tags": [
+    "космос",
+    "космонавт",
+    "космонавт космос",
+    "в космосе",
+    "невесомость",
+    "позвоночник",
+    "рост",
+    "наса",
+    "астронавты",
+    "тело человека",
+    "наука",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "В космосе ты стал бы выше. Ненадолго.",
+      "onScreen": "В космосе ты *выше*",
+      "icon": "rocket",
+      "visualQuery": "International Space Station astronaut",
+      "imagePrompt": "cinematic shot of an astronaut floating inside a space station module, Earth glowing through the window, cool blue light, shallow depth of field"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Гравитация всю жизнь давит на твой позвоночник сверху. Диски между позвонками постоянно сжаты.",
+      "onScreen": "Гравитация *сжимает* позвоночник",
+      "icon": "trending-down",
+      "visualQuery": "human spine skeleton model",
+      "imagePrompt": "cinematic close-up of a translucent human spine model under heavy downward pressure, cold blue rim light, dark background"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "На орбите этот пресс исчезает. Позвоночник распрямляется, а диски расширяются.",
+      "onScreen": "Без веса диски *расширяются*",
+      "icon": "atom",
+      "visualQuery": "astronaut floating weightlessness",
+      "imagePrompt": "astronaut drifting weightless in a space station corridor, body stretched out, soft blue ambient light, cinematic wide shot"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "Так астронавты вытягиваются до трёх процентов. Это данные программы исследований человека НАСА.",
+      "onScreen": "До 3% роста — *бесплатно*",
+      "stat": {
+        "value": 3,
+        "prefix": "до ",
+        "suffix": "%",
+        "label": "прибавка роста в невесомости"
+      },
+      "icon": "trending-up",
+      "visualQuery": "NASA Johnson Space Center",
+      "imagePrompt": "glowing holographic human silhouette slowly stretching upward against a starry background, teal and deep blue palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "При росте сто восемьдесят сантиметров это больше пяти сантиметров. Длина спичечного коробка.",
+      "onScreen": "180 см → *+5* см",
+      "icon": "target",
+      "visualQuery": "matchbox on table",
+      "imagePrompt": "cinematic macro of a small matchbox next to a measuring tape on a dark surface, cool blue rim light"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Но после посадки гравитация берёт своё. Рост возвращается к прежнему.",
+      "onScreen": "После посадки рост *уходит*",
+      "icon": "hourglass",
+      "visualQuery": "Soyuz capsule landing",
+      "imagePrompt": "space capsule descending under a parachute over a vast steppe at dawn, dust rising, cinematic wide shot, cool palette"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Помнишь, что утром ты выше, чем вечером? Космос для позвоночника — вечное утро.",
+      "onScreen": "Космос — это *вечное утро*",
+      "icon": "sun",
+      "visualQuery": "Earth sunrise from orbit",
+      "imagePrompt": "sunrise over Earth's curved horizon seen from orbit, thin blue atmosphere glowing, cinematic, deep space palette"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Насколько выше стал бы в космосе ты?",
+      "onScreen": "А насколько вырос бы *ты*?",
+      "icon": "message-circle"
+    }
+  ]
+}

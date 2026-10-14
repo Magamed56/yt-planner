@@ -3,11 +3,15 @@
 // настоящий buildState (state.ts), поэтому на демо-странице (app/board/demo, только в разработке)
 // работает и карточка ролика (VideoSheet). Её же проверяет scripts/board-test.ts — от того, докуда
 // дошёл настоящий план, тест не зависит.
-import ruChannel from "../../channel.json";
+import ruChannelFile from "../../channel.json";
 import type { ChannelVideo } from "../../src/pipeline/youtube-fill";
 import type { GhRelease } from "./github";
 import { parseBoardState, type BoardState } from "./board";
 import { buildState, parseAutopilot, type PanelState } from "./state";
+import { withFixtureSchedule } from "./fixture-channel";
+
+// Расписание — фиксированное (fixture-channel.ts): ожидания теста посчитаны по нему.
+const ruChannel = withFixtureSchedule(ruChannelFile);
 
 // Воскресенье, 11.10.2026, 13:00 по Москве.
 export const FIXTURE_NOW = new Date("2026-10-11T10:00:00Z");
