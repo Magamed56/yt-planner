@@ -160,3 +160,6 @@
 {"at":"2026-10-14T07:12:46Z","kind":"tts","code":"L03","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":3,"chars":6153,"runId":"38526584032","keyIndex":1}
 {"at":"2026-10-14T07:49:13Z","kind":"tts","code":"L04","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":3,"chars":6075,"runId":"38526584032","keyIndex":1}
 {"at":"2026-10-14T08:29:34Z","kind":"tts","code":"L05","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":3,"chars":6171,"runId":"38526584032","keyIndex":1}
+{"at":"2026-10-14T09:11:45Z","kind":"tts","code":"L06","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":4,"chars":6209,"runId":"38526697760","keyIndex":2}
+{"at":"2026-10-14T10:05:12Z","kind":"tts","code":"L07","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":4,"chars":6189,"runId":"38526697760","keyIndex":2}
+{"at":"2026-10-14T11:00:20Z","kind":"tts","code":"L08","provider":"gemini","model":"gemini-3.8-flash-tts","inputTokens":null,"outputTokens":null,"costUsd":0,"calls":4,"chars":5962,"runId":"38526697760","keyIndex":2}
