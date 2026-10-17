@@ -1,0 +1,409 @@
+{
+  "title": "Кратер Чиксулуб: как нашли астероид, убивший динозавров",
+  "description": "Как физик Луис Альварес вычислил удар астероида по слою иридия, почему кратер от метеорита под Юкатаном нефтяники Pemex заметили ещё в 1978 году, а наука признала лишь в 1991-м. Разбираем бурение 2016 года, первый день кайнозоя и честно отвечаем, кто виноват в вымирании: астероид или вулканы Деканских траппов.\n#кратерчиксулуб #динозавры #астероид #геология #наука",
+  "tags": [
+    "кратер чиксулуб",
+    "кратер от метеорита",
+    "вымирание динозавров",
+    "астероид",
+    "иридий",
+    "альварес",
+    "юкатан",
+    "деканские траппы",
+    "мел-палеогеновое вымирание",
+    "геология",
+    "палеонтология",
+    "история науки",
+    "chicxulub",
+    "dinosaur extinction"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Кратер, убивший динозавров, нефтяники заметили в тысяча девятьсот семьдесят восьмом.",
+      "onScreen": "Нефтяники нашли кратер в *1978*",
+      "icon": "compass",
+      "visualQuery": "Chicxulub crater gravity map",
+      "imagePrompt": "cinematic aerial view of a vast circular ring hidden under turquoise coastal waters of the Yucatan, faint glowing outline, teal and amber palette, golden hour",
+      "chapter": "Иридий в тонком слое"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "А учёные искали его до тысяча девятьсот девяностого. Больше десяти лет улика лежала в отчётах нефтяной компании. Разберём, как так вышло. А в конце честно ответим: закрыт ли спор с вулканами.",
+      "onScreen": "Учёные искали его до *1990*",
+      "icon": "hourglass",
+      "visualQuery": "old geological survey maps",
+      "imagePrompt": "dusty stack of old geophysical survey maps on a wooden desk, warm desk lamp light, teal and amber palette, shallow depth of field"
+    },
+    {
+      "id": "s3",
+      "kind": "stat",
+      "narration": "Начнём с масштаба. Около шестидесяти шести миллионов лет назад, на рубеже мела и палеогена, исчезли примерно три четверти видов. Все нептичьи динозавры и большинство четвероногих тяжелее двадцати пяти килограммов.",
+      "onScreen": "66 млн лет назад: *великое* вымирание",
+      "stat": {
+        "value": 75,
+        "prefix": "≈",
+        "suffix": "%",
+        "label": "видов растений и животных исчезло"
+      },
+      "icon": "trending-down",
+      "visualQuery": "Tyrannosaurus skeleton museum",
+      "imagePrompt": "towering dinosaur skeleton in a dim museum hall, dramatic rim light, dust in the air, teal and amber palette"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Эта граница видна прямо в скалах. Между слоями известняка тянется тонкая полоска глины. Ниже неё мир динозавров. Выше уже совсем другая эпоха.",
+      "onScreen": "Тонкий слой между *двумя* мирами",
+      "icon": "layers",
+      "visualQuery": "Cretaceous–Paleogene boundary rock layers",
+      "imagePrompt": "close-up of layered limestone cliff with a thin dark clay band, hand of a geologist pointing, soft side light, teal and amber palette"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "В тысяча девятьсот восьмидесятом году физик Луис Альварес, его сын геолог Уолтер, химики Фрэнк Асаро и Хелен Мишел опубликовали статью в журнале Science. Они измерили в этой глине иридий.",
+      "onScreen": "Альваресы, Science, *1980*",
+      "icon": "flask-conical",
+      "visualQuery": "Luis Walter Alvarez portrait",
+      "imagePrompt": "father and son scientists examining a rock sample in a 1970s laboratory, warm tungsten light, teal and amber palette, cinematic"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Результат ошеломил. В Италии иридия оказалось примерно в тридцать раз больше фона. В Дании в сто шестьдесят. В Новой Зеландии в двадцать. Один и тот же всплеск на разных концах планеты.",
+      "onScreen": "Иридий *зашкаливает* по всему миру",
+      "compare": {
+        "items": [
+          {
+            "label": "Италия",
+            "value": 30
+          },
+          {
+            "label": "Дания",
+            "value": 160
+          },
+          {
+            "label": "Новая Зеландия",
+            "value": 20
+          }
+        ],
+        "suffix": "×"
+      }
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Почему именно иридий? В земной коре он редкость: тяжёлые металлы давно утонули в ядре планеты. А в метеоритах его много. Значит, этот металл прилетел из космоса.",
+      "onScreen": "Редкий на Земле. *Обычный* в космосе",
+      "icon": "atom",
+      "visualQuery": "iron meteorite museum",
+      "imagePrompt": "heavy metallic meteorite on a black pedestal, cold rim light revealing crystalline surface, teal and amber palette, macro shot"
+    },
+    {
+      "id": "s8",
+      "kind": "list",
+      "narration": "Отсюда гипотеза. Упал астероид диаметром около десяти километров, плюс-минус четыре. Пыль закрыла Солнце. Фотосинтез остановился. И пищевые цепи рухнули.",
+      "onScreen": "Гипотеза *удара* за четыре шага",
+      "items": [
+        "Астероид около 10 км",
+        "Пыль закрыла Солнце",
+        "Фотосинтез остановился",
+        "Пищевые цепи рухнули"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "asteroid impact painting",
+      "imagePrompt": "giant asteroid entering Earth atmosphere above a prehistoric forest, fiery trail, darkening sky, teal and amber palette, epic wide shot"
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Но у красивой гипотезы была дыра. Камень выше Эвереста не может упасть бесследно. Он обязан оставить кратер порядка ста километров. А такого кратера никто не видел.",
+      "onScreen": "Где же *кратер*?",
+      "icon": "circle-x",
+      "visualQuery": "Meteor Crater Arizona",
+      "imagePrompt": "lonely geologist standing at the rim of an empty desert crater at dusk, long shadows, teal and amber palette, wide cinematic shot",
+      "chapter": "Улика, которой не было"
+    },
+    {
+      "id": "s10",
+      "kind": "media",
+      "narration": "Критики били именно сюда. Иридий есть, а следа удара нет. Может, кратер ушёл под воду или стёрся за миллионы лет? Без него теория оставалась догадкой.",
+      "onScreen": "Нет кратера — нет *доказательства*",
+      "icon": "triangle-alert",
+      "visualQuery": "ocean waves open sea",
+      "imagePrompt": "endless dark ocean surface under heavy clouds, faint light breaking through, teal and amber palette, moody wide shot"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "А теперь перенесёмся в Мексику. В тысяча девятьсот семьдесят восьмом году геофизики нефтяной компании Пемекс Глен Пенфилд и Антонио Камарго облетали Мексиканский залив с магнитометром. Искали нефть.",
+      "onScreen": "Pemex, 1978: съёмка *ради нефти*",
+      "icon": "plane",
+      "visualQuery": "Yucatán Peninsula coast aerial",
+      "imagePrompt": "small survey airplane flying low over the turquoise Gulf of Mexico near the Yucatan coast, morning haze, teal and amber palette",
+      "map": {
+        "lat": 21.4,
+        "lon": -89.5,
+        "label": "Чиксулуб",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s12",
+      "kind": "stat",
+      "narration": "На магнитной карте у побережья Юкатана проступило гигантское кольцо. Около ста восьмидесяти километров в поперечнике. Ровно тот масштаб, которого не хватало Альваресам.",
+      "onScreen": "Кольцо под *Юкатаном*",
+      "stat": {
+        "value": 180,
+        "prefix": "≈",
+        "suffix": " км",
+        "label": "диаметр кольцевой структуры"
+      },
+      "icon": "target",
+      "visualQuery": "aeromagnetic map circular anomaly",
+      "imagePrompt": "glowing concentric rings emerging on a vintage magnetic anomaly map, hand holding a pencil, warm lamp light, teal and amber palette"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Пенфилд сразу решил, что это след удара. Но была загвоздка. Данные принадлежали нефтяной компании. Свободно рассказывать о них геофизик не мог.",
+      "onScreen": "Данные *под замком*",
+      "icon": "lock",
+      "visualQuery": "confidential files cabinet office",
+      "imagePrompt": "closed metal filing cabinet in a dim 1970s office, single light beam, dust particles, teal and amber palette"
+    },
+    {
+      "id": "s14",
+      "kind": "media",
+      "narration": "Лишь в тысяча девятьсот восемьдесят первом году им разрешили выступить на конференции Общества геофизиков-разведчиков. Доклад прозвучал. И почти никто его не заметил.",
+      "onScreen": "Доклад 1981: *тишина* в ответ",
+      "icon": "users",
+      "visualQuery": "conference hall audience presentation",
+      "imagePrompt": "half-empty conference hall with a slide projector beam, lone speaker at a podium, 1980s atmosphere, teal and amber palette"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "Нефтяники и охотники за кратером жили в разных мирах. Так кольцо пролежало на картах ещё почти десять лет. Ждало, пока две истории встретятся. И помог им встретиться один аспирант.",
+      "onScreen": "Две истории *ещё не встретились*",
+      "icon": "key",
+      "visualQuery": "graduate student library research",
+      "imagePrompt": "young researcher surrounded by stacks of papers late at night, desk lamp glow, determined face in shadow, teal and amber palette"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "Его звали Алан Хилдебранд. Он учился в Аризонском университете у планетолога Уильяма Бойнтона. И вместе они искали тот самый кратер. Следы выброса в пограничных слоях подсказывали: удар был где-то в районе Карибского моря.",
+      "onScreen": "Аспирант, который *искал* кратер",
+      "chapter": "Чиксулуб получает имя",
+      "map": {
+        "lat": 21.4,
+        "lon": -89.5,
+        "label": "Юкатан",
+        "zoom": "region"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Шульте, 2010",
+            "value": 41
+          },
+          {
+            "label": "Статья 1991",
+            "value": 7
+          }
+        ],
+        "suffix": " авторов"
+      }
+    },
+    {
+      "id": "s17",
+      "kind": "media",
+      "narration": "В тысяча девятьсот девяностом году Хилдебранд и Пенфилд наконец объединили усилия. Им нужны были образцы пород из самого кольца. Их взяли из старых нефтяных скважин, которые бурили там ещё десятилетия назад.",
+      "onScreen": "1990: две истории *встретились*",
+      "icon": "users",
+      "visualQuery": "drill core samples box",
+      "imagePrompt": "cinematic shot of old rock drill cores laid in wooden boxes in a dusty warehouse, warm amber light, shallow depth of field"
+    },
+    {
+      "id": "s18",
+      "kind": "statement",
+      "narration": "И в этих образцах нашли следы удара. Например, кварц с тонкими параллельными полосками. Такие зёрна рождаются только при чудовищном мгновенном давлении. Обычный вулкан на такое не способен.",
+      "onScreen": "Ударный кварц — *подпись* астероида",
+      "icon": "microscope",
+      "visualQuery": "Shocked quartz microscope",
+      "imagePrompt": "macro view of a quartz crystal with fine parallel fracture lines under polarized microscope light, deep teal and amber tones"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "В тысяча девятьсот девяносто первом году в журнале Геолоджи вышла статья семи авторов. Среди них Хилдебранд, Пенфилд, Камарго и Бойнтон. Заголовок осторожный: возможный ударный кратер мел-палеогеновой границы.",
+      "onScreen": "1991: *возможный* кратер границы",
+      "icon": "book-open",
+      "visualQuery": "scientific journal pages desk",
+      "imagePrompt": "vintage scientific journal open on a cluttered geologist desk with maps and a magnifying glass, warm lamp light"
+    },
+    {
+      "id": "s20",
+      "kind": "media",
+      "narration": "Кратер назвали по посёлку Чиксулуб на северном берегу Юкатана, рядом с центром структуры. Сверху там ничего не видно. Обычные пляжи и деревни, а кольцо спрятано глубоко под известняком.",
+      "onScreen": "Кратер *под* пляжем",
+      "icon": "globe",
+      "visualQuery": "Yucatan coast beach village",
+      "imagePrompt": "aerial view of a calm Yucatan coastline with turquoise water and a small village at golden hour, cinematic warm palette"
+    },
+    {
+      "id": "s21",
+      "kind": "statement",
+      "narration": "Дальше улики только копились. В две тысячи десятом году сорок один исследователь во главе с Петером Шульте подвёл итог в журнале Сайенс. Вымирание запустил именно удар Чиксулуба.",
+      "onScreen": "41 учёный: удар — *спусковой крючок*",
+      "icon": "target",
+      "visualQuery": "scientists meeting conference table",
+      "imagePrompt": "group of geologists around a table covered with rock samples and charts, dramatic side light, warm tones"
+    },
+    {
+      "id": "s22",
+      "kind": "stat",
+      "narration": "Оставался вопрос времени. В две тысячи тринадцатом году Пол Ренне с коллегами применил аргон-аргоновое датирование. Удар и вымирание совпали с точностью до тридцати двух тысяч лет. Около шестидесяти шести миллионов лет назад.",
+      "onScreen": "Удар и вымирание *совпали*",
+      "stat": {
+        "value": 66.04,
+        "suffix": " млн лет",
+        "label": "назад произошёл удар"
+      },
+      "icon": "hourglass",
+      "visualQuery": "mass spectrometer laboratory",
+      "imagePrompt": "glowing laboratory instrument analyzing tiny glass beads of impact rock, cool blue light mixed with warm amber, cinematic"
+    },
+    {
+      "id": "s23",
+      "kind": "statement",
+      "narration": "Но всё это изучали по обломкам и старым скважинам. Само сердце кратера никто не видел. Чтобы заглянуть внутрь, пришлось выйти в море и бурить.",
+      "onScreen": "Сердце кратера ещё *никто* не видел",
+      "icon": "compass",
+      "visualQuery": "offshore drilling platform sea",
+      "imagePrompt": "lone drilling platform standing in calm sea at dusk, orange sky, cinematic wide shot"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Весной две тысячи шестнадцатого года к побережью Юкатана подошла самоподъёмная платформа Миртл. Международная экспедиция под руководством Джоанны Морган и Шона Гулика начала бурение прямо в пиковое кольцо кратера.",
+      "onScreen": "Экспедиция 364: бурение *пикового кольца*",
+      "icon": "compass",
+      "visualQuery": "offshore drilling platform sea",
+      "imagePrompt": "cinematic landscape of an offshore drilling platform in calm turquoise waters, early morning golden sunlight, realistic documentary style",
+      "chapter": "Скважина в пиковом кольце"
+    },
+    {
+      "id": "s25",
+      "kind": "media",
+      "narration": "Керн из скважины подтвердил дерзкую теорию. Пиковое кольцо состояло из раздробленного гранита, который поднялся с глубин земной коры, взметнулся вверх и обрушился обратно за считаные минуты.",
+      "onScreen": "Гранит поднялся со *дна коры*",
+      "icon": "mountain",
+      "visualQuery": "geological drill core granite",
+      "imagePrompt": "close-up of shattered pink and grey granite drill cores lying in wooden trays, soft studio lighting, high geological detail"
+    },
+    {
+      "id": "s26",
+      "kind": "stat",
+      "narration": "В две тысячи девятнадцатом году команда Гулика буквально по минутам восстановила первый день новой эры. За первые десятки минут на кольцо осело около сорока метров расплава и брекчий.",
+      "onScreen": "Первые минуты *после удара*",
+      "stat": {
+        "value": 40,
+        "suffix": " м",
+        "label": "расплава и брекчий за первые десятки минут"
+      },
+      "icon": "timer",
+      "visualQuery": "impact melt breccia rock",
+      "imagePrompt": "geological rock cross-section showing dark melted impact breccia with angular rock fragments, macro photograph"
+    },
+    {
+      "id": "s27",
+      "kind": "stat",
+      "narration": "А к концу первых суток слой обломков, принесённых гигантским цунами, достиг ста тридцати метров. В этих породах нашли микроскопические угольки от пожаров, бушевавших по всей планете.",
+      "onScreen": "130 метров осадка за *один день*",
+      "stat": {
+        "value": 130,
+        "suffix": " м",
+        "label": "слой осадков за первый день кайнозоя"
+      },
+      "icon": "flame",
+      "visualQuery": "charcoal particles sediment microscope",
+      "imagePrompt": "microscopic view of ancient charcoal particles embedded in sandy marine sedimentary rock, dramatic scientific lighting"
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "Но главное: в керне почти не оказалось богатых серой пород, которые покрывали морское дно до удара. Триста миллиардов тонн серы испарились в стратосферу, вызвав смертоносную мглу и резкое похолодание.",
+      "onScreen": "Сера испарилась, вызвав *холод и тьму*",
+      "icon": "cloud-fog",
+      "visualQuery": "dark atmospheric smoke clouds",
+      "imagePrompt": "view from low orbit of Earth engulfed in thick dark stratospheric sulfur haze and smoke, dim sunlight barely passing through"
+    },
+    {
+      "id": "s29",
+      "kind": "statement",
+      "narration": "И всё же один научный спор оставался открытым. В это же самое время на другом конце планеты изливались колоссальные лавовые поля — Деканские траппы в Индии.",
+      "onScreen": "Деканские траппы: *второй подозреваемый*",
+      "icon": "flame",
+      "visualQuery": "Deccan Traps layered basalt cliffs",
+      "imagePrompt": "majestic terraced dark basalt rock formations of Deccan Traps under a dramatic overcast sky, wide geological view",
+      "chapter": "Астероид или вулканы",
+      "map": {
+        "lat": 19.5,
+        "lon": 74,
+        "label": "Деканские траппы",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "В две тысячи девятнадцатом году группа Блэра Шёне и Герты Келлер показала, что мощные извержения начались ещё до катастрофы. Сторонники этой теории настаивали: планету погубил двойной удар.",
+      "onScreen": "Версия: экосистему добили *вулканы*",
+      "icon": "triangle-alert",
+      "visualQuery": "basalt lava field dark rocks",
+      "imagePrompt": "rugged ancient cooled volcanic basalt plateau stretching to the horizon, moody cinematic lighting"
+    },
+    {
+      "id": "s31",
+      "kind": "media",
+      "narration": "Однако год спустя Пинчелли Халл с коллегами изучила океанические отложения и установила: основной выброс газов из вулканов произошёл задолго до вымирания, а с кризисом совпадает лишь падение небесного тела.",
+      "onScreen": "С вымиранием совпадает *только астероид*",
+      "icon": "circle-check",
+      "visualQuery": "ocean sediment core marine geology",
+      "imagePrompt": "scientists analyzing deep marine sediment cores in a high-tech modern laboratory, clean bright scientific setting"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Точку поставило климатическое моделирование Альфио Кьяренцы. Ударная зима разрушила биосферу, а вулканическое потепление после неё, наоборот, помогло уцелевшим видам быстрее восстановиться.",
+      "onScreen": "Вулканы не убили, а *смягчили удар*",
+      "icon": "shield",
+      "visualQuery": "prehistoric forest morning mist regrowth",
+      "imagePrompt": "sunlight breaking through dense prehistoric fern valley after a catastrophe, rays of hope, cinematic landscape"
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Сегодня наука признаёт: динозавров уничтожил астероид. А разгадка этой тайны двенадцать лет спокойно пылилась в забытом отчёте нефтяников, мимо которого проходили сотни специалистов.",
+      "onScreen": "Улика 12 лет лежала *в пыльном отчёте*",
+      "icon": "book-open",
+      "visualQuery": "vintage geological map table",
+      "imagePrompt": "an aged geophysical contour map lying on an old wooden desk beside calipers, soft warm side lighting"
+    },
+    {
+      "id": "s34",
+      "kind": "cta",
+      "narration": "Какое открытие сейчас лежит незамеченным?",
+      "onScreen": "Какое открытие сейчас лежит *незамеченным*?",
+      "icon": "eye"
+    }
+  ]
+}

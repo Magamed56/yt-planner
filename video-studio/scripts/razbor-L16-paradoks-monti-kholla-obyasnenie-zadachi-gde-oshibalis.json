@@ -1,0 +1,512 @@
+{
+  "title": "Парадокс Монти Холла: объяснение задачи, где ошибались профессора",
+  "description": "Разбираем парадокс Монти Холла: почему смена двери даёт шанс две трети, а не пятьдесят на пятьдесят. Узнаешь, как Мэрилин вос Савант получила около десяти тысяч писем с обвинениями, почему Пол Эрдёш поверил только симуляции и как голуби обошли людей. Главное — поймёшь, откуда берётся выигрыш: ведущий знает, где приз.\n#парадоксмонтихолла #теориявероятностей #математика #логика",
+  "tags": [
+    "парадокс монти холла",
+    "парадокс монти холла объяснение",
+    "парадокс монти холла 21",
+    "задача монти холла",
+    "теория вероятностей",
+    "математика",
+    "мэрилин вос савант",
+    "пол эрдёш",
+    "логика",
+    "когнитивные искажения",
+    "задача о трёх заключённых",
+    "monty hall problem",
+    "головоломки"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Тысячи читателей, среди них учёные, писали: вы ошиблись. Ошиблись они.",
+      "onScreen": "«Вы ошиблись». Ошиблись *они*",
+      "icon": "mail",
+      "visualQuery": "stack of old letters envelopes",
+      "imagePrompt": "cinematic shot of a huge pile of handwritten letters and envelopes on a 1990s office desk, warm amber lamp light, teal shadows, shallow depth of field",
+      "chapter": "Три двери и коза"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это задача из телешоу: три двери, автомобиль и козы. На ней спотыкались профессора математики. А к концу ролика ты поймёшь, где именно ломается интуиция.",
+      "onScreen": "Задача, где *профессора* ошибались",
+      "icon": "brain",
+      "visualQuery": "three closed doors hallway",
+      "imagePrompt": "three tall closed wooden doors on a dark stage, spotlight beams from above, warm amber and teal palette, cinematic wide shot, mysterious mood"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Шоу называлось Давай заключим сделку. Его придумали Стефан Хатос и Монти Холл. Первый выпуск вышел на Эн-би-си тридцатого декабря тысяча девятьсот шестьдесят третьего года.",
+      "onScreen": "Let's Make a Deal, NBC, *1963*",
+      "icon": "tv",
+      "visualQuery": "Monty Hall portrait",
+      "imagePrompt": "vintage 1960s television studio with stage curtains, cameras and audience seats, warm amber stage lights, teal shadows, cinematic wide angle"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "Монти Холл стал лицом этого шоу надолго. Он вёл его почти тридцать лет. Именно его имя потом досталось знаменитой задаче.",
+      "onScreen": "Ведущий на *три десятилетия*",
+      "stat": {
+        "value": 30,
+        "prefix": "≈",
+        "suffix": " лет",
+        "label": "Монти Холл вёл шоу"
+      },
+      "icon": "timer",
+      "visualQuery": "vintage television set studio",
+      "imagePrompt": "retro television set glowing in a dim living room, showing a game show stage, warm amber glow, teal ambient light, cinematic"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Призы прятали за занавесами или в коробках. Можно было уйти с хорошей вещью. А можно было рискнуть и получить зонк, нелепый утешительный приз почти без цены.",
+      "onScreen": "Рискнул — и получил *зонк*",
+      "icon": "gift",
+      "visualQuery": "stage curtain gift boxes",
+      "imagePrompt": "red velvet stage curtain half open revealing a wrapped gift box and a silly rubber chicken, warm spotlight, teal background, playful cinematic mood"
+    },
+    {
+      "id": "s6",
+      "kind": "list",
+      "narration": "Теперь сама задача. Три двери: за одной автомобиль, за двумя козы. Ты выбираешь дверь. Ведущий открывает другую, там коза. И предлагает тебе поменять выбор.",
+      "onScreen": "Условие *задачи*",
+      "items": [
+        "Три двери, одна машина",
+        "Ты выбираешь дверь",
+        "Ведущий открывает козу",
+        "Предлагает поменять"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "goat standing doorway",
+      "imagePrompt": "three doors on a game show stage, one open revealing a goat standing calmly, the other two closed, warm amber spotlights, teal haze, cinematic"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Вот главный вопрос. Остаться при своей двери или перейти на другую закрытую? Большинство отвечает: без разницы, пятьдесят на пятьдесят. Запомни свой ответ. Проверим его в конце.",
+      "onScreen": "Менять или нет? *Запомни* ответ",
+      "icon": "help-circle",
+      "visualQuery": "goat farm close",
+      "imagePrompt": "a hand hovering between two closed doors with a goat visible through a third open door, tense moment, warm amber rim light, teal shadows, cinematic close shot"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Только сначала одна деталь. Эта задача старше скандала с письмами. Её разбирали в серьёзных журналах задолго до того, как о ней заспорила вся Америка.",
+      "onScreen": "Задача *старше* скандала",
+      "icon": "book-open",
+      "visualQuery": "old science magazines stack",
+      "imagePrompt": "stack of vintage scientific journals on a wooden library table, dust in a beam of warm light, teal shadows, cinematic still life",
+      "chapter": "Задача до Монти Холла"
+    },
+    {
+      "id": "s9",
+      "kind": "media",
+      "narration": "В октябре тысяча девятьсот пятьдесят девятого года Мартин Гарднер опубликовал в колонке Математические игры журнала Сайентифик Американ задачу о трёх заключённых.",
+      "onScreen": "Мартин Гарднер, *1959*",
+      "icon": "newspaper",
+      "visualQuery": "Martin Gardner portrait",
+      "imagePrompt": "1950s writer's desk with a typewriter, puzzle sketches and a magazine page, warm desk lamp light, teal night window, cinematic"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Там нет машины и коз. Есть трое заключённых: одного помилуют, двоих казнят. Но математически это та же головоломка. Свобода вместо автомобиля, казнь вместо козы.",
+      "onScreen": "Свобода вместо машины, казнь вместо *козы*",
+      "icon": "lock",
+      "visualQuery": "prison cell bars",
+      "imagePrompt": "three old prison cell doors in a stone corridor, one beam of warm light falling on a single door, teal darkness, cinematic dramatic mood"
+    },
+    {
+      "id": "s11",
+      "kind": "media",
+      "narration": "В феврале тысяча девятьсот семьдесят пятого года биостатистик Стив Селвин из Беркли написал в журнал Американ Статистишн. В письме была задача про три двери.",
+      "onScreen": "Беркли, *1975*",
+      "icon": "mail",
+      "visualQuery": "Sather Tower Berkeley campus",
+      "imagePrompt": "university campus clock tower at golden hour, a typed letter on a desk in the foreground, warm amber light, teal sky, cinematic",
+      "map": {
+        "lat": 37.8719,
+        "lon": -122.2585,
+        "label": "Беркли",
+        "zoom": "city"
+      }
+    },
+    {
+      "id": "s12",
+      "kind": "statement",
+      "narration": "В том же году Селвин отправил второе письмо. И там впервые дал задаче имя, под которым её знают сегодня: проблема Монти Холла.",
+      "onScreen": "Рождение имени: *проблема Монти Холла*",
+      "icon": "lightbulb",
+      "visualQuery": "typewriter letter paper",
+      "imagePrompt": "close view of a vintage typewriter with a sheet of paper, warm lamp light, teal background shadows, shallow depth of field"
+    },
+    {
+      "id": "s13",
+      "kind": "stat",
+      "narration": "А дальше тишина. Пятнадцать лет задача жила в узком кругу статистиков. Её решали, обсуждали и не видели в ней ничего скандального.",
+      "onScreen": "15 лет *тишины*",
+      "stat": {
+        "value": 15,
+        "suffix": " лет",
+        "label": "задача жила без скандала"
+      },
+      "icon": "hourglass",
+      "visualQuery": "hourglass sand table",
+      "imagePrompt": "an hourglass with falling sand on a dusty academic desk, warm amber light, teal shadows, cinematic quiet mood"
+    },
+    {
+      "id": "s14",
+      "kind": "statement",
+      "narration": "Всё изменилось в тысяча девятьсот девяностом. За задачу взялась женщина, которую Книга рекордов Гиннесса называла человеком с самым высоким ай-кью.",
+      "onScreen": "Женщина с *рекордным* IQ",
+      "icon": "trophy",
+      "visualQuery": "Parade magazine 1990",
+      "imagePrompt": "a 1990s Sunday magazine lying on a kitchen table next to a coffee cup, morning warm light, teal shadows, cinematic anticipation"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "Её зовут Мэрилин вос Савант. С восемьдесят пятого по восемьдесят девятый год Гиннесс держал её в рекордсменах. А в девяностом категорию убрали: тесты сочли слишком ненадёжными.",
+      "onScreen": "Рекорд IQ: 1985–1989, потом *отменён*",
+      "chapter": "Колонка в Parade и шквал писем",
+      "compare": {
+        "items": [
+          {
+            "label": "Начало рекорда",
+            "value": 1985
+          },
+          {
+            "label": "Конец рекорда",
+            "value": 1989
+          },
+          {
+            "label": "Категорию упразднили",
+            "value": 1990
+          }
+        ]
+      }
+    },
+    {
+      "id": "s16",
+      "kind": "media",
+      "narration": "Девятого сентября тысяча девятьсот девяностого года читатель спросил её про три двери в колонке Спросите Мэрилин журнала Парейд. Ответ был коротким: меняйте.",
+      "onScreen": "Parade, 9 сентября 1990: *меняйте*",
+      "icon": "book-open",
+      "visualQuery": "magazine pages printing press",
+      "imagePrompt": "cinematic shot of a 1990s Sunday newspaper magazine lying on a kitchen table next to a coffee mug, warm morning window light, teal and amber palette, shallow depth of field, no readable text"
+    },
+    {
+      "id": "s17",
+      "kind": "statement",
+      "narration": "Её логика простая. У твоей двери шанс один из трёх. У второй закрытой двери два из трёх. Смена удваивает шансы на автомобиль.",
+      "onScreen": "1/3 против 2/3: смена *удваивает* шанс",
+      "icon": "target",
+      "compare": {
+        "items": [
+          {
+            "label": "Остаться",
+            "value": 33.3
+          },
+          {
+            "label": "Поменять",
+            "value": 66.7
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s18",
+      "kind": "stat",
+      "narration": "И тут редакцию накрыло. По данным Нью-Йорк Таймс, написали около десяти тысяч читателей. Большинство требовали одного: признайте ошибку.",
+      "onScreen": "Лавина *писем* в редакцию",
+      "stat": {
+        "value": 10000,
+        "prefix": "≈",
+        "label": "читателей написали в журнал"
+      },
+      "icon": "triangle-alert",
+      "visualQuery": "pile of letters envelopes",
+      "imagePrompt": "cinematic view of a huge pile of paper envelopes spilling across an editor's desk, warm desk lamp glow, teal shadows, dramatic depth"
+    },
+    {
+      "id": "s19",
+      "kind": "stat",
+      "narration": "Но поразительнее другое — кто именно писал. Почти тысяча авторов имели докторскую степень. Это люди, которые сами учат других считать вероятности.",
+      "onScreen": "Ошибкой назвали *доктора наук*",
+      "stat": {
+        "value": 1000,
+        "prefix": "≈",
+        "label": "писем от людей со степенью PhD"
+      },
+      "icon": "graduation-cap",
+      "visualQuery": "university professor desk papers",
+      "imagePrompt": "cinematic portrait-free scene of an academic office with chalkboard of equations and stacks of journals, warm amber lamp, teal night window, shallow depth of field"
+    },
+    {
+      "id": "s20",
+      "kind": "list",
+      "narration": "Тон был жёстким. Вы совершенно неправы. Я в шоке. А кто-то съязвил: коза — это вы. И так писали профессиональные математики.",
+      "onScreen": "Что писали *математики*",
+      "items": [
+        "Вы совершенно неправы",
+        "Я в шоке",
+        "Коза — это вы"
+      ],
+      "icon": "circle-x",
+      "visualQuery": "goat portrait farm",
+      "imagePrompt": "cinematic close-up of a goat staring into camera in front of a closed game show door, warm stage spotlight, teal background, playful mood"
+    },
+    {
+      "id": "s21",
+      "kind": "media",
+      "narration": "Мэрилин ответила не обидой, а новым образом. Представь миллион дверей. Ты выбираешь одну. Ведущий знает, где приз, и открывает все остальные, кроме одной.",
+      "onScreen": "Представь *миллион* дверей",
+      "icon": "key",
+      "visualQuery": "long corridor many doors",
+      "imagePrompt": "cinematic endless corridor of identical doors stretching to the horizon, all open except two closed ones, warm amber light against teal shadows, wide angle"
+    },
+    {
+      "id": "s22",
+      "kind": "statement",
+      "narration": "Что вероятнее: твоя дверь, взятая наугад из миллиона, или та единственная, которую ведущий старательно обошёл? Менять вдруг кажется очевидным.",
+      "onScreen": "Наугад или *нарочно* оставлена?",
+      "icon": "lightbulb"
+    },
+    {
+      "id": "s23",
+      "kind": "media",
+      "narration": "Тогда она попросила математические классы по всей стране проверить задачу руками. Монетки, бумажные стаканчики, раунд за раундом, и записывать каждый результат.",
+      "onScreen": "Монетки и *стаканчики* в классах",
+      "icon": "flask-conical",
+      "visualQuery": "students classroom coins paper cups",
+      "imagePrompt": "cinematic school classroom table with three upside-down paper cups and a coin, students' hands reaching in, warm afternoon sunlight, teal accents, shallow depth of field"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "И классы, к собственному удивлению, подтвердили её ответ. Смена двери выигрывала чаще. Но спор не утих: впереди был скептик куда серьёзнее.",
+      "onScreen": "Опыт подтвердил: *меняйте*",
+      "icon": "circle-check"
+    },
+    {
+      "id": "s25",
+      "kind": "statement",
+      "narration": "Пол Эрдёш — один из самых плодовитых математиков двадцатого века. Он годами жил на чемоданах, кочуя от коллеги к коллеге.",
+      "onScreen": "Пол Эрдёш: *гений* XX века",
+      "icon": "graduation-cap",
+      "chapter": "Эрдёш и голуби",
+      "map": {
+        "lat": 47.5,
+        "lon": 19.04,
+        "label": "Будапешт",
+        "zoom": "city"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Ведущий знает",
+            "value": 67
+          },
+          {
+            "label": "Ведущий упал",
+            "value": 50
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s26",
+      "kind": "media",
+      "narration": "Его коллега Эндрю Важони вспоминал в тысяча девятьсот девяносто девятом году: Эрдёш не поверил правильному ответу. Убедила его только компьютерная симуляция.",
+      "onScreen": "Поверил только *симуляции*",
+      "icon": "cpu",
+      "visualQuery": "vintage computer terminal screen",
+      "imagePrompt": "cinematic shot of an old CRT computer monitor glowing green in a dark study, stacks of math papers, warm spotlight, shallow depth of field"
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "Задумайся. Человек, решавший задачи, недоступные почти никому, споткнулся о две козы и машину. Значит, дело явно не в глупости.",
+      "onScreen": "Ошибка — *не* от глупости",
+      "icon": "brain",
+      "visualQuery": "chalkboard equations mathematician",
+      "imagePrompt": "cinematic view of a chalkboard covered in probability equations, single warm spotlight, dark theatrical background"
+    },
+    {
+      "id": "s28",
+      "kind": "media",
+      "narration": "А теперь неожиданные участники. В две тысячи десятом году психологи Уолтер Хербрансон и Джулия Шрёдер дали вариант этой задачи голубям. Вместо машины — корм.",
+      "onScreen": "2010: задача для *голубей*",
+      "icon": "microscope",
+      "visualQuery": "Rock dove pigeon",
+      "imagePrompt": "cinematic close-up of a grey pigeon in a dark laboratory box facing three glowing buttons, warm rim light"
+    },
+    {
+      "id": "s29",
+      "kind": "statement",
+      "narration": "Голуби ничего не знали о вероятностях. Они просто запоминали, что приносит корм. После многих попыток птицы почти всегда меняли выбор.",
+      "onScreen": "Голуби почти всегда *меняли*",
+      "icon": "trending-up",
+      "visualQuery": "pigeon pecking grain",
+      "imagePrompt": "pigeon pecking seeds under a warm spotlight on a dark stage, three closed doors blurred behind"
+    },
+    {
+      "id": "s30",
+      "kind": "quiz",
+      "narration": "Угадай, что вышло у людей. Правда или миф: после долгой тренировки люди тоже научились менять дверь?",
+      "onScreen": "Люди научились *менять* дверь?",
+      "icon": "users",
+      "visualQuery": "students experiment laboratory computer",
+      "imagePrompt": "group of people sitting at old computers in a dim psychology lab, three glowing doors on screens, warm spotlight",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Даже после долгой тренировки люди не перешли на выигрышную стратегию",
+        "question": "А ты бы научился быстрее голубя?",
+        "pauseSec": 4
+      }
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Миф. Люди так и не перешли на выигрышную стратегию. Голубь доверяет опыту, человек — интуиции. А интуиция пропускает одну деталь условия.",
+      "onScreen": "Интуиция пропускает *одну* деталь",
+      "icon": "eye",
+      "visualQuery": "person thinking puzzle",
+      "imagePrompt": "silhouette of a puzzled person standing before three tall doors on a dark game show stage, warm spotlight"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Вот эта деталь. Твой первый выбор угадывает машину лишь в одном случае из трёх. И когда ведущий открывает дверь, этот шанс не меняется.",
+      "onScreen": "Первый выбор: *1 из 3*",
+      "icon": "target",
+      "chapter": "Ведущий знает больше",
+      "compare": {
+        "items": [
+          {
+            "label": "Твоя дверь",
+            "value": 33
+          },
+          {
+            "label": "Другая дверь",
+            "value": 67
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s33",
+      "kind": "stat",
+      "narration": "Оставшиеся две трети не делятся поровну. Они целиком переходят на единственную дверь, которую ведущий оставил закрытой.",
+      "onScreen": "Шанс *перетекает* к другой двери",
+      "stat": {
+        "value": 67,
+        "prefix": "≈",
+        "suffix": "%",
+        "label": "выигрыш при смене двери"
+      },
+      "icon": "trending-up",
+      "visualQuery": "three doors game show stage",
+      "imagePrompt": "three tall red doors on a dark game show stage, one open revealing a goat, one glowing with warm light"
+    },
+    {
+      "id": "s34",
+      "kind": "media",
+      "narration": "Почему туда? Ведущий знает, где машина, и никогда её не открывает. В двух случаях из трёх он фактически указывает на приз, обходя его стороной.",
+      "onScreen": "Ведущий *знает*, где машина",
+      "icon": "key",
+      "visualQuery": "goat standing barn door",
+      "imagePrompt": "cinematic shot of a goat standing behind an opened stage door, theatrical warm spotlight, dark background"
+    },
+    {
+      "id": "s35",
+      "kind": "list",
+      "narration": "Проверь на трёх раскладах. Машина за твоей дверью — смена проигрывает. За второй — выигрывает. За третьей — снова выигрывает.",
+      "onScreen": "Смена выигрывает *2 раза* из 3",
+      "items": [
+        "За твоей дверью — проигрыш",
+        "За второй — выигрыш",
+        "За третьей — выигрыш"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "paper cups coins table",
+      "imagePrompt": "top-down view of three paper cups and a coin on a dark wooden table, warm spotlight"
+    },
+    {
+      "id": "s36",
+      "kind": "media",
+      "narration": "Теперь главный поворот. Математик Джеффри Розенталь в две тысячи восьмом году описал вариант Монти падает. Ведущий поскальзывается и случайно открывает дверь. Там коза.",
+      "onScreen": "Вариант «Монти *падает*»",
+      "icon": "triangle-alert",
+      "visualQuery": "slippery floor man falling",
+      "imagePrompt": "game show host in a suit slipping on a glossy stage floor, accidentally pushing a door open, warm spotlight, motion blur"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "И тут шансы правда равны, пятьдесят на пятьдесят. Дверь та же, коза та же. Но ведущий ничего не выбирал — значит, ничего и не сообщил.",
+      "onScreen": "Случайность = *никакой* информации",
+      "icon": "circle-x",
+      "visualQuery": "goat behind open door",
+      "imagePrompt": "goat behind an accidentally opened stage door, host fallen in the foreground blur, warm spotlight, dark background",
+      "compare": {
+        "items": [
+          {
+            "label": "Ведущий знает",
+            "value": 67
+          },
+          {
+            "label": "Ведущий упал",
+            "value": 50
+          }
+        ],
+        "suffix": "%"
+      }
+    },
+    {
+      "id": "s38",
+      "kind": "quote",
+      "narration": "Сам Монти Холл объяснил в тысяча девятьсот девяносто первом году: если ведущий обязан всегда предлагать обмен, обмен стоит принять. А в его шоу всё зависело от настроения.",
+      "onScreen": "Обязан предлагать обмен — *меняй*",
+      "icon": "quote",
+      "visualQuery": "Monty Hall portrait",
+      "imagePrompt": "vintage 1960s television game show stage with three curtains, warm nostalgic spotlight, film grain"
+    },
+    {
+      "id": "s39",
+      "kind": "statement",
+      "narration": "Вот что взять с собой сегодня. Прежде чем считать шансы, спроси: что знает тот, кто открывает тебе дверь?",
+      "onScreen": "Что *знает* тот, кто открывает?",
+      "icon": "lightbulb",
+      "visualQuery": "hand opening door",
+      "imagePrompt": "close-up of a hand on a brass door handle, light spilling through the gap, dark warm palette"
+    },
+    {
+      "id": "s40",
+      "kind": "statement",
+      "narration": "Тысячи писем, профессора и даже Эрдёш спорили не с математикой. Они спорили с мыслью, что открытая дверь — просто дверь. А это подсказка.",
+      "onScreen": "Открытая дверь — это *подсказка*",
+      "icon": "compass",
+      "visualQuery": "stack of old letters",
+      "imagePrompt": "pile of old handwritten letters on a desk beside three tiny model doors, one open, warm spotlight"
+    },
+    {
+      "id": "s41",
+      "kind": "cta",
+      "narration": "А ты бы поменял дверь?",
+      "onScreen": "А ты бы *поменял* дверь?",
+      "icon": "message-circle"
+    }
+  ]
+}

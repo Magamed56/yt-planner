@@ -1,0 +1,410 @@
+{
+  "title": "Дневник Мерера: кто и как возил камень для пирамиды Хеопса",
+  "description": "В 2013 году в древнем порту Вади-эль-Джарф нашли древнейшие папирусы с текстом — журнал инспектора Мерера, который возил известняк из Туры к пирамиде Хеопса. Разбираем, что этот дневник, город строителей и исчезнувший рукав Нила рассказывают о том, кто на самом деле строил Великую пирамиду и почему это были не рабы.\n#пирамидахеопса #древнийегипет #история #археология",
+  "tags": [
+    "дневник мерера",
+    "дневник мерера кто",
+    "пирамида хеопса",
+    "пирамиды египта",
+    "как строили пирамиды",
+    "вади эль джарф",
+    "пьер талле",
+    "хуфу",
+    "древний египет",
+    "археология",
+    "рукав нила",
+    "марк лехнер",
+    "кто строил пирамиды",
+    "diary of merer",
+    "great pyramid"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Древнейшие папирусы с текстом — журнал перевозчика камней для пирамиды Хеопса.",
+      "onScreen": "Древнейшие папирусы: *журнал* строителя пирамиды",
+      "icon": "book-open",
+      "visualQuery": "Diary of Merer papyrus Cairo Museum",
+      "imagePrompt": "cinematic macro shot of ancient Egyptian papyrus with hieratic script, soft golden museum light, high detail",
+      "chapter": "Загадка без свидетелей"
+    },
+    {
+      "id": "s2",
+      "kind": "stat",
+      "narration": "На Великую пирамиду ушло около двух миллионов трёхсот тысяч массивных каменных блоков. Их общий вес — шесть миллионов тонн.",
+      "onScreen": "Вес пирамиды Хеопса",
+      "stat": {
+        "value": 6,
+        "suffix": " млн т",
+        "label": "общая масса известняковых блоков"
+      },
+      "icon": "scale",
+      "visualQuery": "Great Pyramid of Giza blocks",
+      "imagePrompt": "wide angle view of the Great Pyramid of Giza, massive stone blocks in dramatic morning light, deep shadows"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Веками люди спорили, как это вообще возможно. В пятом веке до нашей эры историк Геродот записал рассказы египетских жрецов.",
+      "onScreen": "Геродот записал слова *жрецов*",
+      "icon": "scroll",
+      "visualQuery": "Herodotus bust marble",
+      "imagePrompt": "marble bust of Herodotus in an ancient library setting, warm sunlight falling from a high window"
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "По его словам, фараон Хеопс согнал на стройку весь народ. Люди работали сменами по сто тысяч человек каждые три месяца.",
+      "onScreen": "Версия Геродота: 100 000 рабочих",
+      "stat": {
+        "value": 100000,
+        "label": "человек в каждой рабочей смене"
+      },
+      "icon": "users",
+      "visualQuery": "ancient Egyptian workers relief",
+      "imagePrompt": "ancient Egyptian wall carving depicting workers pulling heavy cargo, warm sandstone texture"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Десять лет якобы строили только дорогу для камня, и ещё двадцать лет возводили саму пирамиду.",
+      "onScreen": "30 лет *тяжелейшего* труда",
+      "icon": "timer",
+      "visualQuery": "Pyramid of Cheops desert road",
+      "imagePrompt": "atmospheric view of an ancient desert construction causeway leading to a rising pyramid, dusty sun rays"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Но Геродот писал через две тысячи лет после событий. Подлинных голосов тех, кто реально таскал эти глыбы, у науки не было.",
+      "onScreen": "Свидетельств строителей *не существовало*",
+      "icon": "message-square-off",
+      "visualQuery": "desert sand wind ancient ruins",
+      "imagePrompt": "wind blowing golden sand across ancient limestone ruins, dramatic cinematic atmosphere"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Пустоту заполнили фантазии: от утраченных технологий атлантов до инопланетных лазеров. Но разгадку скрывали не мифы, а забытая бухгалтерия и вода.",
+      "onScreen": "Загадку решили *бухгалтерия* и вода",
+      "icon": "droplet",
+      "visualQuery": "Nile river boat sunset",
+      "imagePrompt": "wooden cargo boat sailing on the Nile river during a rich crimson sunset, reflections in water"
+    },
+    {
+      "id": "s8",
+      "kind": "media",
+      "narration": "В апреле две тысячи тринадцатого года археологи совершили сенсацию. Французско-египетская экспедиция Пьера Талле работала на пустынном берегу Красного моря.",
+      "onScreen": "Апрель 2013: открытие Пьера *Талле*",
+      "icon": "compass",
+      "visualQuery": "Wadi al-Jarf archaeological site",
+      "imagePrompt": "archaeologists working in dry desert landscape near the Red Sea coast, bright clear daylight",
+      "chapter": "Порт на Красном море",
+      "map": {
+        "lat": 29.04,
+        "lon": 32.65,
+        "label": "Вади-эль-Джарф",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Место раскопок — Вади-эль-Джарф, в ста восьмидесяти километрах к югу от Суэца. Там обнаружили гигантский причал времён Хуфу.",
+      "onScreen": "Вади-эль-Джарф: гавань *Хуфу*",
+      "icon": "anchor",
+      "visualQuery": "ancient harbor stones Red Sea",
+      "imagePrompt": "submerged ancient stone blocks of an old harbor structure in crystal clear coastal sea water"
+    },
+    {
+      "id": "s10",
+      "kind": "stat",
+      "narration": "Эта гавань оказалась на тысячу с лишним лет старше любых известных портовых сооружений на планете. Но главный сюрприз ждал внутри рукотворных пещер.",
+      "onScreen": "Возраст порта Вади-эль-Джарф",
+      "stat": {
+        "value": 1000,
+        "prefix": "> ",
+        "suffix": " лет",
+        "label": "старше других известных портов мира"
+      },
+      "icon": "hourglass",
+      "visualQuery": "limestone caves desert entrance",
+      "imagePrompt": "dark entrance to ancient limestone storage caves carved into desert cliff side, high contrast"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "Там хранились сотни фрагментов папирусов. В них стояла чёткая дата: год после тринадцатого подсчёта скота при фараоне Хуфу.",
+      "onScreen": "26-й год *правления* фараона",
+      "icon": "calendar",
+      "visualQuery": "ancient papyrus fragments hieroglyphs",
+      "imagePrompt": "detailed shot of well-preserved papyrus fragments with red and black hieroglyphic ink, museum restoration"
+    },
+    {
+      "id": "s12",
+      "kind": "statement",
+      "narration": "Такой учёт для налогов вели раз в два года. Значит, документам около четырёх с половиной тысяч лет, и они относятся к концу правления Хеопса.",
+      "onScreen": "Документам около *4500* лет",
+      "icon": "history",
+      "visualQuery": "hieroglyphic inscription limestone block",
+      "imagePrompt": "carved Egyptian hieroglyphs on ancient weathered limestone surface, soft directional light"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Сам свиток как материал находили и раньше: чистый папирус лежал ещё в гробнице сановника Хемаки. Но журнал из Вади-эль-Джарфа — древнейший именно с текстом.",
+      "onScreen": "Древнейший папирус *с текстом*",
+      "icon": "file-text",
+      "visualQuery": "Hemaka cylinder box Cairo Museum",
+      "imagePrompt": "ancient wooden cylindrical box resting on neutral museum display background, studio lighting"
+    },
+    {
+      "id": "s14",
+      "kind": "statement",
+      "narration": "Что же записал в свой судовой журнал древний египтянин, чьи расчёты пережили сорок пять веков?",
+      "onScreen": "Что скрывает *журнал* инспектора?",
+      "icon": "help-circle",
+      "visualQuery": "Egyptian scribe statue Louvre",
+      "imagePrompt": "ancient limestone statue of a seated Egyptian scribe holding a papyrus scroll on his lap, focused museum light"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "Автора записей звали Мерер. Он носил титул инспектора и руководил отрядом примерно из сорока опытных лодочников.",
+      "onScreen": "Инспектор Мерер и *сорок* лодочников",
+      "icon": "users",
+      "visualQuery": "ancient Egyptian boat model museum",
+      "imagePrompt": "Cinematic shot of ancient Egyptian wooden boat model, detailed wood carvings, soft museum lighting, dark background, shallow depth of field",
+      "chapter": "Журнал инспектора Мерера"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "Из множества фрагментов лучше всего уцелели два свитка, известные сегодня как журналы А и Бэ. В них описаны ежедневные рейсы.",
+      "onScreen": "Журналы *А и Б*: хроника рейсов",
+      "icon": "book-open",
+      "visualQuery": "Diary of Merer papyrus",
+      "imagePrompt": "Cinematic close up of ancient hieratic papyrus fragment Diary of Merer, fibrous papyrus texture, red and black ink columns, warm directional museum light"
+    },
+    {
+      "id": "s17",
+      "kind": "media",
+      "narration": "Команда Мерера добывала ослепительно белый известняк в каменоломнях Северной и Южной Туры на восточном берегу и везла его через Нил.",
+      "onScreen": "Белый *известняк* из каменоломен Туры",
+      "icon": "plane",
+      "visualQuery": "limestone quarry ancient cliff",
+      "imagePrompt": "Massive ancient limestone quarry walls in the desert sun, sharp chisel cut marks on white stone cliffs, warm morning haze"
+    },
+    {
+      "id": "s18",
+      "kind": "quote",
+      "narration": "Пьер Талле подчеркивает: Мерер скрупулезно фиксировал свои многочисленные рейсы за блоками, открывая нам реальную организацию стройки.",
+      "onScreen": "Мерер фиксировал *каждый* свой рейс",
+      "icon": "quote",
+      "visualQuery": "Pierre Tallet egyptologist",
+      "imagePrompt": "Portrait of an archeologist examining ancient papyrus fragments with magnifying glass, soft studio light, scholarly atmosphere"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Камень доставляли к самой пирамиде, которую в тексте называют Ахет-Хуфу, что переводится как «Горизонт Хуфу».",
+      "onScreen": "Пирамида Ахет-Хуфу — *«Горизонт Хуфу»*",
+      "icon": "sun",
+      "visualQuery": "Great Pyramid Giza horizon",
+      "imagePrompt": "Dramatic cinematic view of the Great Pyramid of Giza against rising golden sun, dust particles in the air, ancient desert atmosphere"
+    },
+    {
+      "id": "s20",
+      "kind": "statement",
+      "narration": "В журнале регулярно упомянут знатный Анххаф, начальник портовой зоны Ра-ше-Хуфу. Историки считают его сводным братом фараона.",
+      "onScreen": "Вельможа *Анххаф*: начальник царской гавани",
+      "icon": "shield",
+      "visualQuery": "Bust of Ankhhaf",
+      "imagePrompt": "Cinematic close-up of the painted limestone bust of Prince Ankhhaf, realistic facial features, subtle studio lighting on dark background"
+    },
+    {
+      "id": "s21",
+      "kind": "media",
+      "narration": "Именно Анххаф принимал груженые суда Мерера в гавани у подножия плато и выдавал наряды на следующие партии блоков.",
+      "onScreen": "Приемка камня в гавани *Ра-ше-Хуфу*",
+      "icon": "compass",
+      "visualQuery": "ancient Nile harbor wooden boat",
+      "imagePrompt": "Cinematic wide angle of ancient Nile canal harbor, heavy wooden transport barges tied to stone quays, limestone blocks unloaded, warm golden hour"
+    },
+    {
+      "id": "s22",
+      "kind": "statement",
+      "narration": "Но как именно многотонные блоки поднимали на ярусы пирамиды, инспектор не пишет ни слова. Его задачей была только доставка.",
+      "onScreen": "О подъеме блоков дневник *молчит*",
+      "icon": "eye",
+      "visualQuery": "Great Pyramid stone blocks steps",
+      "imagePrompt": "Cinematic low-angle view of massive stepped megalithic limestone blocks of the Great Pyramid climbing up into the clear sky"
+    },
+    {
+      "id": "s23",
+      "kind": "statement",
+      "narration": "Тот самый гладкий известняк из Туры украшал фасад пирамиды, пока в четырнадцатом веке после землетрясений его не разобрали на постройки Каира.",
+      "onScreen": "Облицовку сняли для *Каира* в XIV веке",
+      "icon": "building",
+      "visualQuery": "Cairo medieval citadel walls",
+      "imagePrompt": "Ancient medieval stone walls and masonry of old Cairo bathed in warm dusk light, subtle weathered limestone texture, atmospheric haze"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Но если Мерер отвечал за флот, то кто же принимал и укладывал камень? Миф о бесправных рабах под плетьми развеяли лопаты археологов.",
+      "onScreen": "Миф о *рабах* развеяли археологи",
+      "icon": "triangle-alert",
+      "visualQuery": "Giza pyramid excavations",
+      "imagePrompt": "Cinematic wide shot of archaeological excavations near Giza pyramids, dust particles in evening sun, authentic trench work, cinematic lighting",
+      "chapter": "Город строителей"
+    },
+    {
+      "id": "s25",
+      "kind": "media",
+      "narration": "С тысяча девятьсот восемьдесят восьмого года Марк Лехнер раскапывает всего в четырёхстах метрах к югу от Сфинкса целый город площадью более семи гектаров.",
+      "onScreen": "Потерянный *город* строителей пирамид",
+      "icon": "compass",
+      "visualQuery": "Heit el-Ghurab ancient ruins",
+      "imagePrompt": "Aerial view of an ancient Egyptian settlement ruins in the desert sand near the Sphinx, warm golden hour, detailed stone foundations",
+      "map": {
+        "lat": 29.972,
+        "lon": 31.138,
+        "label": "Хейт-эль-Гураб",
+        "zoom": "city"
+      }
+    },
+    {
+      "id": "s26",
+      "kind": "list",
+      "narration": "Здесь нашли огромные пекарни, склады провизии, ремесленные мастерские и длинные казармы. Это была постоянная база для тысяч организованных специалистов.",
+      "onScreen": "Инфраструктура *города* у пирамид",
+      "items": [
+        "Огромные пекарни",
+        "Склады провизии",
+        "Медные мастерские",
+        "Длинные галереи"
+      ],
+      "icon": "utensils",
+      "visualQuery": "ancient Egyptian bakery ruins",
+      "imagePrompt": "Reconstruction of ancient Egyptian bakeries with ceramic pots and grain storage, workers baking bread, atmospheric rays of sunlight"
+    },
+    {
+      "id": "s27",
+      "kind": "stat",
+      "narration": "Оценки Геродота про сотни тысяч рабочих оказались фантазией. Реальное число строителей составляло от двадцати до тридцати тысяч человек.",
+      "onScreen": "Реальное *число* строителей Хеопса",
+      "stat": {
+        "value": 30,
+        "prefix": "до ",
+        "suffix": " тыс",
+        "label": "работников строили Великую пирамиду"
+      },
+      "icon": "users",
+      "visualQuery": "ancient Egyptian stone masons",
+      "imagePrompt": "A disciplined group of ancient Egyptian workers moving limestone blocks under supervision, realistic desert environment, documentary style",
+      "compare": {
+        "items": [
+          {
+            "label": "Геродот",
+            "value": 100000
+          },
+          {
+            "label": "Наука",
+            "value": 30000
+          }
+        ],
+        "suffix": " чел."
+      }
+    },
+    {
+      "id": "s28",
+      "kind": "quote",
+      "narration": "Как подчеркнул в интервью Марк Лехнер: конечно, это были не рабы. Это был почётный государственный призыв с сытным мясным пайком.",
+      "onScreen": "«Конечно, это были *не рабы*»",
+      "icon": "quote",
+      "visualQuery": "Mark Lehner portrait",
+      "imagePrompt": "Portrait of a seasoned archaeologist in a dusty hat on Giza plateau, dramatic sun flare, professional documentary atmosphere"
+    },
+    {
+      "id": "s29",
+      "kind": "statement",
+      "narration": "Рядом Захи Хавасс исследовал кладбище строителей из шестисот могил. Скелеты со следами заживших переломов доказали: рабочих лечили квалифицированные врачи.",
+      "onScreen": "Кладбище *строителей*: следы медицины",
+      "icon": "heart",
+      "visualQuery": "Zahi Hawass excavations Giza",
+      "imagePrompt": "Ancient mudbrick tombs at the foot of the pyramids, archaeological grid, medical splint traces on ancient bone casts, soft dramatic shadows"
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "Людей кормили, лечили и вели строгий учёт. Но оставалась главная физическая преграда: как доставить миллионы тонн камня к подножию плато?",
+      "onScreen": "Как *доставить* миллионы тонн камня?",
+      "icon": "target",
+      "visualQuery": "Great Pyramid of Giza blocks",
+      "imagePrompt": "Massive stepped limestone blocks of Khufu pyramid ascending into the sky, cinematic low angle, intense desert sun"
+    },
+    {
+      "id": "s31",
+      "kind": "media",
+      "narration": "Разгадку дали палеоэкологи. В две тысячи двадцать втором году исследование пыльцы в почве доказало: в эпоху пирамид у плато шумела полноводная река.",
+      "onScreen": "Древний рукав Нила у *пирамид*",
+      "icon": "droplet",
+      "visualQuery": "Nile river flood ancient Egypt",
+      "imagePrompt": "Ancient branch of the Nile overflowing near lush papyrus reed banks, pyramids visible in background haze, atmospheric golden hour",
+      "chapter": "Бухгалтерия и вода"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Рукав Нила, названный рукавом Хуфу, держал высокий уровень воды во время ежегодных паводков, подходя вплотную к причалам царского порта.",
+      "onScreen": "Вода подходила к *самому плато*",
+      "icon": "ship",
+      "visualQuery": "ancient Egyptian wooden cargo boat",
+      "imagePrompt": "Wooden ancient Egyptian cargo vessel loaded with massive white limestone blocks sailing on blue river water, misty pyramid hills in distance"
+    },
+    {
+      "id": "s33",
+      "kind": "stat",
+      "narration": "А в две тысячи двадцать четвёртом году радары выявили скрытый под песками рукав Ахрамат протяжённостью целых шестьдесят четыре километра.",
+      "onScreen": "Засыпанный рукав Нила: *Ахрамат*",
+      "stat": {
+        "value": 64,
+        "suffix": " км",
+        "label": "длина скрытого водного рукава"
+      },
+      "icon": "globe",
+      "visualQuery": "satellite radar Sahara desert sand",
+      "imagePrompt": "Satellite radar topography render showing an ancient riverbed winding through the golden desert next to thirty pyramids"
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "Вдоль этой исчезнувшей водной магистрали выстроилась тридцать одна пирамида, а церемониальные дамбы от храмов служили прямыми дорогами к пристаням.",
+      "onScreen": "31 пирамида вдоль *водной* артерии",
+      "icon": "landmark",
+      "visualQuery": "Giza causeway ruins",
+      "imagePrompt": "Ancient stone causeway leading from a desert harbor basin up toward a majestic sunlit pyramid, cinematic vista"
+    },
+    {
+      "id": "s35",
+      "kind": "statement",
+      "narration": "Так пазл сложился: не тайные знания и не рабский труд, а точный расчёт паводков, развитая речная сеть и безупречная бухгалтерия создали чудо света.",
+      "onScreen": "Не мистика, а *логистика* и вода",
+      "icon": "circle-check",
+      "visualQuery": "Diary of Merer papyrus fragment",
+      "imagePrompt": "Close up of preserved papyrus with hieratic script next to ancient bronze tools and measuring ropes on wooden table, warm library light"
+    },
+    {
+      "id": "s36",
+      "kind": "cta",
+      "narration": "Что о нас рассказал бы твой журнал?",
+      "onScreen": "Что о нас *расскажет* твой журнал?",
+      "icon": "book-open"
+    }
+  ]
+}

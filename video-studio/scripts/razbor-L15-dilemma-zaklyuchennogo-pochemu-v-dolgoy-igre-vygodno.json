@@ -1,0 +1,426 @@
+{
+  "title": "Дилемма заключенного: почему в долгой игре выгодно сотрудничать",
+  "description": "Разбираем дилемму заключенного из теории игр: от опыта в корпорации RAND в 1950 году и истории Альберта Таккера до турнира программ Роберта Аксельрода, где победила простейшая стратегия «Око за око». Ты узнаешь, почему в повторяющихся отношениях выигрывает тот, кто не предаёт первым, отвечает на обман и умеет прощать, и как вовремя выйти из цепочки взаимной мести.\n#дилеммазаключенного #теорияигр #аксельрод #сотрудничество #нэш",
+  "tags": [
+    "дилемма заключенного",
+    "дилемма заключенного теория игр",
+    "теория игр",
+    "око за око",
+    "tit for tat",
+    "роберт аксельрод",
+    "эволюция кооперации",
+    "равновесие нэша",
+    "джон нэш",
+    "сотрудничество",
+    "корпорация rand",
+    "альберт таккер",
+    "элинор остром",
+    "prisoner's dilemma"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Турнир хитрых программ выиграла самая простая — не обыграв никого.",
+      "onScreen": "Победила, не обыграв *никого*",
+      "icon": "trophy",
+      "visualQuery": "vintage computer punch cards",
+      "imagePrompt": "cinematic shot of a vintage 1970s mainframe computer room with blinking lights, a single small terminal glowing in the center, warm amber and deep teal palette, film grain",
+      "chapter": "Игра, придуманная в RAND"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Звучит как опечатка, но это реальный турнир. Разберёмся, как так вышло. А в конце ты получишь простое правило для долгих отношений и узнаешь, где оно ломается.",
+      "onScreen": "Правило долгой игры — и где оно *ломается*",
+      "icon": "key",
+      "visualQuery": "chess board two players",
+      "imagePrompt": "two hands hovering over a chessboard in a dim smoky room, warm desk lamp light, teal shadows, shallow depth of field, 1950s noir mood"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Начало тысяча девятьсот пятидесятого года, Калифорния. Корпорация RAND работает на американских военных и изучает стратегию. Здесь математики Меррил Флуд и Мелвин Дрешер придумывают на вид простую игру.",
+      "onScreen": "RAND, *1950*",
+      "icon": "briefcase",
+      "visualQuery": "RAND Corporation Santa Monica",
+      "imagePrompt": "1950s research office with chalkboards full of equations, mathematicians in white shirts, warm amber window light, teal shadows, film grain",
+      "map": {
+        "lat": 34.0095,
+        "lon": -118.4906,
+        "label": "Санта-Моника",
+        "zoom": "city"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Правила такие. Двое тайно выбирают: сотрудничать или предать. Каждому лично выгоднее предать, что бы ни сделал другой. Но если оба сотрудничают, оба получают больше, чем при взаимном обмане.",
+      "onScreen": "Предать выгодно. Сотрудничать — *выгоднее*",
+      "icon": "users",
+      "visualQuery": "two people handshake table",
+      "imagePrompt": "two silhouettes facing each other across a table, one hand offered, the other hidden behind back, warm amber and teal light, cinematic noir"
+    },
+    {
+      "id": "s5",
+      "kind": "list",
+      "narration": "Флуд и Дрешер зовут двух коллег. Экономиста Армена Алчиана. Математика Джона Уильямса. И просят их сыграть сто раундов подряд. Оба — люди искушённые, не новички.",
+      "onScreen": "Два игрока, *100* раундов",
+      "items": [
+        "Экономист Армен Алчиан",
+        "Математик Джон Уильямс",
+        "Сто раундов подряд"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "scientists playing cards office",
+      "imagePrompt": "two 1950s scientists seated at a wooden desk exchanging folded paper notes, scorecard between them, warm lamp light, teal background, film grain"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Теория предсказывала скучный результат: умные игроки будут предавать каждый ход. Это и есть так называемая равновесная стратегия. Но Алчиан и Уильямс то и дело выбирали сотрудничество. Раз за разом.",
+      "onScreen": "Теория: предавай. Люди: *сотрудничали*",
+      "icon": "circle-x",
+      "visualQuery": "hand writing score sheet",
+      "imagePrompt": "close-up of a pencil marking tallies on a vintage score sheet, many cooperative marks, warm amber light, shallow depth of field"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Результаты вошли в отчёт RAND тысяча девятьсот пятьдесят второго года. И там же, в сноске, ответил Джон Нэш. Люди, по его словам, играли лишь приближение к равновесию. Мол, теория верна, просто игроки неидеальны.",
+      "onScreen": "Нэш: лишь *приближение* к равновесию",
+      "icon": "book-open",
+      "visualQuery": "John Forbes Nash portrait",
+      "imagePrompt": "old typewritten research report with a small footnote under a magnifying glass, warm desk lamp, teal shadows, macro shot"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Так кто прав: строгая формула или двое живых игроков? Чтобы разобраться, сначала поймём, почему формула вообще требует предавать.",
+      "onScreen": "Формула или *живые* игроки?",
+      "icon": "compass",
+      "visualQuery": "chalkboard equations classroom",
+      "imagePrompt": "a chalkboard split in two halves, equations on one side and two human silhouettes on the other, warm amber light, cinematic"
+    },
+    {
+      "id": "s9",
+      "kind": "media",
+      "narration": "В том же тысяча девятьсот пятидесятом году игру объясняет психологам Стэнфорда принстонский математик Альберт Таккер. Кстати, научный руководитель самого Нэша. Голые таблицы скучны, и Таккер придумывает историю.",
+      "onScreen": "Альберт Таккер придумывает *историю*",
+      "icon": "graduation-cap",
+      "visualQuery": "Albert W. Tucker portrait",
+      "imagePrompt": "1950s lecture hall at a university, professor gesturing at a chalkboard with a simple 2x2 grid, audience in silhouette, warm light, teal shadows",
+      "chapter": "Двое заключённых Таккера"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Двух сообщников арестовали и развели по разным камерам. Каждому предлагают сделку: сдай напарника. Молчат оба — короткий срок. Сдают оба — долгий. Сдал один — он выходит, а молчун получает максимум.",
+      "onScreen": "Молчать или *сдать*?",
+      "icon": "lock",
+      "visualQuery": "prison cell bars",
+      "imagePrompt": "two separate dim interrogation rooms side by side, a lone man under a hanging lamp in each, amber light and teal shadows, film noir"
+    },
+    {
+      "id": "s11",
+      "kind": "list",
+      "narration": "Встань на место одного из них. Напарник молчит? Сдавай, выйдешь на свободу. Напарник сдаёт? Тоже сдавай, иначе сядешь по полной. Как ни крути, предать выгоднее.",
+      "onScreen": "Любой расклад: *предавай*",
+      "items": [
+        "Напарник молчит — сдавай",
+        "Напарник сдаёт — сдавай",
+        "Вывод: всегда предавай"
+      ],
+      "icon": "triangle-alert",
+      "visualQuery": "interrogation room table chair",
+      "imagePrompt": "a man sitting alone at an interrogation table, staring at a blank paper and pen, harsh overhead amber light, deep teal shadows"
+    },
+    {
+      "id": "s12",
+      "kind": "media",
+      "narration": "Но напарник рассуждает точно так же. В итоге оба сдают друг друга и оба сидят дольше, чем если бы промолчали. Разумный выбор каждого ведёт к проигрышу обоих.",
+      "onScreen": "Каждый умён — оба *проиграли*",
+      "icon": "trending-down",
+      "visualQuery": "prison corridor cells",
+      "imagePrompt": "long prison corridor with two cell doors closing simultaneously, cold teal light with warm amber accents, symmetrical composition, cinematic"
+    },
+    {
+      "id": "s13",
+      "kind": "stat",
+      "narration": "Такой исход называют равновесием Нэша: никому не выгодно менять ход в одиночку. В тысяча девятьсот девяносто четвёртом году Нэш, Харсаньи и Зельтен получили за анализ таких равновесий премию по экономике памяти Нобеля.",
+      "onScreen": "Равновесие Нэша — *Нобелевская* премия",
+      "stat": {
+        "value": 1994,
+        "label": "премия за анализ равновесий"
+      },
+      "icon": "star",
+      "visualQuery": "Nobel Prize medal",
+      "imagePrompt": "golden medal resting on dark velvet beside old game theory papers, warm rim light, teal background, shallow depth of field"
+    },
+    {
+      "id": "s14",
+      "kind": "statement",
+      "narration": "Вот и тупик. Нобелевская теория твердит: предавай. А живые люди в RAND сотрудничали. Но заметь: Алчиан и Уильямс играли не один раз, а сто. Что если всё решает именно повторение?",
+      "onScreen": "Один раз или *сто*?",
+      "icon": "hourglass",
+      "visualQuery": "hourglass sand desk",
+      "imagePrompt": "an hourglass on a desk next to a stack of score sheets, sand flowing, warm amber lamp light, teal shadows, cinematic close-up"
+    },
+    {
+      "id": "s15",
+      "kind": "statement",
+      "narration": "Чтобы проверить эту догадку, политолог Роберт Аксельрод из Мичиганского университета устроил первый в истории компьютерный турнир по теории игр.",
+      "onScreen": "Компьютерный турнир *теории* игр",
+      "icon": "cpu",
+      "visualQuery": "vintage computer laboratory 1980s",
+      "imagePrompt": "cinematic shot of early 1980s computer terminal in an academic lab, green phosphor text on screen, soft atmospheric lighting",
+      "chapter": "Турнир компьютерных программ"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "Он разослал приглашения ведущим экспертам: математикам, экономистам, социологам и психологам. Каждый участник должен был закодировать свою стратегию в виде алгоритма.",
+      "onScreen": "Математики, экономисты и *психологи*",
+      "icon": "users",
+      "visualQuery": "University of Michigan campus vintage",
+      "imagePrompt": "vintage academic seminar room, chalkboards covered in formulas, soft dramatic window light"
+    },
+    {
+      "id": "s17",
+      "kind": "stat",
+      "narration": "Правила были строгими. Каждая программа встречалась с каждой и разыгрывала дилемму заключённого ровно двести ходов подряд.",
+      "onScreen": "200 ходов в каждой дуэли",
+      "stat": {
+        "value": 200,
+        "suffix": " ходов",
+        "label": "в каждой партии один на один"
+      },
+      "icon": "timer",
+      "visualQuery": "retro computer floppy disk",
+      "imagePrompt": "close-up of hands typing code on a vintage mechanical keyboard, warm 1980s desk lamp light"
+    },
+    {
+      "id": "s18",
+      "kind": "statement",
+      "narration": "Авторы прислали изощрённые алгоритмы. Некоторые пытались вычислять вероятность блефа или нащупывали момент, когда соперника можно безнаказанно обмануть.",
+      "onScreen": "Попытки *обмануть* соперника",
+      "icon": "zap",
+      "visualQuery": "complex mathematical equations board",
+      "imagePrompt": "glowing digital matrix of decision trees and code lines, moody cinematic lighting, shallow depth of field"
+    },
+    {
+      "id": "s19",
+      "kind": "statement",
+      "narration": "Но турнир безоговорочно выиграла программа Анатоля Рапопорта под названием Око за око. Её правило было до смешного примитивным.",
+      "onScreen": "Победа стратегии *Око за око*",
+      "icon": "trophy",
+      "visualQuery": "chess board two players hands",
+      "imagePrompt": "two hands moving pieces on an elegant wooden chessboard, cinematic rim lighting, dark moody background"
+    },
+    {
+      "id": "s20",
+      "kind": "list",
+      "narration": "Алгоритм делал всего две вещи. Первым ходом он всегда выбирал сотрудничество. А каждым следующим ходом просто в точности повторял предыдущий ответ соперника.",
+      "onScreen": "Всего 2 простых *правила*",
+      "items": [
+        "Первым ходом сотрудничай",
+        "Повторяй прошлый ход соперника"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "minimalist code screen display",
+      "imagePrompt": "macro shot of clean minimalist lines of code on an old cathode ray monitor, dramatic green glow"
+    },
+    {
+      "id": "s21",
+      "kind": "stat",
+      "narration": "Весь этот победный алгоритм уместился ровно в четыре строки на языке Бейсик. Но случайность ли это?",
+      "onScreen": "4 строки кода на BASIC",
+      "stat": {
+        "value": 4,
+        "suffix": " строки",
+        "label": "код победителя на языке Бейсик"
+      },
+      "icon": "microscope",
+      "visualQuery": "old programming manual book",
+      "imagePrompt": "vintage open computer programming manual next to a glowing retro monitor, shallow depth of field"
+    },
+    {
+      "id": "s22",
+      "kind": "stat",
+      "narration": "Аксельрод объявил второй круг. Участники уже изучили слабости лидера и прислали шестьдесят две изощрённые программы, но Око за око снова разгромила всех.",
+      "onScreen": "62 стратегии во втором туре",
+      "stat": {
+        "value": 62,
+        "suffix": " программы",
+        "label": "пытались победить чемпиона во 2 туре"
+      },
+      "icon": "trending-up",
+      "visualQuery": "server room mainframe retro",
+      "imagePrompt": "vintage mainframe computers in a university data center, rows of glowing lights, cinematic haze",
+      "chapter": "Победа без единой победы"
+    },
+    {
+      "id": "s23",
+      "kind": "statement",
+      "narration": "При этом вскрылся поразительный парадокс: эта стратегия в принципе не способна набрать в дуэли больше очков, чем её визави.",
+      "onScreen": "Не может *обыграть* партнёра",
+      "icon": "triangle-alert",
+      "visualQuery": "two business partners handshake shadow",
+      "imagePrompt": "two silhouette figures facing each other at a backlit glass table, subtle contrast, cinematic composition"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Она ни разу не заняла первое место в отдельном матче. В лучшем случае она играла вничью, а в худшем уступала хищникам.",
+      "onScreen": "Победа по *общей* сумме очков",
+      "icon": "target",
+      "visualQuery": "balance scale brass vintage",
+      "imagePrompt": "vintage brass balance scales in perfect equilibrium on a polished dark wood desk, dramatic directional light"
+    },
+    {
+      "id": "s25",
+      "kind": "statement",
+      "narration": "Секрет скрывался в общей сумме. С честными партнёрами она долго собирала максимальный взаимный выигрыш, а предателям сразу давала сдачи и не позволяла себя грабить.",
+      "onScreen": "Честным — союз, *хищникам* — отпор",
+      "icon": "shield",
+      "visualQuery": "medieval iron shield stone wall",
+      "imagePrompt": "weathered iron medieval shield illuminated by a single ray of warm light, cinematic moody atmosphere"
+    },
+    {
+      "id": "s26",
+      "kind": "list",
+      "narration": "Аксельрод вывел рецепт успеха: никогда не предавай первым, сразу наказывай за обман, умей прощать и не завидуй соседу.",
+      "onScreen": "4 правила *успеха* Аксельрода",
+      "items": [
+        "Не предавай первым",
+        "Отвечай на предательство",
+        "Умей прощать",
+        "Не завидуй"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "handshake light shadow contract",
+      "imagePrompt": "dramatic close-up of a firm handshake between two hands in warm studio light, high contrast"
+    },
+    {
+      "id": "s27",
+      "kind": "media",
+      "narration": "Этот принцип работает и у живых людей. В двенадцатом году экономисты изучили британское шоу Голден Боллс, где игроки делили огромные деньги.",
+      "onScreen": "Финал телешоу *Golden Balls*",
+      "icon": "tv",
+      "visualQuery": "television studio spotlights camera",
+      "imagePrompt": "empty professional television game show studio with two podiums and bright overhead spotlights, cinematic wide shot"
+    },
+    {
+      "id": "s28",
+      "kind": "stat",
+      "narration": "На кону стояло в среднем больше двадцати тысяч долларов. Вопреки теории сухого эгоизма, участники очень часто выбирали разделить банк по-честному.",
+      "onScreen": "Кон в среднем $20 000",
+      "stat": {
+        "value": 20000,
+        "prefix": "≈$",
+        "label": "средний банк на кону в финале"
+      },
+      "icon": "coins",
+      "visualQuery": "golden spheres glass table studio",
+      "imagePrompt": "gleaming golden metallic balls lying on a polished black glass surface, reflective dramatic illumination"
+    },
+    {
+      "id": "s29",
+      "kind": "statement",
+      "narration": "Но у простого зеркального правила есть опасная уязвимость. Что произойдёт, если в систему вмешается обычная случайная ошибка?",
+      "onScreen": "А если случится *ошибка*?",
+      "icon": "clock",
+      "visualQuery": "falling domino tiles line",
+      "imagePrompt": "line of black and white domino tiles starting to fall in a dramatic cascade, slow motion capture, rim light"
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "Но у простого зеркального правила есть опасная уязвимость. Что произойдёт, если в систему вмешается обычная случайная ошибка? Партнёр хотел помочь, но оступился.",
+      "onScreen": "Уязвимость зеркала: случайная *ошибка*",
+      "icon": "triangle-alert",
+      "visualQuery": "domino tiles falling chain",
+      "imagePrompt": "cinematic wide shot of a line of black dominoes falling on a polished dark table, shallow depth of field, dramatic moody lighting",
+      "chapter": "Почему выгодно прощать"
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Тогда стратегия «Око за око» накажет его в ответ. Он ответит на твой удар. Начнётся бесконечное эхо взаимной мести, которое погубит обоих участников.",
+      "onScreen": "Бесконечная цепочка взаимной *мести*",
+      "icon": "trending-down",
+      "visualQuery": "storm waves crashing dark",
+      "imagePrompt": "cinematic dramatic view of two dark opposing ocean waves crashing violently against each other, cold blue tones, cinematic lighting"
+    },
+    {
+      "id": "s32",
+      "kind": "media",
+      "narration": "В тысяча девятьсот девяносто третьем году Мартин Новак и Карл Зигмунд описали в журнале Нейче решение. Стратегию назвали «Павлов», или «выиграл — оставайся, проиграл — меняй».",
+      "onScreen": "Стратегия «Павлов», журнал *Nature* 1993",
+      "icon": "lightbulb",
+      "visualQuery": "Nature journal cover scientific",
+      "imagePrompt": "cinematic shot of scientific research papers and notebook on a wooden desk, warm focused spotlight, shallow depth of field"
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Она проверяет результат своего прошлого шага. Если исход принёс пользу, ход повторяется. Если привёл к потерям, стратегия переключается и тем самым гасит цепочку случайной вражды.",
+      "onScreen": "«Выиграл — *оставайся*, проиграл — меняй»",
+      "icon": "zap",
+      "visualQuery": "pendulum swinging brass motion",
+      "imagePrompt": "cinematic close-up of an elegant brass pendulum suspended over dark wood, subtle motion blur, warm cinematic rim light"
+    },
+    {
+      "id": "s34",
+      "kind": "media",
+      "narration": "И это не просто формулы в компьютере. В две тысячи девятом году Элинор Остром стала первой женщиной, получившей премию памяти Нобеля по экономике.",
+      "onScreen": "Элинор Остром: *Нобелевская* премия 2009",
+      "icon": "trophy",
+      "visualQuery": "Elinor Ostrom portrait",
+      "imagePrompt": "cinematic soft portrait lighting of a scholarly elder woman with gentle confident expression, books and green foliage in background"
+    },
+    {
+      "id": "s35",
+      "kind": "statement",
+      "narration": "Она доказала: рыбаки, пастухи и крестьяне веками успешно берегут общие пастбища, леса и водоёмы сами — без диктата государства, договариваясь на равных и контролируя обманщиков.",
+      "onScreen": "Люди берегут ресурсы *вместе*",
+      "icon": "leaf",
+      "visualQuery": "green alpine pasture landscape",
+      "imagePrompt": "cinematic wide landscape of lush green communal mountain pastures, crystal clear stream, soft morning sunlight, documentary style"
+    },
+    {
+      "id": "s36",
+      "kind": "list",
+      "narration": "Секрет долгой игры прост. Не предавай первым. Немедленно отвечай на чужой обман. Умей вовремя прощать. И никогда не завидуй союзнику.",
+      "onScreen": "4 правила *долгой* игры",
+      "items": [
+        "Не предавай первым",
+        "Отвечай на обман",
+        "Прощай ошибки",
+        "Не завидуй"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "chess board pieces light",
+      "imagePrompt": "cinematic close-up of carved wooden chess pieces standing peacefully side by side on a board, warm soft golden hour light"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Турнир выиграла простейшая программа, потому что в жизни побеждает не тот, кто потопил партнёра, а тот, с кем выгодно играть снова и снова.",
+      "onScreen": "Побеждает тот, с кем *выгодно* играть",
+      "icon": "heart",
+      "visualQuery": "two business partners handshake",
+      "imagePrompt": "cinematic silhouette of two people shaking hands against a bright warm window, cinematic golden rim light, minimalist composition"
+    },
+    {
+      "id": "s38",
+      "kind": "cta",
+      "narration": "А кому ты готов простить один ход?",
+      "onScreen": "Кому ты готов *простить* ход?",
+      "icon": "message-circle"
+    }
+  ]
+}

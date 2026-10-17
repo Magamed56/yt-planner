@@ -1,0 +1,497 @@
+{
+  "title": "Антикитерский механизм: как работал компьютер возрастом 2000 лет",
+  "description": "Как ловцы губок нашли у острова Антикитира затонувший античный корабль и почему в позеленевшем обломке оказалась шестерёнка. Разбираем, что показала томография 2005 года, как механизм предсказывал затмения по саросу, вёл календарь и Олимпиады и воспроизводил бег Луны по теории Гиппарха. И почему это не технология пришельцев, а вершина греческой науки.\n#антикитерскиймеханизм #история #археология #астрономия",
+  "tags": [
+    "антикитерский механизм",
+    "антикитерский механизм реконструкция",
+    "антикитерский механизм видео",
+    "древний компьютер",
+    "древняя греция",
+    "археология",
+    "история науки",
+    "астрономия",
+    "гиппарх",
+    "сарос",
+    "затмения",
+    "дерек прайс",
+    "антикитира",
+    "antikythera mechanism"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Ныряльщики за губками подняли со дна шестерёнки возрастом больше двух тысяч лет.",
+      "onScreen": "Шестерёнки старше *2000* лет",
+      "icon": "cog",
+      "visualQuery": "Antikythera mechanism fragment",
+      "imagePrompt": "cinematic close-up of a corroded green bronze gear emerging from the sandy sea floor, shafts of turquoise sunlight through water, floating particles, teal and bronze palette, shallow depth of field",
+      "chapter": "Статуи на дне"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Это не легенда и не подделка. К концу ролика ты поймёшь, как бронзовая коробка с ручкой предсказывала затмения. И почему её сложность так долго никто не мог повторить.",
+      "onScreen": "Коробка, что *предсказывала* затмения",
+      "icon": "eye",
+      "visualQuery": "solar eclipse sky",
+      "imagePrompt": "ancient bronze box with dials on a wooden table, a solar eclipse glowing through a window behind it, warm bronze light against deep teal shadows, cinematic wide shot"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Всё началось около Пасхи тысяча девятисотого года. Ловцы губок с острова Сими под началом капитана Димитриоса Кондоса бросили якорь у крошечной Антикитиры, между Критом и Пелопоннесом.",
+      "onScreen": "Антикитира, *1900* год",
+      "icon": "compass",
+      "visualQuery": "Antikythera island coast",
+      "imagePrompt": "small wooden greek sailing boat anchored near a rocky barren island, choppy turquoise sea, early 1900s atmosphere, overcast golden light, cinematic aerial view",
+      "map": {
+        "lat": 35.87,
+        "lon": 23.3,
+        "label": "Антикитира",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "stat",
+      "narration": "Первым под воду ушёл водолаз Элиас Стадиатис. Сорок пять метров, тяжёлый скафандр, воздух по шлангу с лодки. Поднявшись, он, по рассказам, доложил о страшном.",
+      "onScreen": "Спуск на *45* метров",
+      "stat": {
+        "value": 45,
+        "suffix": " м",
+        "label": "глубина спуска водолаза"
+      },
+      "icon": "droplet",
+      "visualQuery": "vintage diving helmet",
+      "imagePrompt": "old brass diving helmet diver descending into deep blue water, air hose trailing upward, dim light from the surface, teal palette, cinematic low angle"
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Он говорил о груде гниющих трупов и лошадей на дне. А на деле это были статуи из бронзы и мрамора, обросшие морем за два тысячелетия.",
+      "onScreen": "Не трупы, а *статуи*",
+      "icon": "triangle-alert",
+      "visualQuery": "Antikythera Ephebe bronze statue",
+      "imagePrompt": "marble and bronze statues lying tangled on the sea floor covered in marine growth, eerie blue light, silt in the water, cinematic wide shot"
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "С ноября тысяча девятисотого года подъём шёл при поддержке греческого флота. По сути, это одна из первых крупных подводных археологических экспедиций в истории.",
+      "onScreen": "Флот на службе *археологии*",
+      "icon": "shield",
+      "visualQuery": "Antikythera wreck excavation 1901",
+      "imagePrompt": "early 1900s greek navy steamship beside a small diving boat at sea, sailors hauling a bronze statue on ropes, sepia tinted teal tones, cinematic"
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Но цена оказалась страшной. Летом тысяча девятьсот первого года погиб водолаз Георгиос Критикос. Ещё двоих парализовало от кессонной болезни, и работы остановили.",
+      "onScreen": "Экспедиция стоила *жизни*",
+      "icon": "heart",
+      "visualQuery": "old diving suit boat deck",
+      "imagePrompt": "empty brass diving helmet resting on a wet wooden boat deck at dusk, coiled ropes, somber muted teal and bronze tones, cinematic close-up"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Кессонная болезнь настигает, когда водолаз поднимается слишком быстро. Азот в крови выходит пузырьками, как газ из резко открытой бутылки газировки.",
+      "onScreen": "Азот *вскипает* в крови",
+      "icon": "flask-conical",
+      "visualQuery": "soda bottle bubbles",
+      "imagePrompt": "macro shot of rising bubbles in dark water, backlit with cold teal light, abstract and tense mood, shallow depth of field"
+    },
+    {
+      "id": "s9",
+      "kind": "stat",
+      "narration": "А когда корабль затонул? Подсказку дали монеты, найденные позже экспедицией Жака Кусто. Их отчеканили между семьдесят шестым и шестьдесят седьмым годами до нашей эры. Значит, крушение не раньше.",
+      "onScreen": "Монеты дали *дату*",
+      "stat": {
+        "value": 76,
+        "suffix": "–67 до н. э.",
+        "label": "годы чеканки найденных монет"
+      },
+      "icon": "coins",
+      "visualQuery": "ancient Greek silver coins",
+      "imagePrompt": "ancient silver greek coins scattered on wet sand, sunlight rippling through shallow water, bronze and teal palette, cinematic macro"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Статуи сегодня стоят в Национальном археологическом музее в Афинах. Но главным грузом оказались не они, а невзрачные позеленевшие комки бронзы и дерева, на которые сперва никто не смотрел.",
+      "onScreen": "Главное — не *статуи*",
+      "icon": "eye",
+      "visualQuery": "National Archaeological Museum Athens",
+      "imagePrompt": "museum crate with shapeless greenish corroded lumps beside polished bronze statues, dusty early 1900s storeroom, single shaft of warm light, cinematic"
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "Семнадцатого мая тысяча девятьсот второго года археолог Валериос Стаис разбирал находки вместе с двоюродным братом Спиридоном. И заметил в одном обломке то, чего там быть не могло: зубчатое колесо.",
+      "onScreen": "17 мая 1902: *шестерёнка*",
+      "icon": "microscope",
+      "visualQuery": "Valerios Stais portrait",
+      "imagePrompt": "early 1900s archaeologist examining a green corroded bronze lump with a magnifying glass, gaslight glow, dusty museum workroom, teal and bronze palette, cinematic close-up",
+      "chapter": "Шестерёнка в обломке"
+    },
+    {
+      "id": "s12",
+      "kind": "media",
+      "narration": "Шестерёнка буквально вросла в корку из окислов. Ровные треугольные зубцы, как в часах. Только механических часов античность не знала.",
+      "onScreen": "Зубцы, как в *часах*",
+      "icon": "clock",
+      "visualQuery": "Antikythera mechanism gear",
+      "imagePrompt": "extreme macro of a corroded bronze gear with fine triangular teeth embedded in green crust, raking side light, dark teal background, cinematic"
+    },
+    {
+      "id": "s13",
+      "kind": "stat",
+      "narration": "Сегодня от механизма осталось восемьдесят два фрагмента. И это лишь около трети исходного устройства. Остальное потеряно.",
+      "onScreen": "Уцелела лишь *треть*",
+      "stat": {
+        "value": 82,
+        "label": "фрагмента дошли до нас"
+      },
+      "icon": "puzzle",
+      "visualQuery": "Antikythera mechanism fragments museum",
+      "imagePrompt": "dozens of small corroded bronze fragments laid out on black velvet like a puzzle, soft top light, museum atmosphere, teal and bronze tones, cinematic overhead shot"
+    },
+    {
+      "id": "s14",
+      "kind": "statement",
+      "narration": "Среди уцелевшего тридцать бронзовых шестерёнок, изъеденных коррозией. Каждую вырезали вручную, зубчик за зубчиком, без станков.",
+      "onScreen": "30 шестерёнок, *вручную*",
+      "icon": "cog",
+      "visualQuery": "bronze gears corroded",
+      "imagePrompt": "ancient craftsman hands filing teeth into a thin bronze disc in a workshop, oil lamp light, metal shavings, warm bronze glow against teal shadows, cinematic close-up"
+    },
+    {
+      "id": "s15",
+      "kind": "list",
+      "narration": "А сколько ему лет, спорят до сих пор. Корабль затонул примерно в семидесятых или шестидесятых годах до нашей эры. Авторы статьи в Nature в две тысячи шестом относят изготовление к концу второго века. А Карман и Эванс в две тысячи четырнадцатом называют началом отсчёта шкалы затмений двести пятый год.",
+      "onScreen": "Возраст: *спор* учёных",
+      "items": [
+        "Крушение: 70–60-е до н. э.",
+        "Nature, 2006: конец II века",
+        "Карман и Эванс: 205 год"
+      ],
+      "icon": "hourglass",
+      "visualQuery": "ancient shipwreck amphorae seabed",
+      "imagePrompt": "timeline of ancient amphorae and a bronze device on the seabed fading into darkness, layered depth, teal water and bronze highlights, cinematic"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "Вот парадокс. Шестерёнку увидели ещё в тысяча девятьсот втором году. Но что это за машина, десятилетиями не понимал никто. Разгадка ждала человека, который не побоялся громкого слова.",
+      "onScreen": "Что это за *машина*?",
+      "icon": "lightbulb",
+      "visualQuery": "Antikythera mechanism museum display",
+      "imagePrompt": "corroded bronze mechanism fragment in a glass museum case, lone spotlight, deep teal darkness around it, mysterious mood, cinematic"
+    },
+    {
+      "id": "s17",
+      "kind": "statement",
+      "narration": "Этим человеком стал Дерек де Солла Прайс, историк науки из Йеля. В тысяча девятьсот пятьдесят девятом году он напечатал в журнале Сайентифик Американ статью с дерзким названием: Древнегреческий компьютер.",
+      "onScreen": "1959: «Древнегреческий *компьютер*»",
+      "icon": "book-open",
+      "visualQuery": "Derek J. de Solla Price portrait",
+      "imagePrompt": "cinematic scene of a 1950s historian's study, vintage scientific magazine open on a wooden desk beside a corroded bronze fragment, warm desk lamp glow, teal shadows, shallow depth of field",
+      "chapter": "Прайс и древний компьютер"
+    },
+    {
+      "id": "s18",
+      "kind": "media",
+      "narration": "Слово компьютер тогда звучало как вызов. Настоящие вычислительные машины занимали целые комнаты. А тут бронзовая коробка возрастом больше двух тысяч лет, которая считает с помощью шестерёнок.",
+      "onScreen": "Компьютер из *бронзы*",
+      "icon": "cpu",
+      "visualQuery": "Antikythera mechanism fragment",
+      "imagePrompt": "cinematic macro of a green corroded bronze gear fragment on black velvet, warm rim light revealing tiny teeth, teal and amber palette, museum atmosphere"
+    },
+    {
+      "id": "s19",
+      "kind": "stat",
+      "narration": "Прайс не остановился на статье. Он изучал механизм около двадцати лет. Просвечивал обломки гамма-лучами, чтобы заглянуть сквозь толстую корку коррозии внутрь.",
+      "onScreen": "Гамма-лучи сквозь *коррозию*",
+      "stat": {
+        "value": 20,
+        "prefix": "≈",
+        "suffix": " лет",
+        "label": "Прайс изучал механизм"
+      },
+      "icon": "hourglass",
+      "visualQuery": "x-ray film light box",
+      "imagePrompt": "cinematic view of a grainy radiograph of hidden gear wheels glowing on a vintage light box, dark lab, teal glow with amber accents"
+    },
+    {
+      "id": "s20",
+      "kind": "statement",
+      "narration": "В тысяча девятьсот семьдесят четвёртом году вышла его книга Шестерни от греков. Прайс описал схему передач и убедил многих: перед ними настоящий счётный механизм, а не безделушка.",
+      "onScreen": "1974: «Gears from the *Greeks*»",
+      "icon": "lightbulb",
+      "visualQuery": "old scientific book gear diagram",
+      "imagePrompt": "cinematic close-up of an old hardcover book open to hand-drawn gear train diagrams, warm lamp light, teal shadows, shallow depth of field"
+    },
+    {
+      "id": "s21",
+      "kind": "list",
+      "narration": "Но у его метода были пределы. Снимки давали плоскую картинку. Шестерни накладывались друг на друга. А надписи внутри коррозии оставались нечитаемыми.",
+      "onScreen": "Почему снимки *не помогли*",
+      "items": [
+        "Плоские снимки",
+        "Шестерни внахлёст",
+        "Скрытые надписи"
+      ],
+      "icon": "eye",
+      "visualQuery": "corroded bronze surface inscription",
+      "imagePrompt": "cinematic macro of faint ancient Greek-style engraved marks barely visible under green bronze corrosion, raking amber light, deep teal shadows"
+    },
+    {
+      "id": "s22",
+      "kind": "media",
+      "narration": "Часть его схемы позже пришлось переделать. Чтобы разглядеть механизм слой за слоем, нужна была техника, которая доросла до такой точности только в двадцать первом веке.",
+      "onScreen": "Ответ ждал *XXI век*",
+      "icon": "microscope",
+      "visualQuery": "industrial CT scanner laboratory",
+      "imagePrompt": "cinematic shot of a modern X-ray tomography scanner in a dim laboratory, corroded bronze fragment on a rotating stage, cool teal light with warm amber highlights"
+    },
+    {
+      "id": "s23",
+      "kind": "statement",
+      "narration": "Такую технику дала рентгеновская томография. В две тысячи пятом году механизм просветили слой за слоем. Шестерни наконец перестали сливаться в одно пятно.",
+      "onScreen": "2005: механизм просветили *слой за слоем*",
+      "chapter": "Затмения, Луна и игры",
+      "map": {
+        "lat": 35.86,
+        "lon": 23.3,
+        "label": "Антикитира",
+        "zoom": "region"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Прайс",
+            "value": 1959
+          },
+          {
+            "label": "Томография",
+            "value": 2005
+          }
+        ]
+      }
+    },
+    {
+      "id": "s24",
+      "kind": "stat",
+      "narration": "Команда Тони Фрита опубликовала итоги в журнале Nature в две тысячи шестом. Прочитанных надписей стало вдвое больше. И они подсказали, что показывала каждая шкала.",
+      "onScreen": "Nature, 2006: надписей *вдвое* больше",
+      "stat": {
+        "value": 2,
+        "prefix": "×",
+        "label": "больше прочитанных надписей"
+      },
+      "icon": "book-open",
+      "visualQuery": "Antikythera mechanism fragment inscription",
+      "imagePrompt": "cinematic macro of corroded green bronze fragment with faint ancient Greek letters glowing under blue x-ray light, dark background, teal and bronze palette"
+    },
+    {
+      "id": "s25",
+      "kind": "media",
+      "narration": "Представь корпус с ручкой сбоку. Крутишь её — и стрелки ползут по шкалам, отсчитывая дни и годы. Сама ручка, правда, не сохранилась.",
+      "onScreen": "Одна *ручка* двигала всё",
+      "icon": "cog",
+      "visualQuery": "Antikythera mechanism replica",
+      "imagePrompt": "cinematic shot of a hand turning a small crank on a reconstructed bronze gear box with dials, warm rim light, teal shadows, shallow depth of field"
+    },
+    {
+      "id": "s26",
+      "kind": "list",
+      "narration": "На задней панели три главные шкалы. Календарь на девятнадцать лет. Цикл общегреческих игр. И спираль сароса для затмений.",
+      "onScreen": "Задняя панель: *три* шкалы",
+      "items": [
+        "Календарь на 19 лет",
+        "Цикл общегреческих игр",
+        "Спираль сароса"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "Antikythera mechanism back dials reconstruction",
+      "imagePrompt": "cinematic view of the back face of a bronze astronomical device with two large spiral dials and a small dial, soft bronze glow, dark teal background"
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "Календарь шёл по метонову циклу. За девятнадцать лет лунные месяцы и солнечные годы почти сходятся. Стрелка шла по спирали из пяти витков.",
+      "onScreen": "Метонов цикл: *19 лет* в 5 витках",
+      "icon": "calendar-check",
+      "visualQuery": "spiral dial bronze gears",
+      "imagePrompt": "close-up of a pointer tracing a five-turn spiral engraved in bronze, sun and crescent moon reflected on metal, cinematic teal and bronze palette"
+    },
+    {
+      "id": "s28",
+      "kind": "media",
+      "narration": "Малая шкала отсчитывала четырёхлетний цикл. На ней Олимпийские и другие общегреческие игры. Механизм буквально напоминал, когда ехать в Олимпию.",
+      "onScreen": "Календарь *Олимпиад* на шкале",
+      "icon": "trophy",
+      "visualQuery": "Olympia stadium Greece",
+      "imagePrompt": "ancient stadium of Olympia at golden hour, stone entrance arch, long shadows, cinematic warm light with teal sky"
+    },
+    {
+      "id": "s29",
+      "kind": "stat",
+      "narration": "Нижняя спираль — сарос. Это двести двадцать три лунных месяца, около восемнадцати лет и одиннадцати дней. Через этот срок затмения повторяются.",
+      "onScreen": "Сарос: затмения *повторяются*",
+      "stat": {
+        "value": 223,
+        "label": "лунных месяца в одном саросе"
+      },
+      "icon": "moon",
+      "visualQuery": "solar eclipse corona",
+      "imagePrompt": "total solar eclipse with glowing corona above a dark sea, cinematic, deep teal sky and bronze highlights"
+    },
+    {
+      "id": "s30",
+      "kind": "statement",
+      "narration": "Все двенадцать месяцев на шкалах названы по-коринфски. Значит, механизм, скорее всего, делали для коринфских колоний на северо-западе Греции или для Сиракуз.",
+      "onScreen": "12 месяцев — все *коринфские*",
+      "icon": "compass",
+      "visualQuery": "Syracuse Sicily ancient theatre",
+      "imagePrompt": "ancient Greek theatre carved into rock overlooking the sea at dusk, cinematic warm bronze light, teal shadows"
+    },
+    {
+      "id": "s31",
+      "kind": "media",
+      "narration": "Но самое хитрое — Луна. Она идёт по небу неравномерно: у перигея быстрее, у апогея медленнее. Эту теорию разработал Гиппарх.",
+      "onScreen": "Луна бежит *неравномерно*",
+      "icon": "moon",
+      "visualQuery": "Moon night sky time lapse",
+      "imagePrompt": "full moon rising over a calm Aegean sea at night, faint orbit trail in the sky, cinematic teal and silver palette"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Мастер повторил её в бронзе. Две шестерни на разных осях. Штифт одной ходит в пазу другой — и лунная стрелка то разгоняется, то тормозит.",
+      "onScreen": "Штифт в пазу — теория *Гиппарха* в бронзе",
+      "icon": "settings",
+      "visualQuery": "bronze gears pin slot",
+      "imagePrompt": "macro of two interlocking bronze gears on offset axles, a small pin sliding in a slot, warm rim light, dark teal background, shallow depth of field"
+    },
+    {
+      "id": "s33",
+      "kind": "media",
+      "narration": "А фазу показывал крошечный шарик, наполовину белый, наполовину чёрный. Он поворачивался, и ты видел серп или полнолуние. Но это была только задняя сторона.",
+      "onScreen": "Фазы Луны — в *шарике*",
+      "icon": "eye",
+      "visualQuery": "Moon phases sequence",
+      "imagePrompt": "tiny half white half black sphere rotating inside a bronze pointer, macro, soft rim light, cinematic teal and bronze palette"
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "Спереди шестерни почти не уцелели. Подсказку дала надпись на передней крышке. В две тысячи шестнадцатом году на ней прочли два числа: четыреста шестьдесят два и четыреста сорок два.",
+      "onScreen": "Два числа на *передней* крышке",
+      "chapter": "Космос и главная развязка",
+      "map": {
+        "lat": 35.86,
+        "lon": 23.31,
+        "label": "Антикитира",
+        "zoom": "region"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Венера",
+            "value": 462
+          },
+          {
+            "label": "Сатурн",
+            "value": 442
+          }
+        ],
+        "suffix": " лет"
+      }
+    },
+    {
+      "id": "s35",
+      "kind": "statement",
+      "narration": "Это периоды планет. За четыреста шестьдесят два года Венера проходит двести восемьдесят девять циклов. За четыреста сорок два года Сатурн — четыреста двадцать семь.",
+      "onScreen": "Венера и Сатурн: *ритмы* неба",
+      "icon": "globe",
+      "visualQuery": "Venus Saturn night sky",
+      "imagePrompt": "cinematic night sky over the Aegean sea with bright Venus and Saturn, ancient bronze dial silhouette in foreground, deep teal and bronze palette"
+    },
+    {
+      "id": "s36",
+      "kind": "media",
+      "narration": "В две тысячи двадцать первом году команда Университетского колледжа Лондона собрала по этим числам модель. Спереди — целый космос: Солнце, Луна и пять известных тогда планет.",
+      "onScreen": "Солнце, Луна и *пять* планет",
+      "icon": "atom",
+      "visualQuery": "Antikythera mechanism reconstruction",
+      "imagePrompt": "cinematic macro of a reconstructed bronze astronomical dial with concentric rings and small planet markers, warm rim light, shallow depth of field, teal and bronze palette"
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Но честно: это реконструкция. Планетные передачи не сохранились. Перед нами логичная догадка по надписям, а не найденные шестерни.",
+      "onScreen": "Модель — это *реконструкция*",
+      "icon": "triangle-alert",
+      "visualQuery": "corroded bronze fragments museum",
+      "imagePrompt": "green corroded bronze fragments in a dim museum display case, soft spotlight, dust particles, teal and bronze palette"
+    },
+    {
+      "id": "s38",
+      "kind": "list",
+      "narration": "Тут и рождаются мифы про пришельцев. Но внутри нет ничего неземного. Вавилонские циклы затмений. Лунная теория Гиппарха. И греческая механика в бронзе.",
+      "onScreen": "Не пришельцы, а *наука*",
+      "items": [
+        "Вавилонские циклы",
+        "Теория Гиппарха",
+        "Греческая механика"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "Hipparchus portrait",
+      "imagePrompt": "ancient greek astronomer studying the night sky with bronze instruments on a stone terrace, candle light, cinematic teal and bronze palette"
+    },
+    {
+      "id": "s39",
+      "kind": "statement",
+      "narration": "Поражает другое. Тони Фрит и соавторы пишут: механизм сложнее любого известного устройства как минимум следующего тысячелетия.",
+      "onScreen": "Сложнее всего на *1000* лет вперёд",
+      "icon": "trophy",
+      "visualQuery": "bronze gears closeup",
+      "imagePrompt": "cinematic close-up of interlocking ancient bronze gear teeth, dramatic side light, deep shadows, teal and bronze palette"
+    },
+    {
+      "id": "s40",
+      "kind": "stat",
+      "narration": "Сопоставимое в Европе появилось лишь в четырнадцатом веке. Джованни де Донди строил свой астрарий с тысяча триста сорок восьмого по тысяча триста шестьдесят четвёртый год.",
+      "onScreen": "Астрарий де Донди, *1348–1364*",
+      "stat": {
+        "value": 16,
+        "suffix": " лет",
+        "label": "строил астрарий Джованни де Донди"
+      },
+      "icon": "hourglass",
+      "visualQuery": "Giovanni Dondi astrarium",
+      "imagePrompt": "medieval astronomical clock with seven ornate dials in a candlelit workshop, brass gleam, cinematic teal and bronze palette"
+    },
+    {
+      "id": "s41",
+      "kind": "media",
+      "narration": "Значит, древние знали больше, чем мы думали. Это знание было — и ушло на дно вместе с кораблём. Не будь ловцов губок, мы бы о нём не узнали.",
+      "onScreen": "Знание, которое *утонуло*",
+      "icon": "eye",
+      "visualQuery": "shipwreck underwater diver",
+      "imagePrompt": "diver's light revealing an ancient shipwreck on the seabed, amphorae and bronze shapes in blue haze, cinematic teal and bronze palette"
+    },
+    {
+      "id": "s42",
+      "kind": "cta",
+      "narration": "Какое ещё древнее знание могло просто утонуть?",
+      "onScreen": "Что ещё *утонуло* навсегда?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -1,0 +1,501 @@
+{
+  "title": "Аполлон-13: что произошло и как экипаж вернулся домой",
+  "description": "Разбираем аварию «Аполлона-13» по часам: взрыв кислородного бака, спасательная шлюпка «Водолей», облёт Луны и самодельный фильтр из ленты и картона. Узнаешь, почему бак погубили ещё на Земле и какие знаменитые фразы о полёте на самом деле придумали для кино.\n#аполлон13 #космос #nasa #историякосмонавтики",
+  "tags": [
+    "аполлон 13",
+    "аполлон 13 что произошло",
+    "аполлон-13 экипажа",
+    "аполлон-13",
+    "космос",
+    "nasa",
+    "луна",
+    "ловелл",
+    "хьюстон у нас проблема",
+    "история космонавтики",
+    "лунный модуль водолей",
+    "артемида 2",
+    "apollo 13"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Жизнь троих астронавтов упёрлась в квадратный фильтр и круглое гнездо.",
+      "onScreen": "Квадратный фильтр. *Круглое* гнездо",
+      "icon": "triangle-alert",
+      "visualQuery": "Apollo 13 lithium hydroxide canister",
+      "imagePrompt": "cinematic close-up of a square metal filter cartridge next to a round socket inside a cramped 1970s spacecraft cabin, cold blue light with warm amber instrument glow, shallow depth of field",
+      "chapter": "Хлопок и проблема"
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Звучит как преувеличение, но так и было. Сейчас разберём, как три человека вернулись из-за Луны на искалеченном корабле. А в финале узнаешь, почему бак был обречён ещё на Земле.",
+      "onScreen": "Как вернуться домой из-за *Луны*",
+      "icon": "compass",
+      "visualQuery": "Apollo command module Earth",
+      "imagePrompt": "small Apollo spacecraft drifting in black space with the distant blue Earth behind it, cold blue and amber palette, documentary realism"
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Одиннадцатого апреля тысяча девятьсот семидесятого года из Космического центра Кеннеди стартует Аполлон-тринадцать. На борту Джеймс Ловелл, Джон Свайгерт и Фред Хейз. Цель — третья высадка на Луну, в районе Фра Мауро.",
+      "onScreen": "11 апреля 1970. Курс на *Фра Мауро*",
+      "icon": "rocket",
+      "visualQuery": "Apollo 13 launch Saturn V",
+      "imagePrompt": "Saturn V rocket lifting off from the launch pad with a huge plume of fire and smoke, 1970s film grain, warm amber flames against a pale sky",
+      "map": {
+        "lat": 28.608,
+        "lon": -80.604,
+        "label": "Мыс Канаверал",
+        "zoom": "region"
+      }
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Причём Свайгерта в экипаже быть не должно было. Дублёр Чарли Дьюк заболел краснухой. У основного пилота Кена Маттингли не нашли иммунитета. Глава НАСА Томас Пейн объявил замену за день до старта.",
+      "onScreen": "Новый пилот — *за день* до старта",
+      "icon": "users",
+      "visualQuery": "Jack Swigert portrait",
+      "imagePrompt": "1970s astronaut in a white spacesuit sitting alone in a briefing room, soft window light, muted blue and amber tones, contemplative mood"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Два дня полёт идёт спокойно. Тринадцатого апреля, в двадцать один ноль восемь по Хьюстону, корабль примерно в трёхстах двадцати тысячах километров от Земли. И тут раздаётся хлопок.",
+      "onScreen": "13 апреля, 21:08. *Хлопок*",
+      "stat": {
+        "value": 320,
+        "prefix": "≈",
+        "suffix": " тыс. км",
+        "label": "от Земли в момент хлопка"
+      },
+      "icon": "zap",
+      "visualQuery": "Earth from deep space",
+      "imagePrompt": "tiny glowing Earth far away in endless black space seen from a spacecraft window, cold blue light, sense of isolation"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Датчики фиксируют толчок и резкую просадку напряжения. Полётное время — пятьдесят пять часов пятьдесят четыре минуты пятьдесят три секунды. Идёт пятьдесят шестой час полёта.",
+      "onScreen": "55:54:53 — толчок и *просадка*",
+      "icon": "battery-low",
+      "visualQuery": "Apollo command module control panel",
+      "imagePrompt": "close-up of a 1970s spacecraft control panel with warning lights flashing amber, analog gauges dropping, tense atmosphere"
+    },
+    {
+      "id": "s7",
+      "kind": "quote",
+      "narration": "Первым на связь выходит Свайгерт. Его слова: окей, Хьюстон, у нас тут была проблема.",
+      "onScreen": "Okay, Houston, we've had a *problem* here",
+      "icon": "quote",
+      "visualQuery": "Apollo astronaut headset microphone",
+      "imagePrompt": "astronaut speaking into a headset microphone inside a dim spacecraft cabin, face lit by amber instrument lights, cinematic close-up"
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Капком Джек Лусма переспрашивает. И Ловелл повторяет: Хьюстон, у нас была проблема, просело напряжение на главной шине Б. Заметь: была. Прошедшее время и никакого пафоса.",
+      "onScreen": "Не «есть проблема», а *была*",
+      "icon": "clock",
+      "visualQuery": "Jim Lovell portrait",
+      "imagePrompt": "calm 1970s astronaut commander inside a cramped capsule, steady gaze, cold blue ambient light with amber highlights"
+    },
+    {
+      "id": "s9",
+      "kind": "media",
+      "narration": "Знаменитое Хьюстон, у нас проблема в настоящем времени придумали для фильма тысяча девятьсот девяносто пятого года. Сценарист Уильям Бройлс считал, что прошедшее время звучит недостаточно драматично.",
+      "onScreen": "Настоящее время — *кино* 1995 года",
+      "icon": "camera",
+      "visualQuery": "Mission Control Center Houston",
+      "imagePrompt": "1970s mission control room with rows of consoles and engineers in white shirts, glowing screens, warm amber and blue palette, film grain"
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "И это не единственный миф. Главный лозунг ЦУПа мы тоже проверим. А самое интересное: бак взорвался не случайно. Его судьбу решили на Земле, задолго до старта.",
+      "onScreen": "Бак был обречён *ещё на Земле*",
+      "icon": "lock",
+      "visualQuery": "oxygen tank spacecraft",
+      "imagePrompt": "spherical metal pressure tank in a dim industrial workshop, single hard light from above, ominous mood, blue and amber tones"
+    },
+    {
+      "id": "s11",
+      "kind": "media",
+      "narration": "Из повреждённого служебного модуля уходит кислород. Топливные элементы, дающие энергию и воду, умирают один за другим. Экипаж отключает командный модуль и перебирается в лунный модуль Водолей.",
+      "onScreen": "Спасательная шлюпка — *Водолей*",
+      "icon": "shield",
+      "visualQuery": "Apollo Lunar Module",
+      "imagePrompt": "Apollo lunar module docked to a command module floating in black space, venting gas cloud in the background, cold blue light with amber reflections",
+      "chapter": "Шлюпка Водолей и облёт Луны"
+    },
+    {
+      "id": "s12",
+      "kind": "list",
+      "narration": "Но Водолей строили для другой работы. Рассчитан на двоих. Ресурс около сорока пяти часов. А теперь ему держать троих почти четверо суток.",
+      "onScreen": "Шлюпка для двоих — *на троих*",
+      "items": [
+        "Рассчитан на двоих",
+        "Ресурс около 45 часов",
+        "Нужно: трое, 4 суток"
+      ],
+      "icon": "hourglass",
+      "visualQuery": "Apollo Lunar Module interior",
+      "imagePrompt": "cramped interior of a lunar module with three astronauts squeezed together, dim amber instrument light, cold breath in the air"
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "Почему бы просто не развернуться? Для этого нужен мощный двигатель служебного модуля, а он рядом с местом взрыва. Включать его слишком опасно. Остаётся один путь — вокруг Луны.",
+      "onScreen": "Разворот невозможен. Только *вокруг Луны*",
+      "icon": "circle-x",
+      "visualQuery": "Apollo service module engine",
+      "imagePrompt": "large rocket engine nozzle of a damaged spacecraft in shadow, debris drifting nearby, cold blue rim light"
+    },
+    {
+      "id": "s14",
+      "kind": "stat",
+      "narration": "Примерно через пять с половиной часов после аварии экипаж включает посадочный двигатель Водолея. Всего на тридцать целых семь десятых секунды. Этого хватает, чтобы вернуть корабль на траекторию свободного возврата.",
+      "onScreen": "30,7 секунды, которые вернули *курс*",
+      "stat": {
+        "value": 30.7,
+        "suffix": " с",
+        "label": "прожиг посадочного двигателя"
+      },
+      "icon": "flame",
+      "visualQuery": "lunar module descent engine",
+      "imagePrompt": "lunar module descent engine firing a soft blue flame in black space, the Moon glowing ahead, cinematic wide shot"
+    },
+    {
+      "id": "s15",
+      "kind": "media",
+      "narration": "Свободный возврат работает как праща. Луна своим притяжением разворачивает корабль и бросает обратно к Земле. А за Луной второй прожиг того же двигателя ускоряет дорогу домой.",
+      "onScreen": "Луна как *праща*",
+      "icon": "moon",
+      "visualQuery": "Moon far side craters",
+      "imagePrompt": "spacecraft passing low over the cratered far side of the Moon, harsh sunlight on grey surface, black sky, blue and amber palette"
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "Курс домой есть. Но в кабине новая беда. Трое выдыхают углекислый газ, а фильтры Водолея рассчитаны на двоих. Воздух медленно начинает травить экипаж.",
+      "onScreen": "Курс есть. Но воздух *травит*",
+      "icon": "triangle-alert",
+      "visualQuery": "carbon dioxide warning gauge",
+      "imagePrompt": "analog gauge needle creeping into the red zone inside a dark spacecraft cabin, faint condensation on metal, tense amber glow"
+    },
+    {
+      "id": "s17",
+      "kind": "stat",
+      "narration": "Углекислый газ в Водолее поглощают патроны с гидроксидом лития. Их всего два. Расчёт простой: двое человек, около тридцати часов. А лететь троим почти четверо суток.",
+      "onScreen": "Фильтры Водолея: *30 часов* на двоих",
+      "stat": {
+        "value": 30,
+        "prefix": "≈",
+        "suffix": " ч",
+        "label": "ресурс фильтров на двоих"
+      },
+      "icon": "timer",
+      "visualQuery": "Apollo Lunar Module interior",
+      "imagePrompt": "cinematic view inside a cramped 1970s lunar module cabin, two cylindrical filter canisters glowing faintly, cold blue light with amber panel lamps, film grain",
+      "chapter": "Квадратный фильтр, круглое гнездо"
+    },
+    {
+      "id": "s18",
+      "kind": "statement",
+      "narration": "Запасные патроны на борту есть. Они лежат в командном модуле. Только там они квадратные, а гнёзда в Водолее круглые. Корабль и лунный модуль строили разные компании.",
+      "onScreen": "Квадратный патрон. *Круглое* гнездо",
+      "icon": "circle-x",
+      "visualQuery": "Apollo 13 lithium hydroxide canister",
+      "imagePrompt": "cinematic still life of a square metal canister beside a round socket on a spacecraft panel, cold blue and amber palette, shallow depth of field, film grain"
+    },
+    {
+      "id": "s19",
+      "kind": "media",
+      "narration": "Углекислый газ копится незаметно. Сначала болит голова, потом путаются мысли, дыхание учащается. В тесной кабине без рабочего фильтра счёт идёт на часы.",
+      "onScreen": "Невидимая угроза в *каждом* вдохе",
+      "icon": "triangle-alert",
+      "visualQuery": "astronaut cabin breathing",
+      "imagePrompt": "cinematic close-up of a tired astronaut face in dim cabin light, breath visible, cold blue tones with amber reflections, film grain"
+    },
+    {
+      "id": "s20",
+      "kind": "list",
+      "narration": "На Земле инженеры выкладывают на стол только то, что есть на борту. Квадратный патрон. Серую клейкую ленту. Пакеты от охлаждающих костюмов. Картонку и шланг скафандра.",
+      "onScreen": "Спасение из *подручных* вещей",
+      "items": [
+        "Квадратный патрон",
+        "Серая клейкая лента",
+        "Пакеты от костюмов",
+        "Картонка и шланг"
+      ],
+      "icon": "list-checks",
+      "visualQuery": "duct tape roll table",
+      "imagePrompt": "top-down cinematic shot of a table with a square canister, gray tape roll, plastic bags, cardboard card and a hose, warm amber desk lamp against cold blue shadows"
+    },
+    {
+      "id": "s21",
+      "kind": "statement",
+      "narration": "По книге Ловелла и Клюгера Потерянная Луна, конструкцию придумал инженер Эд Смайли. Квадратный патрон обматывают пакетами и лентой, а воздух подают через шланг скафандра.",
+      "onScreen": "Задача: вставить *квадрат* в круг",
+      "icon": "lightbulb",
+      "visualQuery": "engineers Mission Control 1970",
+      "imagePrompt": "cinematic 1970s engineering room, men in white shirts bent over a makeshift device on a table, smoky amber light, blue window glow, film grain"
+    },
+    {
+      "id": "s22",
+      "kind": "media",
+      "narration": "Дальше всё решает радио. Капком Джо Кервин диктует инструкцию шаг за шагом: отрезать, обернуть, заклеить. А Свайгерт в невесомости повторяет это руками.",
+      "onScreen": "Инструкция *по радио*, шаг за шагом",
+      "icon": "radio",
+      "visualQuery": "Mission Control Center Houston Apollo",
+      "imagePrompt": "cinematic shot of a 1970s mission control console with a headset and glowing screens, amber and cold blue palette, film grain"
+    },
+    {
+      "id": "s23",
+      "kind": "stat",
+      "narration": "Сборка занимает около часа. На девяносто первом часу полёта переходник подключают, и уровень углекислого газа в кабине начинает падать. Квадрат вошёл в круг.",
+      "onScreen": "Квадрат *вошёл* в круг",
+      "stat": {
+        "value": 91,
+        "suffix": "-й час",
+        "label": "полёта: переходник заработал"
+      },
+      "icon": "circle-check",
+      "visualQuery": "Apollo 13 mailbox adapter",
+      "imagePrompt": "cinematic close-up of a taped makeshift box with a hose attached inside a spacecraft cabin, amber light on gray tape, cold blue background, film grain"
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Воздух спасён. Но это лишь одна беда из трёх. Впереди холод, жажда и первый взгляд на то, что осталось от корабля.",
+      "onScreen": "Воздух есть. Впереди *холод*",
+      "icon": "hourglass",
+      "visualQuery": "Apollo spacecraft Earth window",
+      "imagePrompt": "cinematic view of distant Earth through a small frosted spacecraft window, cold blue light, amber cabin glow at the edges, film grain"
+    },
+    {
+      "id": "s25",
+      "kind": "stat",
+      "narration": "Чтобы хватило энергии на возвращение, экипаж отключает почти всё, включая обогрев. По словам Ловелла, в кабине становится тридцать восемь градусов по Фаренгейту. Это около трёх тепла.",
+      "onScreen": "В кабине как в *холодильнике*",
+      "stat": {
+        "value": 3,
+        "prefix": "≈",
+        "suffix": " °C",
+        "label": "в кабине по словам Ловелла"
+      },
+      "icon": "thermometer-snowflake",
+      "visualQuery": "frost window cold",
+      "imagePrompt": "cinematic macro of frost and condensation on a spacecraft instrument panel, dark switches, cold blue palette with faint amber, film grain",
+      "chapter": "Холод и вырванный борт"
+    },
+    {
+      "id": "s26",
+      "kind": "statement",
+      "narration": "Воду урезают до шести унций в день на человека. Это около ста восьмидесяти миллилитров, меньше стакана. Пятая часть обычной нормы.",
+      "onScreen": "Вода: *пятая часть* нормы",
+      "compare": {
+        "items": [
+          {
+            "label": "Обычная норма",
+            "value": 900
+          },
+          {
+            "label": "Аполлон-13",
+            "value": 180
+          }
+        ],
+        "suffix": " мл"
+      }
+    },
+    {
+      "id": "s27",
+      "kind": "media",
+      "narration": "Холод и жажда берут своё. Ловелл худеет примерно на шесть с половиной килограммов. Весь экипаж вместе теряет около четырнадцати.",
+      "onScreen": "Экипаж потерял *14 кг*",
+      "icon": "trending-down",
+      "visualQuery": "Apollo 13 crew",
+      "imagePrompt": "cinematic portrait of three exhausted astronauts huddled in a dim cold cabin, faces lit by amber panel lights, cold blue shadows, film grain"
+    },
+    {
+      "id": "s28",
+      "kind": "statement",
+      "narration": "Перед входом в атмосферу служебный модуль надо отстрелить. Экипаж избавляется от него и впервые видит, что сделал взрыв.",
+      "onScreen": "Первый взгляд на *рану* корабля",
+      "icon": "eye",
+      "visualQuery": "Apollo 13 service module damage",
+      "imagePrompt": "cinematic shot of a drifting damaged cylindrical spacecraft module against black space, torn panel, harsh sunlight, cold blue and amber tones, film grain"
+    },
+    {
+      "id": "s29",
+      "kind": "quote",
+      "narration": "Ловелл передаёт на Землю: у корабля нет целого борта. Панель возле антенны вырвана почти от основания до самого двигателя.",
+      "onScreen": "«У корабля нет целого *борта*»",
+      "icon": "quote",
+      "visualQuery": "Apollo 13 service module jettison",
+      "imagePrompt": "cinematic view through a spacecraft window of a module with one side ripped open, debris glinting, cold blue space, amber reflections on glass, film grain"
+    },
+    {
+      "id": "s30",
+      "kind": "media",
+      "narration": "Семнадцатого апреля тысяча девятьсот семидесятого года капсула на парашютах опускается в Тихий океан. Все трое живы.",
+      "onScreen": "17 апреля 1970. *Все живы*",
+      "icon": "heart",
+      "visualQuery": "Apollo 13 splashdown",
+      "imagePrompt": "cinematic shot of a space capsule under three striped parachutes descending over the ocean, golden morning light, cold blue sea, film grain"
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Сам Ловелл потом назовёт этот полёт успешной неудачей. Высадки на Луну не было. Но домой вернулись все.",
+      "onScreen": "Успешная *неудача*",
+      "icon": "trophy",
+      "visualQuery": "James Lovell portrait",
+      "imagePrompt": "cinematic portrait of a 1970s astronaut in a flight jacket, thoughtful expression, warm amber light against cold blue background, film grain"
+    },
+    {
+      "id": "s32",
+      "kind": "statement",
+      "narration": "Остаётся главный вопрос. Что разорвало бак? Ответ найдут не в космосе, а на Земле, задолго до старта.",
+      "onScreen": "Что *разорвало* бак?",
+      "icon": "search",
+      "visualQuery": "oxygen tank spacecraft",
+      "imagePrompt": "cinematic close-up of a spherical metal oxygen tank in a dim hangar, amber work light, cold blue shadows, ominous mood, film grain"
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Комиссия Эдгара Кортрайта опубликовала отчёт пятнадцатого июня тысяча девятьсот семидесятого года. Цепочка началась с мелочи: в октябре шестьдесят восьмого бак уронили. Всего на пять сантиметров.",
+      "onScreen": "Октябрь 1968: бак *уронили* на 5 см",
+      "chapter": "Почему взорвался бак",
+      "compare": {
+        "items": [
+          {
+            "label": "Падение бака",
+            "value": 1968
+          },
+          {
+            "label": "Авария",
+            "value": 1970
+          }
+        ]
+      }
+    },
+    {
+      "id": "s34",
+      "kind": "stat",
+      "narration": "Дальше хуже. Термовыключатели нагревателя рассчитали на двадцать восемь вольт. А при наземном сливе кислорода его питали от шестидесяти пяти. Бак пустел целых восемь часов.",
+      "onScreen": "28 вольт по расчёту, *65* на деле",
+      "stat": {
+        "value": 65,
+        "suffix": " В",
+        "label": "вместо расчётных 28 вольт"
+      },
+      "compare": {
+        "items": [
+          {
+            "label": "Расчёт",
+            "value": 28
+          },
+          {
+            "label": "На деле",
+            "value": 65
+          }
+        ],
+        "suffix": " В"
+      }
+    },
+    {
+      "id": "s35",
+      "kind": "stat",
+      "narration": "Трубка нагревателя могла раскалиться примерно до пятисот сорока градусов. А датчик не умел показывать больше восьмидесяти пяти по Фаренгейту. Никто ничего не заметил.",
+      "onScreen": "Датчик *слеп* выше 85 °F",
+      "stat": {
+        "value": 540,
+        "prefix": "≈",
+        "suffix": " °C",
+        "label": "мог раскалиться нагреватель"
+      },
+      "icon": "flame",
+      "visualQuery": "cryogenic oxygen tank",
+      "imagePrompt": "cinematic macro of a glowing red-hot heater tube inside a dark metal tank, frost on the walls, cold teal and amber palette, 1970s film grain"
+    },
+    {
+      "id": "s36",
+      "kind": "media",
+      "narration": "Жар повредил тефлоновую изоляцию проводов. В полёте экипаж включил вентиляторы перемешивания, провода замкнуло, и бак разорвало.",
+      "onScreen": "Искра в *чистом* кислороде",
+      "icon": "zap",
+      "visualQuery": "Apollo 13 service module damage",
+      "imagePrompt": "cinematic view of a damaged spacecraft service module drifting in black space, torn panel, debris glinting in harsh sunlight, cold teal and amber palette, film grain"
+    },
+    {
+      "id": "s37",
+      "kind": "quote",
+      "narration": "Вывод комиссии жёсткий: это необычное сочетание ошибок и несколько несовершенная, неумолимая конструкция.",
+      "onScreen": "Не случайность, а *сочетание* ошибок",
+      "icon": "quote",
+      "visualQuery": "Apollo 13 Review Board",
+      "imagePrompt": "1970s engineers around a long table covered with technical drawings and reports, warm desk lamps, cold teal and amber palette, documentary film grain"
+    },
+    {
+      "id": "s38",
+      "kind": "quiz",
+      "narration": "Теперь проверь себя. В ЦУПе тогда звучало: неудача — не вариант?",
+      "onScreen": "«Неудача — не вариант» звучало *в ЦУПе*?",
+      "icon": "circle-x",
+      "visualQuery": "Apollo mission control room",
+      "imagePrompt": "1970s mission control room with rows of glowing consoles, controllers in white shirts, tense atmosphere, cold teal and amber palette, film grain",
+      "quiz": {
+        "answer": "myth",
+        "explanation": "Фразу придумали для фильма 1995 года, в полёте её не было",
+        "question": "Какую фразу из фильма ты считал реальной?",
+        "pauseSec": 4
+      }
+    },
+    {
+      "id": "s39",
+      "kind": "statement",
+      "narration": "Миф. В полёте так не говорил никто. По рассказу баллистика Джерри Бостика, фразу придумали со сценаристами фильма девяносто пятого года. Кранц потом назвал так мемуары.",
+      "onScreen": "Лозунг родился *в кино*",
+      "icon": "camera",
+      "visualQuery": "film clapperboard studio",
+      "imagePrompt": "vintage film clapperboard on a dark studio floor beside a model rocket, single spotlight, cold teal and amber palette, film grain"
+    },
+    {
+      "id": "s40",
+      "kind": "stat",
+      "narration": "А ещё экипаж невольно поставил рекорд: четыреста тысяч сто семьдесят один километр от Земли. Его побила только Артемида-два, шестого апреля две тысячи двадцать шестого.",
+      "onScreen": "Рекорд дальности держался *56 лет*",
+      "stat": {
+        "value": 400171,
+        "suffix": " км",
+        "label": "дальше всех людей от Земли"
+      },
+      "icon": "trophy",
+      "visualQuery": "far side of the Moon Earth",
+      "imagePrompt": "cinematic view of a small blue Earth rising over the cratered far side of the Moon, deep black space, cold teal and amber palette, film grain"
+    },
+    {
+      "id": "s41",
+      "kind": "statement",
+      "narration": "Их спасли не лозунги. Спасли чёткие процедуры, импровизация и сотни людей на Земле. Иногда жизнь держится на картонке и клейкой ленте.",
+      "onScreen": "Спасли *процедуры* и люди",
+      "icon": "users",
+      "visualQuery": "Apollo 13 crew recovery",
+      "imagePrompt": "three astronauts on the deck of a recovery ship after splashdown, ocean sunlight, sailors cheering, cold teal and amber palette, documentary film grain"
+    },
+    {
+      "id": "s42",
+      "kind": "cta",
+      "narration": "Смог бы ты собрать фильтр по радио?",
+      "onScreen": "Собрал бы ты *фильтр* по радио?",
+      "icon": "message-circle"
+    }
+  ]
+}

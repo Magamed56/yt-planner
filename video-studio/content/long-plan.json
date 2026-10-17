@@ -772,7 +772,8 @@
         "Холод и вырванный борт",
         "Почему взорвался бак"
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/razbor-L11-apollon-13-chto-proizoshlo-i-kak-ekipazh-vernulsya-domoy.json"
     },
     {
       "id": "L12",
@@ -840,7 +841,8 @@
         "Первый день кайнозоя",
         "Астероид или вулканы?"
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/razbor-L12-krater-chiksulub-kak-nashli-asteroid-ubivshiy-dinozavrov.json"
     },
     {
       "id": "L13",
@@ -908,7 +910,8 @@
         "Город строителей",
         "Бухгалтерия и вода"
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/razbor-L13-dnevnik-merera-kto-i-kak-vozil-kamen-dlya-piramidy-kheopsa.json"
     },
     {
       "id": "L14",
@@ -976,7 +979,8 @@
         "Затмения, Луна и игры",
         "Космос на передней панели"
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/razbor-L14-antikiterskiy-mekhanizm-kak-rabotal-kompyuter-vozrastom-2000.json"
     },
     {
       "id": "L15",
@@ -1044,7 +1048,8 @@
         "Победа «Око за око»",
         "Почему выгодно прощать"
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/razbor-L15-dilemma-zaklyuchennogo-pochemu-v-dolgoy-igre-vygodno.json"
     },
     {
       "id": "L16",
@@ -1112,7 +1117,8 @@
         "Голуби против людей",
         "Ведущий знает больше"
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/razbor-L16-paradoks-monti-kholla-obyasnenie-zadachi-gde-oshibalis.json"
     }
   ]
 }
