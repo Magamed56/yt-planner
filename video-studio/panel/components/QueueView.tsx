@@ -201,7 +201,7 @@ export default function QueueView({ state, initialMode, initialSelected = null }
       const r = await findNewUploadsAction();
       if (!("found" in r)) return setToast({ text: r.message, ok: false });
       const extra = [
-        r.withoutTexts.length ? `Загружены, но текстов для них нет (собраны не через Actions): ${r.withoutTexts.join(", ")}.` : "",
+        r.withoutTexts.length ? `Загружены, но текстов для них нет ни в content/videos.json, ни в релизах: ${r.withoutTexts.join(", ")} — заполните в Studio вручную.` : "",
         r.pending.length ? `YouTube ещё обрабатывает: ${r.pending.join(", ")} — нажмите ещё раз через пару минут.` : "",
         r.duplicates.length ? `Загружены дважды: ${r.duplicates.join(", ")} — удалите лишний в Studio.` : "",
       ]

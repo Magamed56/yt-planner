@@ -21,6 +21,7 @@ import { loadState, STUDIO_DIR } from "@/lib/load";
 import { canRetry, confirmStale } from "@/lib/ops";
 import { autoAddToPlaylists } from "@/lib/playlist-sync";
 import { editLock, rebuildInputs, rebuildLabel, type RebuildOptions } from "@/lib/rebuild";
+import { releaseFillItems } from "@/lib/release-texts";
 import { applyScriptEdit, checkScriptEdit, scriptEditOf, scriptFileText, type ScriptEdit } from "@/lib/script-edit";
 import { SESSION_COOKIE } from "@/lib/session";
 import { AUTOPILOT_VAR, codesLabel, KEEP_RELEASE_MAX, parseQueueOrder, QUEUE_ORDER_VAR, queueSort, SCRIPT_RESERVE_MAX, type AutopilotSettings } from "@/lib/state";
@@ -236,6 +237,18 @@ async function computeFill(search = true) {
   ]);
   const items: FillItem[] = [];
   for (const it of [...fillItemsOf(week1), ...fillItemsOf(later)]) if (!items.some((x) => x.id === it.id)) items.push(it);
+  // Ролик из плана загружен (приватный, без времени), а текстов для него нет ни в одном списке —
+  // берём их из его релиза. Нет и там — заполнить нечем (withoutTexts).
+  const known = new Set(items.map((i) => i.id));
+  const bare: FillItem[] = [...parsePlan(planJson).items, ...longPlan.items]
+    .filter((i) => !known.has(i.id))
+    .map((i) => ({ id: i.id, file: i.id, durationSec: Number.NaN, title: i.title, description: "", tags: [], categoryId: "27", defaultLanguage: "ru", containsSyntheticMedia: true }));
+  const fresh = matchVideos(bare, videos)
+    .matches.filter((m) => m.video.privacyStatus === "private" && !m.video.publishAt)
+    .map((m) => m.item.id);
+  const recovered = fresh.length ? releaseFillItems(await listReleases().catch(() => []), fresh) : [];
+  items.push(...recovered);
+  const withoutTexts = fresh.filter((c) => !recovered.some((i) => i.id === c));
   const found = matchVideos(items, videos);
   // Свободные слоты раздаются в порядке совпадений — ставим их в очередь выхода из календаря.
   const order = parseQueueOrder(orderRaw);
@@ -245,14 +258,6 @@ async function computeFill(search = true) {
   const taken = videos.filter((v) => v.privacyStatus === "private" && v.publishAt && Date.parse(v.publishAt) > now.getTime()).map((v) => v.publishAt!);
   // «Разборы» (L01…) — в свои слоты вт/чт/сб 21:00, Shorts — в свои.
   const updates = planUpdates(report, { schedule: channel.schedule, longSchedule: longScheduleOf(channel), mode: "slots", now, taken });
-  // Ролик из плана загружен, а текстов для него нет ни в одном списке — заполнить нечем.
-  const known = new Set(items.map((i) => i.id));
-  const bare: FillItem[] = [...parsePlan(planJson).items, ...longPlan.items]
-    .filter((i) => !known.has(i.id))
-    .map((i) => ({ id: i.id, file: i.id, durationSec: Number.NaN, title: i.title, description: "", tags: [], categoryId: "27", defaultLanguage: "ru", containsSyntheticMedia: true }));
-  const withoutTexts = matchVideos(bare, videos)
-    .matches.filter((m) => m.video.privacyStatus === "private" && !m.video.publishAt)
-    .map((m) => m.item.id);
   return { tz: channel.schedule.timezone, report, updates, withoutTexts };
 }
 
