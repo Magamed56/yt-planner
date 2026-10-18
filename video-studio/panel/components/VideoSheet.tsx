@@ -471,7 +471,7 @@ export default function VideoSheet({ row, state, onClose }: { row: Row; state: P
                 </button>
               </div>
             ) : (
-              <p className="muted small">Текстов для него нет (ролик собран не через Actions) — заполните в Studio вручную.</p>
+              <p className="muted small">Текстов для него нет ни в content/videos.json, ни в релизе — заполните в Studio вручную.</p>
             )}
           </>
         )}

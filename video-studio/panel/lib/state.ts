@@ -60,7 +60,7 @@ export interface Row {
   release: ReleaseInfo | null;
   youtube: YoutubeInfo | null;
   cover: string | null; // картинка для очереди: обложка с YouTube, иначе cover.jpg / thumbnail.png из релиза
-  hasTexts: boolean; // youtube-fill знает тексты (week1-videos.json / videos.json)
+  hasTexts: boolean; // тексты для Studio есть: week1-videos.json / videos.json или description.txt в релизе
   textsDiffer: boolean; // на YouTube тексты не такие, как в файле
   when: string | null; // ISO: время выхода — точное (YouTube) или ориентир (следующие свободные слоты)
   whenExact: boolean;
@@ -514,7 +514,8 @@ export function buildState(input: StateInput): PanelState {
     const long = longCodes.has(it.id);
     const v = matched.get(it.id) ?? pending.get(it.id) ?? dups.get(it.id)?.[0] ?? null;
     const release = releases.get(it.id) ?? null;
-    const hasTexts = texts.has(it.id);
+    // Нет в списках — панель возьмёт их из релиза (app/actions.ts → computeFill).
+    const hasTexts = texts.has(it.id) || Boolean(release?.description);
     const scriptPath = scripts.get(it.id) ?? null;
     const flags: string[] = [];
     const dup = dups.get(it.id);
