@@ -18,9 +18,9 @@ import { coveredFromScript, coveredPromptBlock, ctaRepeat, findRepeats, indexCov
 import { QUIZ_ROUNDS_PLANNED, QUIZ_SILENCE_SEC, SHORTS_DEFAULT_SECONDS, buildShortsPrompt, buildSystemPrompt, shortsTargets } from "../pipeline/script/prompt";
 import { fetchSuggestions, parseSuggestResponse, searchPhrases, suggestionsFor } from "../pipeline/script/suggest";
 import { appendUsage, countPostRequests, llmUsageRecord, ttsUsageRecord, usageNow, type LlmCallInfo } from "../pipeline/script/usage-log";
-import { checkTopics, checkUrl, extractUrl, generatePlanItems, similarTitle } from "../pipeline/script/plan-gen";
+import { buildPlanSystemPrompt, checkTopics, checkUrl, extractUrl, generatePlanItems, similarTitle } from "../pipeline/script/plan-gen";
 import { LIMITS } from "../pipeline/script/schema";
-import { SHORTS_RULES, WORDS_PER_SECOND, coerceScene, countWords, ctaProblems, titleRepeatsHook, trimCta } from "../pipeline/script/validate";
+import { SHORTS_RULES, WORDS_PER_SECOND, coerceScene, countWords, ctaProblems, titleFiller, titleRepeatsHook, trimCta } from "../pipeline/script/validate";
 import { TITLE_MAX, buildYoutubeMeta, chapterTime, youtubeChapters } from "../pipeline/meta";
 import { buildFixtureProps } from "../remotion/fixtures/buildFixture";
 import { CHAPTER_CARD_FRAMES, FINAL_TAIL_FRAMES, FPS, QUIZ_REVEAL_FRAMES, SCENE_LEAD_FRAMES, SCENE_TAIL_FRAMES, layoutScenes, quizTiming, type ScriptScene, type VideoScript } from "../types";
@@ -1193,6 +1193,37 @@ await test("План: ссылки источников, похожие назв
   for (const part of ["без ссылки", "слишком похожа", "нужно минимум 2", "уже был на канале"]) assert.ok(notes.includes(part), `нет «${part}» в:\n${notes}`);
   const none = checkTopics({ nope: 1 }, { positions: [{ id: "31a", day: 31, slot: "12:00" }], existingTitles: [], covered: [] });
   assert.ok(!none.ok, "без items — в ремонт");
+});
+
+await test("Интересность: пустые хвосты названий, «да ладно?!» в промпте плана, Shorts-название до 50", () => {
+  assert.equal(titleFiller("Луна отдаляется от Земли: и вот почему"), "и вот почему");
+  assert.equal(titleFiller("Почему небо голубое, а закат красный: простая физика"), "простая физика");
+  assert.equal(titleFiller("Как работает QR-код: объясняем"), "объясняем");
+  assert.equal(titleFiller("ШОК: осьминог видит кожей"), "ШОК");
+  assert.equal(titleFiller("Эффект Даннинга — Крюгера простыми словами"), null, "так ищут — не пустышка");
+  assert.equal(titleFiller("Вот почему кошки мурлычут, а собаки нет"), null, "«вот почему» в начале несёт смысл");
+  assert.equal(titleFiller("Почему вомбаты какают кубиками"), null);
+
+  const system = buildPlanSystemPrompt(false);
+  assert.match(system, /тест «да ладно\?!»/);
+  assert.match(system, /«бородатые» факты/);
+  assert.match(system, /title — до 50 символов/);
+  assert.match(system, /два удара: факт и поворот/);
+  assert.match(buildPlanSystemPrompt(false, true), /title — до 70 символов: в начале главный поисковый запрос/);
+
+  const fact = (n: number) => ({ claim: `Факт ${n} про то, как слоны зовут друг друга по именам`, source: `https://example.org/elephants/${n}` });
+  const v = checkTopics(
+    { items: [{ code: "31a", title: "Слоны зовут друг друга по именам: и вот почему так вышло давно", hook: "Слоны зовут друг друга по именам.", angle: "Pardo 2024.", keyFacts: [fact(1), fact(2)] }] },
+    { positions: [{ id: "31a", day: 31, slot: "12:00" }], existingTitles: [], covered: [] },
+  );
+  assert.ok(v.ok);
+  if (!v.ok) return;
+  const notes = v.value.notes.join("\n");
+  assert.match(notes, /31a: название длиннее 50 символов — в ленте Shorts видно только начало/);
+
+  const s = validateScript(demo);
+  assert.ok(lintScript({ ...s, title: "Память за сутки: и вот почему" }).some((w) => w.includes("пустые слова «и вот почему»")));
+  assert.ok(!lintScript(s).some((w) => w.includes("пустые слова")));
 });
 
 await test("План: проверка ссылки по сети — 200/405→GET/404/нет домена/403/таймаут", async () => {

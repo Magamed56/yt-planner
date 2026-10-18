@@ -300,6 +300,25 @@ export function titleRepeatsHook(title: string, hook: string): boolean {
   return common / t.size >= 0.6;
 }
 
+// Пустые слова в заголовке: хвост «: и вот почему», «: простая физика», «шок» место занимает,
+// а ничего не обещает — в ленте Shorts видно только начало. «Простыми словами» не трогаем:
+// так зрители ищут («эффект Даннинга — Крюгера простыми словами»).
+const TITLE_FILLER: RegExp[] = [
+  /(?:^|[\s:—–-])(?:и\s+)?вот\s+почему[\s.!?…]*$/iu,
+  /прост(?:ая|ой|ые)\s+(?:физика|химия|биология|математика|наука|объяснение)/iu,
+  /(?:^|[\s:—–-])(?:объясняем|объясняю|рассказываем|разбираемся|разбираем|разбор)[\s.!?…]*$/iu,
+  /(?:интересн|удивительн)\p{L}*\s+факт/iu,
+  /вы\s+не\s+поверите|(?<!\p{L})шок(?!\p{L})/iu,
+];
+
+export function titleFiller(title: string): string | null {
+  for (const re of TITLE_FILLER) {
+    const m = re.exec(title);
+    if (m) return m[0].replace(/^[\s:—–-]+/u, "").replace(/[\s.!?…]+$/u, "");
+  }
+  return null;
+}
+
 export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
   const out: string[] = [];
   const queries = new Map<string, string>();
@@ -384,6 +403,8 @@ export function lintScript(script: VideoScript, opts: Partial<LintOptions> = {})
   if (hook && titleRepeatsHook(script.title, hook)) {
     out.push(`title почти повторяет хук («${hook}») — пусть заголовок дополняет его (тема и обещание ответа), а не пересказывает первую фразу`);
   }
+  const filler = titleFiller(script.title);
+  if (filler) out.push(`в title пустые слова «${filler}» — замени конкретикой: число, контраст «думали — оказалось» или вопрос, на который хочется узнать ответ`);
   if (!/#[\p{L}\p{N}_]+/u.test(script.description)) out.push("в description нет хэштегов");
   // YouTube считает описание в байтах (≤ 5000), кириллица — 2 байта на букву;
   // ещё нужно место под источники, музыку и голос (meta.ts их свернёт/обрежет).
