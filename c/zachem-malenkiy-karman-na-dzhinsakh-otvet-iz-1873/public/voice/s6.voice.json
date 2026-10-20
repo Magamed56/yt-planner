@@ -1,0 +1,58 @@
+{
+ "key": "afdf0a25edc1ce99c3305a8465f741a70f81ad2542fda32e5461a706d153cef8",
+ "file": "s6.wav",
+ "durationMs": 4040,
+ "words": [
+  {
+   "text": "Суть",
+   "startMs": 0,
+   "endMs": 213
+  },
+  {
+   "text": "патента",
+   "startMs": 213,
+   "endMs": 648
+  },
+  {
+   "text": "простая:",
+   "startMs": 688,
+   "endMs": 1088
+  },
+  {
+   "text": "укрепить",
+   "startMs": 1413,
+   "endMs": 1893
+  },
+  {
+   "text": "карманы",
+   "startMs": 1933,
+   "endMs": 2413
+  },
+  {
+   "text": "металлом,",
+   "startMs": 2413,
+   "endMs": 2818
+  },
+  {
+   "text": "а",
+   "startMs": 3108,
+   "endMs": 3148
+  },
+  {
+   "text": "не",
+   "startMs": 3173,
+   "endMs": 3348
+  },
+  {
+   "text": "только",
+   "startMs": 3398,
+   "endMs": 3693
+  },
+  {
+   "text": "ниткой.",
+   "startMs": 3733,
+   "endMs": 3918
+  }
+ ],
+ "wordsSource": "aligned"
+}

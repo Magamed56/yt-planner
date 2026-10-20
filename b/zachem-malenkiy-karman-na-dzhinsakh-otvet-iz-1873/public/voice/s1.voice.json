@@ -1,0 +1,48 @@
+{
+ "key": "2150454befec8ec4e9a6a55fbe2e723ac64eba78ffce9a8035af26ef87a88d38",
+ "file": "s1.wav",
+ "durationMs": 3210,
+ "words": [
+  {
+   "text": "Этот",
+   "startMs": 60,
+   "endMs": 290
+  },
+  {
+   "text": "маленький",
+   "startMs": 370,
+   "endMs": 810
+  },
+  {
+   "text": "кармашек",
+   "startMs": 850,
+   "endMs": 1250
+  },
+  {
+   "text": "на",
+   "startMs": 1310,
+   "endMs": 1490
+  },
+  {
+   "text": "джинсах",
+   "startMs": 1490,
+   "endMs": 1810
+  },
+  {
+   "text": "придумали",
+   "startMs": 2050,
+   "endMs": 2610
+  },
+  {
+   "text": "для",
+   "startMs": 2650,
+   "endMs": 2850
+  },
+  {
+   "text": "часов.",
+   "startMs": 2890,
+   "endMs": 3090
+  }
+ ],
+ "wordsSource": "aligned"
+}

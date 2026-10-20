@@ -1,0 +1,63 @@
+{
+ "key": "d69af17a82f06dbcca5939bff5fed2f1c81c6e06d80e0a30bcd73bc3ea88082b",
+ "file": "s4.wav",
+ "durationMs": 4450,
+ "words": [
+  {
+   "text": "А",
+   "startMs": 0,
+   "endMs": 40
+  },
+  {
+   "text": "теперь",
+   "startMs": 40,
+   "endMs": 395
+  },
+  {
+   "text": "посмотри",
+   "startMs": 445,
+   "endMs": 825
+  },
+  {
+   "text": "на",
+   "startMs": 865,
+   "endMs": 985
+  },
+  {
+   "text": "края",
+   "startMs": 1025,
+   "endMs": 1265
+  },
+  {
+   "text": "карманов.",
+   "startMs": 1345,
+   "endMs": 1635
+  },
+  {
+   "text": "Там",
+   "startMs": 2065,
+   "endMs": 2225
+  },
+  {
+   "text": "блестят",
+   "startMs": 2305,
+   "endMs": 2705
+  },
+  {
+   "text": "маленькие",
+   "startMs": 2745,
+   "endMs": 3225
+  },
+  {
+   "text": "металлические",
+   "startMs": 3265,
+   "endMs": 3945
+  },
+  {
+   "text": "заклёпки.",
+   "startMs": 3985,
+   "endMs": 4325
+  }
+ ],
+ "wordsSource": "aligned"
+}

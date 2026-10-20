@@ -1,0 +1,48 @@
+{
+ "key": "f6bc9a333ad853b11372e821cd5406b348be4c9399e7e9f0233b35e34e40eff0",
+ "file": "s3.wav",
+ "durationMs": 3320,
+ "words": [
+  {
+   "text": "Об",
+   "startMs": 0,
+   "endMs": 60
+  },
+  {
+   "text": "этом",
+   "startMs": 100,
+   "endMs": 300
+  },
+  {
+   "text": "рассказывает",
+   "startMs": 380,
+   "endMs": 1020
+  },
+  {
+   "text": "архив",
+   "startMs": 1060,
+   "endMs": 1310
+  },
+  {
+   "text": "самой",
+   "startMs": 1390,
+   "endMs": 1820
+  },
+  {
+   "text": "компании",
+   "startMs": 1900,
+   "endMs": 2340
+  },
+  {
+   "text": "Ливай",
+   "startMs": 2460,
+   "endMs": 2839
+  },
+  {
+   "text": "Страусс.",
+   "startMs": 2839,
+   "endMs": 3210
+  }
+ ],
+ "wordsSource": "aligned"
+}

@@ -1,0 +1,63 @@
+{
+  "slug": "zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873",
+  "title": "Зачем маленький карман на джинсах: ответ из 1873",
+  "format": "shorts",
+  "theme": "sunset",
+  "voiceProvider": "gemini",
+  "voice": {
+    "provider": "gemini",
+    "name": "Charon",
+    "model": "gemini-3.8-flash-tts",
+    "requested": "gemini",
+    "fallback": false,
+    "modelFallback": false,
+    "reason": null
+  },
+  "durationSec": 34.23,
+  "runDir": "out/look/c/zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873",
+  "files": {
+    "video": null,
+    "thumbnail": null,
+    "captions": "out/look/c/zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873/captions.srt",
+    "description": "out/look/c/zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873/description.txt",
+    "props": "out/look/c/zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873/props.json",
+    "script": "out/look/c/zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873/script.json",
+    "cost": "out/look/c/zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873/cost.json",
+    "instagramCaption": "out/look/c/zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873/instagram.txt",
+    "cover": null,
+    "qc": null
+  },
+  "costUsd": 0,
+  "renderSec": null,
+  "loudnessLufs": null,
+  "totalSec": 9.2,
+  "timings": [
+    {
+      "step": "Сценарий",
+      "sec": 0
+    },
+    {
+      "step": "Озвучка",
+      "sec": 0.4
+    },
+    {
+      "step": "Визуал",
+      "sec": 7.2
+    },
+    {
+      "step": "Музыка и звук перехода",
+      "sec": 1.5
+    },
+    {
+      "step": "Сборка таймлинии (props.json)",
+      "sec": 0
+    },
+    {
+      "step": "Субтитры, описание и стоимость",
+      "sec": 0
+    }
+  ],
+  "youtube": null,
+  "instagram": null,
+  "telegram": null
+}

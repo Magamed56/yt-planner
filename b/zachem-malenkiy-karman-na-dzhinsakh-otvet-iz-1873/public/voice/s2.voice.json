@@ -1,0 +1,68 @@
+{
+ "key": "d93d4148abb2956441754727939cb789a9741dd872304007bdd215d0b3fbccdb",
+ "file": "s2.wav",
+ "durationMs": 3610,
+ "words": [
+  {
+   "text": "Не",
+   "startMs": 55,
+   "endMs": 225
+  },
+  {
+   "text": "для",
+   "startMs": 305,
+   "endMs": 505
+  },
+  {
+   "text": "монет",
+   "startMs": 545,
+   "endMs": 865
+  },
+  {
+   "text": "и",
+   "startMs": 865,
+   "endMs": 985
+  },
+  {
+   "text": "не",
+   "startMs": 985,
+   "endMs": 1105
+  },
+  {
+   "text": "для",
+   "startMs": 1145,
+   "endMs": 1305
+  },
+  {
+   "text": "мелочи.",
+   "startMs": 1345,
+   "endMs": 1705
+  },
+  {
+   "text": "Для",
+   "startMs": 1775,
+   "endMs": 2065
+  },
+  {
+   "text": "карманных",
+   "startMs": 2105,
+   "endMs": 2665
+  },
+  {
+   "text": "часов",
+   "startMs": 2705,
+   "endMs": 2915
+  },
+  {
+   "text": "на",
+   "startMs": 2955,
+   "endMs": 3155
+  },
+  {
+   "text": "цепочке.",
+   "startMs": 3205,
+   "endMs": 3485
+  }
+ ],
+ "wordsSource": "aligned"
+}

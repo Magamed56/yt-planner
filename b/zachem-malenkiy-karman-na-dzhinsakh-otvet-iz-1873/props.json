@@ -1,0 +1,1294 @@
+{
+  "title": "Зачем маленький карман на джинсах: ответ из 1873",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Этот маленький кармашек на джинсах придумали для часов.",
+      "onScreen": "Кармашек для *часов*",
+      "icon": "clock",
+      "visualQuery": "jeans pocket close up",
+      "imagePrompt": "cinematic macro shot of the small coin pocket on worn blue denim jeans, warm golden side light, shallow depth of field",
+      "audioSrc": "voice/s1.wav",
+      "audioDurationMs": 3210,
+      "words": [
+        {
+          "text": "Этот",
+          "startMs": 60,
+          "endMs": 290
+        },
+        {
+          "text": "маленький",
+          "startMs": 370,
+          "endMs": 810
+        },
+        {
+          "text": "кармашек",
+          "startMs": 850,
+          "endMs": 1250
+        },
+        {
+          "text": "на",
+          "startMs": 1310,
+          "endMs": 1490
+        },
+        {
+          "text": "джинсах",
+          "startMs": 1490,
+          "endMs": 1810
+        },
+        {
+          "text": "придумали",
+          "startMs": 2050,
+          "endMs": 2610
+        },
+        {
+          "text": "для",
+          "startMs": 2650,
+          "endMs": 2850
+        },
+        {
+          "text": "часов.",
+          "startMs": 2890,
+          "endMs": 3090
+        }
+      ],
+      "visual": {
+        "type": "image",
+        "src": "visuals/s1.jpg",
+        "credit": "Wikimedia Commons: Vanroc (CC BY 4.0)"
+      },
+      "startFrame": 0,
+      "durationInFrames": 111,
+      "audioStartFrame": 3
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Не для монет и не для мелочи. Для карманных часов на цепочке.",
+      "onScreen": "Не для монет. Для *карманных* часов",
+      "icon": "timer",
+      "visualQuery": "pocket watch chain",
+      "imagePrompt": "antique gold pocket watch on a chain resting on rough denim, warm amber light, vintage mood",
+      "audioSrc": "voice/s2.wav",
+      "audioDurationMs": 3610,
+      "words": [
+        {
+          "text": "Не",
+          "startMs": 55,
+          "endMs": 225
+        },
+        {
+          "text": "для",
+          "startMs": 305,
+          "endMs": 505
+        },
+        {
+          "text": "монет",
+          "startMs": 545,
+          "endMs": 865
+        },
+        {
+          "text": "и",
+          "startMs": 865,
+          "endMs": 985
+        },
+        {
+          "text": "не",
+          "startMs": 985,
+          "endMs": 1105
+        },
+        {
+          "text": "для",
+          "startMs": 1145,
+          "endMs": 1305
+        },
+        {
+          "text": "мелочи.",
+          "startMs": 1345,
+          "endMs": 1705
+        },
+        {
+          "text": "Для",
+          "startMs": 1775,
+          "endMs": 2065
+        },
+        {
+          "text": "карманных",
+          "startMs": 2105,
+          "endMs": 2665
+        },
+        {
+          "text": "часов",
+          "startMs": 2705,
+          "endMs": 2915
+        },
+        {
+          "text": "на",
+          "startMs": 2955,
+          "endMs": 3155
+        },
+        {
+          "text": "цепочке.",
+          "startMs": 3205,
+          "endMs": 3485
+        }
+      ],
+      "visual": {
+        "type": "video",
+        "src": "visuals/s2.mp4",
+        "durationSec": 14,
+        "credit": "Pixabay: fotoblend"
+      },
+      "startFrame": 99,
+      "durationInFrames": 123,
+      "audioStartFrame": 3
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Об этом рассказывает архив самой компании Ливай Страусс.",
+      "onScreen": "Так пишет *архив* Levi Strauss",
+      "icon": "book-open",
+      "visualQuery": "archive boxes shelves",
+      "imagePrompt": "old archive shelves with leather ledgers and folded denim, dusty warm light beams",
+      "audioSrc": "voice/s3.wav",
+      "audioDurationMs": 3320,
+      "words": [
+        {
+          "text": "Об",
+          "startMs": 0,
+          "endMs": 60
+        },
+        {
+          "text": "этом",
+          "startMs": 100,
+          "endMs": 300
+        },
+        {
+          "text": "рассказывает",
+          "startMs": 380,
+          "endMs": 1020
+        },
+        {
+          "text": "архив",
+          "startMs": 1060,
+          "endMs": 1310
+        },
+        {
+          "text": "самой",
+          "startMs": 1390,
+          "endMs": 1820
+        },
+        {
+          "text": "компании",
+          "startMs": 1900,
+          "endMs": 2340
+        },
+        {
+          "text": "Ливай",
+          "startMs": 2460,
+          "endMs": 2839
+        },
+        {
+          "text": "Страусс.",
+          "startMs": 2839,
+          "endMs": 3210
+        }
+      ],
+      "visual": {
+        "type": "video",
+        "src": "visuals/s3.mp4",
+        "durationSec": 17,
+        "credit": "Pixabay: klimkin"
+      },
+      "startFrame": 210,
+      "durationInFrames": 114,
+      "audioStartFrame": 3
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "А теперь посмотри на края карманов. Там блестят маленькие металлические заклёпки.",
+      "onScreen": "Заметил *заклёпки*?",
+      "icon": "eye",
+      "visualQuery": "jeans rivet close up",
+      "imagePrompt": "extreme close-up of copper rivets on blue denim pocket corner, glinting warm highlights, cinematic",
+      "audioSrc": "voice/s4.wav",
+      "audioDurationMs": 4450,
+      "words": [
+        {
+          "text": "А",
+          "startMs": 0,
+          "endMs": 40
+        },
+        {
+          "text": "теперь",
+          "startMs": 40,
+          "endMs": 395
+        },
+        {
+          "text": "посмотри",
+          "startMs": 445,
+          "endMs": 825
+        },
+        {
+          "text": "на",
+          "startMs": 865,
+          "endMs": 985
+        },
+        {
+          "text": "края",
+          "startMs": 1025,
+          "endMs": 1265
+        },
+        {
+          "text": "карманов.",
+          "startMs": 1345,
+          "endMs": 1635
+        },
+        {
+          "text": "Там",
+          "startMs": 2065,
+          "endMs": 2225
+        },
+        {
+          "text": "блестят",
+          "startMs": 2305,
+          "endMs": 2705
+        },
+        {
+          "text": "маленькие",
+          "startMs": 2745,
+          "endMs": 3225
+        },
+        {
+          "text": "металлические",
+          "startMs": 3265,
+          "endMs": 3945
+        },
+        {
+          "text": "заклёпки.",
+          "startMs": 3985,
+          "endMs": 4325
+        }
+      ],
+      "visual": {
+        "type": "image",
+        "src": "visuals/s4.jpg",
+        "credit": "Wikimedia Commons: Olgierd Rudak (CC BY-SA 4.0)",
+        "fit": "contain"
+      },
+      "startFrame": 312,
+      "durationInFrames": 148,
+      "audioStartFrame": 3
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Двадцатого мая тысяча восемьсот семьдесят третьего года на заклёпки выдали патент. Его получили Джейкоб Дэвис и компания Ливая Страусса.",
+      "onScreen": "Патент США, *20 мая* 1873",
+      "stat": {
+        "value": 1873,
+        "label": "патент на заклёпки карманов"
+      },
+      "icon": "calendar-check",
+      "visualQuery": "vintage sewing workshop",
+      "imagePrompt": "aged 19th century patent paper with technical drawing of trousers, sepia tones, candle light",
+      "audioSrc": "voice/s5.wav",
+      "audioDurationMs": 8160,
+      "words": [
+        {
+          "text": "Двадцатого",
+          "startMs": 0,
+          "endMs": 580
+        },
+        {
+          "text": "мая",
+          "startMs": 620,
+          "endMs": 860
+        },
+        {
+          "text": "тысяча",
+          "startMs": 860,
+          "endMs": 1180
+        },
+        {
+          "text": "восемьсот",
+          "startMs": 1220,
+          "endMs": 1700
+        },
+        {
+          "text": "семьдесят",
+          "startMs": 1740,
+          "endMs": 2220
+        },
+        {
+          "text": "третьего",
+          "startMs": 2260,
+          "endMs": 2700
+        },
+        {
+          "text": "года",
+          "startMs": 2700,
+          "endMs": 2820
+        },
+        {
+          "text": "на",
+          "startMs": 3120,
+          "endMs": 3180
+        },
+        {
+          "text": "заклёпки",
+          "startMs": 3260,
+          "endMs": 3740
+        },
+        {
+          "text": "выдали",
+          "startMs": 3820,
+          "endMs": 4130
+        },
+        {
+          "text": "патент.",
+          "startMs": 4200,
+          "endMs": 4480
+        },
+        {
+          "text": "Его",
+          "startMs": 4980,
+          "endMs": 5140
+        },
+        {
+          "text": "получили",
+          "startMs": 5180,
+          "endMs": 5580
+        },
+        {
+          "text": "Джейкоб",
+          "startMs": 5620,
+          "endMs": 6140
+        },
+        {
+          "text": "Дэвис",
+          "startMs": 6180,
+          "endMs": 6470
+        },
+        {
+          "text": "и",
+          "startMs": 6570,
+          "endMs": 6670
+        },
+        {
+          "text": "компания",
+          "startMs": 6720,
+          "endMs": 7140
+        },
+        {
+          "text": "Ливая",
+          "startMs": 7220,
+          "endMs": 7600
+        },
+        {
+          "text": "Страусса.",
+          "startMs": 7650,
+          "endMs": 8040
+        }
+      ],
+      "visual": {
+        "type": "none"
+      },
+      "startFrame": 448,
+      "durationInFrames": 259,
+      "audioStartFrame": 3
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Суть патента простая: укрепить карманы металлом, а не только ниткой.",
+      "onScreen": "Металл *крепче* нитки",
+      "icon": "shield",
+      "visualQuery": "sewing machine denim",
+      "imagePrompt": "vintage tailor workbench with denim, thread spools and copper rivets, warm workshop light",
+      "audioSrc": "voice/s6.wav",
+      "audioDurationMs": 4040,
+      "words": [
+        {
+          "text": "Суть",
+          "startMs": 0,
+          "endMs": 213
+        },
+        {
+          "text": "патента",
+          "startMs": 213,
+          "endMs": 648
+        },
+        {
+          "text": "простая:",
+          "startMs": 688,
+          "endMs": 1088
+        },
+        {
+          "text": "укрепить",
+          "startMs": 1413,
+          "endMs": 1893
+        },
+        {
+          "text": "карманы",
+          "startMs": 1933,
+          "endMs": 2413
+        },
+        {
+          "text": "металлом,",
+          "startMs": 2413,
+          "endMs": 2818
+        },
+        {
+          "text": "а",
+          "startMs": 3108,
+          "endMs": 3148
+        },
+        {
+          "text": "не",
+          "startMs": 3173,
+          "endMs": 3348
+        },
+        {
+          "text": "только",
+          "startMs": 3398,
+          "endMs": 3693
+        },
+        {
+          "text": "ниткой.",
+          "startMs": 3733,
+          "endMs": 3918
+        }
+      ],
+      "visual": {
+        "type": "video",
+        "src": "visuals/s6.mp4",
+        "durationSec": 11,
+        "credit": "Pixabay: chayka1270"
+      },
+      "startFrame": 695,
+      "durationInFrames": 136,
+      "audioStartFrame": 3
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Выходит, в твоих джинсах до сих пор живёт место для часов, которые почти никто не носит.",
+      "onScreen": "Место для часов, которых *нет*",
+      "icon": "hourglass",
+      "visualQuery": "person putting hands in jeans pockets",
+      "imagePrompt": "person in blue jeans walking down a sunny street, hand near the small pocket, golden hour, cinematic",
+      "audioSrc": "voice/s7.wav",
+      "audioDurationMs": 4750,
+      "words": [
+        {
+          "text": "Выходит,",
+          "startMs": 0,
+          "endMs": 450
+        },
+        {
+          "text": "в",
+          "startMs": 450,
+          "endMs": 510
+        },
+        {
+          "text": "твоих",
+          "startMs": 570,
+          "endMs": 890
+        },
+        {
+          "text": "джинсах",
+          "startMs": 890,
+          "endMs": 1290
+        },
+        {
+          "text": "до",
+          "startMs": 1370,
+          "endMs": 1530
+        },
+        {
+          "text": "сих",
+          "startMs": 1530,
+          "endMs": 1705
+        },
+        {
+          "text": "пор",
+          "startMs": 1775,
+          "endMs": 1890
+        },
+        {
+          "text": "живёт",
+          "startMs": 1970,
+          "endMs": 2215
+        },
+        {
+          "text": "место",
+          "startMs": 2265,
+          "endMs": 2530
+        },
+        {
+          "text": "для",
+          "startMs": 2570,
+          "endMs": 2730
+        },
+        {
+          "text": "часов,",
+          "startMs": 2770,
+          "endMs": 3005
+        },
+        {
+          "text": "которые",
+          "startMs": 3055,
+          "endMs": 3475
+        },
+        {
+          "text": "почти",
+          "startMs": 3585,
+          "endMs": 3890
+        },
+        {
+          "text": "никто",
+          "startMs": 3930,
+          "endMs": 4250
+        },
+        {
+          "text": "не",
+          "startMs": 4290,
+          "endMs": 4410
+        },
+        {
+          "text": "носит.",
+          "startMs": 4490,
+          "endMs": 4635
+        }
+      ],
+      "visual": {
+        "type": "none"
+      },
+      "startFrame": 819,
+      "durationInFrames": 157,
+      "audioStartFrame": 3
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А что ты носишь в этом кармашке?",
+      "onScreen": "Что в твоём *кармашке*?",
+      "icon": "message-circle",
+      "audioSrc": "voice/s8.wav",
+      "audioDurationMs": 1470,
+      "words": [
+        {
+          "text": "А",
+          "startMs": 0,
+          "endMs": 39
+        },
+        {
+          "text": "что",
+          "startMs": 39,
+          "endMs": 116
+        },
+        {
+          "text": "ты",
+          "startMs": 155,
+          "endMs": 295
+        },
+        {
+          "text": "носишь",
+          "startMs": 334,
+          "endMs": 619
+        },
+        {
+          "text": "в",
+          "startMs": 658,
+          "endMs": 735
+        },
+        {
+          "text": "этом",
+          "startMs": 774,
+          "endMs": 967
+        },
+        {
+          "text": "кармашке?",
+          "startMs": 1006,
+          "endMs": 1470
+        }
+      ],
+      "visual": {
+        "type": "none"
+      },
+      "startFrame": 964,
+      "durationInFrames": 63,
+      "audioStartFrame": 3
+    }
+  ],
+  "captions": [
+    {
+      "text": " Этот",
+      "startMs": 160,
+      "endMs": 390,
+      "timestampMs": 275,
+      "confidence": null
+    },
+    {
+      "text": " маленький",
+      "startMs": 470,
+      "endMs": 910,
+      "timestampMs": 690,
+      "confidence": null
+    },
+    {
+      "text": " кармашек",
+      "startMs": 950,
+      "endMs": 1350,
+      "timestampMs": 1150,
+      "confidence": null
+    },
+    {
+      "text": " на",
+      "startMs": 1410,
+      "endMs": 1590,
+      "timestampMs": 1500,
+      "confidence": null
+    },
+    {
+      "text": " джинсах",
+      "startMs": 1590,
+      "endMs": 1910,
+      "timestampMs": 1750,
+      "confidence": null
+    },
+    {
+      "text": " придумали",
+      "startMs": 2150,
+      "endMs": 2710,
+      "timestampMs": 2430,
+      "confidence": null
+    },
+    {
+      "text": " для",
+      "startMs": 2750,
+      "endMs": 2950,
+      "timestampMs": 2850,
+      "confidence": null
+    },
+    {
+      "text": " часов.",
+      "startMs": 2990,
+      "endMs": 3190,
+      "timestampMs": 3090,
+      "confidence": null
+    },
+    {
+      "text": " Не",
+      "startMs": 3455,
+      "endMs": 3625,
+      "timestampMs": 3540,
+      "confidence": null
+    },
+    {
+      "text": " для",
+      "startMs": 3705,
+      "endMs": 3905,
+      "timestampMs": 3805,
+      "confidence": null
+    },
+    {
+      "text": " монет",
+      "startMs": 3945,
+      "endMs": 4265,
+      "timestampMs": 4105,
+      "confidence": null
+    },
+    {
+      "text": " и",
+      "startMs": 4265,
+      "endMs": 4385,
+      "timestampMs": 4325,
+      "confidence": null
+    },
+    {
+      "text": " не",
+      "startMs": 4385,
+      "endMs": 4505,
+      "timestampMs": 4445,
+      "confidence": null
+    },
+    {
+      "text": " для",
+      "startMs": 4545,
+      "endMs": 4705,
+      "timestampMs": 4625,
+      "confidence": null
+    },
+    {
+      "text": " мелочи.",
+      "startMs": 4745,
+      "endMs": 5105,
+      "timestampMs": 4925,
+      "confidence": null
+    },
+    {
+      "text": " Для",
+      "startMs": 5175,
+      "endMs": 5465,
+      "timestampMs": 5320,
+      "confidence": null
+    },
+    {
+      "text": " карманных",
+      "startMs": 5505,
+      "endMs": 6065,
+      "timestampMs": 5785,
+      "confidence": null
+    },
+    {
+      "text": " часов",
+      "startMs": 6105,
+      "endMs": 6315,
+      "timestampMs": 6210,
+      "confidence": null
+    },
+    {
+      "text": " на",
+      "startMs": 6355,
+      "endMs": 6555,
+      "timestampMs": 6455,
+      "confidence": null
+    },
+    {
+      "text": " цепочке.",
+      "startMs": 6605,
+      "endMs": 6885,
+      "timestampMs": 6745,
+      "confidence": null
+    },
+    {
+      "text": " Об",
+      "startMs": 7100,
+      "endMs": 7160,
+      "timestampMs": 7130,
+      "confidence": null
+    },
+    {
+      "text": " этом",
+      "startMs": 7200,
+      "endMs": 7400,
+      "timestampMs": 7300,
+      "confidence": null
+    },
+    {
+      "text": " рассказывает",
+      "startMs": 7480,
+      "endMs": 8120,
+      "timestampMs": 7800,
+      "confidence": null
+    },
+    {
+      "text": " архив",
+      "startMs": 8160,
+      "endMs": 8410,
+      "timestampMs": 8285,
+      "confidence": null
+    },
+    {
+      "text": " самой",
+      "startMs": 8490,
+      "endMs": 8920,
+      "timestampMs": 8705,
+      "confidence": null
+    },
+    {
+      "text": " компании",
+      "startMs": 9000,
+      "endMs": 9440,
+      "timestampMs": 9220,
+      "confidence": null
+    },
+    {
+      "text": " Ливай",
+      "startMs": 9560,
+      "endMs": 9939,
+      "timestampMs": 9750,
+      "confidence": null
+    },
+    {
+      "text": " Страусс.",
+      "startMs": 9939,
+      "endMs": 10310,
+      "timestampMs": 10125,
+      "confidence": null
+    },
+    {
+      "text": " А",
+      "startMs": 10500,
+      "endMs": 10540,
+      "timestampMs": 10520,
+      "confidence": null
+    },
+    {
+      "text": " теперь",
+      "startMs": 10540,
+      "endMs": 10895,
+      "timestampMs": 10718,
+      "confidence": null
+    },
+    {
+      "text": " посмотри",
+      "startMs": 10945,
+      "endMs": 11325,
+      "timestampMs": 11135,
+      "confidence": null
+    },
+    {
+      "text": " на",
+      "startMs": 11365,
+      "endMs": 11485,
+      "timestampMs": 11425,
+      "confidence": null
+    },
+    {
+      "text": " края",
+      "startMs": 11525,
+      "endMs": 11765,
+      "timestampMs": 11645,
+      "confidence": null
+    },
+    {
+      "text": " карманов.",
+      "startMs": 11845,
+      "endMs": 12135,
+      "timestampMs": 11990,
+      "confidence": null
+    },
+    {
+      "text": " Там",
+      "startMs": 12565,
+      "endMs": 12725,
+      "timestampMs": 12645,
+      "confidence": null
+    },
+    {
+      "text": " блестят",
+      "startMs": 12805,
+      "endMs": 13205,
+      "timestampMs": 13005,
+      "confidence": null
+    },
+    {
+      "text": " маленькие",
+      "startMs": 13245,
+      "endMs": 13725,
+      "timestampMs": 13485,
+      "confidence": null
+    },
+    {
+      "text": " металлические",
+      "startMs": 13765,
+      "endMs": 14445,
+      "timestampMs": 14105,
+      "confidence": null
+    },
+    {
+      "text": " заклёпки.",
+      "startMs": 14485,
+      "endMs": 14825,
+      "timestampMs": 14655,
+      "confidence": null
+    },
+    {
+      "text": " Двадцатого",
+      "startMs": 15033,
+      "endMs": 15613,
+      "timestampMs": 15323,
+      "confidence": null
+    },
+    {
+      "text": " мая",
+      "startMs": 15653,
+      "endMs": 15893,
+      "timestampMs": 15773,
+      "confidence": null
+    },
+    {
+      "text": " тысяча",
+      "startMs": 15893,
+      "endMs": 16213,
+      "timestampMs": 16053,
+      "confidence": null
+    },
+    {
+      "text": " восемьсот",
+      "startMs": 16253,
+      "endMs": 16733,
+      "timestampMs": 16493,
+      "confidence": null
+    },
+    {
+      "text": " семьдесят",
+      "startMs": 16773,
+      "endMs": 17253,
+      "timestampMs": 17013,
+      "confidence": null
+    },
+    {
+      "text": " третьего",
+      "startMs": 17293,
+      "endMs": 17733,
+      "timestampMs": 17513,
+      "confidence": null
+    },
+    {
+      "text": " года",
+      "startMs": 17733,
+      "endMs": 17853,
+      "timestampMs": 17793,
+      "confidence": null
+    },
+    {
+      "text": " на",
+      "startMs": 18153,
+      "endMs": 18213,
+      "timestampMs": 18183,
+      "confidence": null
+    },
+    {
+      "text": " заклёпки",
+      "startMs": 18293,
+      "endMs": 18773,
+      "timestampMs": 18533,
+      "confidence": null
+    },
+    {
+      "text": " выдали",
+      "startMs": 18853,
+      "endMs": 19163,
+      "timestampMs": 19008,
+      "confidence": null
+    },
+    {
+      "text": " патент.",
+      "startMs": 19233,
+      "endMs": 19513,
+      "timestampMs": 19373,
+      "confidence": null
+    },
+    {
+      "text": " Его",
+      "startMs": 20013,
+      "endMs": 20173,
+      "timestampMs": 20093,
+      "confidence": null
+    },
+    {
+      "text": " получили",
+      "startMs": 20213,
+      "endMs": 20613,
+      "timestampMs": 20413,
+      "confidence": null
+    },
+    {
+      "text": " Джейкоб",
+      "startMs": 20653,
+      "endMs": 21173,
+      "timestampMs": 20913,
+      "confidence": null
+    },
+    {
+      "text": " Дэвис",
+      "startMs": 21213,
+      "endMs": 21503,
+      "timestampMs": 21358,
+      "confidence": null
+    },
+    {
+      "text": " и",
+      "startMs": 21603,
+      "endMs": 21703,
+      "timestampMs": 21653,
+      "confidence": null
+    },
+    {
+      "text": " компания",
+      "startMs": 21753,
+      "endMs": 22173,
+      "timestampMs": 21963,
+      "confidence": null
+    },
+    {
+      "text": " Ливая",
+      "startMs": 22253,
+      "endMs": 22633,
+      "timestampMs": 22443,
+      "confidence": null
+    },
+    {
+      "text": " Страусса.",
+      "startMs": 22683,
+      "endMs": 23073,
+      "timestampMs": 22878,
+      "confidence": null
+    },
+    {
+      "text": " Суть",
+      "startMs": 23267,
+      "endMs": 23480,
+      "timestampMs": 23373,
+      "confidence": null
+    },
+    {
+      "text": " патента",
+      "startMs": 23480,
+      "endMs": 23915,
+      "timestampMs": 23697,
+      "confidence": null
+    },
+    {
+      "text": " простая:",
+      "startMs": 23955,
+      "endMs": 24355,
+      "timestampMs": 24155,
+      "confidence": null
+    },
+    {
+      "text": " укрепить",
+      "startMs": 24680,
+      "endMs": 25160,
+      "timestampMs": 24920,
+      "confidence": null
+    },
+    {
+      "text": " карманы",
+      "startMs": 25200,
+      "endMs": 25680,
+      "timestampMs": 25440,
+      "confidence": null
+    },
+    {
+      "text": " металлом,",
+      "startMs": 25680,
+      "endMs": 26085,
+      "timestampMs": 25882,
+      "confidence": null
+    },
+    {
+      "text": " а",
+      "startMs": 26375,
+      "endMs": 26415,
+      "timestampMs": 26395,
+      "confidence": null
+    },
+    {
+      "text": " не",
+      "startMs": 26440,
+      "endMs": 26615,
+      "timestampMs": 26527,
+      "confidence": null
+    },
+    {
+      "text": " только",
+      "startMs": 26665,
+      "endMs": 26960,
+      "timestampMs": 26812,
+      "confidence": null
+    },
+    {
+      "text": " ниткой.",
+      "startMs": 27000,
+      "endMs": 27185,
+      "timestampMs": 27092,
+      "confidence": null
+    },
+    {
+      "text": " Выходит,",
+      "startMs": 27400,
+      "endMs": 27850,
+      "timestampMs": 27625,
+      "confidence": null
+    },
+    {
+      "text": " в",
+      "startMs": 27850,
+      "endMs": 27910,
+      "timestampMs": 27880,
+      "confidence": null
+    },
+    {
+      "text": " твоих",
+      "startMs": 27970,
+      "endMs": 28290,
+      "timestampMs": 28130,
+      "confidence": null
+    },
+    {
+      "text": " джинсах",
+      "startMs": 28290,
+      "endMs": 28690,
+      "timestampMs": 28490,
+      "confidence": null
+    },
+    {
+      "text": " до",
+      "startMs": 28770,
+      "endMs": 28930,
+      "timestampMs": 28850,
+      "confidence": null
+    },
+    {
+      "text": " сих",
+      "startMs": 28930,
+      "endMs": 29105,
+      "timestampMs": 29018,
+      "confidence": null
+    },
+    {
+      "text": " пор",
+      "startMs": 29175,
+      "endMs": 29290,
+      "timestampMs": 29233,
+      "confidence": null
+    },
+    {
+      "text": " живёт",
+      "startMs": 29370,
+      "endMs": 29615,
+      "timestampMs": 29493,
+      "confidence": null
+    },
+    {
+      "text": " место",
+      "startMs": 29665,
+      "endMs": 29930,
+      "timestampMs": 29798,
+      "confidence": null
+    },
+    {
+      "text": " для",
+      "startMs": 29970,
+      "endMs": 30130,
+      "timestampMs": 30050,
+      "confidence": null
+    },
+    {
+      "text": " часов,",
+      "startMs": 30170,
+      "endMs": 30405,
+      "timestampMs": 30288,
+      "confidence": null
+    },
+    {
+      "text": " которые",
+      "startMs": 30455,
+      "endMs": 30875,
+      "timestampMs": 30665,
+      "confidence": null
+    },
+    {
+      "text": " почти",
+      "startMs": 30985,
+      "endMs": 31290,
+      "timestampMs": 31138,
+      "confidence": null
+    },
+    {
+      "text": " никто",
+      "startMs": 31330,
+      "endMs": 31650,
+      "timestampMs": 31490,
+      "confidence": null
+    },
+    {
+      "text": " не",
+      "startMs": 31690,
+      "endMs": 31810,
+      "timestampMs": 31750,
+      "confidence": null
+    },
+    {
+      "text": " носит.",
+      "startMs": 31890,
+      "endMs": 32035,
+      "timestampMs": 31963,
+      "confidence": null
+    },
+    {
+      "text": " А",
+      "startMs": 32233,
+      "endMs": 32272,
+      "timestampMs": 32253,
+      "confidence": null
+    },
+    {
+      "text": " что",
+      "startMs": 32272,
+      "endMs": 32349,
+      "timestampMs": 32311,
+      "confidence": null
+    },
+    {
+      "text": " ты",
+      "startMs": 32388,
+      "endMs": 32528,
+      "timestampMs": 32458,
+      "confidence": null
+    },
+    {
+      "text": " носишь",
+      "startMs": 32567,
+      "endMs": 32852,
+      "timestampMs": 32710,
+      "confidence": null
+    },
+    {
+      "text": " в",
+      "startMs": 32891,
+      "endMs": 32968,
+      "timestampMs": 32930,
+      "confidence": null
+    },
+    {
+      "text": " этом",
+      "startMs": 33007,
+      "endMs": 33200,
+      "timestampMs": 33104,
+      "confidence": null
+    },
+    {
+      "text": " кармашке?",
+      "startMs": 33239,
+      "endMs": 33703,
+      "timestampMs": 33471,
+      "confidence": null
+    }
+  ],
+  "transitionFrames": 12,
+  "durationInFrames": 1027,
+  "music": {
+    "src": "music/ambient-calm-6ab6e696.wav",
+    "volume": 0.22,
+    "duckedVolume": 0.07
+  },
+  "whooshSrc": "sfx/whoosh.wav",
+  "sfx": {
+    "whooshes": [
+      "sfx/whoosh.wav",
+      "sfx/whoosh-2.wav",
+      "sfx/whoosh-3.wav"
+    ],
+    "pop": "sfx/pop.wav",
+    "impact": "sfx/impact.wav",
+    "rise": "sfx/rise.wav",
+    "sting": "sfx/sting.wav"
+  },
+  "brandIntro": true,
+  "sfxVolume": 0.35,
+  "showCaptions": true,
+  "showProgressBar": true,
+  "channelName": "Суть за минуту",
+  "ctaComment": "Что думаешь? Пиши в комментариях"
+}

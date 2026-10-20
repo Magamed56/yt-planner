@@ -1,0 +1,103 @@
+{
+ "key": "1caa8748bdaa7eb05ad44d60dda1a5fe08fb79bcb8182d0404e10f224d5b91ce",
+ "file": "s5.wav",
+ "durationMs": 8160,
+ "words": [
+  {
+   "text": "Двадцатого",
+   "startMs": 0,
+   "endMs": 580
+  },
+  {
+   "text": "мая",
+   "startMs": 620,
+   "endMs": 860
+  },
+  {
+   "text": "тысяча",
+   "startMs": 860,
+   "endMs": 1180
+  },
+  {
+   "text": "восемьсот",
+   "startMs": 1220,
+   "endMs": 1700
+  },
+  {
+   "text": "семьдесят",
+   "startMs": 1740,
+   "endMs": 2220
+  },
+  {
+   "text": "третьего",
+   "startMs": 2260,
+   "endMs": 2700
+  },
+  {
+   "text": "года",
+   "startMs": 2700,
+   "endMs": 2820
+  },
+  {
+   "text": "на",
+   "startMs": 3120,
+   "endMs": 3180
+  },
+  {
+   "text": "заклёпки",
+   "startMs": 3260,
+   "endMs": 3740
+  },
+  {
+   "text": "выдали",
+   "startMs": 3820,
+   "endMs": 4130
+  },
+  {
+   "text": "патент.",
+   "startMs": 4200,
+   "endMs": 4480
+  },
+  {
+   "text": "Его",
+   "startMs": 4980,
+   "endMs": 5140
+  },
+  {
+   "text": "получили",
+   "startMs": 5180,
+   "endMs": 5580
+  },
+  {
+   "text": "Джейкоб",
+   "startMs": 5620,
+   "endMs": 6140
+  },
+  {
+   "text": "Дэвис",
+   "startMs": 6180,
+   "endMs": 6470
+  },
+  {
+   "text": "и",
+   "startMs": 6570,
+   "endMs": 6670
+  },
+  {
+   "text": "компания",
+   "startMs": 6720,
+   "endMs": 7140
+  },
+  {
+   "text": "Ливая",
+   "startMs": 7220,
+   "endMs": 7600
+  },
+  {
+   "text": "Страусса.",
+   "startMs": 7650,
+   "endMs": 8040
+  }
+ ],
+ "wordsSource": "aligned"
+}

@@ -1,0 +1,93 @@
+{
+ "version": 1,
+ "scenes": {
+  "s1": {
+   "key": "{\"kind\":\"hook\",\"q\":\"jeans small watch pocket\",\"p\":\"close-up of the front right pocket of classic blue denim jeans, the tiny watch pocket sewn inside it clearly visible in the center of the frame, copper rivets on the corners\",\"format\":\"shorts\",\"visuals\":\"cloudflare,pollinations\",\"prefer\":\"\",\"style\":\"stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 4.01
+  },
+  "s2": {
+   "key": "{\"kind\":\"media\",\"q\":\"pocket watch chain\",\"p\":\"a gold antique pocket watch on a chain tucked into the tiny watch pocket of blue denim jeans, close-up\",\"format\":\"shorts\",\"visuals\":\"cloudflare,pollinations\",\"prefer\":\"\",\"style\":\"stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 4.41
+  },
+  "s3": {
+   "key": "{\"kind\":\"statement\",\"q\":\"Levi Strauss portrait\",\"p\":\"an archivist wearing white cotton gloves carefully holding a very old worn pair of blue jeans in a museum archive room with shelves of boxes\",\"format\":\"shorts\",\"visuals\":\"cloudflare,pollinations\",\"prefer\":\"\",\"style\":\"stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 4.12
+  },
+  "s4": {
+   "key": "{\"kind\":\"media\",\"q\":\"copper rivets denim pocket\",\"p\":\"extreme close-up of a shiny copper rivet on the corner of a blue denim jeans pocket, sharp detail\",\"format\":\"shorts\",\"visuals\":\"cloudflare,pollinations\",\"prefer\":\"\",\"style\":\"stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 5.25
+  },
+  "s5": {
+   "key": "{\"kind\":\"stat\",\"q\":\"US patent document 1873\",\"p\":\"two men in 1870s clothing in an old tailor workshop proudly holding up a new pair of blue denim work pants with copper rivets\",\"format\":\"shorts\",\"visuals\":\"cloudflare,pollinations\",\"prefer\":\"\",\"style\":\"stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 8.96
+  },
+  "s6": {
+   "key": "{\"kind\":\"statement\",\"q\":\"sewing denim workshop\",\"p\":\"hands of a tailor hammering a small copper rivet into the corner of a denim pocket on a wooden workbench, close-up\",\"format\":\"shorts\",\"visuals\":\"cloudflare,pollinations\",\"prefer\":\"\",\"style\":\"stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 4.84
+  },
+  "s7": {
+   "key": "{\"kind\":\"media\",\"q\":\"person putting hands in jeans pockets\",\"p\":\"a young man in blue jeans and a t-shirt on a sunny city street looking down at the tiny pocket on his jeans with a puzzled smile\",\"format\":\"shorts\",\"visuals\":\"cloudflare,pollinations\",\"prefer\":\"\",\"style\":\"stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 5.55
+  },
+  "s8": {
+   "key": "{\"kind\":\"cta\",\"q\":\"\",\"p\":\"\",\"format\":\"shorts\",\"visuals\":\"cloudflare,pollinations\",\"prefer\":\"\",\"style\":\"stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 2.27
+  }
+ }
+}
