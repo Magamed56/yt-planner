@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Результат «сравнения подачи» (video-studio-look-test.yml) → ветка claude/look-test-out.
-# Ветка без истории и перезаписывается каждым запуском: в ней только out/look этого запуска.
+# Результат «сравнения подачи» (video-studio-look-test.yml) → ветка OUT_BRANCH
+# (по умолчанию claude/look-test-out). Ветка без истории и перезаписывается каждым
+# запуском: в ней только out/look этого запуска.
 # Запуск из video-studio/: нужны GH_TOKEN, STAGE и GITHUB_REPOSITORY.
 set -euo pipefail
 
@@ -20,5 +21,6 @@ git checkout -q -b look-out
 git add -A
 git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
   commit -q -m "look-test: $STAGE (${GITHUB_SHA::7})"
-git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/claude/look-test-out
-echo "Запушено в claude/look-test-out: $STAGE"
+branch="${OUT_BRANCH:-claude/look-test-out}"
+git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/$branch"
+echo "Запушено в $branch: $STAGE"

@@ -17,6 +17,8 @@ import { CompareScene } from "./scenes/CompareScene";
 import { MapScene } from "./scenes/MapScene";
 import { StatementScene } from "./scenes/StatementScene";
 import { getTheme } from "./theme";
+import { BrightScene } from "./look/BrightScene";
+import { WordCaptions } from "./look/WordCaptions";
 
 // Composition требует Props extends Record<string, unknown>, а VideoProps —
 // interface; пересечение снимает ограничение, не меняя общий контракт.
@@ -24,7 +26,9 @@ export type VideoCompositionProps = VideoProps & Record<string, unknown>;
 
 const TRANSITION_EASING = Easing.bezier(0.65, 0, 0.35, 1);
 
-function pickScene(scene: RenderScene) {
+function pickScene(scene: RenderScene, bright: boolean) {
+  // Подача bright: сцена с кадром — кадр на весь экран; финал и сцены без кадра — как обычно.
+  if (bright && scene.kind !== "cta" && scene.visual.type !== "none") return BrightScene;
   // Карта и сравнение (необязательные поля сцены) заменяют обычную раскладку.
   const special = specialLayout(scene);
   if (special === "map") return MapScene;
@@ -41,6 +45,7 @@ export const Video: React.FC<VideoCompositionProps> = (props) => {
   const layout = useMemo(() => computeLayout(props.format, width, height, props.showCaptions), [props.format, width, height, props.showCaptions]);
   const T = Math.max(0, Math.round(props.transitionFrames));
   const scenes = props.scenes;
+  const bright = props.look === "bright";
   const cuts = useMemo(() => scenes.slice(1).map((s) => s.startFrame - 4), [scenes]);
 
   useMemo(() => {
@@ -60,7 +65,7 @@ export const Video: React.FC<VideoCompositionProps> = (props) => {
           <Background theme={theme} seed={props.title} cuts={cuts} cutFrames={Math.max(18, T + 8)} />
           <TransitionSeries name="Сцены">
             {scenes.map((scene, i) => {
-              const Comp = pickScene(scene);
+              const Comp = pickScene(scene, bright);
               return (
                 <React.Fragment key={scene.id || i}>
                   {i > 0 && T > 0 ? (
@@ -76,7 +81,9 @@ export const Video: React.FC<VideoCompositionProps> = (props) => {
               );
             })}
           </TransitionSeries>
-          {props.showCaptions ? <Captions captions={props.captions} scenes={scenes} theme={theme} /> : null}
+          {props.showCaptions ? (
+            bright ? <WordCaptions captions={props.captions} scenes={scenes} /> : <Captions captions={props.captions} scenes={scenes} theme={theme} />
+          ) : null}
           {props.showProgressBar ? <ProgressBar theme={theme} /> : null}
           {props.brandIntro ? (
             <Sequence durationInFrames={STING_FRAMES} name="Бренд-заставка" layout="none">

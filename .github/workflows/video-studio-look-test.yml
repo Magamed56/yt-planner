@@ -1,11 +1,13 @@
-# video-studio: сравнение подачи — один ролик (18b) в четырёх вариантах, ничего не публикует.
+# video-studio: сравнение подачи — один ролик (18b) в нескольких вариантах, ничего не публикует.
 #
-# A — как сейчас (scripts/sut-18b-….json, полный рендер);
 # B — подача «bright» на стоках, C — ИИ-картинки «почти фото», D — ИИ-картинки «3D-мульт»
-# (examples/look-jeans-*.json; голос, картинки и props.json без рендера — рендер со стрелками локально).
+# (examples/look-jeans-*.json): голос, картинки и props.json без рендера — рендер со стрелками
+# делается локально. Контроль A (как сейчас) — обычный рендер scripts/sut-18b-….json.
 # Текст у всех один, поэтому озвучка — одна (общий кэш), меняется только картинка.
-# Результат — в ветке claude/look-test-out (перезаписывается). Ни релизов, ни YouTube, ни очередей.
-# Запускается сам при изменении этого файла или сценариев вариантов в ветке claude/….
+# Каждый вариант — на своём раннере (свой IP: у Pollinations лимит 1 картинка в 45 с на IP),
+# результат — в ветке claude/look-test-out-<вариант> (перезаписывается).
+# Ни релизов, ни YouTube, ни очередей. Запускается сам при изменении этого файла или
+# сценариев вариантов в ветке claude/….
 
 name: "video-studio: сравнение подачи"
 
@@ -18,7 +20,7 @@ on:
       - "video-studio/examples/look-*.json"
 
 permissions:
-  contents: write # пуш результата в claude/look-test-out
+  contents: write # пуш результата в claude/look-test-out-*
 
 concurrency:
   group: video-studio-look-test
@@ -26,15 +28,20 @@ concurrency:
 
 jobs:
   look:
-    name: Варианты A–D
+    name: Вариант ${{ matrix.variant }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [b, c, d]
     defaults:
       run:
         working-directory: video-studio
         shell: bash
     env:
       NO_COLOR: "1"
+      VARIANT: ${{ matrix.variant }}
       # Голос — как у основного workflow: тот же ключ кэша озвучки, квота Gemini не тратится повторно.
       TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'auto' }}
       TTS_VOICE: ${{ vars.TTS_VOICE }}
@@ -50,13 +57,11 @@ jobs:
       CAPTION_ALIGN: ${{ vars.CAPTION_ALIGN }}
       MUSIC: ${{ vars.MUSIC }}
       MUSIC_MOOD: ${{ vars.MUSIC_MOOD }}
-      LOUDNESS_TARGET: ${{ vars.LOUDNESS_TARGET }}
       CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
       VISUALS_PREFER: ${{ vars.VISUALS_PREFER }}
       VISUALS_JUDGE: ${{ vars.VISUALS_JUDGE || 'claude' }}
       VISUALS_JUDGE_MODEL: ${{ vars.VISUALS_JUDGE_MODEL }}
       VISUALS_MIN_PHOTO_PX: ${{ vars.VISUALS_MIN_PHOTO_PX }}
-      RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
       GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -101,47 +106,19 @@ jobs:
           restore-keys: |
             tts-voice-${{ runner.os }}-
 
-      - name: Системные библиотеки для Chrome Headless Shell
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends \
-            libnss3 libdbus-1-3 libatk1.0-0t64 libasound2t64 libxrandr2 libxkbcommon0 \
-            libxfixes3 libxcomposite1 libxdamage1 libgbm1 libcups2t64 libcairo2 \
-            libpango-1.0-0 libatk-bridge2.0-0t64
-
-      - name: Браузер для рендера
-        run: npx remotion browser ensure
-
-      - name: B — подача bright на стоках (без рендера)
+      - name: Голос, картинки и props.json (без рендера)
         run: |
           mkdir -p out/look
-          npm run make -- --script examples/look-jeans-b.json --out out/look/b --no-render 2>&1 | tee out/look/b.log
+          file="examples/look-jeans-$VARIANT.json"
+          # Свой порядок источников и стиль ИИ-картинок — из сценария варианта (если заданы).
+          v="$(node -p "require('./$file').visuals || ''")"; [ -n "$v" ] && export VISUALS="$v"
+          s="$(node -p "require('./$file').visualStyle || ''")"; [ -n "$s" ] && export VISUALS_STYLE="$s"
+          npm run make -- --script "$file" --out "out/look/$VARIANT" --no-render 2>&1 | tee "out/look/$VARIANT.log"
 
-      - name: C — ИИ «почти фото» (без рендера)
-        run: |
-          export VISUALS="$(node -p 'require("./examples/look-jeans-c.json").visuals')"
-          export VISUALS_STYLE="$(node -p 'require("./examples/look-jeans-c.json").visualStyle')"
-          npm run make -- --script examples/look-jeans-c.json --out out/look/c --no-render 2>&1 | tee out/look/c.log
-
-      - name: D — ИИ «3D-мульт» (без рендера)
-        run: |
-          export VISUALS="$(node -p 'require("./examples/look-jeans-d.json").visuals')"
-          export VISUALS_STYLE="$(node -p 'require("./examples/look-jeans-d.json").visualStyle')"
-          npm run make -- --script examples/look-jeans-d.json --out out/look/d --no-render 2>&1 | tee out/look/d.log
-
-      - name: Пуш B–D в claude/look-test-out
+      - name: Пуш в claude/look-test-out-${{ matrix.variant }}
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-          STAGE: "B, C, D — голос и картинки"
-        run: bash ../.github/scripts/look-test-push.sh
-
-      - name: A — как сейчас (полный рендер)
-        run: npm run make -- --script scripts/sut-18b-zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873.json --out out/look/a 2>&1 | tee out/look/a.log
-
-      - name: Пуш A в claude/look-test-out
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          STAGE: "A — готовое видео; B, C, D — голос и картинки"
+          OUT_BRANCH: claude/look-test-out-${{ matrix.variant }}
+          STAGE: "${{ matrix.variant }} — голос и картинки"
         run: bash ../.github/scripts/look-test-push.sh

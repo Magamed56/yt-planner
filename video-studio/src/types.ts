@@ -118,6 +118,22 @@ export interface WordTiming {
   endMs: number;
 }
 
+// ---- Подача «bright» (аддитивно, только в props.json) ----
+
+// classic — как раньше: кадр приглушён под текстом сцены и карточками;
+// bright — кадр главный и яркий на весь экран, текст — только субтитры по одному слову,
+// красная стрелка показывает предмет в кадре (как у роликов «смотри, что это»).
+export type VideoLook = "classic" | "bright";
+
+// Стрелка на предмет в кадре сцены (подача bright): x, y — острие стрелки в долях
+// ширины и высоты кадра 9:16 до наезда камеры (стрелка движется вместе с картинкой).
+export interface ScenePointer {
+  x: number; // 0…1
+  y: number; // 0…1
+  shape?: "arrow" | "circle"; // circle — обвести (r — радиус в долях ширины)
+  r?: number;
+}
+
 export type SceneVisual =
   | { type: "none" }
   // fit: "contain" — фото целиком поверх размытой копии (реальное горизонтальное фото в Shorts)
@@ -134,6 +150,7 @@ export interface RenderScene extends ScriptScene {
   audioStartFrame: number; // через сколько кадров после начала сцены стартует голос
   words: WordTiming[]; // тайминги слов относительно начала аудио сцены
   visual: SceneVisual;
+  pointer?: ScenePointer; // подача bright: стрелка на предмет в кадре
 }
 
 // Слово субтитров на ОБЩЕЙ таймлинии (совместимо с Caption из @remotion/captions).
@@ -175,6 +192,7 @@ export interface VideoProps {
   // Файл канала не по умолчанию (channels/en.json): из него бренд-заставка берёт название
   // (src/remotion/brand/data.ts, ключ BRAND_CHANNEL_PROP). Нет — channel.json из бандла.
   brandChannel?: Record<string, unknown>;
+  look?: VideoLook; // нет — classic
 }
 
 export const DEFAULT_TRANSITION_FRAMES = 12; // 0.4 c при 30 fps
