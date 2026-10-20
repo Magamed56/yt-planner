@@ -1,0 +1,143 @@
+# video-studio: сравнение подачи — один ролик (18b) в четырёх вариантах, ничего не публикует.
+#
+# A — как сейчас (scripts/sut-18b-….json, полный рендер);
+# B — подача «bright» на стоках, C — ИИ-картинки «почти фото», D — ИИ-картинки «3D-мульт»
+# (examples/look-jeans-*.json; голос, картинки и props.json без рендера — рендер со стрелками локально).
+# Текст у всех один, поэтому озвучка — одна (общий кэш), меняется только картинка.
+# Результат — в ветке claude/look-test-out (перезаписывается). Ни релизов, ни YouTube, ни очередей.
+# Запускается сам при изменении этого файла или сценариев вариантов в ветке claude/….
+
+name: "video-studio: сравнение подачи"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - ".github/workflows/video-studio-look-test.yml"
+      - "video-studio/examples/look-*.json"
+
+permissions:
+  contents: write # пуш результата в claude/look-test-out
+
+concurrency:
+  group: video-studio-look-test
+  cancel-in-progress: true
+
+jobs:
+  look:
+    name: Варианты A–D
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: video-studio
+        shell: bash
+    env:
+      NO_COLOR: "1"
+      # Голос — как у основного workflow: тот же ключ кэша озвучки, квота Gemini не тратится повторно.
+      TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'auto' }}
+      TTS_VOICE: ${{ vars.TTS_VOICE }}
+      TTS_RATE: ${{ vars.TTS_RATE }}
+      TTS_FALLBACK: ${{ vars.TTS_FALLBACK }}
+      TTS_CACHE_DIR: ${{ github.workspace }}/video-studio/.cache/voice
+      TTS_CACHE: ${{ vars.TTS_CACHE }}
+      TTS_CACHE_DAYS: ${{ vars.TTS_CACHE_DAYS }}
+      GEMINI_TTS_MODEL: ${{ vars.GEMINI_TTS_MODEL }}
+      GEMINI_TTS_VOICE: ${{ vars.GEMINI_TTS_VOICE }}
+      GEMINI_TTS_STYLE: ${{ vars.GEMINI_TTS_STYLE }}
+      MODELS_DIR: ${{ github.workspace }}/video-studio/models
+      CAPTION_ALIGN: ${{ vars.CAPTION_ALIGN }}
+      MUSIC: ${{ vars.MUSIC }}
+      MUSIC_MOOD: ${{ vars.MUSIC_MOOD }}
+      LOUDNESS_TARGET: ${{ vars.LOUDNESS_TARGET }}
+      CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
+      VISUALS_PREFER: ${{ vars.VISUALS_PREFER }}
+      VISUALS_JUDGE: ${{ vars.VISUALS_JUDGE || 'claude' }}
+      VISUALS_JUDGE_MODEL: ${{ vars.VISUALS_JUDGE_MODEL }}
+      VISUALS_MIN_PHOTO_PX: ${{ vars.VISUALS_MIN_PHOTO_PX }}
+      RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+      GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Код репозитория
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video-studio/package-lock.json
+
+      - name: Зависимости (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      - name: Модель распознавания — имя
+        id: asr-model
+        run: |
+          name=$(npx tsx -e 'import("./src/pipeline/voice/align.ts").then((m) => console.log(m.ASR_MODEL_NAME))' | tail -n 1)
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Кэш модели распознавания — восстановить
+        if: steps.asr-model.outputs.name != ''
+        uses: actions/cache/restore@v6
+        with:
+          path: video-studio/models/${{ steps.asr-model.outputs.name }}
+          key: asr-model-${{ runner.os }}-${{ steps.asr-model.outputs.name }}
+
+      - name: Кэш озвучки — восстановить
+        uses: actions/cache/restore@v6
+        with:
+          path: video-studio/.cache/voice
+          key: tts-voice-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            tts-voice-${{ runner.os }}-
+
+      - name: Системные библиотеки для Chrome Headless Shell
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            libnss3 libdbus-1-3 libatk1.0-0t64 libasound2t64 libxrandr2 libxkbcommon0 \
+            libxfixes3 libxcomposite1 libxdamage1 libgbm1 libcups2t64 libcairo2 \
+            libpango-1.0-0 libatk-bridge2.0-0t64
+
+      - name: Браузер для рендера
+        run: npx remotion browser ensure
+
+      - name: B — подача bright на стоках (без рендера)
+        run: npm run make -- --script examples/look-jeans-b.json --out out/look/b --no-render
+
+      - name: C — ИИ «почти фото» (без рендера)
+        run: |
+          export VISUALS="$(node -p 'require("./examples/look-jeans-c.json").visuals')"
+          export VISUALS_STYLE="$(node -p 'require("./examples/look-jeans-c.json").visualStyle')"
+          npm run make -- --script examples/look-jeans-c.json --out out/look/c --no-render
+
+      - name: D — ИИ «3D-мульт» (без рендера)
+        run: |
+          export VISUALS="$(node -p 'require("./examples/look-jeans-d.json").visuals')"
+          export VISUALS_STYLE="$(node -p 'require("./examples/look-jeans-d.json").visualStyle')"
+          npm run make -- --script examples/look-jeans-d.json --out out/look/d --no-render
+
+      - name: Пуш B–D в claude/look-test-out
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STAGE: "B, C, D — голос и картинки"
+        run: bash ../.github/scripts/look-test-push.sh
+
+      - name: A — как сейчас (полный рендер)
+        run: npm run make -- --script scripts/sut-18b-zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873.json --out out/look/a
+
+      - name: Пуш A в claude/look-test-out
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STAGE: "A — готовое видео; B, C, D — голос и картинки"
+        run: bash ../.github/scripts/look-test-push.sh
