@@ -1,0 +1,43 @@
+{
+ "key": "a49d05b2fca9bef109ec89c17f685078bef30fdb0e4a56fd0dc48ff053f83eaf",
+ "file": "s8.wav",
+ "durationMs": 1470,
+ "words": [
+  {
+   "text": "А",
+   "startMs": 0,
+   "endMs": 39
+  },
+  {
+   "text": "что",
+   "startMs": 39,
+   "endMs": 116
+  },
+  {
+   "text": "ты",
+   "startMs": 155,
+   "endMs": 295
+  },
+  {
+   "text": "носишь",
+   "startMs": 334,
+   "endMs": 619
+  },
+  {
+   "text": "в",
+   "startMs": 658,
+   "endMs": 735
+  },
+  {
+   "text": "этом",
+   "startMs": 774,
+   "endMs": 967
+  },
+  {
+   "text": "кармашке?",
+   "startMs": 1006,
+   "endMs": 1470
+  }
+ ],
+ "wordsSource": "aligned"
+}

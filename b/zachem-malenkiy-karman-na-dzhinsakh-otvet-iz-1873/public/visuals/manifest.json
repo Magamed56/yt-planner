@@ -1,0 +1,127 @@
+{
+ "version": 1,
+ "scenes": {
+  "s1": {
+   "key": "{\"kind\":\"hook\",\"q\":\"jeans pocket close up\",\"p\":\"cinematic macro shot of the small coin pocket on worn blue denim jeans, warm golden side light, shallow depth of field\",\"format\":\"shorts\",\"visuals\":\"\",\"prefer\":\"\",\"style\":\"\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "image",
+     "src": "visuals/s1.jpg",
+     "credit": "Wikimedia Commons: Vanroc (CC BY 4.0)"
+    },
+    "credit": {
+     "provider": "Wikimedia Commons",
+     "author": "Vanroc (CC BY 4.0)",
+     "url": "https://commons.wikimedia.org/wiki/File:Jeans-pocket-watch.jpg"
+    }
+   },
+   "candidateId": "wikimedia:194435141",
+   "minDurationSec": 4.01
+  },
+  "s2": {
+   "key": "{\"kind\":\"media\",\"q\":\"pocket watch chain\",\"p\":\"antique gold pocket watch on a chain resting on rough denim, warm amber light, vintage mood\",\"format\":\"shorts\",\"visuals\":\"\",\"prefer\":\"\",\"style\":\"\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "video",
+     "src": "visuals/s2.mp4",
+     "durationSec": 14,
+     "credit": "Pixabay: fotoblend"
+    },
+    "credit": {
+     "provider": "Pixabay",
+     "author": "fotoblend",
+     "url": "https://pixabay.com/videos/id-136740/"
+    }
+   },
+   "candidateId": "pixabay:video:136740",
+   "minDurationSec": 4.41
+  },
+  "s3": {
+   "key": "{\"kind\":\"statement\",\"q\":\"archive boxes shelves\",\"p\":\"old archive shelves with leather ledgers and folded denim, dusty warm light beams\",\"format\":\"shorts\",\"visuals\":\"\",\"prefer\":\"\",\"style\":\"\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "video",
+     "src": "visuals/s3.mp4",
+     "durationSec": 17,
+     "credit": "Pixabay: klimkin"
+    },
+    "credit": {
+     "provider": "Pixabay",
+     "author": "klimkin",
+     "url": "https://pixabay.com/videos/id-1310/"
+    }
+   },
+   "candidateId": "pixabay:video:1310",
+   "minDurationSec": 4.12
+  },
+  "s4": {
+   "key": "{\"kind\":\"media\",\"q\":\"jeans rivet close up\",\"p\":\"extreme close-up of copper rivets on blue denim pocket corner, glinting warm highlights, cinematic\",\"format\":\"shorts\",\"visuals\":\"\",\"prefer\":\"\",\"style\":\"\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "image",
+     "src": "visuals/s4.jpg",
+     "credit": "Wikimedia Commons: Olgierd Rudak (CC BY-SA 4.0)",
+     "fit": "contain"
+    },
+    "credit": {
+     "provider": "Wikimedia Commons",
+     "author": "Olgierd Rudak (CC BY-SA 4.0)",
+     "url": "https://commons.wikimedia.org/wiki/File:Wrangler_jeans_back_detail_(2026-01-27).jpg"
+    }
+   },
+   "candidateId": "wikimedia:182524982",
+   "minDurationSec": 5.25
+  },
+  "s5": {
+   "key": "{\"kind\":\"stat\",\"q\":\"vintage sewing workshop\",\"p\":\"aged 19th century patent paper with technical drawing of trousers, sepia tones, candle light\",\"format\":\"shorts\",\"visuals\":\"\",\"prefer\":\"\",\"style\":\"\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 8.96
+  },
+  "s6": {
+   "key": "{\"kind\":\"statement\",\"q\":\"sewing machine denim\",\"p\":\"vintage tailor workbench with denim, thread spools and copper rivets, warm workshop light\",\"format\":\"shorts\",\"visuals\":\"\",\"prefer\":\"\",\"style\":\"\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "video",
+     "src": "visuals/s6.mp4",
+     "durationSec": 11,
+     "credit": "Pixabay: chayka1270"
+    },
+    "credit": {
+     "provider": "Pixabay",
+     "author": "chayka1270",
+     "url": "https://pixabay.com/videos/id-9398/"
+    }
+   },
+   "candidateId": "pixabay:video:9398",
+   "minDurationSec": 4.84
+  },
+  "s7": {
+   "key": "{\"kind\":\"media\",\"q\":\"person putting hands in jeans pockets\",\"p\":\"person in blue jeans walking down a sunny street, hand near the small pocket, golden hour, cinematic\",\"format\":\"shorts\",\"visuals\":\"\",\"prefer\":\"\",\"style\":\"\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 5.55
+  },
+  "s8": {
+   "key": "{\"kind\":\"cta\",\"q\":\"\",\"p\":\"\",\"format\":\"shorts\",\"visuals\":\"\",\"prefer\":\"\",\"style\":\"\",\"rules\":4,\"judge\":\"claude\",\"jm\":\"\"}",
+   "result": {
+    "visual": {
+     "type": "none"
+    },
+    "credit": null
+   },
+   "candidateId": null,
+   "minDurationSec": 2.27
+  }
+ }
+}
