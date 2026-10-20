@@ -1,0 +1,97 @@
+{
+  "title": "Зачем маленький карман на джинсах: ответ из 1873",
+  "description": "Узнаешь, для чего на самом деле нужен маленький карман на джинсах и откуда на нём металлические заклёпки. Короткая история из архива Levi Strauss и патента США 1873 года, которую можно пересказать другу.\n#shorts #джинсы #история #levis",
+  "tags": [
+    "зачем маленький карман на джинсах",
+    "джинсы",
+    "маленький карман",
+    "история вещей",
+    "levi strauss",
+    "джейкоб дэвис",
+    "заклёпки",
+    "патент",
+    "карманные часы",
+    "мода",
+    "факты",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Этот маленький кармашек на джинсах придумали для часов.",
+      "onScreen": "Кармашек для *часов*",
+      "icon": "clock",
+      "visualQuery": "jeans small watch pocket",
+      "imagePrompt": "close-up of the front right pocket of classic blue denim jeans, the tiny watch pocket sewn inside it clearly visible in the center of the frame, copper rivets on the corners"
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Не для монет и не для мелочи. Для карманных часов на цепочке.",
+      "onScreen": "Не для монет. Для *карманных* часов",
+      "icon": "timer",
+      "visualQuery": "pocket watch chain",
+      "imagePrompt": "a gold antique pocket watch on a chain tucked into the tiny watch pocket of blue denim jeans, close-up"
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Об этом рассказывает архив самой компании Ливай Страусс.",
+      "onScreen": "Так пишет *архив* Levi Strauss",
+      "icon": "book-open",
+      "visualQuery": "Levi Strauss portrait",
+      "imagePrompt": "an archivist wearing white cotton gloves carefully holding a very old worn pair of blue jeans in a museum archive room with shelves of boxes"
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "А теперь посмотри на края карманов. Там блестят маленькие металлические заклёпки.",
+      "onScreen": "Заметил *заклёпки*?",
+      "icon": "eye",
+      "visualQuery": "copper rivets denim pocket",
+      "imagePrompt": "extreme close-up of a shiny copper rivet on the corner of a blue denim jeans pocket, sharp detail"
+    },
+    {
+      "id": "s5",
+      "kind": "stat",
+      "narration": "Двадцатого мая тысяча восемьсот семьдесят третьего года на заклёпки выдали патент. Его получили Джейкоб Дэвис и компания Ливая Страусса.",
+      "onScreen": "Патент США, *20 мая* 1873",
+      "stat": {
+        "value": 1873,
+        "label": "патент на заклёпки карманов"
+      },
+      "icon": "calendar-check",
+      "visualQuery": "US patent document 1873",
+      "imagePrompt": "two men in 1870s clothing in an old tailor workshop proudly holding up a new pair of blue denim work pants with copper rivets"
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Суть патента простая: укрепить карманы металлом, а не только ниткой.",
+      "onScreen": "Металл *крепче* нитки",
+      "icon": "shield",
+      "visualQuery": "sewing denim workshop",
+      "imagePrompt": "hands of a tailor hammering a small copper rivet into the corner of a denim pocket on a wooden workbench, close-up"
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Выходит, в твоих джинсах до сих пор живёт место для часов, которые почти никто не носит.",
+      "onScreen": "Место для часов, которых *нет*",
+      "icon": "hourglass",
+      "visualQuery": "person putting hands in jeans pockets",
+      "imagePrompt": "a young man in blue jeans and a t-shirt on a sunny city street looking down at the tiny pocket on his jeans with a puzzled smile"
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А что ты носишь в этом кармашке?",
+      "onScreen": "Что в твоём *кармашке*?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "currency": "USD",
+  "totalUsd": 0,
+  "llm": {
+    "totalUsd": 0,
+    "calls": []
+  },
+  "voice": {
+    "provider": "gemini",
+    "characters": 577,
+    "costUsd": 0,
+    "note": "бесплатно в пределах суточной квоты AI Studio (~10 запросов на модель; шорт = 1 запрос)"
+  },
+  "visuals": {
+    "sources": {
+      "Pollinations": 7
+    },
+    "costUsd": 0,
+    "note": "стоки и бесплатные квоты генерации"
+  },
+  "render": {
+    "costUsd": 0,
+    "note": "GitHub Actions (минуты из квоты аккаунта)"
+  }
+}
