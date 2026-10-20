@@ -114,7 +114,9 @@ jobs:
         run: |
           mkdir -p out/look
           if git fetch -q --depth=1 "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "claude/look-test-out-$VARIANT" 2>/dev/null; then
-            git archive FETCH_HEAD "$VARIANT" | tar -x -C out/look && echo "взял прошлые картинки: $(ls out/look/$VARIANT/*/public/visuals 2>/dev/null | tr '\n' ' ')"
+            # Путь в archive — от корня репозитория, а шаг идёт в video-studio/.
+            (cd .. && git archive FETCH_HEAD "$VARIANT") | tar -x -C out/look
+            echo "взял прошлые картинки: $(ls out/look/$VARIANT/*/public/visuals 2>/dev/null | tr '\n' ' ')"
           else
             echo "прошлого результата нет"
           fi
