@@ -73,7 +73,8 @@ export const BrightScene: React.FC<SceneProps> = (p) => {
       {/* Только под интерфейс YouTube: сверху поиск и меню, снизу название и кнопки */}
       <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0) 13%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.5) 100%)" }} />
       {stat ? (
-        <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: Math.round(300 * unit) }}>
+        // Ниже верхней трети: там чаще всего лица людей в кадре.
+        <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: Math.round(700 * unit) }}>
           <div
             style={{
               fontFamily: FONT_NUMBER,

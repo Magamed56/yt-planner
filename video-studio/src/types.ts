@@ -132,6 +132,8 @@ export interface ScenePointer {
   y: number; // 0…1
   shape?: "arrow" | "circle"; // circle — обвести (r — радиус в долях ширины)
   r?: number;
+  // Откуда прилетает стрелка (где её хвост): tl — сверху слева, tr, bl, br. Нет — к центру кадра.
+  from?: "tl" | "tr" | "bl" | "br";
 }
 
 export type SceneVisual =

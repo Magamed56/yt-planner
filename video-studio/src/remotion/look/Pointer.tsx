@@ -9,11 +9,11 @@ import type { ScenePointer } from "../../types";
 const RED = "#ff2a1f";
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
-// Хвост — по диагонали к центру кадра (стрелка не уходит за край); у центра — снизу слева.
-function tailDirection(x: number, y: number): { dx: number; dy: number } {
-  const sx = x > 0.5 ? 1 : -1;
-  const sy = y > 0.42 ? 1 : -1;
-  // Хвост смотрит туда, где больше места: к центру по горизонтали, вниз — если предмет вверху.
+// Хвост — по диагонали: со стороны from, иначе к центру кадра (стрелка не уходит за край):
+// к центру по горизонтали, вниз — если предмет вверху.
+function tailDirection(p: ScenePointer): { dx: number; dy: number } {
+  const sx = p.from ? (p.from.endsWith("l") ? 1 : -1) : p.x > 0.5 ? 1 : -1;
+  const sy = p.from ? (p.from.startsWith("t") ? 1 : -1) : p.y > 0.42 ? 1 : -1;
   return { dx: -sx * Math.SQRT1_2, dy: -sy * Math.SQRT1_2 };
 }
 
@@ -40,7 +40,7 @@ export const Pointer: React.FC<{ pointer: ScenePointer; durationInFrames: number
     );
   }
 
-  const { dx, dy } = tailDirection(pointer.x, pointer.y);
+  const { dx, dy } = tailDirection(pointer);
   // Стрелка нарисована остриём в (0,0) вдоль +x; поворачиваем от хвоста к острию.
   const angle = (Math.atan2(-dy, -dx) * 180) / Math.PI;
   const L = 330 * unit; // длина
