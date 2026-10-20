@@ -4,6 +4,7 @@ import { measureText } from "@remotion/layout-utils";
 import type { RenderScene, TimelineCaption } from "../../types";
 import { FONT_DISPLAY } from "../fonts";
 import { sceneBreaksMs } from "../lib/caption-pages";
+import { useLayout } from "../lib/layout";
 
 // Субтитры подачи bright: по одному слову крупно по центру кадра — белые с
 // толстой чёрной обводкой. Короткое служебное слово («в», «не», «для») идёт
@@ -20,7 +21,12 @@ interface Group {
   startMs: number;
   endMs: number;
   accent: boolean;
+  scene: number; // индекс сцены
 }
+
+// Сцена на кадре (BrightScene) — слово выше, по центру картинки; сцена в обычной
+// раскладке (финал, сцена без кадра) — на месте обычных субтитров, под её текстом.
+const onPicture = (s: RenderScene | undefined) => !!s && s.kind !== "cta" && s.visual.type !== "none";
 
 const letters = (s: string) => s.toLowerCase().replace(/ё/g, "е").replace(/[^\p{L}\p{N}]/gu, "");
 const clean = (s: string) => s.trim().replace(/[.,;:—–-]+$/u, "").replace(/^[«"„(]+|[»"”)]+$/gu, "");
@@ -42,7 +48,7 @@ function buildGroups(captions: TimelineCaption[], scenes: RenderScene[]): Group[
   const out: Group[] = [];
   let cur: (Group & { words: number; scene: number; allShort: boolean }) | null = null;
   const flush = () => {
-    if (cur) out.push({ text: cur.text, startMs: cur.startMs, endMs: cur.endMs, accent: cur.accent });
+    if (cur) out.push({ text: cur.text, startMs: cur.startMs, endMs: cur.endMs, accent: cur.accent, scene: cur.scene });
     cur = null;
   };
   for (const c of captions) {
@@ -69,6 +75,7 @@ function buildGroups(captions: TimelineCaption[], scenes: RenderScene[]): Group[
 
 export const WordCaptions: React.FC<{ captions: TimelineCaption[]; scenes: RenderScene[] }> = ({ captions, scenes }) => {
   const { fps, width, height } = useVideoConfig();
+  const layout = useLayout();
   const groups = useMemo(() => buildGroups(captions, scenes), [captions, scenes]);
   const breaks = useMemo(() => sceneBreaksMs(scenes), [scenes]);
   return (
@@ -81,7 +88,7 @@ export const WordCaptions: React.FC<{ captions: TimelineCaption[]; scenes: Rende
         const dur = Math.max(1, Math.round((endMs / 1000) * fps) - from);
         return (
           <Sequence key={i} from={from} durationInFrames={dur} layout="none" name={`Слово ${i + 1}`}>
-            <Word group={g} width={width} height={height} />
+            <Word group={g} width={width} centerY={onPicture(scenes[g.scene]) ? Math.round(height * 0.655) : layout.captions.centerY} />
           </Sequence>
         );
       })}
@@ -89,7 +96,7 @@ export const WordCaptions: React.FC<{ captions: TimelineCaption[]; scenes: Rende
   );
 };
 
-const Word: React.FC<{ group: Group; width: number; height: number }> = ({ group, width, height }) => {
+const Word: React.FC<{ group: Group; width: number; centerY: number }> = ({ group, width, centerY }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const unit = width / 1080;
@@ -112,7 +119,7 @@ const Word: React.FC<{ group: Group; width: number; height: number }> = ({ group
           position: "absolute",
           left: 0,
           width,
-          top: Math.round(height * 0.655),
+          top: centerY,
           transform: `translateY(-50%) scale(${interpolate(pop, [0, 1], [0.72, 1]).toFixed(4)})`,
           textAlign: "center",
           fontFamily: FONT_DISPLAY,
