@@ -95,6 +95,6 @@
     }
   ],
   "look": "bright",
-  "visuals": "cloudflare",
+  "visuals": "cloudflare,pollinations",
   "visualStyle": "photorealistic photo, natural bright daylight, vivid true-to-life colors, sharp focus, high detail, shot on 35mm, no text, no letters, no watermark, no logo"
 }

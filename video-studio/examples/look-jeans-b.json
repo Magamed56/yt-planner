@@ -25,7 +25,7 @@
       "narration": "Этот маленький кармашек на джинсах придумали для часов.",
       "onScreen": "Кармашек для *часов*",
       "icon": "clock",
-      "visualQuery": "jeans small watch pocket",
+      "visualQuery": "jeans pocket close up",
       "imagePrompt": "cinematic macro shot of the small coin pocket on worn blue denim jeans, warm golden side light, shallow depth of field"
     },
     {
@@ -43,7 +43,7 @@
       "narration": "Об этом рассказывает архив самой компании Ливай Страусс.",
       "onScreen": "Так пишет *архив* Levi Strauss",
       "icon": "book-open",
-      "visualQuery": "Levi Strauss portrait",
+      "visualQuery": "archive boxes shelves",
       "imagePrompt": "old archive shelves with leather ledgers and folded denim, dusty warm light beams"
     },
     {
@@ -52,7 +52,7 @@
       "narration": "А теперь посмотри на края карманов. Там блестят маленькие металлические заклёпки.",
       "onScreen": "Заметил *заклёпки*?",
       "icon": "eye",
-      "visualQuery": "copper rivets denim pocket",
+      "visualQuery": "jeans rivet close up",
       "imagePrompt": "extreme close-up of copper rivets on blue denim pocket corner, glinting warm highlights, cinematic"
     },
     {
@@ -65,7 +65,7 @@
         "label": "патент на заклёпки карманов"
       },
       "icon": "calendar-check",
-      "visualQuery": "US patent document 1873",
+      "visualQuery": "vintage sewing workshop",
       "imagePrompt": "aged 19th century patent paper with technical drawing of trousers, sepia tones, candle light"
     },
     {
@@ -74,7 +74,7 @@
       "narration": "Суть патента простая: укрепить карманы металлом, а не только ниткой.",
       "onScreen": "Металл *крепче* нитки",
       "icon": "shield",
-      "visualQuery": "sewing denim workshop",
+      "visualQuery": "sewing machine denim",
       "imagePrompt": "vintage tailor workbench with denim, thread spools and copper rivets, warm workshop light"
     },
     {

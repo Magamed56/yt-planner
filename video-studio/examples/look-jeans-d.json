@@ -95,6 +95,6 @@
     }
   ],
   "look": "bright",
-  "visuals": "cloudflare",
+  "visuals": "cloudflare,pollinations",
   "visualStyle": "stylized 3D animated movie still, expressive cartoon characters, soft global illumination, bright saturated colors, high detail, no text, no letters, no watermark, no logo"
 }

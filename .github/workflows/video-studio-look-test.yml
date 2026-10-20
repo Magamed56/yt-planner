@@ -113,30 +113,34 @@ jobs:
         run: npx remotion browser ensure
 
       - name: B — подача bright на стоках (без рендера)
-        run: npm run make -- --script examples/look-jeans-b.json --out out/look/b --no-render
+        run: |
+          mkdir -p out/look
+          npm run make -- --script examples/look-jeans-b.json --out out/look/b --no-render 2>&1 | tee out/look/b.log
 
       - name: C — ИИ «почти фото» (без рендера)
         run: |
           export VISUALS="$(node -p 'require("./examples/look-jeans-c.json").visuals')"
           export VISUALS_STYLE="$(node -p 'require("./examples/look-jeans-c.json").visualStyle')"
-          npm run make -- --script examples/look-jeans-c.json --out out/look/c --no-render
+          npm run make -- --script examples/look-jeans-c.json --out out/look/c --no-render 2>&1 | tee out/look/c.log
 
       - name: D — ИИ «3D-мульт» (без рендера)
         run: |
           export VISUALS="$(node -p 'require("./examples/look-jeans-d.json").visuals')"
           export VISUALS_STYLE="$(node -p 'require("./examples/look-jeans-d.json").visualStyle')"
-          npm run make -- --script examples/look-jeans-d.json --out out/look/d --no-render
+          npm run make -- --script examples/look-jeans-d.json --out out/look/d --no-render 2>&1 | tee out/look/d.log
 
       - name: Пуш B–D в claude/look-test-out
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           STAGE: "B, C, D — голос и картинки"
         run: bash ../.github/scripts/look-test-push.sh
 
       - name: A — как сейчас (полный рендер)
-        run: npm run make -- --script scripts/sut-18b-zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873.json --out out/look/a
+        run: npm run make -- --script scripts/sut-18b-zachem-malenkiy-karman-na-dzhinsakh-otvet-iz-1873.json --out out/look/a 2>&1 | tee out/look/a.log
 
       - name: Пуш A в claude/look-test-out
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           STAGE: "A — готовое видео; B, C, D — голос и картинки"
