@@ -11,16 +11,21 @@ import { cfSize } from "./cloudflare";
 
 // Бесплатный лимит — «1 image every 45 seconds per IP» (HTTP 402/429, «Retry after 40s»):
 // ждём, сколько просят, и повторяем — иначе из 8 сцен картинку получала бы только первая.
-// POLLINATIONS_WAIT_MAX_SEC — сколько всего ждать на сцену (по умолчанию 100 с, 0 — не ждать).
+// Сбой сервиса (5xx) и таймаут — ещё до двух повторов через 15 с: бесключевой эндпоинт часто
+// отвечает 503 или молчит. POLLINATIONS_WAIT_MAX_SEC — сколько всего ждать на сцену
+// (по умолчанию 100 с, 0 — не ждать).
 async function withFreeLimitRetry<T>(run: () => Promise<T>, env: Record<string, string | undefined>): Promise<T> {
   let budget = envNumber(env, "POLLINATIONS_WAIT_MAX_SEC", 100);
+  let failures = 0;
   for (;;) {
     try {
       return await run();
     } catch (e) {
-      const limited = e instanceof VisualError && (e.status === 402 || e.status === 429) && /FREE_LIMIT|retry after/i.test(e.message);
-      const waitSec = limited ? Math.min(60, Number(/retry after (\d+)/i.exec(e.message)?.[1] ?? 45) + 2) : 0;
-      if (!limited || waitSec > budget) throw e;
+      if (!(e instanceof VisualError)) throw e;
+      const limited = (e.status === 402 || e.status === 429) && /FREE_LIMIT|retry after/i.test(e.message);
+      const flaky = !limited && (e.network || (e.status !== null && e.status >= 500)) && failures++ < 2;
+      const waitSec = limited ? Math.min(60, Number(/retry after (\d+)/i.exec(e.message)?.[1] ?? 45) + 2) : flaky ? 15 : -1;
+      if (waitSec < 0 || waitSec > budget) throw e;
       budget -= waitSec;
       await new Promise((r) => setTimeout(r, waitSec * 1000));
     }
