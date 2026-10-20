@@ -1,0 +1,88 @@
+{
+ "key": "2b74fe69a2c8d59ab6a3a23dd12d5aee09070d2b024e2777306399fb7acaae00",
+ "file": "s7.wav",
+ "durationMs": 4750,
+ "words": [
+  {
+   "text": "Выходит,",
+   "startMs": 0,
+   "endMs": 450
+  },
+  {
+   "text": "в",
+   "startMs": 450,
+   "endMs": 510
+  },
+  {
+   "text": "твоих",
+   "startMs": 570,
+   "endMs": 890
+  },
+  {
+   "text": "джинсах",
+   "startMs": 890,
+   "endMs": 1290
+  },
+  {
+   "text": "до",
+   "startMs": 1370,
+   "endMs": 1530
+  },
+  {
+   "text": "сих",
+   "startMs": 1530,
+   "endMs": 1705
+  },
+  {
+   "text": "пор",
+   "startMs": 1775,
+   "endMs": 1890
+  },
+  {
+   "text": "живёт",
+   "startMs": 1970,
+   "endMs": 2215
+  },
+  {
+   "text": "место",
+   "startMs": 2265,
+   "endMs": 2530
+  },
+  {
+   "text": "для",
+   "startMs": 2570,
+   "endMs": 2730
+  },
+  {
+   "text": "часов,",
+   "startMs": 2770,
+   "endMs": 3005
+  },
+  {
+   "text": "которые",
+   "startMs": 3055,
+   "endMs": 3475
+  },
+  {
+   "text": "почти",
+   "startMs": 3585,
+   "endMs": 3890
+  },
+  {
+   "text": "никто",
+   "startMs": 3930,
+   "endMs": 4250
+  },
+  {
+   "text": "не",
+   "startMs": 4290,
+   "endMs": 4410
+  },
+  {
+   "text": "носит.",
+   "startMs": 4490,
+   "endMs": 4635
+  }
+ ],
+ "wordsSource": "aligned"
+}
