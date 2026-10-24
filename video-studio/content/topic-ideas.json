@@ -20,7 +20,8 @@
       "readers": {
         "ru": 226011,
         "en": 1398813
-      }
+      },
+      "added": "33a"
     },
     {
       "n": 2,
@@ -40,7 +41,8 @@
       "readers": {
         "ru": 1138,
         "en": 1504499
-      }
+      },
+      "added": "33b"
     },
     {
       "n": 3,
@@ -60,7 +62,8 @@
       "readers": {
         "ru": 13998,
         "en": 880257
-      }
+      },
+      "added": "33c"
     },
     {
       "n": 4,
@@ -80,7 +83,8 @@
       "readers": {
         "ru": 72193,
         "en": 340129
-      }
+      },
+      "added": "34a"
     },
     {
       "n": 5,
@@ -100,7 +104,8 @@
       "readers": {
         "ru": 121844,
         "en": 79815
-      }
+      },
+      "added": "34b"
     },
     {
       "n": 6,
@@ -120,7 +125,8 @@
       "readers": {
         "ru": 65935,
         "en": 218759
-      }
+      },
+      "added": "34c"
     },
     {
       "n": 7,
@@ -140,7 +146,8 @@
       "readers": {
         "ru": 37501,
         "en": 216114
-      }
+      },
+      "added": "35a"
     },
     {
       "n": 8,
@@ -160,7 +167,8 @@
       "readers": {
         "ru": 11236,
         "en": 83192
-      }
+      },
+      "added": "35b"
     },
     {
       "n": 9,
@@ -180,7 +188,8 @@
       "readers": {
         "ru": 8771,
         "en": 50644
-      }
+      },
+      "added": "35c"
     },
     {
       "n": 10,
@@ -220,7 +229,8 @@
       "readers": {
         "ru": 12395,
         "en": 24190
-      }
+      },
+      "added": "36a"
     },
     {
       "n": 12,
@@ -260,7 +270,8 @@
       "readers": {
         "ru": 14752,
         "en": 2340
-      }
+      },
+      "added": "36b"
     },
     {
       "n": 14,
@@ -280,7 +291,8 @@
       "readers": {
         "ru": 7386,
         "en": 33182
-      }
+      },
+      "added": "36c"
     },
     {
       "n": 15,
@@ -300,7 +312,8 @@
       "readers": {
         "ru": 5457,
         "en": 32791
-      }
+      },
+      "added": "37a"
     },
     {
       "n": 16,
@@ -320,7 +333,8 @@
       "readers": {
         "ru": 1218,
         "en": 34464
-      }
+      },
+      "added": "37b"
     },
     {
       "n": 17,
@@ -340,7 +354,8 @@
       "readers": {
         "ru": 184,
         "en": 33315
-      }
+      },
+      "added": "37c"
     },
     {
       "n": 18,
@@ -360,7 +375,8 @@
       "readers": {
         "ru": 4019,
         "en": 10919
-      }
+      },
+      "added": "38a"
     },
     {
       "n": 19,
@@ -380,7 +396,8 @@
       "readers": {
         "ru": 1767,
         "en": 17909
-      }
+      },
+      "added": "38b"
     },
     {
       "n": 20,
@@ -399,7 +416,8 @@
       "readers": {
         "ru": null,
         "en": 22970
-      }
+      },
+      "added": "38c"
     },
     {
       "n": 21,
@@ -415,7 +433,8 @@
       "fresh": false,
       "wiki": "Холмс, Элизабет",
       "wikiEn": "Elizabeth Holmes",
-      "interestSeen": true
+      "interestSeen": true,
+      "added": "L17"
     },
     {
       "n": 22,
@@ -431,7 +450,8 @@
       "fresh": false,
       "wiki": "Лауда, Ники",
       "wikiEn": "Niki Lauda",
-      "interestSeen": true
+      "interestSeen": true,
+      "added": "L18"
     },
     {
       "n": 23,
@@ -447,7 +467,8 @@
       "fresh": false,
       "wiki": "Гипотеза Пуанкаре",
       "wikiEn": "Poincaré conjecture",
-      "interestSeen": true
+      "interestSeen": true,
+      "added": "L19"
     },
     {
       "n": 24,
@@ -463,7 +484,8 @@
       "fresh": true,
       "wiki": "Кристи, Агата",
       "wikiEn": "Agatha Christie",
-      "interestSeen": true
+      "interestSeen": true,
+      "added": "L20"
     },
     {
       "n": 25,
@@ -479,7 +501,8 @@
       "fresh": true,
       "wiki": "Троя",
       "wikiEn": "Troy",
-      "interestSeen": true
+      "interestSeen": true,
+      "added": "L21"
     },
     {
       "n": 26,
@@ -495,7 +518,8 @@
       "fresh": false,
       "wiki": "Авария на шахте Сан-Хосе",
       "wikiEn": "2010 Copiapó mining accident",
-      "interestSeen": true
+      "interestSeen": true,
+      "added": "L22"
     }
   ],
   "rejected": [
