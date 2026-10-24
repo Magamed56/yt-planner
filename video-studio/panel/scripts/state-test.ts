@@ -140,7 +140,9 @@ test("этапы: вышел, запланирован, видео (неделя
   assert.equal(row("09b").voice, null, "без релиза проверять нечего — данные страницы не раздуваем");
   assert.equal(row("09a").stage, "studio");
   assert.equal(row("09b").stage, "topic");
-  assert.deepEqual(state.counts, { topic: 43, script: 1, video: 5, studio: 1, scheduled: 9, published: 1 });
+  // Тем в плане всё больше (plan-extend дописывает новые): «тема» — всё, что не на других этапах.
+  const planSize = (json("content/plan.json") as { items: unknown[] }).items.length;
+  assert.deepEqual(state.counts, { topic: planSize - 17, script: 1, video: 5, studio: 1, scheduled: 9, published: 1 });
 });
 
 test("ориентир: следующие свободные слоты по порядку плана — с 13.10 12:00 МСК", () => {

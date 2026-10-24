@@ -98,6 +98,14 @@ on:
         type: choice
         options: [ru, en, kk, uz]
         default: ru
+      cinematic:
+        description: "Кинорежим: Shorts как короткий связный фильм — Claude пишет сценарий с кадрами-планами (draft и batch по теме или плану; render берёт режим из сценария)"
+        type: boolean
+        default: false
+      preview:
+        description: "Готовое видео — ещё и в скрытый черновой релиз preview-… (виден только владельцу): проверить ролик без публикации"
+        type: boolean
+        default: false
   # Запуск по расписанию (раскомментируйте): черновик на тему из переменной
   # репозитория SCHEDULED_TOPIC, например по понедельникам и четвергам в 05:17 UTC.
   # schedule:
@@ -190,6 +198,14 @@ jobs:
       CAPTION_ALIGN: ${{ vars.CAPTION_ALIGN }}
       # На 2 vCPU (приватный репозиторий) 2 потока быстрее авто-значения (1) на ~12 %.
       RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
+      CINEMATIC: ${{ inputs.cinematic && '1' || '' }}
+      # Кадры кинорежима: проверка зрением Claude (off — выключить), бюджет новых картинок
+      # на ролик и общий кэш кадров между запусками (шаги «Кэш AI-кадров»).
+      VISUALS_REVIEW: ${{ vars.VISUALS_REVIEW }}
+      VISUALS_REVIEW_MODEL: ${{ vars.VISUALS_REVIEW_MODEL }}
+      VISUALS_REVIEW_ROUNDS: ${{ vars.VISUALS_REVIEW_ROUNDS }}
+      VISUALS_AI_MAX_FRAMES: ${{ vars.VISUALS_AI_MAX_FRAMES }}
+      VISUALS_AI_CACHE_DIR: ${{ github.workspace }}/video-studio/.cache/visuals-ai
       NO_COLOR: "1"
     steps:
       - name: Код репозитория
@@ -280,6 +296,18 @@ jobs:
           restore-keys: |
             tts-voice-${{ runner.os }}-
 
+      # Кадры AI прошлых запусков (ключ записи — модель, размер, seed и промпт) и вердикты
+      # проверки Claude: пересборка того же сценария не тратит квоту Cloudflare и деньги заново.
+      - name: Кэш AI-кадров — восстановить
+        id: visuals-cache
+        if: env.MODE != 'draft'
+        uses: actions/cache/restore@v6
+        with:
+          path: video-studio/.cache/visuals-ai
+          key: visuals-ai-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            visuals-ai-${{ runner.os }}-
+
       - name: Системные библиотеки для Chrome Headless Shell
         if: env.MODE != 'draft'
         # Список — из документации Remotion (Linux Dependencies, Ubuntu 24.04), с t64-именами пакетов Noble.
@@ -308,14 +336,16 @@ jobs:
         run: |
           lang=()
           if [ "$VIDEO_LANG" != "ru" ]; then lang=(--lang "$VIDEO_LANG"); fi
+          cin=()
+          if [ -n "$CINEMATIC" ]; then cin=(--cinematic); fi
           if [ -n "$PLAN" ]; then
             # Темы плана: сценарии scripts/sut-<код>-….json, отметка в plan.json; готовые пропускаются.
             # Коды L01… — «Разборы» из content/long-plan.json → scripts/razbor-L01-….json.
             # Другой язык — перевод русского сценария темы в scripts/<язык>/ (план не меняется).
-            npm run script -- --plan "$PLAN" "${lang[@]}"
+            npm run script -- --plan "$PLAN" "${lang[@]}" "${cin[@]}"
           elif [ -n "$TOPIC" ]; then
             fmt="$FORMAT"; [ "$fmt" = "auto" ] && fmt=shorts
-            npm run script -- --topic "$TOPIC" --format "$fmt" "${lang[@]}"
+            npm run script -- --topic "$TOPIC" --format "$fmt" "${lang[@]}" "${cin[@]}"
           else
             echo "::error::Для mode=draft нужна тема (поле topic) или коды тем из плана (поле plan, например 08a,08b)."
             exit 1
@@ -356,6 +386,7 @@ jobs:
             args+=(--script "$SCRIPT_PATH")
           elif [ -n "$TOPIC" ]; then
             args+=(--topic "$TOPIC")
+            if [ -n "$CINEMATIC" ]; then args+=(--cinematic); fi
           else
             echo "::notice::Не задан ни script, ни topic — собираю демо-ролик."
             args+=(--demo)
@@ -403,6 +434,27 @@ jobs:
         run: |
           echo "::warning::Артефакт не сохранился — чаще всего исчерпана квота хранилища артефактов (бесплатный план, сбрасывается только с новым расчётным периодом). Чтобы ролик не пропал, запускайте с upload = release."
           echo "⚠️ **Артефакт не сохранился** (вероятно, кончилась квота хранилища артефактов). Выберите upload = release — релизы в эту квоту не входят." >> "$GITHUB_STEP_SUMMARY"
+
+      # Проверка без публикации: черновой релиз видят только те, у кого есть право записи
+      # (в открытом репозитории посторонние его не видят). Тег preview-… не похож на теги
+      # роликов канала (video-…): панель, слоты YouTube и youtube-fill его не берут.
+      - name: Черновой релиз для проверки
+        id: preview
+        if: env.MODE == 'render' && inputs.preview && steps.render.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_DIR: ${{ steps.render.outputs.run_dir }}
+          SLUG: ${{ steps.render.outputs.slug }}
+        run: |
+          tag="preview-${SLUG:0:60}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          files=("$RUN_DIR/video.mp4")
+          for f in cover.jpg script.json cost.json; do
+            if [ -f "$RUN_DIR/$f" ]; then files+=("$RUN_DIR/$f"); fi
+          done
+          gh release create "$tag" --draft --target "$GITHUB_SHA" --title "Проверка: $SLUG" --notes "Черновик для проверки (прогон $GITHUB_RUN_ID), не публикуется." "${files[@]}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "🔒 **Черновой релиз для проверки:** \`$tag\` — виден только владельцу репозитория." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Релиз GitHub
         id: release
@@ -698,6 +750,14 @@ jobs:
         with:
           path: video-studio/.cache/voice
           key: tts-voice-${{ runner.os }}-${{ hashFiles('video-studio/.cache/voice/*.json') }}
+
+      - name: Кэш AI-кадров — сохранить
+        if: always() && env.MODE != 'draft' && hashFiles('video-studio/.cache/visuals-ai/**/*.json') != '' && steps.visuals-cache.outputs.cache-matched-key != format('visuals-ai-{0}-{1}', runner.os, hashFiles('video-studio/.cache/visuals-ai/**/*.json'))
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: video-studio/.cache/visuals-ai
+          key: visuals-ai-${{ runner.os }}-${{ hashFiles('video-studio/.cache/visuals-ai/**/*.json') }}
 
       # Набор голосов не изменился (ничего не скачано) — не сохраняем; добавился голос (основной
       # или запасной) — новая запись с ним, и следующий запуск восстановит уже её (самую свежую).

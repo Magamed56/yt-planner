@@ -3,31 +3,67 @@
 // платные «Pollen». Поэтому — только по явному согласию через VISUALS и
 // только как последний вариант, по принципу «повезёт — хорошо».
 
+import { readAiFrame, writeAiFrame } from "../ai-cache";
 import { getBytes } from "../http";
-import { extFromBytes, imagePromptFor, seedFor } from "../query";
+import { aiPromptFor, aiSeed, extFromBytes } from "../query";
 import { envNumber, MB } from "../util";
 import { VisualError, type Stage, type VisualProvider } from "../types";
 import { cfSize } from "./cloudflare";
+
+// Бесплатный лимит — «1 image every 45 seconds per IP» (HTTP 402/429, «Retry after 40s»):
+// ждём, сколько просят, и повторяем — иначе из 16 планов картинку получал бы только первый
+// (прогон 33). Сбой сервиса (5xx) и таймаут — ещё до двух повторов через 15 с: бесключевой
+// эндпоинт часто отвечает 503 или молчит. POLLINATIONS_WAIT_MAX_SEC — сколько всего ждать
+// на кадр (по умолчанию 100 с, 0 — не ждать). Перенесено из ветки claude/look-test.
+async function withFreeLimitRetry<T>(run: () => Promise<T>, env: Record<string, string | undefined>): Promise<T> {
+  let budget = envNumber(env, "POLLINATIONS_WAIT_MAX_SEC", 100);
+  let failures = 0;
+  for (;;) {
+    try {
+      return await run();
+    } catch (e) {
+      if (!(e instanceof VisualError)) throw e;
+      const limited = (e.status === 402 || e.status === 429) && /FREE_LIMIT|retry after/i.test(e.message);
+      const flaky = !limited && (e.network || (e.status !== null && e.status >= 500)) && failures++ < 2;
+      const waitSec = limited ? Math.min(60, Number(/retry after (\d+)/i.exec(e.message)?.[1] ?? 45) + 2) : flaky ? 15 : -1;
+      if (waitSec < 0 || waitSec > budget) throw e;
+      budget -= waitSec;
+      await new Promise((r) => setTimeout(r, waitSec * 1000));
+    }
+  }
+}
+
+const MODEL = "pollinations-flux";
 
 const stage: Stage = {
   rank: 0,
   media: "image",
   async run(input) {
     const { deps, ctx, scene } = input;
-    const prompt = imagePromptFor(scene, ctx.format, ctx.style ?? deps.env.VISUALS_STYLE);
+    const prompt = aiPromptFor(scene, ctx, deps.env);
     if (!prompt) return [];
     const { width, height } = cfSize(ctx.format);
-    const q = new URLSearchParams({ width: String(width), height: String(height), seed: String(seedFor(`${scene.id}|${prompt}`)), model: "flux", nologo: "true" });
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt.slice(0, 900))}?${q}`;
-    const timeout = envNumber(deps.env, "VISUALS_GEN_TIMEOUT_MS", 90_000);
-    const res = await getBytes(deps.fetch, "Pollinations", url, {}, timeout, 20 * MB);
-    const ext = extFromBytes(res.body, res.contentType);
-    if (!ext || !res.contentType.startsWith("image/")) throw new VisualError("Pollinations: ответ — не картинка (эндпоинт мог измениться).");
+    const seed = aiSeed(scene.id, prompt, ctx.seedSalt);
+    const cacheKey = { model: MODEL, width, height, seed, prompt };
+    let data = readAiFrame(deps.env, cacheKey);
+    if (data) deps.log.info(`[визуал] ${scene.id}: кадр из кэша (Pollinations)`);
+    else {
+      const q = new URLSearchParams({ width: String(width), height: String(height), seed: String(seed), model: "flux", nologo: "true" });
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt.slice(0, 900))}?${q}`;
+      const timeout = envNumber(deps.env, "VISUALS_GEN_TIMEOUT_MS", 90_000);
+      const res = await withFreeLimitRetry(() => getBytes(deps.fetch, "Pollinations", url, {}, timeout, 20 * MB), deps.env);
+      const ext = extFromBytes(res.body, res.contentType);
+      if (!ext || !res.contentType.startsWith("image/")) throw new VisualError("Pollinations: ответ — не картинка (эндпоинт мог измениться).");
+      data = res.body;
+      writeAiFrame(deps.env, cacheKey, data, ext);
+    }
+    const ext = extFromBytes(data);
+    if (!ext) throw new VisualError("Pollinations: кадр из кэша повреждён.");
     return [
       {
         id: `pollinations:${scene.id}`,
         type: "image",
-        data: res.body,
+        data,
         ext,
         width,
         height,

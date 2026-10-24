@@ -25,12 +25,15 @@ export function cameraEase(t: number): number {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-// Наезд/отъезд: 1.06 ↔ 1.16 — заметно, но без «прыжка» масштаба.
-const ZOOM = { near: 1.16, far: 1.06 } as const;
-// Панорама и наклон: масштаб 1.16 даёт по 8 % кадра с каждой стороны; ход ±6 %.
-const PAN = { scale: 1.16, travel: 0.06 } as const;
-// С рук: небольшое «дыхание» — сдвиг ≤ 1,2 %, поворот ≤ 0,4°, ~0,5 Гц.
-const HAND = { scale: 1.1, x: 0.012, y: 0.01, rotate: 0.4, hz: 0.5 } as const;
+// Амплитуды подняты после 30a (прогоны 34–35): при прежних (наезд 1.06 → 1.16,
+// панорама ±6 %) кадр за 2,6 с менялся на 0,3 % яркости между кадрами — на
+// телефоне это читалось как стоп-кадр.
+// Наезд/отъезд: 1.04 ↔ 1.22 — движение видно с первой секунды.
+const ZOOM = { near: 1.22, far: 1.04 } as const;
+// Панорама и наклон: масштаб 1.2 даёт по 10 % кадра с каждой стороны; ход ±8,5 %.
+const PAN = { scale: 1.2, travel: 0.085 } as const;
+// С рук: заметное «дыхание» — сдвиг ≤ 1,8 %, поворот ≤ 0,6°, ~0,6 Гц.
+const HAND = { scale: 1.12, x: 0.018, y: 0.014, rotate: 0.6, hz: 0.6 } as const;
 
 export function cameraState(move: CameraMove, progress: number, timeSec: number, seed: string): CameraState {
   const e = cameraEase(progress);

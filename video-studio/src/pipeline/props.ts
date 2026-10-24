@@ -17,6 +17,7 @@ import {
   type RenderScene,
   type SceneVisual,
   type SfxSet,
+  type ShotMeta,
   type ThemeName,
   type VideoProps,
   type VideoScript,
@@ -38,6 +39,7 @@ export interface BuildPropsInput {
   voices: VoiceResult[]; // по порядку script.scenes
   visuals?: (VisualResult | null | undefined)[]; // по порядку script.scenes
   shotVisuals?: (VisualResult[] | null | undefined)[]; // кинорежим: кадры планов по порядку script.scenes и shots
+  shotMetas?: (ShotMeta | null)[][]; // кинорежим: что проверка нашла на кадрах (рамки для подписей), так же по порядку
   music: MusicChoice | null;
   whooshSrc: string | null; // уже относительно publicDir ("sfx/whoosh.wav")
   sfx?: SfxSet | null; // остальные звуки монтажа (audio/makeSfx)
@@ -128,7 +130,7 @@ export function buildVideoProps(input: BuildPropsInput): VideoProps {
   const cinematic = isCinematic(script);
   const scenes: RenderScene[] = laid.scenes.map((s, i) => {
     const frames = (input.shotVisuals?.[i] ?? []).map((v) => sanitizeVisual(publicDir, v?.visual));
-    const shots = cinematic ? renderShots(s, script.scenes[i]!.shots, frames, transitionFrames) : undefined;
+    const shots = cinematic ? renderShots(s, script.scenes[i]!.shots, frames, transitionFrames, input.shotMetas?.[i] ?? []) : undefined;
     return shots ? { ...s, shots } : s;
   });
 

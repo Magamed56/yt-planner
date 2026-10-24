@@ -97,7 +97,7 @@ export const QC_LIMITS = {
 
 // Бинарник из пакета Remotion (тот же, что рендерит и выравнивает громкость);
 // spawn, а не callFf: нужен stdout байтами (PCM и кадры), а не строкой.
-async function runFf(bin: "ffmpeg" | "ffprobe", args: string[], timeoutMs = 10 * 60_000): Promise<{ stdout: Buffer; stderr: string; code: number | null }> {
+export async function runFf(bin: "ffmpeg" | "ffprobe", args: string[], timeoutMs = 10 * 60_000): Promise<{ stdout: Buffer; stderr: string; code: number | null }> {
   const exe = RenderInternals.getExecutablePath({ type: bin, indent: false, logLevel: "error", binariesDirectory: null });
   const proc = spawn(exe, args, { cwd: path.dirname(exe), windowsHide: true });
   const out: Buffer[] = [];

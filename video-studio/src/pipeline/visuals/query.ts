@@ -46,10 +46,12 @@ export function buildQueries(scene: ScriptScene): string[] {
 
 // ---- Кинорежим: план и общий стиль ролика ----
 
-// Общий стиль ролика (VideoScript.style) → хвост промпта каждого AI-кадра.
-// «Без надписей» — всегда: генераторы любят рисовать буквы. Привлекательность —
-// тоже всегда и словами «что нужно», а не «чего не надо»: FLUX не понимает
-// отрицаний, «no horror» лишь подсказал бы ему жуть.
+// Общий стиль ролика (VideoScript.style) → хвост промпта каждого AI-кадра —
+// у сценариев со «стилем отдельно» (без shotPrompts "complete"). Привлекательность —
+// всегда и словами «что нужно»: FLUX не понимает отрицаний («no text» он читает
+// как «text»). Окружение (environment) в хвост не идёт: «дом, снежный парк,
+// лаборатория» в каждом промпте дало в 30a 4 коллажа из 16 кадров — место
+// называет сам план.
 export function styleText(style: VisualStyle | undefined): string | undefined {
   if (!style) return undefined;
   const t = (v: string | undefined) => v?.trim().replace(/[.\s]+$/, "") || "";
@@ -59,9 +61,8 @@ export function styleText(style: VisualStyle | undefined): string | undefined {
     t(style.lighting),
     t(style.palette) && `${t(style.palette)} color palette`,
     t(style.mood) && `${t(style.mood)} mood`,
-    t(style.environment) && `setting: ${t(style.environment)}`,
   ].filter(Boolean);
-  return parts.length ? `${parts.join(", ")}, ${APPEAL}, no text, no letters, no watermark` : undefined;
+  return parts.length ? `${parts.join(", ")}, ${APPEAL}` : undefined;
 }
 
 export const APPEAL = "appealing and aesthetically pleasing, clean and wholesome";
@@ -93,6 +94,23 @@ export const DEFAULT_STYLE =
 
 // Промпт для AI-картинки: imagePrompt сцены + общий стиль ролика (одинаковый
 // для всех сцен — так кадры выглядят как один фильм).
+// Полный промпт плана (shotPrompts "complete") — как есть: в нём уже герой,
+// место, свет, объектив и композиция. Предел — как у imagePromptFor.
+export function completePrompt(text: string | undefined): string | null {
+  const p = text?.replace(/\s+/g, " ").trim() ?? "";
+  return p && !CYRILLIC.test(p) ? p.slice(0, 1800) : null;
+}
+
+// Что уходит в генератор: полный промпт плана или imagePrompt сцены + стиль.
+export function aiPromptFor(scene: ScriptScene, ctx: { format: Format; style?: string; rawPrompt?: boolean }, env: Record<string, string | undefined>): string | null {
+  return ctx.rawPrompt ? completePrompt(scene.imagePrompt) : imagePromptFor(scene, ctx.format, ctx.style ?? env.VISUALS_STYLE);
+}
+
+// seed — от кадра и промпта; salt — новая попытка того же кадра (перегенерация после проверки).
+export function aiSeed(sceneId: string, prompt: string, salt?: string): number {
+  return seedFor(`${sceneId}|${prompt}${salt ? `|${salt}` : ""}`);
+}
+
 export function imagePromptFor(scene: ScriptScene, format: Format, style: string | undefined): string | null {
   const base = scene.imagePrompt?.trim() || (scene.visualQuery?.trim() ? `cinematic shot of ${scene.visualQuery.trim()}` : "");
   if (!base || CYRILLIC.test(base)) return null;

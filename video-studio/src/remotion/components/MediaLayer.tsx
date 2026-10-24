@@ -30,7 +30,8 @@ export const MediaLayer: React.FC<{
   dim: MediaDim;
   camera?: CameraMove; // кинорежим: движение камеры плана вместо Ken Burns
   motionSeed?: string; // зерно «дыхания» с рук — своё у каждого плана
-}> = ({ visual, theme, durationInFrames, seed, dim, camera, motionSeed }) => {
+  overlay?: React.ReactNode; // кинорежим: подписи к предметам — в том же трансформе, что и картинка
+}> = ({ visual, theme, durationInFrames, seed, dim, camera, motionSeed, overlay }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   const [failed, setFailed] = useState(false);
@@ -62,7 +63,12 @@ export const MediaLayer: React.FC<{
   const shade = dim === "none" ? null : DIM_SHADE[dim];
   return (
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: theme.bgFrom }}>
-      {visual.type === "image" ? (
+      {visual.type === "image" && overlay ? (
+        <AbsoluteFill style={{ transform: style.transform }}>
+          <Img src={resolveSrc(visual.src)} style={{ ...style, transform: undefined }} onError={onError} />
+          {overlay}
+        </AbsoluteFill>
+      ) : visual.type === "image" ? (
         <Img src={resolveSrc(visual.src)} style={style} onError={onError} />
       ) : (
         <Loop durationInFrames={Math.max(1, Math.floor(visual.durationSec * fps))}>

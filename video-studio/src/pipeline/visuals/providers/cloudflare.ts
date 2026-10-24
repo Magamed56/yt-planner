@@ -5,7 +5,8 @@
 // Запасная — SDXL-Lightning (бета, $0): JSON на вход, PNG на выход.
 
 import { getBytes } from "../http";
-import { extFromBytes, imagePromptFor, seedFor } from "../query";
+import { readAiFrame, writeAiFrame } from "../ai-cache";
+import { aiPromptFor, aiSeed, extFromBytes } from "../query";
 import { envNumber, MB } from "../util";
 import { VisualError, type Candidate, type Stage, type StageInput, type VisualProvider } from "../types";
 
@@ -29,12 +30,27 @@ function isQuota(status: number, body: string): boolean {
   return status === 429 || /4006|daily free allocation|neurons/i.test(body);
 }
 
+// Кадр из общего кэша (ai-cache.ts) или генерация — и в кэш.
 async function runModel(input: StageInput, model: string, prompt: string): Promise<Buffer> {
-  const { deps, key, ctx, scene } = input;
+  const { width, height } = cfSize(input.ctx.format);
+  const seed = aiSeed(input.scene.id, prompt, input.ctx.seedSalt);
+  const cacheKey = { model, width, height, seed, prompt };
+  const cached = readAiFrame(input.deps.env, cacheKey);
+  if (cached) {
+    input.deps.log.info(`[визуал] ${input.scene.id}: кадр из кэша (${MODEL_TITLE[model] ?? model}) — квота не тратится`);
+    return cached;
+  }
+  const data = await fetchModel(input, model, prompt, seed);
+  const ext = extFromBytes(data);
+  if (ext) writeAiFrame(input.deps.env, cacheKey, data, ext);
+  return data;
+}
+
+async function fetchModel(input: StageInput, model: string, prompt: string, seed: number): Promise<Buffer> {
+  const { deps, key, ctx } = input;
   const accountId = deps.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "";
   const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/ai/run/${model}`;
   const { width, height } = cfSize(ctx.format);
-  const seed = seedFor(`${scene.id}|${prompt}`);
   const headers: Record<string, string> = { Authorization: `Bearer ${key}` };
   let body: BodyInit;
   if (MULTIPART.has(model)) {
@@ -80,7 +96,7 @@ const stage: Stage = {
   rank: 0,
   media: "image",
   async run(input) {
-    const prompt = imagePromptFor(input.scene, input.ctx.format, input.ctx.style ?? input.deps.env.VISUALS_STYLE);
+    const prompt = aiPromptFor(input.scene, input.ctx, input.deps.env);
     if (!prompt) return [];
     const override = input.deps.env.CLOUDFLARE_IMAGE_MODEL?.trim();
     const models = override ? [override] : [FLUX2, SDXL];

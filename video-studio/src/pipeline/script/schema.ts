@@ -44,10 +44,15 @@ export const LIMITS = {
   quizExplanation: 120, // пояснение под вердиктом (в промпте — до 12 слов)
   quizQuestion: 80,
   chapter: 60, // название главы: карточка в ролике и строка таймкода в описании
-  shotPrompt: 400, // промпт плана (стиль добавляется отдельно)
+  shotPrompt: 1200, // полный промпт плана: герой с приметами, действие, место, свет, объектив, композиция
   shotSubject: 60,
   shotBeat: 120,
-  styleField: 160,
+  styleField: 300,
+  calloutLabel: 32,
+  calloutTarget: 80,
+  stickerText: 12,
+  characterName: 40,
+  characterLook: 300,
 } as const;
 
 export const SceneStatSchema = z.object({
@@ -76,12 +81,40 @@ export const SceneCompareSchema = z.object({
 
 // ---- Кинорежим (SceneShot / VisualStyle в types.ts) ----
 export const SceneShotSchema = z.object({
-  prompt: z.string().trim().min(1).max(LIMITS.shotPrompt).describe("ENGLISH shot description: who/what, action, setting; no style words, no text in frame"),
-  seconds: z.number().min(SHOT_LIMITS.minSec).max(SHOT_LIMITS.maxSec).optional().describe("желаемая длина плана в секундах, 2–3"),
+  prompt: z
+    .string()
+    .trim()
+    .min(1)
+    .max(LIMITS.shotPrompt)
+    .describe("COMPLETE ENGLISH image prompt in prose: hero with exact look, action, one location, light, lens, composition; no negations, no text in frame"),
+  seconds: z.number().min(SHOT_LIMITS.minSec).max(SHOT_LIMITS.maxSec).optional().describe("желаемая длина плана в секундах"),
   framing: z.enum(SHOT_FRAMINGS as [ShotFraming, ...ShotFraming[]]).optional().describe("крупность или ракурс плана"),
   camera: z.enum(CAMERA_MOVES as [CameraMove, ...CameraMove[]]).optional().describe("движение камеры"),
   subject: z.string().trim().min(1).max(LIMITS.shotSubject).optional().describe("ENGLISH name of the hero or object in frame, the same in every shot"),
   beat: z.string().trim().min(1).max(LIMITS.shotBeat).optional().describe("первые 1–3 слова narration, на которых начинается план"),
+  reuse: z
+    .string()
+    .regex(/^s\d+-k\d+$/)
+    .optional()
+    .describe("id более раннего плана (s2-k1): показать его кадр ещё раз с другим движением камеры, без новой картинки"),
+  callouts: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1).max(LIMITS.calloutLabel).describe("подпись по-русски, 1–3 слова"),
+        target: z.string().trim().min(1).max(LIMITS.calloutTarget).describe("ENGLISH: the object in the image to point at"),
+        beat: z.string().trim().min(1).max(LIMITS.shotBeat).optional().describe("слова narration, на которых появляется подпись"),
+      }),
+    )
+    .max(SHOT_LIMITS.callouts)
+    .optional()
+    .describe("подписи со стрелкой к предметам в кадре"),
+  sticker: z
+    .object({
+      text: z.string().trim().min(1).max(LIMITS.stickerText).describe("крупная цифра или дата: 1932, ×10"),
+      beat: z.string().trim().min(1).max(LIMITS.shotBeat).optional().describe("слова narration, на которых она появляется"),
+    })
+    .optional()
+    .describe("крупная цифра поверх кадра"),
 });
 
 const styleField = (about: string) => z.string().trim().min(1).max(LIMITS.styleField).optional().describe(about);
@@ -92,6 +125,18 @@ export const VisualStyleSchema = z.object({
   realism: styleField("ENGLISH degree of realism"),
   mood: styleField("ENGLISH mood"),
   environment: styleField("ENGLISH recurring environment"),
+  world: styleField("ENGLISH: the one world of the video — place, era, season, weather"),
+  look: styleField("ENGLISH: camera, lens, film stock, light and color of every shot"),
+  characters: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(LIMITS.characterName),
+        look: z.string().trim().min(1).max(LIMITS.characterLook).describe("ENGLISH fixed appearance, repeated word for word in every prompt"),
+      }),
+    )
+    .max(4)
+    .optional()
+    .describe("сквозные герои ролика"),
 });
 // ---- конец: кинорежим ----
 
@@ -130,12 +175,13 @@ export const VideoScriptSchema = z.object({
   scenes: z.array(ScriptSceneSchema).min(LIMITS.scenesMin).max(LIMITS.scenesMax),
   mode: z.enum(["infographic", "cinematic"]).optional().describe("cinematic — кинорежим: планы shots и общий style"),
   style: VisualStyleSchema.optional().describe("общий стиль AI-кадров ролика"),
+  shotPrompts: z.enum(["complete"]).optional().describe("служебное: промпты планов полные"),
 });
 
 // Ответ модели в обычном режиме — без полей кинорежима: JSON Schema, которую
 // видит модель, остаётся прежней, и планы она не выдумывает.
 export const ClassicSceneSchema = ScriptSceneSchema.omit({ shots: true });
-export const ClassicVideoScriptSchema = VideoScriptSchema.omit({ mode: true, style: true }).extend({
+export const ClassicVideoScriptSchema = VideoScriptSchema.omit({ mode: true, style: true, shotPrompts: true }).extend({
   scenes: z.array(ClassicSceneSchema).min(LIMITS.scenesMin).max(LIMITS.scenesMax),
 });
 

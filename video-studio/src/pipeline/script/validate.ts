@@ -5,7 +5,7 @@
 
 import type { z } from "zod";
 import type { Format, ScriptRequest } from "../contracts";
-import { CAMERA_MOVES, QUIZ_PAUSE_SEC, SCENE_KINDS, SHOT_FRAMINGS, THEME_NAMES, findBeat, isCinematic, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
+import { CAMERA_MOVES, QUIZ_PAUSE_SEC, SCENE_KINDS, SHOT_FRAMINGS, SHOT_LIMITS, THEME_NAMES, findBeat, isCinematic, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
 import { stems } from "./covered";
 import { LIMITS, ScriptSceneSchema, VideoScriptSchema } from "./schema";
 
@@ -201,7 +201,7 @@ function checkScriptRules(raw: Loose): string[] {
       raw.scenes.forEach((sc, i) => {
         if (!isObj(sc) || str(sc.kind) === "cta") return;
         if (!Array.isArray(sc.shots) || sc.shots.length === 0) {
-          out.push(`сцена №${i + 1}${str(sc.id) ? ` (${str(sc.id)})` : ""}: в кинорежиме (mode "cinematic") нужны планы shots — 1–6 кадров по 2–3 с`);
+          out.push(`сцена №${i + 1}${str(sc.id) ? ` (${str(sc.id)})` : ""}: в кинорежиме (mode "cinematic") нужны планы shots — 1–4 плана, кадр на каждый (или повтор кадра через reuse)`);
         }
       });
     }
@@ -254,6 +254,7 @@ export interface LintOptions {
   format: Format;
   targetSeconds?: number;
   cinematic?: boolean; // mode "cinematic": кадры дают планы, правило media и visualQuery не нужны
+  completePrompts?: boolean; // shotPrompts "complete": промпт плана — полный, уходит в генератор как есть
 }
 
 // Темп ГОТОВОГО ролика — слова narration на секунду вместе с паузами между сценами:
@@ -363,13 +364,44 @@ export function creepyShot(shot: Loose): string | null {
 const DARK_STYLE = /\b(low-key|dark|night|gloomy|eerie|horror|creepy|cold blue|grim|noir)\b/i;
 export function styleLints(style: unknown): string[] {
   if (!isObj(style)) return [];
-  const text = ["direction", "lighting", "palette", "mood", "environment"].map((k) => str(style[k])).join(" ");
+  const text = ["direction", "lighting", "palette", "mood", "environment", "world", "look"].map((k) => str(style[k])).join(" ");
   const hit = DARK_STYLE.exec(text);
   return hit ? [`style мрачный («${hit[0]}»): весь ролик выйдет тёмным и холодным — для научпопа бери дневной или тёплый золотой свет; тёмный стиль — только если его требует сама тема`] : [];
 }
 
-export function shotLints(shots: Loose[], narration: string, label: string): string[] {
+// Полный промпт (shotPrompts "complete") уходит в генератор как есть — что
+// FLUX понимает плохо: отрицания («no text» он читает как «text»), несколько
+// сцен в одном промпте (рисует коллаж из панелей), надписи (пишет с ошибками).
+// Контрольный 30a (10.2026): «setting: дом, снежный парк, лаборатория» в
+// каждом промпте дало 4 коллажа из 16 кадров.
+export const PROMPT_RULES = { minWords: 25, maxWords: 140 } as const;
+const NEGATION = /\b(no|not|without|never|avoid|don't|doesn't|isn't)\b/i;
+const COLLAGE = /\b(split[- ]?screen|collage|triptych|diptych|side[- ]by[- ]side|(?:photo|image|picture) grid|grid of (?:images|photos|pictures|panels)|comic panels?|multiple (?:images|views|scenes|frames)|before and after)\b/i;
+const LETTERING = /\b(text|lettering|caption|subtitles?|logo|watermark|inscription|signboard|headline|words? (?:on|reading))\b/i;
+
+export function completePromptLints(shot: Loose, label: string): string[] {
+  const prompt = str(shot.prompt);
+  if (!prompt || str(shot.reuse)) return [];
   const out: string[] = [];
+  const words = countWords(prompt);
+  if (words < PROMPT_RULES.minWords) out.push(`${label}: промпт ${words} слов — нужен полный кадр: герой с приметами, действие, одно место из world, свет, объектив, композиция (${PROMPT_RULES.minWords}–${PROMPT_RULES.maxWords} слов)`);
+  if (words > PROMPT_RULES.maxWords) out.push(`${label}: промпт ${words} слов — длиннее ${PROMPT_RULES.maxWords}: генератор теряет главное; оставь героя, действие, место, свет и композицию`);
+  const neg = NEGATION.exec(prompt);
+  if (neg) out.push(`${label}: в промпте отрицание «${neg[0]}» — генератор их не понимает и рисует названное; опиши, что в кадре ЕСТЬ`);
+  const col = COLLAGE.exec(prompt);
+  if (col) out.push(`${label}: «${col[0]}» в промпте — генератор нарисует коллаж; один кадр — одна сцена`);
+  const txt = LETTERING.exec(prompt);
+  if (txt) out.push(`${label}: «${txt[0]}» в промпте — надписи генератор пишет с ошибками; подписи и цифры добавит монтаж (callouts, sticker)`);
+  return out;
+}
+
+// Первое предложение полного промпта — кто и что делает; дальше у всех
+// планов общие свет, объектив и композиция, по ним дубли не ищем.
+const promptCore = (p: string, complete: boolean) => (complete ? (p.split(/(?<=[.;])\s/)[0] ?? p) : p);
+
+export function shotLints(shots: Loose[], narration: string, label: string, opts: { complete?: boolean } = {}): string[] {
+  const out: string[] = [];
+  const complete = Boolean(opts.complete);
   const est = countWords(narration) / WORDS_PER_SECOND;
   const n = shots.length;
   if (est > 0 && n > 1 && est / n < SHOT_RULES.minSec) {
@@ -386,17 +418,48 @@ export function shotLints(shots: Loose[], narration: string, label: string): str
   shots.forEach((sh, k) => {
     const creepy = creepyShot(sh);
     if (creepy) out.push(`${label}, план ${k + 1}: ${creepy} — генератор делает такие кадры жуткими; покажи через ситуацию и реакцию человека или животного, а анатомию — чистой упрощённой 3D-иллюстрацией`);
-    if (k > 0) {
+    if (complete) out.push(...completePromptLints(sh, `${label}, план ${k + 1}`));
+    if (Array.isArray(sh.callouts)) {
+      sh.callouts.filter(isObj).forEach((c) => {
+        if (countWords(str(c.label)) > 3) out.push(`${label}, план ${k + 1}: подпись «${str(c.label)}» длиннее 3 слов — на экране не успеть прочитать`);
+      });
+    }
+    if (k > 0 && !str(sh.reuse) && !str(shots[k - 1]!.reuse)) {
       const prev = shots[k - 1]!;
-      const sim = promptSimilarity(str(prev.prompt), str(sh.prompt));
+      const sim = promptSimilarity(promptCore(str(prev.prompt), complete), promptCore(str(sh.prompt), complete));
       const sameFraming = Boolean(sh.framing) && sh.framing === prev.framing;
       if (sim >= SHOT_RULES.duplicate || (sameFraming && sim >= SHOT_RULES.duplicateSameFraming)) {
         out.push(`${label}: планы ${k} и ${k + 1} почти одинаковые — покажи другой аспект истории (место, героя, деталь, реакцию), а не тот же кадр ещё раз`);
       }
+    }
+    if (k > 0) {
       const beat = str(sh.beat).trim();
       if (beat && !findBeat(beat, words)) out.push(`${label}, план ${k + 1}: beat «${beat}» не найден в narration — склейка встанет по длине плана`);
     }
   });
+  return out;
+}
+
+// Весь ролик: сколько НОВЫХ картинок (планы без reuse) и куда ссылаются
+// повторы — только на более ранний план с картинкой.
+export function storyboardLints(scenes: unknown[]): string[] {
+  const out: string[] = [];
+  const known = new Set<string>();
+  let fresh = 0;
+  scenes.forEach((sc, i) => {
+    if (!isObj(sc) || !Array.isArray(sc.shots)) return;
+    const id = str(sc.id) || `s${i + 1}`;
+    sc.shots.filter(isObj).forEach((sh, k) => {
+      const reuse = str(sh.reuse);
+      if (reuse) {
+        if (!known.has(reuse)) out.push(`сцена ${id}, план ${k + 1}: reuse «${reuse}» — такого более раннего плана с картинкой нет; укажи id вида s2-k1 из прошлых планов`);
+      } else {
+        fresh++;
+        known.add(`${id}-k${k + 1}`);
+      }
+    });
+  });
+  if (fresh > SHOT_LIMITS.newFrames) out.push(`новых картинок ${fresh} — бюджет ролика ${SHOT_LIMITS.newFrames}: там, где герой и место те же, повтори кадр через reuse с другим движением камеры`);
   return out;
 }
 
@@ -433,7 +496,7 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
     const drawn = kind !== "hook" && kind !== "cta" && (Boolean(raw.map) || compareItems >= 2);
     const shots = opts.cinematic && Array.isArray(raw.shots) ? raw.shots.filter(isObj) : [];
     if (!q && kind !== "cta" && !drawn && !shots.length) out.push(`${label}: нет visualQuery — визуал придётся подбирать наугад`);
-    if (shots.length) out.push(...shotLints(shots, narration, label));
+    if (shots.length) out.push(...shotLints(shots, narration, label, { complete: opts.completePrompts }));
     if (q) {
       if (queries.has(q)) out.push(`${label}: visualQuery «${q}» повторяет сцену ${queries.get(q)} — визуал будет однообразным`);
       else queries.set(q, str(raw.id));
@@ -469,7 +532,7 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
   // Викторина строится из раундов — там сцены media не к месту. Викторина — от двух
   // раундов: один вопрос внутри обычного ролика не освобождает его от правила.
   const quiz = scenes.filter((s) => isObj(s) && s.kind === "quiz").length >= 2;
-  if (opts.cinematic) out.push(...framingVariety(scenes));
+  if (opts.cinematic) out.push(...framingVariety(scenes), ...storyboardLints(scenes));
   else if (shorts && !quiz && scenes.length) {
     const media = scenes.filter((s) => isObj(s) && s.kind === "media").length;
     const { min, max } = SHORTS_RULES.media;
@@ -487,7 +550,7 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
 export function lintScript(script: VideoScript, opts: Partial<LintOptions> = {}): string[] {
   const format = opts.format ?? script.format;
   const cinematic = isCinematic(script);
-  const out = lintScenes(script.scenes, { format, targetSeconds: opts.targetSeconds, cinematic });
+  const out = lintScenes(script.scenes, { format, targetSeconds: opts.targetSeconds, cinematic, completePrompts: script.shotPrompts === "complete" });
   if (!cinematic && script.scenes.some((s) => s.shots?.length)) out.push(`у сцен есть планы shots, но mode не "cinematic" — ролик соберётся в обычном режиме, планы не используются`);
   if (cinematic && !script.style) out.push(`кинорежим без style — кадры получат общий стиль по умолчанию; задай style (освещение, палитра, атмосфера), чтобы планы выглядели одним фильмом`);
   if (cinematic) out.push(...styleLints(script.style));
@@ -757,6 +820,28 @@ function coerceShot(raw: unknown): unknown {
     if (Number.isFinite(n) && n > 0) sh.seconds = n;
     else delete sh.seconds;
   }
+  if (typeof sh.reuse === "string") {
+    const m = /s\s*(\d+)\s*[-_ ]?\s*k\s*(\d+)/i.exec(sh.reuse);
+    if (m) sh.reuse = `s${Number(m[1])}-k${Number(m[2])}`;
+    else delete sh.reuse;
+  } else if (sh.reuse !== undefined) delete sh.reuse;
+  if (Array.isArray(sh.callouts)) {
+    const list = sh.callouts
+      .filter(isObj)
+      .map((c) => dropNulls(c))
+      .map((c) => ({ ...c, label: str(c.label).replace(/\s+/g, " ").trim(), target: str(c.target).replace(/\s+/g, " ").trim(), ...(str(c.beat).trim() ? { beat: str(c.beat).trim() } : {}) }))
+      .filter((c) => c.label && c.target)
+      .slice(0, SHOT_LIMITS.callouts);
+    if (list.length) sh.callouts = list.map(({ label, target, beat }) => (beat ? { label, target, beat } : { label, target }));
+    else delete sh.callouts;
+  } else if (sh.callouts !== undefined) delete sh.callouts;
+  if (typeof sh.sticker === "string" || typeof sh.sticker === "number") sh.sticker = { text: String(sh.sticker) };
+  if (isObj(sh.sticker)) {
+    const text = String(sh.sticker.text ?? "").trim();
+    const beat = str(sh.sticker.beat).trim();
+    if (text) sh.sticker = beat ? { text, beat } : { text };
+    else delete sh.sticker;
+  } else if (sh.sticker !== undefined) delete sh.sticker;
   return sh;
 }
 
@@ -806,10 +891,14 @@ export function coerceScriptCandidate(raw: unknown, req: Pick<ScriptRequest, "fo
   const out = coerceMeta(top);
   // Режим задаёт запрос, а не модель: в обычном режиме поля кино убираем,
   // в кинорежиме mode ставим сами.
-  if (req.cinematic) out.mode = "cinematic";
-  else {
+  // Кинорежим пишет полные промпты планов (prompt.ts, buildCinematicPrompt) — помечаем это.
+  if (req.cinematic) {
+    out.mode = "cinematic";
+    out.shotPrompts = "complete";
+  } else {
     delete out.mode;
     delete out.style;
+    delete out.shotPrompts;
     if (Array.isArray(out.scenes)) out.scenes = out.scenes.map((sc) => (isObj(sc) ? (({ shots: _s, ...rest }) => rest)(sc) : sc));
   }
   // Язык, как и формат, задаёт запрос: в системном промпте пример с "ru", и модель

@@ -12,13 +12,15 @@ import path from "node:path";
 import { fade } from "@remotion/transitions/fade";
 import type { VoiceResult } from "../pipeline/contracts";
 import { buildVideoProps } from "../pipeline/props";
-import { ScriptValidationError, coerceScriptCandidate, creepyShot, lintScript, promptSimilarity, styleLints, validateScript } from "../pipeline/script/validate";
+import { ScriptValidationError, coerceScriptCandidate, completePromptLints, creepyShot, lintScript, promptSimilarity, storyboardLints, styleLints, validateScript } from "../pipeline/script/validate";
 import { resetVisualsState } from "../pipeline/visuals/index";
 import { readVisualsManifest, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
-import { APPEAL, DEFAULT_STYLE, imagePromptFor, styleText } from "../pipeline/visuals/query";
-import { findShotVisuals, shotId, shotScene, shotVisualKey } from "../pipeline/visuals/shots";
+import { APPEAL, DEFAULT_STYLE, aiPromptFor, imagePromptFor, styleText } from "../pipeline/visuals/query";
+import { capNewFrames, findShotVisuals, resolveReuse, shotId, shotScene, shotVisualKey } from "../pipeline/visuals/shots";
+import { cleanBox, parseAnswer, reviewFrames, type ReviewClient, type ReviewItem } from "../pipeline/visuals/review";
+import { sceneCues } from "../remotion/lib/cues";
 import { buildFixtureProps, estimateWords } from "../remotion/fixtures/buildFixture";
-import { CAMERA_MOVES, FPS, MIN_SHOT_FRAMES, findBeat, layoutShots, type CameraMove, type RenderScene, type SceneShot, type SceneVisual, type VideoScript } from "../types";
+import { CAMERA_MOVES, FPS, MIN_SHOT_FRAMES, SHOT_LIMITS, findBeat, layoutShots, renderShots, type CameraMove, type RenderScene, type SceneShot, type SceneVisual, type VideoScript } from "../types";
 import { cameraState, coversFrame } from "../remotion/lib/camera";
 import { specialLayout } from "../remotion/lib/cues";
 import { shotLayers } from "../remotion/lib/shots";
@@ -257,11 +259,13 @@ await test("план без кадра выпадает; ни одного ка�
 
 // ---- Промпты и общий стиль ----
 
-await test("промпт плана: крупность + описание + герой + общий стиль ролика + вертикальная композиция", () => {
+await test("промпт плана (стиль отдельно): крупность + описание + герой + общий стиль ролика + вертикальная композиция", () => {
   const style = styleText(newScript.style)!;
-  for (const part of ["warm uplifting cinematic science documentary still", "photorealistic", "golden-hour sunlight", "warm amber, cream and soft teal color palette", "warm, curious and uplifting mood", "setting: bright cozy home", APPEAL, "no text"]) {
+  for (const part of ["warm uplifting cinematic science documentary still", "photorealistic", "golden-hour sunlight", "warm amber, cream and soft teal color palette", "warm, curious and uplifting mood", APPEAL]) {
     assert.ok(style.includes(part), part);
   }
+  // 30a: «setting: дом, снежный парк, лаборатория» в каждом промпте — 4 коллажа из 16; «no text» FLUX читает как «text».
+  assert.ok(!style.includes("setting:") && !/\bno\b/.test(style), `в хвосте стиля нет мест и отрицаний: ${style}`);
   const s5 = newScript.scenes.find((s) => s.id === "s5")!;
   const prompts = s5.shots!.map((shot, k) => imagePromptFor(shotScene(s5, shot, k), "shorts", style)!);
   assert.ok(prompts[0]!.startsWith("medium shot: Charles Darwin"), prompts[0]);
@@ -342,6 +346,166 @@ await test("без генераторов в VISUALS кадров планов �
   );
   assert.equal(calls.length, 0);
   assert.ok(r.results.every((x) => x.visual.type === "none"));
+});
+
+
+// ---- Полные промпты (сценарий кинорежима от 10.2026) ----
+
+const FULL = "Major Meredith, a tall man in his forties with a neat brown moustache, khaki uniform and slouch hat, frowns at a jammed Lewis machine gun on a tripod in a dry golden wheat field in Western Australia, late afternoon sun, 35mm film photograph, 35mm lens, medium shot, the major and the gun fill the upper two thirds of the vertical frame, calm wheat in the lower third.";
+
+await test("полный промпт: в генератор как есть — без стиля, крупности и героя; режим ставит coerce", () => {
+  const raw = clone(readJson(NEW_FILE)) as Record<string, unknown> & { scenes: { shots?: Record<string, unknown>[] }[] };
+  const cin = coerceScriptCandidate(clone(raw), { format: "shorts", language: "ru", cinematic: true }) as Record<string, unknown>;
+  assert.equal(cin.shotPrompts, "complete");
+  const classic = coerceScriptCandidate({ ...clone(raw), shotPrompts: "complete" }, { format: "shorts", language: "ru" }) as Record<string, unknown>;
+  assert.equal(classic.shotPrompts, undefined, "обычный режим — поле убирается");
+  const scene = { ...newScript.scenes[1]!, shots: [{ prompt: FULL, framing: "medium" as const, subject: "Major Meredith" }] };
+  const ps = shotScene(scene, scene.shots[0]!, 0, true);
+  assert.equal(ps.imagePrompt, FULL, "ни крупности, ни героя код не дописывает");
+  assert.equal(aiPromptFor(ps, { format: "shorts", style: "SHOULD NOT APPEAR", rawPrompt: true }, {}), FULL);
+  const key = JSON.parse(shotVisualKey(scene, scene.shots[0]!, 0, "shorts", { VISUALS: "cloudflare" }, "style", { complete: true })) as { p: string };
+  assert.equal(key.p, FULL, "ключ кэша — по итоговому промпту");
+  const keyR1 = shotVisualKey(scene, scene.shots[0]!, 0, "shorts", { VISUALS: "cloudflare" }, undefined, { complete: true, salt: "r1" });
+  assert.notEqual(keyR1, shotVisualKey(scene, scene.shots[0]!, 0, "shorts", { VISUALS: "cloudflare" }, undefined, { complete: true }), "повтор кадра — свой ключ");
+});
+
+await test("проверки полного промпта: короткий, отрицание, коллаж, надписи; повтор кадра не проверяется", () => {
+  assert.deepEqual(completePromptLints({ prompt: FULL }, "p"), []);
+  const one = (prompt: string) => completePromptLints({ prompt }, "p").join(" | ");
+  assert.match(one("a cat on a fence"), /промпт \d+ слов/);
+  assert.match(one(`${FULL} No text, without people.`), /отрицание «No»/);
+  assert.match(one(`${FULL} Split screen with the farm.`), /коллаж/);
+  assert.match(one(`${FULL} A sign with text above the gate.`), /надписи/);
+  assert.deepEqual(completePromptLints({ prompt: "slow push-in on the gun", reuse: "s2-k1" }, "p"), [], "у повтора кадра prompt — одна фраза");
+});
+
+await test("раскадровка: бюджет новых картинок и повторы только на более ранний план", () => {
+  const sc = (id: string, shots: Record<string, unknown>[]) => ({ id, kind: "media", narration: "x", onScreen: "x", shots });
+  const ok = [sc("s1", [{ prompt: FULL }]), sc("s2", [{ prompt: FULL }, { prompt: "push-in", reuse: "s1-k1" }])];
+  assert.deepEqual(storyboardLints(ok), []);
+  assert.match(storyboardLints([sc("s1", [{ prompt: FULL, reuse: "s2-k1" }])]).join(), /более раннего плана/);
+  const many = Array.from({ length: SHOT_LIMITS.newFrames + 1 }, (_, i) => sc(`s${i + 1}`, [{ prompt: FULL }]));
+  assert.match(storyboardLints(many).join(), /бюджет ролика/);
+});
+
+await test("coerce плана: reuse «S2 K1» → s2-k1, подписи — не больше двух и без пустых, цифра из строки", () => {
+  const raw = clone(readJson(NEW_FILE)) as { scenes: { shots?: Record<string, unknown>[] }[] };
+  raw.scenes[2]!.shots![0] = {
+    prompt: FULL,
+    reuse: "S2 K1",
+    callouts: [{ label: " пулемёт ", target: "the gun" }, { label: "", target: "x" }, { label: "майор", target: "the major", beat: "Майор" }, { label: "три", target: "y" }],
+    sticker: "1932",
+  };
+  const cin = coerceScriptCandidate(raw, { format: "shorts", language: "ru", cinematic: true }) as { scenes: { shots: SceneShot[] }[] };
+  const sh = cin.scenes[2]!.shots[0]!;
+  assert.equal(sh.reuse, "s2-k1");
+  assert.deepEqual(sh.callouts, [{ label: "пулемёт", target: "the gun" }, { label: "майор", target: "the major", beat: "Майор" }]);
+  assert.deepEqual(sh.sticker, { text: "1932" });
+});
+
+await test("бюджет кадров и повторы: лишние планы повторяют прошлый кадр сцены, повтор берёт картинку по id", () => {
+  const scenes = [
+    { id: "s1", shots: [{ prompt: "a" }, { prompt: "b" }] as SceneShot[] },
+    { id: "s2", shots: [{ prompt: "c" }, { prompt: "d" }, { prompt: "e", reuse: "s1-k2" }] as SceneShot[] },
+  ];
+  const capped = capNewFrames(scenes, 3);
+  assert.equal(capped.capped, 1);
+  assert.equal(capped.scenes[1]!.shots![1]!.reuse, "s2-k1", "4-я новая картинка — повтор кадра своей сцены");
+  const res = resolveReuse(capped.scenes, [["A", "B"], ["C", "", ""]], (r: string) => r === "");
+  assert.deepEqual(res, [["A", "B"], ["C", "C", "B"]]);
+});
+
+await test("подписи и цифра: появляются на словах beat, без рамки проверки подписи нет, цифра уходит вниз от героя", () => {
+  const words = [
+    { text: "Майор", startMs: 0, endMs: 400 },
+    { text: "взял", startMs: 400, endMs: 700 },
+    { text: "пулемёт", startMs: 700, endMs: 1300 },
+    { text: "в", startMs: 1300, endMs: 1400 },
+    { text: "тысяча", startMs: 1400, endMs: 1900 },
+  ];
+  const scene = { durationInFrames: 120, audioStartFrame: 3, words, visual: { type: "none" } as SceneVisual };
+  const shots: SceneShot[] = [{ prompt: FULL, callouts: [{ label: "пулемёт Льюиса", target: "the gun", beat: "пулемёт" }, { label: "майор", target: "the major" }], sticker: { text: "1932", beat: "тысяча" } }];
+  const box = { x: 0.5, y: 0.3, w: 0.2, h: 0.1 };
+  const out = renderShots(scene, shots, [img("k.png")], 0, [{ subject: { x: 0.3, y: 0.1, w: 0.4, h: 0.5 }, boxes: { "the gun": box } }])!;
+  const m = out[0]!.marks!;
+  assert.equal(m.callouts.length, 1, "«майор» без рамки проверки — без подписи");
+  assert.deepEqual(m.callouts[0], { label: "пулемёт Льюиса", box, at: 3 + Math.floor(0.7 * FPS) });
+  assert.equal(m.sticker?.text, "1932");
+  assert.equal(m.sticker?.at, 3 + Math.floor(1.4 * FPS));
+  assert.equal(m.sticker?.place, "middle", "герой в верхней трети — цифра ниже");
+  const bare = renderShots(scene, [{ prompt: FULL }], [img("k.png")], 0)!;
+  assert.equal(bare[0]!.marks, undefined, "без подписей и цифры — без marks");
+  const rs = { ...scene, id: "s1", kind: "media" as const, narration: "", onScreen: "", audioSrc: "", audioDurationMs: 0, startFrame: 0, shots: out } as RenderScene;
+  const cues = sceneCues(rs, FPS);
+  assert.deepEqual(cues.pops, [m.callouts[0]!.at + 6]);
+  assert.deepEqual(cues.impacts, [m.sticker!.at]);
+});
+
+await test("проверка кадров: разбор ответа, рамки в пределах кадра, кэш вердиктов — второй раз без запроса", async () => {
+  assert.deepEqual(cleanBox({ x: -0.1, y: 0.2, w: 0.5, h: 2 }), { x: 0, y: 0.2, w: 0.5, h: 0.8 });
+  assert.equal(cleanBox({ x: 0.5, y: 0.5, w: 0.001, h: 0.3 }), null, "точка — не рамка");
+  const dir = await mkdtemp(path.join(os.tmpdir(), "vs-review-"));
+  try {
+    const file = path.join(dir, "s1-k1.png");
+    await (await import("node:fs/promises")).writeFile(file, PNG);
+    const items: ReviewItem[] = [{ id: "s1-k1", file, phrase: "Майор взял пулемёт", prompt: FULL, targets: ["the gun"] }];
+    const answer = {
+      frames: [
+        { id: "s1-k1", verdict: "redo", score: 3, problems: ["коллаж из трёх панелей"], fix_prompt: "one single scene", subject_box: { x: 0.2, y: 0.1, w: 0.5, h: 0.5 }, callouts: [{ target: "The gun", found: true, box: { x: 0.4, y: 0.3, w: 0.2, h: 0.1 } }] },
+      ],
+    };
+    const v = parseAnswer(`вот: ${JSON.stringify(answer)}`, items).get("s1-k1")!;
+    assert.equal(v.ok, false);
+    assert.equal(v.fixPrompt, "one single scene");
+    assert.deepEqual(v.boxes, { "the gun": { x: 0.4, y: 0.3, w: 0.2, h: 0.1 } }, "имя предмета — как в сценарии");
+    let calls = 0;
+    const client: ReviewClient = {
+      beta: {
+        messages: {
+          stream: (body) => {
+            calls++;
+            const content = body.messages[0]!.content as { type: string }[];
+            assert.equal(content.filter((b) => b.type === "image").length, 1);
+            return { finalMessage: async () => ({ model: "claude-opus-5-5", stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(answer) }], usage: { input_tokens: 2000, output_tokens: 300 } }) as never };
+          },
+        },
+      },
+    };
+    const env = { VISUALS_AI_CACHE_DIR: path.join(dir, "cache") };
+    const cfg = { model: "claude-opus-5-5", apiKey: "k", timeoutMs: 1000 };
+    const shrink = async () => Buffer.from("jpeg");
+    const first = await reviewFrames(items, { topic: "Эму-война" }, cfg, env, client, shrink);
+    assert.equal(calls, 1);
+    assert.ok(first.costUsd > 0);
+    assert.equal(first.verdicts.get("s1-k1")?.score, 3);
+    const again = await reviewFrames(items, { topic: "Эму-война" }, cfg, env, client, shrink);
+    assert.equal(calls, 1, "тот же кадр и то же задание — вердикт из кэша");
+    assert.equal(again.cached, 1);
+    assert.equal(again.costUsd, 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+await test("общий кэш AI-кадров: тот же промпт и seed — без второго запроса к Cloudflare, даже в другой папке ролика", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "vs-aicache-"));
+  try {
+    const env = { VISUALS: "cloudflare", CLOUDFLARE_ACCOUNT_ID: "acc", CLOUDFLARE_API_TOKEN: "tok", VISUALS_AI_CACHE_DIR: path.join(dir, "ai") };
+    const scene = { ...newScript.scenes[1]!, shots: [{ prompt: FULL }] };
+    const run = async (folder: string) => {
+      const net = cloudflareMock();
+      const r = await findShotVisuals({ scene, shots: scene.shots, format: "shorts", publicDir: path.join(dir, folder), sceneIndex: 1, usedIds: new Set(), prev: {}, complete: true }, { env, fetch: net.fn, log: { info: () => {}, warn: () => {} } });
+      return { r, net };
+    };
+    const a = await run("one");
+    assert.equal(a.net.prompts.length, 1);
+    assert.equal(a.net.prompts[0], FULL, "в генератор — полный промпт как есть");
+    const b = await run("two");
+    assert.equal(b.net.prompts.length, 0, "другая папка ролика (как чистый раннер Actions) — кадр из кэша");
+    assert.equal(b.r.results[0]!.visual.type, "image");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 // ---- Композиция: слои, переходы, камера ----

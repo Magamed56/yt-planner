@@ -56,8 +56,11 @@
 - **Кинорежим** (`VideoScript.mode = "cinematic"`, README «Кинорежим»): планы `ScriptScene.shots` и
   общий `VideoScript.style` — в `types.ts` (`layoutShots`/`renderShots` делят длину сцены, не трогая
   тайминг звука и субтитров); кадры планов — `visuals/shots.ts` (тот же `findVisual` с `aiOnly`,
-  промпт — `query.ts`: `shotImagePrompt` + `styleText`, ключ манифеста — `shotVisualKey`); рисует
-  `MediaScene` (`lib/shots.ts`, движения камеры — `lib/camera.ts`, `MediaLayer` с `dim="none"`).
+  промпт — `query.ts`: полный промпт сценариста при `shotPrompts: "complete"`, иначе `shotImagePrompt` +
+  `styleText`; ключ манифеста — `shotVisualKey`; повторы кадра `reuse`, бюджет `capNewFrames`); общий кэш
+  кадров — `visuals/ai-cache.ts`; проверка кадров зрением Claude и перегенерация — `visuals/review.ts` +
+  `reviewAndFixShots` в `cli/make.ts`; рисует `MediaScene` (`lib/shots.ts`, движения камеры —
+  `lib/camera.ts`, `MediaLayer` с `dim="none"`, подписи и цифры — `components/ShotMarks.tsx`).
   Обычный ответ LLM — `ClassicVideoScriptSchema` (JSON Schema для модели без полей кино);
   проверки — `src/dev/cinematic-test.ts`.
 - `src/pipeline/plan.ts` — `content/plan.json` (60 тем: хук, угол, факты с источниками): `parsePlan`,

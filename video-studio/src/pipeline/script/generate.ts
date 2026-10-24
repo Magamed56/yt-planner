@@ -44,6 +44,7 @@ import {
   ScriptValidationError,
   SHORTS_RULES,
   shotLints,
+  storyboardLints,
   styleLints,
   trimCta,
   unwrap,
@@ -177,12 +178,12 @@ function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGu
     // первый ответ в ремонт, после ремонта только замечание (оно и так в lintScript).
     if (req.cinematic && strict) {
       scenes.forEach((sc, i) => {
-        if (isObj(sc) && Array.isArray(sc.shots)) problems.push(...shotLints(sc.shots.filter(isObj), typeof sc.narration === "string" ? sc.narration : "", `сцена №${i + 1}`));
+        if (isObj(sc) && Array.isArray(sc.shots)) problems.push(...shotLints(sc.shots.filter(isObj), typeof sc.narration === "string" ? sc.narration : "", `сцена №${i + 1}`, { complete: true }));
       });
-      problems.push(...styleLints(isObj(cand) ? cand.style : undefined));
+      problems.push(...storyboardLints(scenes), ...styleLints(isObj(cand) ? cand.style : undefined));
     }
     if (problems.length || !script) {
-      const soft = [...warnings, ...lintScenes(scenes, { format: "shorts", targetSeconds: voiceSeconds, cinematic: req.cinematic }), ...ctaRepeatWarnings(scenes, recent)];
+      const soft = [...warnings, ...lintScenes(scenes, { format: "shorts", targetSeconds: voiceSeconds, cinematic: req.cinematic, completePrompts: req.cinematic }), ...ctaRepeatWarnings(scenes, recent)];
       return { ok: false, problems, warnings: softOnly(soft, problems) };
     }
     guard.accept(rep.warnings);

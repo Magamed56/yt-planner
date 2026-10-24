@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Sequence, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { KineticText } from "../components/KineticText";
 import { Illustration } from "../components/Illustration";
+import { CalloutLayer, StickerLayer } from "../components/ShotMarks";
 import { MediaLayer } from "../components/MediaLayer";
 import { isCinematicScene, shotLayers } from "../lib/shots";
 import { FONT_DISPLAY } from "../fonts";
@@ -22,7 +23,17 @@ const CinematicShots: React.FC<SceneProps> = (p) => (
   <AbsoluteFill style={{ backgroundColor: p.theme.bgFrom }}>
     {shotLayers(p.scene).map((layer, k) => (
       <Sequence key={k} from={layer.from} durationInFrames={layer.durationInFrames} name={`План ${k + 1} · ${layer.camera}`}>
-        <MediaLayer visual={layer.visual} theme={p.theme} durationInFrames={layer.durationInFrames} seed={p.index * 10 + k} dim={layer.dim} camera={layer.camera} motionSeed={layer.motionSeed} />
+        <MediaLayer
+          visual={layer.visual}
+          theme={p.theme}
+          durationInFrames={layer.durationInFrames}
+          seed={p.index * 10 + k}
+          dim={layer.dim}
+          camera={layer.camera}
+          motionSeed={layer.motionSeed}
+          overlay={layer.marks?.callouts.length ? <CalloutLayer callouts={layer.marks.callouts} durationInFrames={layer.durationInFrames} /> : undefined}
+        />
+        {layer.marks?.sticker ? <StickerLayer sticker={layer.marks.sticker} durationInFrames={layer.durationInFrames} /> : null}
       </Sequence>
     ))}
   </AbsoluteFill>

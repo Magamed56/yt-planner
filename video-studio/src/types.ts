@@ -61,17 +61,38 @@ export type CameraMove = "push-in" | "pull-out" | "pan-left" | "pan-right" | "ti
 export const CAMERA_MOVES: CameraMove[] = ["push-in", "pull-out", "pan-left", "pan-right", "tilt-up", "tilt-down", "handheld"];
 
 export interface SceneShot {
-  prompt: string; // АНГЛИЙСКОЕ описание кадра: кто/что, действие, окружение (без стиля — он в VideoScript.style)
+  // АНГЛИЙСКИЙ промпт кадра. При VideoScript.shotPrompts = "complete" — полный
+  // (герой с приметами, действие, одно место, свет, объектив, композиция) и
+  // уходит в генератор как есть; иначе — только содержание, стиль добавит код.
+  prompt: string;
   seconds?: number; // желаемая длина плана; реальная — доля длины сцены, которую задаёт голос
   framing?: ShotFraming;
   camera?: CameraMove; // нет — подберётся по крупности (defaultCamera)
   subject?: string; // кто/что в кадре: один и тот же герой или предмет называется одинаково во всех планах
   beat?: string; // первые слова narration, на которых начинается план (склейка под фразу)
+  reuse?: string; // "s2-k1": кадр того плана ещё раз, с другим движением камеры — без новой генерации
+  callouts?: ShotCallout[]; // подписи со стрелкой к предметам в кадре (моушен поверх картинки)
+  sticker?: ShotSticker; // крупная цифра или дата поверх кадра
+}
+
+// Подпись к предмету в кадре: где он — скажет проверка кадра (visuals/review.ts).
+export interface ShotCallout {
+  label: string; // по-русски, 1–3 слова: «пулемёт Льюиса»
+  target: string; // ENGLISH: что в кадре подписываем — "the machine gun"
+  beat?: string; // слова narration, на которых подпись появляется
+}
+
+export interface ShotSticker {
+  text: string; // «1932», «×10», «986»
+  beat?: string;
 }
 
 export type VideoMode = "infographic" | "cinematic";
 
-// Общий стиль кадров ролика (по-английски — уходит в промпт каждого AI-кадра).
+// Общий вид кадров ролика (по-английски). Старые сценарии: поля direction…
+// environment дописываются в промпт каждого кадра. Новые (shotPrompts =
+// "complete"): world, look и characters — «библия» ролика, по которой
+// сценарист пишет полные промпты; код к ним ничего не дописывает.
 export interface VisualStyle {
   direction?: string; // художественное направление: "dark fantasy film still"
   lighting?: string; // "low-key candle light, volumetric haze"
@@ -79,9 +100,20 @@ export interface VisualStyle {
   realism?: string; // "photorealistic" | "painterly" …
   mood?: string; // "mysterious, tense"
   environment?: string; // "misty northern village, wooden houses"
+  world?: string; // один мир ролика: место, эпоха, время года, погода
+  look?: string; // съёмка: камера, объектив, плёнка, свет, цвет
+  characters?: StyleCharacter[]; // сквозные герои с неизменными приметами
 }
 
-export const SHOT_LIMITS = { perScene: 6, minSec: 1, maxSec: 10 } as const;
+export interface StyleCharacter {
+  name: string; // "Major Meredith"
+  look: string; // ENGLISH приметы — слово в слово в каждом промпте с этим героем
+}
+
+// newFrames — сколько НОВЫХ картинок просим у сценариста на ролик (остальные
+// планы повторяют кадры через reuse): бесплатной квоты Cloudflare хватает на
+// ≈ 60 кадров в сутки, а одна картинка с движением камеры держит 3–5 с.
+export const SHOT_LIMITS = { perScene: 6, minSec: 1, maxSec: 10, newFrames: 12, callouts: 2 } as const;
 // План короче секунды мелькает: такие точки склейки сдвигаются.
 export const MIN_SHOT_FRAMES = 30;
 // Склейка на фразу — чуть раньше первого слова: картинка «ведёт» голос.
@@ -151,6 +183,7 @@ export interface VideoScript {
   scenes: ScriptScene[];
   mode?: VideoMode; // нет — обычный режим (инфографика)
   style?: VisualStyle; // общий стиль AI-кадров ролика
+  shotPrompts?: "complete"; // промпты планов полные — стиль к ним не дописывается (кинорежим, сценарий от 10.2026)
 }
 
 // ---- Рендер ----
@@ -188,6 +221,27 @@ export interface RenderShot extends SceneShot {
   visual: SceneVisual;
   from: number; // кадр начала плана относительно начала сцены
   durationInFrames: number;
+  marks?: ShotMarks; // моушен поверх кадра: подписи и цифра (кадры — от начала плана)
+}
+
+// Прямоугольник на картинке в долях её ширины и высоты (левый верхний угол + размер).
+export interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+// Что знает проверка о кадре (visuals/review.ts): где главный предмет и
+// предметы для подписей. Нет — подписи плана не рисуются.
+export interface ShotMeta {
+  subject?: Box;
+  boxes?: Record<string, Box>; // target подписи → где он на картинке
+}
+
+export interface ShotMarks {
+  callouts: { label: string; box: Box; at: number }[];
+  sticker: { text: string; at: number; place: "top" | "middle" } | null;
 }
 
 // Слово субтитров на ОБЩЕЙ таймлинии (совместимо с Caption из @remotion/captions).
@@ -414,13 +468,50 @@ export function renderShots(
   shots: SceneShot[] | undefined,
   visuals: (SceneVisual | null | undefined)[],
   edgeFrames: number,
+  metas: (ShotMeta | null | undefined)[] = [],
 ): RenderShot[] | undefined {
   if (!shots?.length) return undefined;
-  const ready = shots.map((s, k) => ({ ...s, visual: visuals[k] ?? ({ type: "none" } as SceneVisual) })).filter((s) => s.visual.type !== "none");
+  const ready = shots
+    .map((s, k) => ({ ...s, visual: visuals[k] ?? ({ type: "none" } as SceneVisual), meta: metas[k] ?? null }))
+    .filter((s) => s.visual.type !== "none");
   if (!ready.length) {
     if (scene.visual.type === "none") return undefined;
-    ready.push({ ...shots[0]!, visual: scene.visual });
+    ready.push({ ...shots[0]!, visual: scene.visual, meta: null });
   }
-  const out = layoutShots(ready, scene, edgeFrames);
+  const out = layoutShots(ready, scene, edgeFrames).map(({ meta, ...shot }) => {
+    const marks = shotMarks(shot, meta, scene);
+    return marks ? { ...shot, marks } : shot;
+  });
   return out.length ? out : undefined;
+}
+
+// Подпись появляется на своих словах (beat) и держится не меньше MARK_TAIL
+// кадров; план короче MARK_MIN_SHOT — без подписей (не успеть прочитать).
+const MARK_FIRST = 6;
+const MARK_TAIL = 20;
+const MARK_MIN_SHOT = 36;
+
+export function shotMarks(
+  shot: SceneShot & { from: number; durationInFrames: number },
+  meta: ShotMeta | null | undefined,
+  scene: { audioStartFrame: number; words: WordTiming[] },
+): ShotMarks | undefined {
+  const dur = shot.durationInFrames;
+  if (dur < MARK_MIN_SHOT) return undefined;
+  // Кадр слов beat относительно начала плана; не нашлось — запасной момент.
+  const at = (beat: string | undefined, fallback: number): number => {
+    const hit = beat ? findBeat(beat, scene.words) : null;
+    const f = hit ? scene.audioStartFrame + Math.floor((Math.max(0, hit.startMs) / 1000) * FPS) - shot.from : fallback;
+    return Math.max(MARK_FIRST, Math.min(dur - MARK_TAIL, f));
+  };
+  const callouts: ShotMarks["callouts"] = [];
+  (shot.callouts ?? []).slice(0, SHOT_LIMITS.callouts).forEach((c, k) => {
+    const box = meta?.boxes?.[c.target];
+    if (!box) return; // проверка не нашла предмет — подпись в пустоту не рисуем
+    callouts.push({ label: c.label, box, at: at(c.beat, MARK_FIRST + 4 + k * 14) });
+  });
+  const sticker = shot.sticker?.text.trim()
+    ? { text: shot.sticker.text.trim(), at: at(shot.sticker.beat, MARK_FIRST), place: meta?.subject && meta.subject.y < 0.3 ? ("middle" as const) : ("top" as const) }
+    : null;
+  return callouts.length || sticker ? { callouts, sticker } : undefined;
 }
