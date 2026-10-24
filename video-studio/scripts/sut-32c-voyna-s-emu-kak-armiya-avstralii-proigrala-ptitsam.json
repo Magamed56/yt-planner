@@ -1,0 +1,251 @@
+{
+  "title": "Война с эму: как армия Австралии проиграла птицам",
+  "description": "Как в 1932 году солдаты с пулемётами Льюиса пытались спасти пшеницу Западной Австралии от эму и почему операция майора Мередита провалилась. Короткая история Эму-войны: засада у водопоя, заклинивший пулемёт и десять патронов на одну птицу.\n#shorts #история #австралия #эму",
+  "tags": [
+    "эму-война",
+    "война с эму",
+    "армия австралии",
+    "австралия война с эму",
+    "война с эму на пальцах",
+    "эму",
+    "австралия",
+    "история",
+    "1932",
+    "пулемёт льюиса",
+    "майор мередит",
+    "странные войны",
+    "emu war",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "В тридцать втором армия пошла с пулемётами на птиц. И проиграла.",
+      "onScreen": "Армия против *птиц*",
+      "shots": [
+        {
+          "prompt": "A tall adult emu with shaggy brown-grey feathers, a bare blue-grey neck and bright amber eyes stands proudly in a golden wheat field and looks curiously toward a distant army truck on a red dirt road, Western Australian wheatbelt on a sunny November afternoon in 1932, 35mm film photograph, natural warm sunlight, soft grain, medium shot, the emu head in the upper two thirds of the vertical frame, calm wheat in the lower third",
+          "seconds": 2.8,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Emu",
+          "sticker": {
+            "text": "1932",
+            "beat": "тридцать втором"
+          }
+        },
+        {
+          "prompt": "A young Australian soldier in his twenties with a freckled face and sandy hair, wearing a khaki shirt with rolled sleeves, khaki shorts and a brown slouch hat, sits behind a Lewis gun mounted on the back of an old army truck and raises his eyebrows in amused surprise at the empty wheat field, sunny afternoon in the Western Australian wheatbelt, 35mm film photograph, warm sunlight, medium close-up, his face in the upper two thirds of the vertical frame, quiet truck bed in the lower third",
+          "seconds": 2.4,
+          "framing": "reaction",
+          "camera": "handheld",
+          "subject": "Gunner",
+          "beat": "И проиграла"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Эму вытаптывали пшеницу фермеров Западной Австралии. Против них выслали солдат с пулемётами Льюиса.",
+      "onScreen": "Эму топчут *пшеницу*",
+      "shots": [
+        {
+          "prompt": "A flock of tall adult emus with shaggy brown-grey feathers, bare blue-grey necks and bright amber eyes strolls through a ripe golden wheat field, pecking at the ears and flattening the stalks, Western Australian wheatbelt on a bright November morning in 1932, 35mm film photograph, natural warm sunlight, soft grain, wide shot, the flock in the upper two thirds of the vertical frame, smooth wheat in the lower third",
+          "seconds": 3,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "Emu",
+          "callouts": [
+            {
+              "label": "пшеница",
+              "target": "golden wheat field",
+              "beat": "вытаптывали пшеницу"
+            }
+          ]
+        },
+        {
+          "prompt": "A 1930s Australian army officer in his forties with a neat dark moustache and short dark hair, wearing a khaki service tunic with a brown leather Sam Browne belt and a peaked khaki cap, stands confidently beside an old army truck with a Lewis gun mounted on its back, gazing across the wheat fields, red dirt road in the Western Australian wheatbelt at midday, 35mm film photograph, warm sunlight, low-angle medium shot, officer and gun in the upper two thirds of the vertical frame, plain red earth in the lower third",
+          "seconds": 3.2,
+          "framing": "low-angle",
+          "camera": "tilt-up",
+          "subject": "Major Meredith",
+          "beat": "Против них",
+          "callouts": [
+            {
+              "label": "пулемёт Льюиса",
+              "target": "Lewis gun",
+              "beat": "пулемётами Льюиса"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Второго ноября началась охота. Самое обидное число ждёт в конце.",
+      "onScreen": "2 ноября: *охота* начинается",
+      "visualQuery": "army truck dirt road wheat field",
+      "imagePrompt": "Old khaki army truck driving along a red dirt road between golden wheat fields, dust trailing behind, early morning light, 35mm film look, warm ochre palette",
+      "shots": [
+        {
+          "prompt": "An old khaki army truck with a Lewis gun on its back drives along a long red dirt road between endless golden wheat fields, a cloud of dust trailing behind, a few gum trees on the horizon, Western Australian wheatbelt in early morning light in November 1932, 35mm film photograph, warm low sunlight, soft grain, establishing shot from above, truck and road in the upper two thirds of the vertical frame, calm wheat in the lower third",
+          "seconds": 4.8,
+          "framing": "establishing",
+          "camera": "pull-out",
+          "subject": "army truck"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Но птицы разбегались мелкими группами. За три дня солдаты подстрелили всего тридцать эму.",
+      "onScreen": "За 3 дня — всего *30*",
+      "shots": [
+        {
+          "prompt": "Several small groups of tall adult emus with shaggy brown-grey feathers, bare blue-grey necks and bright amber eyes sprint off in different directions across a wide wheat paddock, kicking up light dust, Western Australian wheatbelt on a sunny afternoon, 35mm film photograph, natural warm sunlight, soft grain, high-angle wide shot, the scattering birds in the upper two thirds of the vertical frame, even stubble in the lower third",
+          "seconds": 3.2,
+          "framing": "high-angle",
+          "camera": "pan-left",
+          "subject": "Emu"
+        },
+        {
+          "prompt": "slow push-in on the young gunner's puzzled face behind the Lewis gun",
+          "seconds": 3,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Gunner",
+          "beat": "За три",
+          "reuse": "s1-k2"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Тогда засада у водопоя. Рядом тысячи птиц. И тут пулемёт заклинило.",
+      "onScreen": "Засада. И пулемёт *заклинило*",
+      "visualQuery": "Emu drinking waterhole",
+      "imagePrompt": "Hundreds of emus gathered around a shallow waterhole in the Australian outback, soldiers hiding behind saltbush, warm late afternoon light, 35mm film look, golden palette",
+      "shots": [
+        {
+          "prompt": "Hundreds upon hundreds of tall adult emus with shaggy brown-grey feathers, bare blue-grey necks and bright amber eyes crowd around a shallow muddy waterhole to drink, while soldiers in khaki crouch hidden behind low saltbush at the edge, Western Australian wheatbelt in soft late afternoon light, 35mm film photograph, warm golden sunlight, soft grain, wide shot, the waterhole and birds in the upper two thirds of the vertical frame, quiet sandy ground in the lower third",
+          "seconds": 3,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "Emu"
+        },
+        {
+          "prompt": "A young Australian soldier in his twenties with a freckled face and sandy hair, wearing a khaki shirt with rolled sleeves, khaki shorts and a brown slouch hat, kneels behind saltbush and stares wide-eyed in comic disbelief at his Lewis gun, tugging at its stuck cocking handle, beside a waterhole in the Western Australian wheatbelt at late afternoon, 35mm film photograph, warm golden light, close-up, face and gun in the upper two thirds of the vertical frame, soft sand in the lower third",
+          "seconds": 2.5,
+          "framing": "close-up",
+          "camera": "handheld",
+          "subject": "Gunner",
+          "beat": "И тут",
+          "callouts": [
+            {
+              "label": "заклинило",
+              "target": "Lewis gun",
+              "beat": "пулемёт заклинило"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "В отчёте майор Мередит насчитал девятьсот восемьдесят шесть эму и девять тысяч восемьсот шестьдесят патронов. Десять на птицу.",
+      "onScreen": "Отчёт: *10* патронов на птицу",
+      "shots": [
+        {
+          "prompt": "A 1930s Australian army officer in his forties with a neat dark moustache and short dark hair, wearing a khaki service tunic with a brown leather Sam Browne belt and a peaked khaki cap, sits at a wooden camp table inside a canvas army tent, thoughtfully writing a report with a fountain pen, stacked wooden ammunition crates behind him, warm evening light through the tent flap in the Western Australian wheatbelt, 35mm film photograph, medium shot, officer in the upper two thirds of the vertical frame, plain table edge in the lower third",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Major Meredith",
+          "sticker": {
+            "text": "986",
+            "beat": "девятьсот восемьдесят"
+          }
+        },
+        {
+          "prompt": "An open wooden crate filled to the brim with empty brass cartridge cases glinting in the sun, resting on red dirt beside a wheat field, Western Australian wheatbelt in warm evening light, 35mm film photograph, soft grain, overhead detail shot, the shining brass in the upper two thirds of the vertical frame, smooth red earth in the lower third",
+          "seconds": 3.5,
+          "framing": "overhead",
+          "camera": "pull-out",
+          "subject": "brass cartridge cases",
+          "beat": "девять тысяч",
+          "sticker": {
+            "text": "×10",
+            "beat": "Десять на птицу"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Десятого декабря операцию свернули. А эму почти не стало меньше.",
+      "onScreen": "А эму *не убавилось*",
+      "visualQuery": "Emu flock wheat field",
+      "imagePrompt": "Large relaxed flock of emus grazing in a golden wheat field at sunset, a small army truck leaving on the horizon, warm golden light, 35mm film look, ochre palette",
+      "shots": [
+        {
+          "prompt": "A large relaxed flock of tall adult emus with shaggy brown-grey feathers, bare blue-grey necks and bright amber eyes calmly grazes in a golden wheat field at sunset while a small khaki army truck drives away along the dirt road on the horizon, Western Australian wheatbelt in December 1932, 35mm film photograph, warm golden sunset light, soft grain, wide shot, the flock and the departing truck in the upper two thirds of the vertical frame, calm wheat in the lower third",
+          "seconds": 2.6,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "Emu"
+        },
+        {
+          "prompt": "slow pull-out from the proud emu standing in the wheat field",
+          "seconds": 2.4,
+          "framing": "medium",
+          "camera": "pull-out",
+          "subject": "Emu",
+          "beat": "А эму",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Кто, по-твоему, выиграл эту войну?",
+      "onScreen": "Кто *выиграл* войну?"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "warm historical comedy, the birds always win the frame",
+    "lighting": "bright golden sunlight, soft long shadows",
+    "palette": "golden wheat, red ochre earth, khaki, sky blue",
+    "realism": "photorealistic period photograph",
+    "mood": "light, ironic, gently humorous",
+    "environment": "open wheat paddocks, dirt road, a shallow waterhole",
+    "world": "Campion district wheatbelt of Western Australia, late spring of November 1932, dry sunny weather, golden wheat fields, red dirt tracks, wire fence lines and scattered gum trees",
+    "look": "35mm film photograph, 35mm lens, natural warm sunlight, warm true-to-life colors with golden and ochre tones, soft film grain, vertical 9:16 frame",
+    "characters": [
+      {
+        "name": "Emu",
+        "look": "a tall adult emu with shaggy brown-grey feathers, a bare blue-grey neck and bright amber eyes"
+      },
+      {
+        "name": "Gunner",
+        "look": "a young Australian soldier in his twenties with a freckled face and sandy hair, wearing a khaki shirt with rolled sleeves, khaki shorts and a brown slouch hat"
+      },
+      {
+        "name": "Major Meredith",
+        "look": "a 1930s Australian army officer in his forties with a neat dark moustache and short dark hair, wearing a khaki service tunic with a brown leather Sam Browne belt and a peaked khaki cap"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}

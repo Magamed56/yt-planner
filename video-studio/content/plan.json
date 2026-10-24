@@ -1561,7 +1561,8 @@
           "source": "https://simple.wikipedia.org/wiki/Emu_War"
         }
       ],
-      "status": "planned"
+      "status": "script-ready",
+      "script": "scripts/sut-32c-voyna-s-emu-kak-armiya-avstralii-proigrala-ptitsam.json"
     },
     {
       "id": "33a",
