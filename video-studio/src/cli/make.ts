@@ -470,9 +470,14 @@ async function main() {
     }
     writeVisualsManifest(publicDir, next);
     if (shotTotal) console.log(`  планы: кадр есть у ${shotFound} из ${shotTotal}${shotReused ? `, из прошлого запуска — ${shotReused}` : ""}`);
-    const found = out.filter((r) => r.visual.type !== "none").length;
+    // Сцены, где кадры дали планы, визуала сцены не ищут — в счёт «найден для N из M» не идут.
+    const bySceneVisual = out.filter((_, i) => !shotVisuals[i]?.some((r) => r.visual.type !== "none"));
+    const found = bySceneVisual.filter((r) => r.visual.type !== "none").length;
     const again = reused.filter(Boolean).length;
-    console.log(`  визуал найден для ${found} из ${out.length} сцен${found < out.length ? " (остальные — чистая моушен-графика)" : ""}`);
+    if (bySceneVisual.length) {
+      const what = shotTotal ? " без кадров планов" : "";
+      console.log(`  визуал найден для ${found} из ${bySceneVisual.length} сцен${what}${found < bySceneVisual.length ? " (остальные — чистая моушен-графика)" : ""}`);
+    }
     if (again) console.log(`  ${again} — из прошлого запуска; подобрать заново: удалите ${rel(path.join(publicDir, "visuals"))}`);
     const judge = visualsJudgeStats();
     if (judge.calls) console.log(`  судья Claude (${judge.model}): ${judge.calls} запросов, ≈ $${judge.costUsd.toFixed(4)}`);

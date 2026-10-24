@@ -339,6 +339,35 @@ export function promptSimilarity(a: string, b: string): number {
 
 export const SHOT_RULES = { minSec: 1.2, duplicate: 0.85, duplicateSameFraming: 0.6, sumTolerance: 0.5 } as const;
 
+// Кадры, которые генератор почти всегда делает жуткими: макро кожи, пор и
+// волос, раны, насекомые, скопления дырочек и пузырьков (трипофобия),
+// испуганные лица. Контрольный 30a (10.2026): «мурашки» в макро вышли
+// волдырями, срез кожи — «пауком», стволовые клетки — гроздью пузырей.
+const CREEPY_SUBJECT = /\b(pores?|goosebumps?|follicles?|cross[- ]sections?|blisters?|bumps|rash|wounds?|blood|gore|insects?|spiders?|worms?|maggots?|larvae?|parasites?|teeth|eyeballs?|tentacles?|cluster(?:s|ed)?|corpses?|skulls?)\b/i;
+const CREEPY_MOOD = /\b(crying|tears|screaming|terrified|scared|frightened|horror|creepy|eerie|gloomy|haunted|shivering|distressed)\b/i;
+const MACRO = /\b(macro|extreme close-?up|microscop\w*|magnified)\b/i;
+
+// Причина, по которой кадр рискует выйти жутким, или null.
+export function creepyShot(shot: Loose): string | null {
+  const text = `${str(shot.prompt)} ${str(shot.subject)}`;
+  const mood = CREEPY_MOOD.exec(text);
+  if (mood) return `«${mood[0]}»`;
+  const close = shot.framing === "detail" || shot.framing === "close-up" || MACRO.test(text);
+  const subject = CREEPY_SUBJECT.exec(text);
+  if (subject && close) return `«${subject[0]}» крупным планом`;
+  if (MACRO.test(text) && /\b(skin|hairs?)\b/i.test(text)) return "макро кожи и волос";
+  return null;
+}
+
+// Тёмный холодный style делает мрачным весь ролик, а не один кадр.
+const DARK_STYLE = /\b(low-key|dark|night|gloomy|eerie|horror|creepy|cold blue|grim|noir)\b/i;
+export function styleLints(style: unknown): string[] {
+  if (!isObj(style)) return [];
+  const text = ["direction", "lighting", "palette", "mood", "environment"].map((k) => str(style[k])).join(" ");
+  const hit = DARK_STYLE.exec(text);
+  return hit ? [`style мрачный («${hit[0]}»): весь ролик выйдет тёмным и холодным — для научпопа бери дневной или тёплый золотой свет; тёмный стиль — только если его требует сама тема`] : [];
+}
+
 export function shotLints(shots: Loose[], narration: string, label: string): string[] {
   const out: string[] = [];
   const est = countWords(narration) / WORDS_PER_SECOND;
@@ -355,6 +384,8 @@ export function shotLints(shots: Loose[], narration: string, label: string): str
   }
   const words = narration.split(/\s+/).map((text) => ({ text, startMs: 0, endMs: 0 }));
   shots.forEach((sh, k) => {
+    const creepy = creepyShot(sh);
+    if (creepy) out.push(`${label}, план ${k + 1}: ${creepy} — генератор делает такие кадры жуткими; покажи через ситуацию и реакцию человека или животного, а анатомию — чистой упрощённой 3D-иллюстрацией`);
     if (k > 0) {
       const prev = shots[k - 1]!;
       const sim = promptSimilarity(str(prev.prompt), str(sh.prompt));
@@ -459,6 +490,7 @@ export function lintScript(script: VideoScript, opts: Partial<LintOptions> = {})
   const out = lintScenes(script.scenes, { format, targetSeconds: opts.targetSeconds, cinematic });
   if (!cinematic && script.scenes.some((s) => s.shots?.length)) out.push(`у сцен есть планы shots, но mode не "cinematic" — ролик соберётся в обычном режиме, планы не используются`);
   if (cinematic && !script.style) out.push(`кинорежим без style — кадры получат общий стиль по умолчанию; задай style (освещение, палитра, атмосфера), чтобы планы выглядели одним фильмом`);
+  if (cinematic) out.push(...styleLints(script.style));
   if (script.title.length > 70) out.push(`title длиннее 70 символов — в поиске YouTube обрежется`);
   else if (format === "shorts" && script.title.length > SHORTS_RULES.titleChars) {
     out.push(`title ${script.title.length} символов — для Shorts лучше до ${SHORTS_RULES.titleChars}: в ленте видно только начало`);

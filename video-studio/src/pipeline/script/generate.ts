@@ -44,6 +44,7 @@ import {
   ScriptValidationError,
   SHORTS_RULES,
   shotLints,
+  styleLints,
   trimCta,
   unwrap,
   validateScenes,
@@ -178,6 +179,7 @@ function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGu
       scenes.forEach((sc, i) => {
         if (isObj(sc) && Array.isArray(sc.shots)) problems.push(...shotLints(sc.shots.filter(isObj), typeof sc.narration === "string" ? sc.narration : "", `сцена №${i + 1}`));
       });
+      problems.push(...styleLints(isObj(cand) ? cand.style : undefined));
     }
     if (problems.length || !script) {
       const soft = [...warnings, ...lintScenes(scenes, { format: "shorts", targetSeconds: voiceSeconds, cinematic: req.cinematic }), ...ctaRepeatWarnings(scenes, recent)];

@@ -21,12 +21,12 @@
   "theme": "midnight",
   "mode": "cinematic",
   "style": {
-    "direction": "cinematic science documentary film still",
-    "lighting": "low-key lighting with a cold blue rim light",
-    "palette": "deep blue and teal with natural warm skin tones",
-    "realism": "photorealistic",
-    "mood": "intimate and curious",
-    "environment": "dark studio interiors and quiet winter nights"
+    "direction": "warm uplifting cinematic science documentary still",
+    "lighting": "soft natural daylight and warm golden-hour sunlight, gentle shadows",
+    "palette": "warm amber, cream and soft teal",
+    "realism": "photorealistic, clean and polished",
+    "mood": "warm, curious and uplifting",
+    "environment": "bright cozy home, sunny snowy park, bright modern laboratory"
   },
   "scenes": [
     {
@@ -39,17 +39,17 @@
       "imagePrompt": "cinematic macro shot of human forearm skin with goosebumps and tiny raised hairs, cold blue rim light, dark background, shallow depth of field",
       "shots": [
         {
-          "framing": "detail",
-          "prompt": "human forearm skin covered in goosebumps, tiny hairs standing upright",
-          "subject": "human forearm",
+          "framing": "medium",
+          "prompt": "a young woman in a cozy knit sweater smiling in surprise as a cool breeze from an open window touches her arm, bright morning light",
+          "subject": "young woman",
           "camera": "push-in",
           "seconds": 2
         },
         {
-          "framing": "medium",
-          "prompt": "a young woman shivering and hugging herself in a cold dark room, goosebumps on her bare arms",
-          "subject": "young woman",
-          "camera": "handheld",
+          "framing": "wide",
+          "prompt": "a fluffy ginger cat lounging on a sunny windowsill, thick soft fur glowing in the light",
+          "subject": "fluffy ginger cat",
+          "camera": "pan-right",
           "seconds": 1.5,
           "beat": "которой у тебя"
         }
@@ -65,16 +65,16 @@
       "imagePrompt": "cinematic microscopic cross-section of skin showing a hair follicle and a tiny muscle pulling it upright, glowing blue and teal tones, dark background",
       "shots": [
         {
-          "framing": "close-up",
-          "prompt": "microscopic cross-section of human skin with a single hair follicle and a tiny muscle attached to it",
-          "subject": "hair follicle",
+          "framing": "medium",
+          "prompt": "clean minimal 3D educational render of a single hair strand rooted in smooth simplified skin layers, a tiny ribbon-like muscle attached at its base, soft pastel colors, smooth glossy surfaces",
+          "subject": "single hair strand",
           "camera": "push-in",
           "seconds": 2.5
         },
         {
-          "framing": "detail",
-          "prompt": "the tiny muscle contracting and pulling the hair upright out of the skin, microscope view",
-          "subject": "hair follicle",
+          "framing": "close-up",
+          "prompt": "clean minimal 3D educational render of the single hair strand standing upright as the tiny ribbon-like muscle at its base contracts, soft pastel colors, smooth glossy surfaces",
+          "subject": "single hair strand",
           "camera": "tilt-up",
           "seconds": 2.5,
           "beat": "Она сокращается"
@@ -92,15 +92,15 @@
       "shots": [
         {
           "framing": "wide",
-          "prompt": "a fluffy cat with puffed fur sitting in a snowy winter yard",
-          "subject": "fluffy cat",
+          "prompt": "a fluffy grey cat with puffed fur sitting happily in a snowy park on a bright sunny winter day",
+          "subject": "fluffy grey cat",
           "camera": "pan-right",
           "seconds": 2
         },
         {
-          "framing": "detail",
-          "prompt": "frost crystals on thick puffed cat fur, warm air trapped between the hairs",
-          "subject": "fluffy cat",
+          "framing": "close-up",
+          "prompt": "thick soft grey cat fur sparkling with snowflakes in warm sunlight, cozy and soft",
+          "subject": "fluffy grey cat",
           "camera": "push-in",
           "seconds": 2,
           "beat": "Воздух между"
@@ -118,15 +118,15 @@
       "shots": [
         {
           "framing": "low-angle",
-          "prompt": "a black cat with arched back and bristling fur standing on a wooden fence at night",
+          "prompt": "a black cat with fluffed-up fur and an arched back standing proudly on a sunny garden fence, playful and comical",
           "subject": "black cat",
           "camera": "tilt-up",
           "seconds": 2.5
         },
         {
           "framing": "reaction",
-          "prompt": "a small dog backing away nervously with flattened ears on a night street",
-          "subject": "small dog",
+          "prompt": "a corgi puppy stepping back with a funny confused expression on a sunny garden path",
+          "subject": "corgi puppy",
           "camera": "handheld",
           "seconds": 2,
           "beat": "Отличный способ"
@@ -144,22 +144,22 @@
       "shots": [
         {
           "framing": "medium",
-          "prompt": "Charles Darwin as an elderly bearded naturalist writing at a candlelit Victorian desk",
+          "prompt": "Charles Darwin as an elderly bearded naturalist writing at a sunlit Victorian study desk with books and plants",
           "subject": "Charles Darwin",
           "camera": "push-in",
           "seconds": 2.5
         },
         {
           "framing": "detail",
-          "prompt": "pen sketches of animals with raised fur in an old 19th century notebook",
+          "prompt": "pen sketches of fluffy animals with raised fur in an old 19th century notebook on a sunny desk",
           "subject": "old notebook",
           "camera": "pan-left",
           "seconds": 2
         },
         {
           "framing": "close-up",
-          "prompt": "goosebumps rising on the bare arm of a modern person listening to music in headphones",
-          "subject": "modern person",
+          "prompt": "a young man with headphones closing his eyes and smiling, deeply moved by music, warm sunset light",
+          "subject": "young man",
           "camera": "handheld",
           "seconds": 2.5,
           "beat": "а рефлекс"
@@ -182,23 +182,23 @@
       "shots": [
         {
           "framing": "medium",
-          "prompt": "scientists in a dark laboratory looking at a glowing microscope screen",
+          "prompt": "two smiling scientists in a bright modern laboratory looking at a colorful image on a large monitor",
           "subject": "scientists",
           "camera": "pan-right",
           "seconds": 2.5
         },
         {
-          "framing": "detail",
-          "prompt": "a glowing nerve fiber wrapping around a hair follicle under a fluorescence microscope",
-          "subject": "hair follicle",
+          "framing": "close-up",
+          "prompt": "clean minimal 3D educational render of a glowing nerve fiber gently wrapping the root of a single hair strand, soft pastel colors, smooth glossy surfaces",
+          "subject": "single hair strand",
           "camera": "push-in",
           "seconds": 3,
           "beat": "Нерв мурашек"
         },
         {
-          "framing": "close-up",
-          "prompt": "luminous stem cells clustered at the base of a hair follicle, fluorescence microscopy",
-          "subject": "hair follicle",
+          "framing": "medium",
+          "prompt": "clean minimal 3D educational render of a few large soft glowing spheres resting at the root of a single hair strand next to a nerve fiber and a tiny muscle, soft pastel colors",
+          "subject": "single hair strand",
           "camera": "pull-out",
           "seconds": 2.5,
           "beat": "и стволовые клетки"
@@ -215,16 +215,16 @@
       "imagePrompt": "cinematic macro of new hair strands growing from skin, soft blue rim light, shallow depth of field, dark background",
       "shots": [
         {
-          "framing": "detail",
-          "prompt": "new hair strands sprouting from human skin, macro",
-          "subject": "human skin",
+          "framing": "medium",
+          "prompt": "a young woman with healthy shiny hair laughing outdoors in warm golden light, hair gently moving in the breeze",
+          "subject": "young woman",
           "camera": "push-in",
           "seconds": 2
         },
         {
           "framing": "wide",
-          "prompt": "a person standing on a windy cliff at dawn with hair blowing, seen from behind",
-          "subject": "person",
+          "prompt": "the young woman walking through a sunny autumn park, seen from behind, hair flowing in the wind, warm golden hour",
+          "subject": "young woman",
           "camera": "pan-left",
           "seconds": 2.5,
           "beat": "Эти нервы"

@@ -12,10 +12,10 @@ import path from "node:path";
 import { fade } from "@remotion/transitions/fade";
 import type { VoiceResult } from "../pipeline/contracts";
 import { buildVideoProps } from "../pipeline/props";
-import { ScriptValidationError, coerceScriptCandidate, lintScript, promptSimilarity, validateScript } from "../pipeline/script/validate";
+import { ScriptValidationError, coerceScriptCandidate, creepyShot, lintScript, promptSimilarity, styleLints, validateScript } from "../pipeline/script/validate";
 import { resetVisualsState } from "../pipeline/visuals/index";
 import { readVisualsManifest, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
-import { DEFAULT_STYLE, imagePromptFor, styleText } from "../pipeline/visuals/query";
+import { APPEAL, DEFAULT_STYLE, imagePromptFor, styleText } from "../pipeline/visuals/query";
 import { findShotVisuals, shotId, shotScene, shotVisualKey } from "../pipeline/visuals/shots";
 import { buildFixtureProps, estimateWords } from "../remotion/fixtures/buildFixture";
 import { CAMERA_MOVES, FPS, MIN_SHOT_FRAMES, findBeat, layoutShots, type CameraMove, type RenderScene, type SceneShot, type SceneVisual, type VideoScript } from "../types";
@@ -77,7 +77,7 @@ await test("старый сценарий 30a: проходит проверку
 
 await test("копия 30a в кинорежиме: режим, стиль и планы сохраняются; в остальном — тот же сценарий", () => {
   assert.equal(newScript.mode, "cinematic");
-  assert.equal(newScript.style?.realism, "photorealistic");
+  assert.equal(newScript.style?.realism, "photorealistic, clean and polished");
   const withShots = newScript.scenes.filter((s) => s.shots?.length);
   assert.equal(withShots.length, newScript.scenes.length - 1, "планы у всех сцен, кроме финала");
   assert.ok(withShots.every((s) => s.shots!.length >= 2), "в каждой сцене несколько планов");
@@ -87,7 +87,7 @@ await test("копия 30a в кинорежиме: режим, стиль и п
   for (const s of stripped.scenes) delete s.shots;
   assert.deepEqual(stripped, oldScript, "копия отличается от 30a только полями кинорежима");
   const lint = lintScript(newScript);
-  assert.ok(!lint.some((w) => /почти одинаковые|не найден|мелькает|одной крупности|media/.test(w)), `лишние замечания: ${lint.join(" | ")}`);
+  assert.ok(!lint.some((w) => /почти одинаковые|не найден|мелькает|одной крупности|media|жутк|мрачн/.test(w)), `лишние замечания: ${lint.join(" | ")}`);
 });
 
 await test("валидация: длина плана 1–10 с, только известные движения камеры, промпт по-английски", () => {
@@ -144,6 +144,28 @@ await test("замечания: почти одинаковые планы по�
   const noMode = clone(newScript);
   delete noMode.mode;
   assert.ok(lintScript(noMode).some((w) => /mode не "cinematic"/.test(w)));
+});
+
+await test("жуть заранее: макро кожи, пор и «срезов», испуганные лица и тёмный стиль помечаются; кадры копии 30a — нет", () => {
+  // Промпты первой контрольной сборки 30a (10.2026): на видео вышли волдыри, «паук» из поры и грозди пузырей.
+  const creepy: Record<string, unknown>[] = [
+    { framing: "detail", prompt: "human forearm skin covered in goosebumps, tiny hairs standing upright" },
+    { framing: "medium", prompt: "a young woman shivering and hugging herself in a cold dark room" },
+    { framing: "close-up", prompt: "microscopic cross-section of human skin with a single hair follicle and a tiny muscle attached to it" },
+    { framing: "detail", prompt: "the tiny muscle contracting and pulling the hair upright out of the skin, microscope view" },
+    { framing: "close-up", prompt: "luminous stem cells clustered at the base of a hair follicle, fluorescence microscopy" },
+    { framing: "detail", prompt: "new hair strands sprouting from human skin, macro" },
+  ];
+  for (const shot of creepy) assert.ok(creepyShot(shot), `не помечен: ${shot.prompt}`);
+  for (const sc of newScript.scenes) for (const shot of sc.shots ?? []) assert.equal(creepyShot(shot as unknown as Record<string, unknown>), null, `зря помечен: ${shot.prompt}`);
+  assert.ok(creepyShot({ framing: "wide", prompt: "a spider web in a sunny garden" }) === null, "паутина общим планом — не макро");
+  assert.equal(styleLints({ lighting: "low-key lighting with a cold blue rim light", environment: "dark studio interiors and quiet winter nights" }).length, 1);
+  assert.deepEqual(styleLints(newScript.style), []);
+  const dark = clone(newScript);
+  dark.style = { ...dark.style, lighting: "low-key lighting with a cold blue rim light" };
+  dark.scenes[0]!.shots![0] = { framing: "detail", prompt: "human forearm skin covered in goosebumps" };
+  const lint = lintScript(dark);
+  assert.ok(lint.some((w) => /style мрачный/.test(w)) && lint.some((w) => /сцена s1, план 1: «goosebumps» крупным планом/.test(w)), lint.join(" | "));
 });
 
 // ---- Раскладка планов ----
@@ -237,7 +259,7 @@ await test("план без кадра выпадает; ни одного ка�
 
 await test("промпт плана: крупность + описание + герой + общий стиль ролика + вертикальная композиция", () => {
   const style = styleText(newScript.style)!;
-  for (const part of ["cinematic science documentary film still", "photorealistic", "cold blue rim light", "deep blue and teal", "intimate and curious mood", "setting: dark studio", "no text"]) {
+  for (const part of ["warm uplifting cinematic science documentary still", "photorealistic", "golden-hour sunlight", "warm amber, cream and soft teal color palette", "warm, curious and uplifting mood", "setting: bright cozy home", APPEAL, "no text"]) {
     assert.ok(style.includes(part), part);
   }
   const s5 = newScript.scenes.find((s) => s.id === "s5")!;

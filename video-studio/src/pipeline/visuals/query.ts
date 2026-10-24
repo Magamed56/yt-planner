@@ -47,7 +47,9 @@ export function buildQueries(scene: ScriptScene): string[] {
 // ---- Кинорежим: план и общий стиль ролика ----
 
 // Общий стиль ролика (VideoScript.style) → хвост промпта каждого AI-кадра.
-// «Без надписей» — всегда: генераторы любят рисовать буквы.
+// «Без надписей» — всегда: генераторы любят рисовать буквы. Привлекательность —
+// тоже всегда и словами «что нужно», а не «чего не надо»: FLUX не понимает
+// отрицаний, «no horror» лишь подсказал бы ему жуть.
 export function styleText(style: VisualStyle | undefined): string | undefined {
   if (!style) return undefined;
   const t = (v: string | undefined) => v?.trim().replace(/[.\s]+$/, "") || "";
@@ -59,8 +61,10 @@ export function styleText(style: VisualStyle | undefined): string | undefined {
     t(style.mood) && `${t(style.mood)} mood`,
     t(style.environment) && `setting: ${t(style.environment)}`,
   ].filter(Boolean);
-  return parts.length ? `${parts.join(", ")}, no text, no letters, no watermark` : undefined;
+  return parts.length ? `${parts.join(", ")}, ${APPEAL}, no text, no letters, no watermark` : undefined;
 }
+
+export const APPEAL = "appealing and aesthetically pleasing, clean and wholesome";
 
 const FRAMING_TEXT: Record<ShotFraming, string> = {
   establishing: "establishing extreme wide shot",
