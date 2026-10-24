@@ -1,0 +1,256 @@
+{
+  "title": "Почему апельсиновая корка лопает шарик",
+  "description": "Почему брызги апельсиновой корки лопают воздушный шарик, хотя корка совсем не острая. Разбираем химию лимонена, вещества, которое пахнет апельсином и растворяет резину. Ещё расскажем, какой шарик выдержит этот опыт и как повторить его дома.\n#shorts #химия #опытыдома #наука",
+  "tags": [
+    "апельсиновая корка",
+    "апельсин",
+    "воздушный шарик",
+    "лимонен",
+    "химия",
+    "опыты дома",
+    "научные опыты",
+    "подобное растворяется в подобном",
+    "резина",
+    "химия для детей",
+    "science experiment",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Апельсиновая корка не острая. Но шарик от неё лопается.",
+      "onScreen": "Корка не острая. Но шарик *лопается*",
+      "icon": "zap",
+      "shots": [
+        {
+          "prompt": "A hand squeezing a folded strip of fresh orange peel, a fine glittering mist of citrus oil spraying onto a big shiny red balloon resting on a white lab bench, sunlit school chemistry classroom in the afternoon, soft natural daylight, 35mm film photograph, warm true-to-life colors, close-up, peel and balloon placed in the upper two thirds of the vertical frame, calm white bench surface across the lower third",
+          "seconds": 4.5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "orange peel and red balloon"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Химик Том Канцлеман увидел этот фокус и задумался: какая химия за ним стоит?",
+      "onScreen": "Какая *химия* за этим стоит?",
+      "icon": "flask-conical",
+      "shots": [
+        {
+          "prompt": "Chemist, a man in his forties with short brown hair, round glasses, a white lab coat over a navy sweater, staring with amused surprise at scraps of a popped red balloon and a half-peeled orange on a white lab bench, sunlit school chemistry classroom in the afternoon, soft window daylight, 35mm film photograph, warm colors, medium shot, his face and the bench in the upper two thirds of the vertical frame, plain bench edge in the lower third",
+          "seconds": 3,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Chemist"
+        },
+        {
+          "prompt": "slow push-in on the Chemist's thoughtful face as he looks at the balloon scraps",
+          "seconds": 3,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "Chemist",
+          "beat": "и задумался",
+          "reuse": "s2-k1"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "В интернете винили лимонен: жидкость с запахом апельсина, сплошь из углерода и водорода.",
+      "onScreen": "Подозреваемый — *лимонен*",
+      "icon": "droplet",
+      "visualQuery": "orange peel zest close",
+      "imagePrompt": "Fresh orange peel with tiny glistening oil glands on a white lab bench, soft natural daylight, 35mm film photograph, warm true-to-life colors",
+      "shots": [
+        {
+          "prompt": "Fresh orange peel with tiny glistening oil glands on its bright surface, a single drop of clear oil forming at the edge, lying on a white lab bench in a sunlit school chemistry classroom in the afternoon, soft natural daylight, 35mm film photograph, warm true-to-life colors, detail shot, peel filling the upper two thirds of the vertical frame, smooth white surface in the lower third",
+          "seconds": 3,
+          "framing": "detail",
+          "camera": "pan-left",
+          "subject": "orange peel",
+          "footage": "orange peel zest close"
+        },
+        {
+          "prompt": "Clean simple illustration of a ball-and-stick molecule model made of large black balls and small white balls, standing beside a juicy orange slice on a plain light cream background, soft even daylight, gentle shadows, warm orange accents, medium shot, model and slice centered in the upper two thirds of the vertical frame, empty calm background in the lower third",
+          "seconds": 3,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "molecule model",
+          "beat": "сплошь из углерода",
+          "callouts": [
+            {
+              "label": "углерод",
+              "target": "large black balls",
+              "beat": "углерода"
+            },
+            {
+              "label": "водород",
+              "target": "small white balls",
+              "beat": "водорода"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Но шарик из резины, а она тоже углеводород. Подобное растворяется в подобном, и оболочка слабеет.",
+      "onScreen": "Подобное растворяется в *подобном*",
+      "icon": "atom",
+      "shots": [
+        {
+          "prompt": "Clean simple illustration of the glossy stretched surface of a big red balloon with one clear droplet of oil sitting on it, plain light cream background, soft even daylight, gentle reflections, warm palette of red and orange, close-up, balloon surface and droplet in the upper two thirds of the vertical frame, smooth empty background in the lower third",
+          "seconds": 4,
+          "framing": "close-up",
+          "camera": "tilt-down",
+          "subject": "red balloon",
+          "callouts": [
+            {
+              "label": "резина",
+              "target": "red balloon surface",
+              "beat": "Но шарик"
+            },
+            {
+              "label": "лимонен",
+              "target": "clear droplet of oil",
+              "beat": "Подобное растворяется"
+            }
+          ]
+        },
+        {
+          "prompt": "slow push-in on the droplet spreading across the thinning balloon surface",
+          "seconds": 3,
+          "framing": "detail",
+          "camera": "push-in",
+          "subject": "red balloon",
+          "beat": "и оболочка",
+          "reuse": "s4-k1"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Канцлеман с коллегами проверили: выделили из корок чистый лимонен и капнули на шарик. Хлоп!",
+      "onScreen": "Чистый лимонен — и *хлоп*",
+      "icon": "flask-conical",
+      "visualQuery": "red balloon popping",
+      "imagePrompt": "Big shiny red balloon bursting into flying rubber scraps on a white lab bench, sunlit chemistry classroom, 35mm film photograph, warm true-to-life colors",
+      "shots": [
+        {
+          "prompt": "Chemist, a man in his forties with short brown hair, round glasses, a white lab coat over a navy sweater, holding a glass pipette above a big shiny red balloon, a small glass vial of clear liquid and a pile of orange peels beside it on a white lab bench, sunlit school chemistry classroom in the afternoon, soft window daylight, 35mm film photograph, warm colors, medium shot, pipette and balloon in the upper two thirds of the vertical frame, calm bench in the lower third",
+          "seconds": 4,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Chemist",
+          "callouts": [
+            {
+              "label": "чистый лимонен",
+              "target": "small glass vial of clear liquid",
+              "beat": "чистый лимонен"
+            }
+          ]
+        },
+        {
+          "prompt": "A big shiny red balloon bursting into flying rubber scraps on a white lab bench in a sunlit school chemistry classroom, frozen moment of the pop, soft natural daylight, 35mm film photograph, warm true-to-life colors, close-up, burst in the upper two thirds of the vertical frame, clean bench in the lower third",
+          "seconds": 2.5,
+          "framing": "close-up",
+          "camera": "handheld",
+          "subject": "red balloon",
+          "beat": "и капнули",
+          "footage": "red balloon popping slow motion"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "А потом сюрприз. Шарик из вулканизированной резины выдержал и лимонен, и сок корки.",
+      "onScreen": "Этот шарик *выдержал*",
+      "icon": "shield",
+      "shots": [
+        {
+          "prompt": "Chemist, a man in his forties with short brown hair, round glasses, a white lab coat over a navy sweater, raising his eyebrows with a delighted grin at a big intact blue balloon glistening with drops of clear oil and orange peel juice on a white lab bench, sunlit school chemistry classroom in the afternoon, soft window daylight, 35mm film photograph, warm colors, medium shot, his face and the balloon in the upper two thirds of the vertical frame, quiet bench in the lower third",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "pull-out",
+          "subject": "Chemist",
+          "callouts": [
+            {
+              "label": "вулканизированная резина",
+              "target": "big intact blue balloon",
+              "beat": "вулканизированной резины"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Дома надуй шарик побольше: растянутый латекс тоньше. А корку надрежь, так лимонену легче выйти.",
+      "onScreen": "Надуй *побольше*, корку надрежь",
+      "icon": "house",
+      "visualQuery": "cutting orange peel knife",
+      "imagePrompt": "Large inflated red balloon next to a whole orange on a wooden kitchen table, bright home kitchen, window sunlight, 35mm film photograph, warm true-to-life colors",
+      "shots": [
+        {
+          "prompt": "A very large inflated red balloon tied with a string resting on a wooden kitchen table next to a whole orange, bright home kitchen on a clear spring afternoon, sunlight from a window, 35mm film photograph, warm true-to-life colors, wide shot, balloon and orange in the upper two thirds of the vertical frame, calm wooden tabletop in the lower third",
+          "seconds": 3.5,
+          "framing": "wide",
+          "camera": "tilt-up",
+          "subject": "red balloon",
+          "callouts": [
+            {
+              "label": "тонкий латекс",
+              "target": "very large inflated red balloon",
+              "beat": "растянутый латекс"
+            }
+          ]
+        },
+        {
+          "prompt": "A small kitchen knife scoring several shallow cuts into a strip of fresh orange peel on a wooden cutting board, bright home kitchen on a clear spring afternoon, window sunlight, 35mm film photograph, warm true-to-life colors, close-up, peel and knife in the upper two thirds of the vertical frame, plain board in the lower third",
+          "seconds": 3.5,
+          "framing": "close-up",
+          "camera": "pan-right",
+          "subject": "orange peel",
+          "beat": "А корку",
+          "footage": "cutting orange peel knife"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А твой шарик выдержит апельсин?",
+      "onScreen": "Твой шарик *выдержит*?",
+      "icon": "message-circle"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "warm playful science film, clean and bright, every frame tells one simple action",
+    "lighting": "soft natural daylight from large windows, gentle highlights",
+    "palette": "bright orange, balloon red, clean white, soft mint accents",
+    "realism": "photorealistic",
+    "mood": "curious, cheerful, surprising",
+    "environment": "sunlit school chemistry classroom with white benches, later a bright home kitchen",
+    "world": "a modern sunlit school chemistry classroom on a clear spring afternoon; the final scene moves to a bright home kitchen on the same afternoon",
+    "look": "35mm film photograph, 35mm lens, soft natural afternoon daylight, warm true-to-life colors, gentle grain, vertical 9:16 composition",
+    "characters": [
+      {
+        "name": "Chemist",
+        "look": "a man in his forties with short brown hair, round glasses, a white lab coat over a navy sweater"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}

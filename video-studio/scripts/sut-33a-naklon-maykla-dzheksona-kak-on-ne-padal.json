@@ -1,0 +1,315 @@
+{
+  "title": "Наклон Майкла Джексона: как он не падал",
+  "description": "Как Майкл Джексон наклонялся вперёд на 45 градусов в Smooth Criminal и не падал. Разбираем патент на антигравитационные ботинки и что сказали о наклоне нейрохирурги.\n#shorts #майклджексон #smoothcriminal #патент #наука",
+  "tags": [
+    "наклон майкла джексона",
+    "наклон джексона",
+    "майкл джексон",
+    "smooth criminal",
+    "антигравитационный наклон",
+    "патент",
+    "ботинки майкла джексона",
+    "биомеханика",
+    "позвоночник",
+    "нейрохирурги",
+    "изобретения",
+    "shorts",
+    "michael jackson lean"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Прямое тело, наклон в сорок пять градусов. И он не падает.",
+      "onScreen": "Наклон 45° — и он *не падает*",
+      "icon": "zap",
+      "shots": [
+        {
+          "prompt": "A slim dancer in his late twenties with shoulder-length black curly hair, wearing a white double-breasted suit, a white fedora with a black band, a blue shirt, a white tie and white spats over black shoes, leans forward stiffly at a steep forty-five degree angle with a perfectly straight body, heels planted on a polished wooden dance floor of a 1930s-style speakeasy club set at night. 35mm film photograph, warm tungsten stage light with soft haze, low-angle wide shot, the dancer fills the upper two thirds of the vertical frame, calm dark floor in the lower third.",
+          "seconds": 5,
+          "framing": "low-angle",
+          "camera": "push-in",
+          "subject": "Dancer"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Майкл Джексон, клип Smooth Criminal, тысяча девятьсот восемьдесят восьмой. Любой другой бы рухнул.",
+      "onScreen": "Smooth Criminal, *1988*",
+      "icon": "music",
+      "shots": [
+        {
+          "prompt": "A row of dancers in white suits and fedoras on a 1930s-style speakeasy club film set at night, with a slim dancer in his late twenties with shoulder-length black curly hair, wearing a white double-breasted suit, a white fedora with a black band, a blue shirt, a white tie and white spats over black shoes, standing in the center, smiling, chandeliers and smoky haze above. 35mm film photograph, warm tungsten light, establishing wide shot, figures in the upper two thirds, empty polished floor in the lower third.",
+          "seconds": 3,
+          "framing": "establishing",
+          "camera": "pan-right",
+          "subject": "Dancer",
+          "sticker": {
+            "text": "1988",
+            "beat": "тысяча девятьсот восемьдесят восьмой"
+          }
+        },
+        {
+          "prompt": "slow pull-out from the leaning dancer to reveal the steep angle",
+          "seconds": 3,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Dancer",
+          "beat": "Любой другой",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Центр масс уходит за ступни. В клипе танцоров держали тросы и обвязка.",
+      "onScreen": "Центр масс *за ступнями*",
+      "icon": "target",
+      "visualQuery": "dancer harness steel cables",
+      "imagePrompt": "Clean simple illustration on a light cream background of a navy silhouette leaning forward at forty-five degrees, a red dot marking the center of mass far beyond the feet, warm soft light",
+      "shots": [
+        {
+          "prompt": "Clean simple illustration on a light cream plain background: a dark navy silhouette of a standing figure leaning forward at forty-five degrees with a straight body, a large red dot at the belly marking the center of mass, and a thin dashed vertical line dropping from the red dot to the floor far in front of the feet. Flat minimal style, the figure in the upper two thirds of the vertical frame, plain light area in the lower third.",
+          "seconds": 3,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "leaning figure",
+          "callouts": [
+            {
+              "label": "центр масс",
+              "target": "red dot",
+              "beat": "Центр масс"
+            },
+            {
+              "label": "ступни",
+              "target": "feet",
+              "beat": "за ступни"
+            }
+          ]
+        },
+        {
+          "prompt": "A slim dancer in his late twenties with shoulder-length black curly hair, wearing a white double-breasted suit, a white fedora with a black band, a blue shirt, a white tie and white spats over black shoes, leans forward on a film set while thin steel cables run from a hidden harness under his jacket up to a rig in the ceiling, a smiling film crew member watching nearby. 35mm film photograph, warm tungsten light with soft haze, medium shot, dancer and cables in the upper two thirds, calm floor below.",
+          "seconds": 3,
+          "framing": "medium",
+          "camera": "tilt-up",
+          "subject": "Dancer",
+          "beat": "В клипе",
+          "callouts": [
+            {
+              "label": "тросы",
+              "target": "steel cables"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Но на концерте тросы цепляли бы рабочие сцены, на глазах у зала.",
+      "onScreen": "Тросы на сцене *выдают* трюк",
+      "icon": "eye",
+      "shots": [
+        {
+          "prompt": "A huge concert stage in the early 1990s seen from behind the audience, a slim dancer in his late twenties with shoulder-length black curly hair, wearing a white double-breasted suit, a white fedora with a black band, a blue shirt, a white tie and white spats over black shoes, standing in a spotlight while a stagehand in black clothes walks toward him holding a coiled steel cable, raised hands of the cheering crowd. 35mm film photograph, warm spotlights and haze, wide shot, stage in the upper two thirds, dark crowd silhouettes in the lower third.",
+          "seconds": 6,
+          "framing": "wide",
+          "camera": "handheld",
+          "subject": "Dancer"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "И тогда Джексон с соавторами придумал ботинок и в девяносто втором подал заявку на патент.",
+      "onScreen": "Ботинок против *гравитации*",
+      "icon": "lightbulb",
+      "shots": [
+        {
+          "prompt": "A wooden drafting desk at night in an early-1990s design studio, a pencil sketch of a black dress shoe with a cut in the heel lying under a warm desk lamp, a white fedora with a black band resting beside the paper, a ruler and pencils nearby. 35mm film photograph, warm lamp light, soft grain, overhead shot, sketch and hat in the upper two thirds of the vertical frame, smooth dark wood in the lower third.",
+          "seconds": 7,
+          "framing": "overhead",
+          "camera": "push-in",
+          "subject": "shoe sketch",
+          "sticker": {
+            "text": "1992",
+            "beat": "в девяносто втором"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "В каблуке прорезь. Она цепляется за штырь, выдвинутый из пола сцены, и держит.",
+      "onScreen": "Прорезь в каблуке + *штырь*",
+      "icon": "key",
+      "visualQuery": "black dress shoe heel",
+      "imagePrompt": "Clean simple illustration on a light cream background of a glossy black dress shoe with a V-shaped slot in the heel hooked onto a metal peg rising from a wooden stage floor, soft shadow",
+      "shots": [
+        {
+          "prompt": "Clean simple illustration on a light cream plain background: one large glossy black dress shoe in side view with a V-shaped slot cut into its heel, hooked onto a short polished metal peg rising up from a dark wooden stage floor board. Flat minimal technical style, soft shadow, shoe and peg large in the upper two thirds of the vertical frame, plain light area in the lower third.",
+          "seconds": 4,
+          "framing": "detail",
+          "camera": "push-in",
+          "subject": "black dress shoe",
+          "callouts": [
+            {
+              "label": "прорезь",
+              "target": "V-shaped slot in the heel",
+              "beat": "В каблуке"
+            },
+            {
+              "label": "штырь",
+              "target": "metal peg",
+              "beat": "цепляется за штырь"
+            }
+          ]
+        },
+        {
+          "prompt": "slow tilt up along the leaning dancer held at the heels",
+          "seconds": 2,
+          "framing": "low-angle",
+          "camera": "tilt-up",
+          "subject": "Dancer",
+          "beat": "и держит",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Выпрямился, сдвинул ботинки назад — свободен. Патент выдали в тысяча девятьсот девяносто третьем.",
+      "onScreen": "Патент выдан в *1993*",
+      "icon": "circle-check",
+      "shots": [
+        {
+          "prompt": "Close-up of the feet of a slim dancer in his late twenties with shoulder-length black curly hair, wearing a white double-breasted suit, a white fedora with a black band, a blue shirt, a white tie and white spats over black shoes, standing upright on a concert stage and sliding both shoes backward across polished dark boards. 35mm film photograph, warm spotlight with haze, close-up, shoes and spats in the upper two thirds of the vertical frame, calm glossy floor in the lower third.",
+          "seconds": 3,
+          "framing": "close-up",
+          "camera": "pan-left",
+          "subject": "Dancer"
+        },
+        {
+          "prompt": "An archival patent line drawing of a dress shoe with a slotted heel on aged cream paper, lying on a wooden archive table under soft daylight. 35mm film photograph, warm tones, detail shot, drawing in the upper two thirds of the vertical frame, plain wood in the lower third.",
+          "seconds": 3,
+          "framing": "detail",
+          "camera": "push-in",
+          "subject": "patent drawing",
+          "beat": "Патент выдали",
+          "sticker": {
+            "text": "1993",
+            "beat": "тысяча девятьсот девяносто третьем"
+          },
+          "photo": "US patent 5255452 antigravity shoes"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "media",
+      "narration": "А через двадцать пять лет трюк разобрали нейрохирурги из индийского Чандигарха.",
+      "onScreen": "Через 25 лет — *нейрохирурги*",
+      "icon": "microscope",
+      "visualQuery": "doctor laptop hospital office",
+      "imagePrompt": "An Indian neurosurgeon in a white coat watching a dance video on a laptop in a bright hospital office, amazed smile, soft window daylight, 35mm film look",
+      "shots": [
+        {
+          "prompt": "An Indian neurosurgeon in his thirties with short black hair and a neat trimmed beard, wearing a white coat over light blue scrubs, sits at a desk in a bright hospital office in Chandigarh on a sunny day, watching a dance video on a laptop with raised eyebrows and an amazed smile, a spine model on the shelf behind him. 35mm film photograph, soft daylight from a window, medium shot, doctor in the upper two thirds of the vertical frame, tidy desk in the lower third.",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Surgeon"
+        }
+      ]
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Манджул Трипати сказал: дальше двадцати пяти, тридцати градусов падаешь лицом вниз. Я попробовал и упал.",
+      "onScreen": "Предел — *25–30°*",
+      "icon": "triangle-alert",
+      "shots": [
+        {
+          "prompt": "slow push-in on the amazed doctor at the laptop",
+          "seconds": 4,
+          "framing": "close-up",
+          "camera": "handheld",
+          "subject": "Surgeon",
+          "reuse": "s8-k1"
+        },
+        {
+          "prompt": "An Indian neurosurgeon in his thirties with short black hair and a neat trimmed beard, wearing a white coat over light blue scrubs, leans forward with a straight body in a bright hospital office in Chandigarh, arms flailing as he tips toward a soft sofa, laughing at himself, a smiling colleague reaching out to catch him. 35mm film photograph, soft daylight, wide shot, the tipping doctor in the upper two thirds of the vertical frame, calm floor in the lower third.",
+          "seconds": 3,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "Surgeon",
+          "beat": "Я попробовал"
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Вывод: даже в этих ботинках нужна огромная сила. А подростки, повторяя наклон, травмируют позвоночник.",
+      "onScreen": "Ботинок страхует, держат *мышцы*",
+      "icon": "dumbbell",
+      "shots": [
+        {
+          "prompt": "slow pull-out from the slotted shoe hooked on the peg",
+          "seconds": 3,
+          "framing": "detail",
+          "camera": "pull-out",
+          "subject": "black dress shoe",
+          "reuse": "s6-k1"
+        },
+        {
+          "prompt": "A teenage boy in a white shirt and black trousers practicing a dance move in a sunny street, smiling friends watching. 35mm film photograph, warm afternoon light, medium shot, dancer in the upper two thirds of the vertical frame, calm pavement in the lower third.",
+          "seconds": 4,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "teenage dancer",
+          "beat": "А подростки",
+          "footage": "teenager dancing street"
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "kind": "cta",
+      "narration": "А ты бы рискнул повторить этот наклон?",
+      "onScreen": "Рискнул бы *повторить*?",
+      "icon": "message-circle"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "one continuous story about a stage illusion, from the dance floor to the inventor's desk to the doctor's office",
+    "lighting": "warm tungsten spotlights and soft haze on stage, clean daylight in the office",
+    "palette": "warm amber, cream white, deep navy blue, soft gold",
+    "realism": "photorealistic film still; mechanisms as clean simple illustrations on a light plain background",
+    "mood": "playful, astonished, curious",
+    "environment": "wooden club dance floor, concert stage, drafting desk, hospital office",
+    "world": "A late-1980s film set of a 1930s-style speakeasy club and a big concert stage of the early 1990s, then a bright hospital office in Chandigarh, India, in 2018, sunny day",
+    "look": "35mm film photograph, 35mm lens, warm tungsten stage light with soft haze, rich warm true-to-life colors, gentle film grain",
+    "characters": [
+      {
+        "name": "Dancer",
+        "look": "a slim dancer in his late twenties with shoulder-length black curly hair, wearing a white double-breasted suit, a white fedora with a black band, a blue shirt, a white tie and white spats over black shoes"
+      },
+      {
+        "name": "Surgeon",
+        "look": "an Indian neurosurgeon in his thirties with short black hair and a neat trimmed beard, wearing a white coat over light blue scrubs"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}
