@@ -11,7 +11,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { FPS, THEME_NAMES, isCinematic, layoutScenes, type Format, type SceneShot, type ScriptScene, type ShotMeta, type ThemeName, type VideoProps, type VideoScript } from "../types";
+import { FPS, THEME_NAMES, framesBudget, isCinematic, layoutScenes, type Format, type SceneShot, type ScriptScene, type ShotMeta, type ThemeName, type VideoProps, type VideoScript } from "../types";
 import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult, VoiceUsed } from "../pipeline/contracts";
 import { makeSfx, prepareMusic } from "../pipeline/audio/index";
 import { applyChannelDefaults, applyPillarVoice, brandIntroEnabled, type ChannelConfig } from "../pipeline/channel";
@@ -457,7 +457,9 @@ async function main() {
     const complete = cinematic && script.shotPrompts === "complete";
     if (cinematic) {
       // Бюджет новых картинок на ролик: лишние планы повторяют прошлый кадр своей сцены.
-      const max = Math.max(1, Math.round(envNum("VISUALS_AI_MAX_FRAMES", 16)));
+      // «Разбор» — один новый кадр на ~7 с (framesBudget), Shorts — 16 с запасом на повторы.
+      const words = script.scenes.reduce((a, sc) => a + sc.narration.split(/\s+/).filter(Boolean).length, 0);
+      const max = Math.max(1, Math.round(envNum("VISUALS_AI_MAX_FRAMES", script.format === "landscape" ? framesBudget("landscape", words / 2.1) : 16)));
       const capped = capNewFrames(script.scenes, max);
       if (capped.capped) {
         script.scenes = capped.scenes;

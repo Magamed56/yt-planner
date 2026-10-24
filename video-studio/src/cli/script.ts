@@ -41,8 +41,10 @@ const HELP = `Черновик сценария для проверки пере
 пожелания LLM, файл — scripts/sut-<код>-<имя>.json, в плане тема получает status script-ready.
 Темы, у которых сценарий уже есть, пропускаются.
 
---cinematic — Shorts как короткий фильм: у сцен планы (shots) по 2–3 с, общий style кадров,
-  текста поверх кадра нет (только субтитры). Кадры — AI-генерация (VISUALS: cloudflare, pollinations).
+--cinematic — ролик как фильм: у сцен планы (shots), общая «библия» кадров (style), текста поверх
+  кадра нет (только субтитры и подписи монтажа). Кадры — AI-генерация (VISUALS: cloudflare,
+  pollinations) и настоящая съёмка по запросу сценариста (footage — стоки, photo — Wikimedia).
+  Shorts и «Разборы» (--long, коды L01…).
 --quiz — Shorts из 2 раундов (с --seconds 60 и больше — до 3): утверждение → пауза с отсчётом → «Правда»/«Миф» → ответ.
 --long — «Разбор» (по умолчанию ${LONG_DEFAULT_SECONDS} с, 25–45 сцен, главы с карточками и таймкодами в описании).
   С --plan файл — scripts/razbor-<код>-<имя>.json: Shorts той же темы и план не трогаются.
@@ -273,9 +275,7 @@ async function main() {
   const formatArg = typeof values.format === "string" ? values.format : undefined;
   if (mode.long && formatArg && formatArg !== "landscape") throw new UserError("--long — горизонтальный ролик: уберите --format или укажите --format landscape.");
   if (mode.quiz && formatArg && formatArg !== "shorts") throw new UserError("--quiz — только Shorts: уберите --format или укажите --format shorts.");
-  if (mode.cinematic && (mode.long || mode.quiz)) throw new UserError("--cinematic пока только для обычных Shorts: без --long и --quiz.");
-  if (mode.cinematic && formatArg && formatArg !== "shorts") throw new UserError("--cinematic — только Shorts: уберите --format или укажите --format shorts.");
-  if (mode.cinematic && planCodes.split(/[\s,]+/).some((c) => isLongCode(c))) throw new UserError("--cinematic — только Shorts, а L01… — «Разборы».");
+  if (mode.cinematic && mode.quiz) throw new UserError("--cinematic и --quiz вместе нельзя: у викторины свой экран с отсчётом.");
   if (mode.cinematic && lang !== "ru") throw new UserError("--cinematic пока только по-русски — уберите --lang.");
   if (planCodes) {
     if (topic || values.notes || values.out || formatArg) throw new UserError("--plan берёт тему, пожелания, формат и папку из плана — без --topic, --notes, --format и --out.");

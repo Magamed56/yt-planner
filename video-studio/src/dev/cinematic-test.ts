@@ -12,6 +12,7 @@ import path from "node:path";
 import { fade } from "@remotion/transitions/fade";
 import type { VoiceResult } from "../pipeline/contracts";
 import { buildVideoProps } from "../pipeline/props";
+import { generateScript, shiftReuse } from "../pipeline/script/generate";
 import { ScriptValidationError, coerceScriptCandidate, completePromptLints, creepyShot, lintScript, promptSimilarity, storyboardLints, styleLints, validateScript } from "../pipeline/script/validate";
 import { resetVisualsState } from "../pipeline/visuals/index";
 import { readVisualsManifest, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
@@ -405,6 +406,65 @@ await test("карточка главы «Разбора»: планы сдви�
   assert.equal(out[0]!.marks?.sticker?.at, 10, "цифра — на тех же словах, что и до сдвига");
 });
 
+await test("«Разбор» в кинорежиме: библия в плане, планы в частях, повторы кадров — со сквозными id, главы на месте", async () => {
+  const PLACES = ["mission control room in Houston", "the dark cabin of the lunar module", "the command module hatch", "a desk covered with checklists", "the lunar far side seen through a window", "a parachute descent over the Pacific", "the recovery ship deck", "a press room full of reporters", "a quiet night sky over Florida", "the launch pad at dawn", "a cardboard and duct tape filter on a table", "the engine nozzle against black space", "a family watching television in 1970"];
+  let n = 0;
+  const prompt = () => {
+    const place = PLACES[n % PLACES.length]!;
+    n++;
+    return n % 2
+      ? `Jim Lovell, a calm forty-two-year-old astronaut with short brown hair in a white flight suit, studies a checklist in ${place}, soft natural light, 35mm documentary film photograph, medium shot, the astronaut in the center of the horizontal frame, a quiet dark lower edge.`
+      : `Close-up of an old metal toggle switch panel glowing amber, a gloved hand reaching for one switch near ${place}, shallow depth of field, warm tungsten light, 35mm documentary film photograph, detail shot, the hand on the right third of the horizontal frame.`;
+  };
+  const words = (k: number, seed: number) => Array.from({ length: k }, (_, i) => ["экипаж", "считал", "кислород", "минуты", "и", "решения", "Земли", "ждали", "все"][(i + seed) % 9]).join(" ") + ".";
+  const scene = (kind: string, narration: string, shots: number) => ({
+    kind,
+    narration,
+    onScreen: "Мысль сцены",
+    ...(shots ? { shots: Array.from({ length: shots }, () => ({ prompt: prompt(), framing: "medium", camera: "push-in" })) } : {}),
+  });
+  const outline = {
+    title: "Аполлон-13: как экипаж вернулся домой",
+    description: "История спасения экипажа. #космос #история",
+    tags: ["аполлон 13", "космос", "nasa", "история", "лунная программа"],
+    theme: "midnight",
+    style: { world: "NASA, April 1970: Houston mission control and the Apollo 13 spacecraft", look: "35mm documentary film photograph, natural light, warm true-to-life colors, soft grain", characters: [{ name: "Jim Lovell", look: "a calm forty-two-year-old astronaut with short brown hair in a white flight suit" }] },
+    sections: [
+      { heading: "Взрыв", goal: "что случилось", points: ["бак взорвался"], seconds: 67 },
+      { heading: "Шлюпка", goal: "как выжили", points: ["лунный модуль"], seconds: 67 },
+      { heading: "Домой", goal: "чем кончилось", points: ["приводнение"], seconds: 66 },
+    ],
+  };
+  const part1 = { scenes: [scene("hook", "Трое людей летели к Луне и вдруг услышали хлопок.", 1), ...Array.from({ length: 7 }, (_, i) => scene("statement", words(30, i), 2))] };
+  part1.scenes[3]!.shots![1] = { prompt: "slow push-in on the same checklist", framing: "detail", camera: "pull-out", reuse: "s2-k1" } as never;
+  const part2 = { scenes: [...Array.from({ length: 4 }, (_, i) => scene("statement", words(30, i + 3), 2)), scene("cta", "А ты бы смог сохранить спокойствие?", 0)] };
+  part2.scenes[2]!.shots![1] = { prompt: "slow pan across the same table", framing: "wide", camera: "pan-left", reuse: "s1-k2" } as never;
+  const replies = [outline, part1, part2].map((o) => Response.json({ model: "gemini-test", choices: [{ message: { role: "assistant", content: JSON.stringify(o) }, finish_reason: "stop" }], usage: { prompt_tokens: 4000, completion_tokens: 1500, total_tokens: 5500 } }));
+  const bodies: string[] = [];
+  const fn = async (_input: string | URL | Request, init?: RequestInit) => {
+    bodies.push(String(init?.body ?? ""));
+    const r = replies.shift();
+    if (!r) throw new Error("лишний запрос");
+    return r;
+  };
+  const { script } = await generateScript({ topic: "Аполлон-13", format: "landscape", targetSeconds: 200, long: true, cinematic: true }, { env: { GEMINI_API_KEY: "k", LLM_FALLBACKS: "none" }, fetch: fn, log: { info: () => {}, warn: () => {} } }).catch((e) => {
+    if (process.env.DEBUG_LONG && bodies[2]) console.log((JSON.parse(bodies[2]).messages as { content: string }[]).at(-1)!.content.slice(0, 3000));
+    throw e;
+  });
+  assert.equal(bodies.length, 3, "план + две части, без ремонтов");
+  assert.match(bodies[0]!, /Режим — КИНО \(документальный фильм\)/);
+  assert.match(bodies[1]!, /«Библия» ролика \(style\)[\s\S]*world: NASA, April 1970/);
+  assert.match(bodies[1]!, /композиция горизонтального кадра 16:9/);
+  assert.equal(script.mode, "cinematic");
+  assert.equal(script.shotPrompts, "complete");
+  assert.equal(script.style?.characters?.[0]?.name, "Jim Lovell");
+  assert.equal(script.scenes.length, 13);
+  assert.equal(script.scenes[3]!.shots![1]!.reuse, "s2-k1", "повтор в первой части — как был");
+  assert.equal(script.scenes[10]!.shots![1]!.reuse, "s9-k2", "повтор во второй части — со сдвигом на 8 сцен");
+  assert.ok(script.scenes.filter((sc) => sc.chapter).length >= 2, "главы «Разбора» на месте");
+  assert.deepEqual(shiftReuse([{ id: "s1", kind: "statement", narration: "x", onScreen: "y", shots: [{ prompt: "p", reuse: "s9-k1" }] }], 4)[0]!.shots![0]!.reuse, "s9-k1", "ссылка за пределы части не трогается");
+});
+
 // ---- Полные промпты (сценарий кинорежима от 10.2026) ----
 
 const FULL = "Major Meredith, a tall man in his forties with a neat brown moustache, khaki uniform and slouch hat, frowns at a jammed Lewis machine gun on a tripod in a dry golden wheat field in Western Australia, late afternoon sun, 35mm film photograph, 35mm lens, medium shot, the major and the gun fill the upper two thirds of the vertical frame, calm wheat in the lower third.";
@@ -441,7 +501,7 @@ await test("раскадровка: бюджет новых картинок и 
   assert.deepEqual(storyboardLints(ok), []);
   assert.match(storyboardLints([sc("s1", [{ prompt: FULL, reuse: "s2-k1" }])]).join(), /более раннего плана/);
   const many = Array.from({ length: SHOT_LIMITS.newFrames + 1 }, (_, i) => sc(`s${i + 1}`, [{ prompt: FULL }]));
-  assert.match(storyboardLints(many).join(), /бюджет ролика/);
+  assert.match(storyboardLints(many).join(), /бюджет 12/);
 });
 
 await test("coerce плана: reuse «S2 K1» → s2-k1, подписи — не больше двух и без пустых, цифра из строки", () => {

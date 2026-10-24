@@ -282,7 +282,7 @@ ${bible}
    2) что он делает — одно ясное действие, понятное с первого взгляда;
    3) где — конкретное место из world и время суток;
    4) свет и съёмка — из look; крупность словами (wide shot, medium shot, close-up);
-   5) ${vertical ? "композиция вертикального кадра 9:16: главное — в верхних двух третях, нижняя треть спокойная (там субтитры)" : "композиция горизонтального кадра 16:9: главное — по центру или по третям, нижняя пятая часть спокойная (там субтитры)"}.
+   5) ${vertical ? "композиция вертикального кадра 9:16: главное — в верхних двух третях, нижняя треть спокойная (там пойдут субтитры)" : "композиция горизонтального кадра 16:9: главное — по центру или по третям, нижняя пятая часть спокойная (там пойдут субтитры)"}; само слово subtitles в промпт не пиши — генератор нарисует текст.
    Нельзя: отрицания (no, not, without — генератор их не понимает и рисует названное); несколько мест или сцен в одном промпте (выйдет коллаж из панелей); надписи, вывески, тексты и логотипы (генератор пишет их с ошибками — подписи и цифры добавит монтаж).
 4. Настоящая съёмка — там, где она сильнее рисунка (на ${o.real}). Кроме prompt у плана можно указать:
    - footage — живое видео со стоков (Pexels, Pixabay): по-английски, 2–6 слов, главный предмет первым ("wheat field wind sunset", "emu running", "rocket launch night"). Для природы, животных, неба, моря, космоса, огня, процессов и мест, где эпоху не видно: в истории о прошлом — без современных машин, одежды и зданий.
@@ -345,15 +345,32 @@ export function buildOutlinePrompt(req: ScriptGenRequest, plan: LandscapePlan): 
   const chapters = req.long
     ? "\nЭто «Разбор» — подробный ролик, разделы станут главами YouTube: heading — короткое название главы (2–5 слов, до 40 символов), без нумерации и кавычек; главы не повторяют друг друга."
     : "";
+  // Кинорежим «Разбора»: «библию» кадров придумывает план — части пишут планы по ней.
+  const cinema = req.cinematic
+    ? `\nРежим — КИНО (документальный фильм): картинку несут кадры планов, текста поверх кадра нет, кроме субтитров и коротких подписей монтажа. Придумай «библию» ролика — поле style (всё по-английски): world — мир истории (места, эпоха, время года); look — как снято всё (камера, объектив, плёнка, свет, цвет, например "35mm documentary film photograph, natural light, warm true-to-life colors, soft grain"); characters — 1–4 сквозных героя: name и look — точные приметы (возраст, лицо, причёска, одежда и её цвет); direction, lighting, palette, mood — коротко.`
+    : "";
   return `${header(req)}
 ${formatLine("landscape")}
-Длительность: около ${plan.seconds} секунд (${minutes} мин).${channelContext(req)}
+Длительность: около ${plan.seconds} секунд (${minutes} мин).${channelContext(req)}${cinema}
 
 Сейчас нужен только ПЛАН ролика — сцены напишем потом по частям.
-Раздели ролик на ${plan.sections} ${ruPlural(plan.sections, "раздел", "раздела", "разделов")}. Первый раздел открывается хуком и обещанием ценности, последний — главной развязкой и призывом. Каждый раздел — отдельная мысль с мини-развязкой и крючком на следующий.${chapters}
-Для каждого раздела: heading — заголовок, goal — что зритель поймёт, points — 2–6 конкретных фактов, примеров или шагов (реальных, проверяемых), seconds — длительность; сумма seconds ≈ ${plan.seconds}.
-Также дай title, description (для длинного ролика — 2–3 предложения и 3–5 хэштегов, без #shorts), tags и theme для всего ролика.
-Ответ — JSON-объект с полями title, description, tags, theme, sections.`;
+Ролик — одна большая история или расследование, а не лекция: загадка в начале (без ответа), герои с именами и мотивами, события по порядку, поворот, развязка и что из этого следует.
+Раздели ролик на ${plan.sections} ${ruPlural(plan.sections, "раздел", "раздела", "разделов")}. Первый раздел открывается хуком-загадкой и обещанием ответа, последний — главной развязкой и призывом. Каждый раздел — эпизод истории с мини-развязкой и крючком на следующий.${chapters}
+Для каждого раздела: heading — заголовок, goal — что зритель поймёт, points — 2–6 конкретных фактов, эпизодов или шагов (реальных, проверяемых), seconds — длительность; сумма seconds ≈ ${plan.seconds}.
+Также дай title, description (для длинного ролика — 2–3 предложения и 3–5 хэштегов, без #shorts), tags и theme${req.cinematic ? " и style" : ""} для всего ролика.
+Ответ — JSON-объект с полями title, description, tags, theme${req.cinematic ? ", style" : ""}, sections.`;
+}
+
+// «Библия» ролика текстом — для частей «Разбора» в кинорежиме.
+function bibleText(style: NonNullable<Outline["style"]>): string {
+  const lines = [
+    style.world ? `world: ${style.world}` : "",
+    style.look ? `look: ${style.look}` : "",
+    ...(style.characters ?? []).map((c) => `character «${c.name}»: ${c.look}`),
+    style.palette ? `palette: ${style.palette}` : "",
+    style.mood ? `mood: ${style.mood}` : "",
+  ].filter(Boolean);
+  return lines.join("\n");
 }
 
 export interface ChunkSpec {
@@ -393,6 +410,15 @@ export function buildChunkPrompt(req: ScriptGenRequest, outline: Outline, spec: 
   const chapters = spec.chapters
     ? `\nГлавы: у ПЕРВОЙ сцены каждого раздела этой части поле chapter — название раздела дословно (${spec.sections.map((s) => `«${s.heading}»`).join(", ")}); у остальных сцен chapter не указывай.`
     : "";
+  const cinema =
+    req.cinematic && outline.style
+      ? `\n\nРежим — КИНО. «Библия» ролика (style):\n${bibleText(outline.style)}\n\n${cinematicRules({
+          format: "landscape",
+          frames: { lo: Math.max(3, Math.round(spec.seconds / 10)), hi: Math.max(4, Math.round(spec.seconds / 7)), max: Math.max(4, Math.round(spec.seconds / 7)) },
+          real: "треть–половину планов части",
+          bible: "given",
+        })}\n- kind сцен — только "hook", "statement", "media" и "cta"; у каждой сцены, кроме "cta", — планы shots. onScreen всё равно заполни — коротко мысль сцены (в кадре его не будет); visualQuery и imagePrompt не нужны.\n- reuse — только на планы этой части, по id её сцен ("s2-k1").`
+      : "";
   return `${header(req)}
 ${formatLine("landscape")}
 Название ролика: ${outline.title}
@@ -405,7 +431,7 @@ ${detail}
 
 Длительность части: около ${Math.round(spec.seconds)} с — это ${Math.round(words * 0.9)}–${Math.round(words * 1.1)} слов narration, ${scenesMin}–${scenesMax} сцен.
 ${start}
-${end}${chapters}
+${end}${chapters}${cinema}
 Ответ — JSON-объект { "scenes": [ … ] }; поля сцен — как в инструкции; id внутри части: "s1", "s2", … (при склейке перенумеруем).`;
 }
 

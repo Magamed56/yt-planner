@@ -596,6 +596,8 @@ jobs:
           # Токен записи — только для gh release; процессу make (npm-зависимости) он не передаётся.
           GH_TOKEN: ${{ github.token }}
           LAST_TAKEN: ${{ steps.slots.outputs.last }}
+          # preview: ролики пакета — в скрытые черновые релизы (видны только владельцу репозитория).
+          PREVIEW: ${{ inputs.preview && '1' || '' }}
         run: |
           # Список сценариев: через запятую, маски можно; пути — от корня репозитория или от video-studio.
           # Или коды тем плана (plan): их сценарии scripts/sut-<код>-*.json написал шаг черновика.
@@ -665,7 +667,10 @@ jobs:
           start="${SCHEDULE_START:-${LAST_TAKEN:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}}"
           [ "$SCHEDULE" = "slots" ] && echo "Слоты считаются от: $start"
           release=""
-          if [[ "$UPLOAD" == *release* || "$UPLOAD" == *instagram* ]]; then release=1; fi
+          if [[ "$UPLOAD" == *release* || "$UPLOAD" == *instagram* || -n "$PREVIEW" ]]; then release=1; fi
+          # Без upload = release, но с preview — релиз черновой: в открытом репозитории его видит только владелец.
+          draft=()
+          if [ -n "$PREVIEW" ] && [[ "$UPLOAD" != *release* && "$UPLOAD" != *instagram* ]]; then draft=(--draft); fi
           {
             echo "## 📦 Пакет: $n роликов"
             echo ""
@@ -724,7 +729,7 @@ jobs:
               done
               # instagram.json в релизе = ролик в очереди Instagram (её разбирает отдельный workflow).
               [[ "$UPLOAD" == *instagram* ]] && [ -f "$run_dir/instagram.json" ] && rfiles+=("$run_dir/instagram.json")
-              if gh release create "$tag" "${rfiles[@]}" --prerelease --target "$GITHUB_SHA" --title "${title:-$slug}" --notes-file "$run_dir/description.txt"; then
+              if gh release create "$tag" "${rfiles[@]}" --prerelease "${draft[@]}" --target "$GITHUB_SHA" --title "${title:-$slug}" --notes-file "$run_dir/description.txt"; then
                 note="$note, релиз \`$tag\`"
                 # Тексты для youtube-fill — в content/videos.json (его коммитит шаг ниже).
                 if [ -n "$code" ] && [ -n "$dur" ] && [ "$status" = "✅" ] && [ "$VIDEO_LANG" = "ru" ]; then

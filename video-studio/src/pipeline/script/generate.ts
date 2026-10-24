@@ -29,7 +29,7 @@ import {
   type ChunkSpec,
   type ScriptGenRequest,
 } from "./prompt";
-import { ClassicVideoScriptSchema, LIMITS, OutlineSchema, SceneChunkSchema, VideoScriptSchema, toCompatJsonSchema, type Outline } from "./schema";
+import { CinematicChunkSchema, CinematicOutlineSchema, ClassicVideoScriptSchema, LIMITS, OutlineSchema, SceneChunkSchema, VideoScriptSchema, toCompatJsonSchema, type Outline } from "./schema";
 import { suggestEnabled, suggestionsFor } from "./suggest";
 import type { LlmCallInfo } from "./usage-log";
 import {
@@ -197,7 +197,7 @@ function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGu
 
 // ---- Длинный ролик ----
 
-function outlineValidator(seconds: number): (raw: unknown) => Verdict<Outline> {
+function outlineValidator(seconds: number, cinematic = false): (raw: unknown) => Verdict<Outline> {
   return (raw) => {
     const top = unwrap(raw, "sections");
     if (!isObj(top)) return { ok: false, problems: ["ожидался JSON-объект плана"], warnings: [] };
@@ -212,7 +212,7 @@ function outlineValidator(seconds: number): (raw: unknown) => Verdict<Outline> {
         return sec;
       });
     }
-    const parsed = OutlineSchema.safeParse(o);
+    const parsed = (cinematic ? CinematicOutlineSchema : OutlineSchema).safeParse(o);
     if (!parsed.success) return { ok: false, problems: formatZodIssues(parsed.error, o, "sections"), warnings: [] };
     // Длительности разделов приводим к целевой сумме сами — это арифметика,
     // а не повод для ремонтного запроса.
@@ -224,7 +224,7 @@ function outlineValidator(seconds: number): (raw: unknown) => Verdict<Outline> {
   };
 }
 
-function chunkValidator(spec: ChunkSpec, guard: RepeatGuard, accepted: string[]): (raw: unknown) => Verdict<ScriptScene[]> {
+function chunkValidator(spec: ChunkSpec, guard: RepeatGuard, accepted: string[], cinematic = false): (raw: unknown) => Verdict<ScriptScene[]> {
   const first = spec.index === 0;
   const last = spec.index === spec.count - 1;
   const what = `Часть ${spec.index + 1}`;
@@ -257,6 +257,15 @@ function chunkValidator(spec: ChunkSpec, guard: RepeatGuard, accepted: string[])
     if (words < target * 0.5 || words > target * 1.8) {
       problems.push(`объём части ${words} слов — для ~${Math.round(spec.seconds)} с нужно около ${Math.round(target)}`);
     }
+    // Кинорежим: у каждой сцены, кроме финала, — планы; первый ответ — строго (в ремонт).
+    if (cinematic) {
+      list.forEach((sc, i) => {
+        if (!isObj(sc) || sc.kind === "cta") return;
+        if (!Array.isArray(sc.shots) || !sc.shots.length) problems.push(`${what}, сцена №${i + 1}: в кинорежиме нужны планы shots — 1–3 плана, кадр на каждый (или повтор кадра через reuse)`);
+        else if (strict) problems.push(...shotLints(sc.shots.filter(isObj), typeof sc.narration === "string" ? sc.narration : "", `${what}, сцена №${i + 1}`, { complete: true }));
+      });
+      if (strict) problems.push(...storyboardLints(list, Math.max(4, Math.round(spec.seconds / 7))));
+    }
     const rep = guard.check(looseScenes(list));
     problems.push(...rep.problems);
     warnings.push(...rep.warnings);
@@ -266,6 +275,14 @@ function chunkValidator(spec: ChunkSpec, guard: RepeatGuard, accepted: string[])
     // Главы: первая сцена каждого раздела; модель сбилась — по доле слов.
     return { ok: true, value: spec.chapters ? assignChapters(scenes, spec.sections) : scenes, warnings };
   };
+}
+
+// Части «Разбора» нумеруют сцены с s1, а при склейке id становятся сквозными:
+// повторы кадров (reuse "s2-k1") внутри части сдвигаем на число сцен до неё.
+export function shiftReuse(list: ScriptScene[], offset: number): ScriptScene[] {
+  if (!offset) return list;
+  const shift = (ref: string) => ref.replace(/^s(\d+)-k(\d+)$/, (_m, sc: string, k: string) => (Number(sc) <= list.length ? `s${Number(sc) + offset}-k${k}` : _m));
+  return list.map((sc) => (sc.shots?.some((sh) => sh.reuse) ? { ...sc, shots: sc.shots.map((sh) => (sh.reuse ? { ...sh, reuse: shift(sh.reuse) } : sh)) } : sc));
 }
 
 // Разделы → части примерно по 170 с: 2 раздела по ~80 с на запрос — это
@@ -393,14 +410,15 @@ async function generateWith(
   } else {
     const seconds = req.targetSeconds ?? (req.long ? LONG_DEFAULT_SECONDS : 480);
     const plan = landscapePlan(seconds);
+    const outlineSchema = req.cinematic ? CinematicOutlineSchema : OutlineSchema;
     const outlineRes = await generateStructured({
       ...base,
       chain,
       user: buildOutlinePrompt(req, plan),
       schemaName: "video_outline",
-      zodSchema: OutlineSchema,
-      jsonSchema: toCompatJsonSchema(OutlineSchema),
-      validate: outlineValidator(seconds),
+      zodSchema: outlineSchema,
+      jsonSchema: toCompatJsonSchema(outlineSchema),
+      validate: outlineValidator(seconds, req.cinematic),
       what: req.long ? "план «Разбора»" : "план ролика",
     });
     const outline = outlineRes.value;
@@ -428,18 +446,19 @@ async function generateWith(
         scenesBudget,
         chapters: Boolean(req.long),
       };
+      const chunkSchema = req.cinematic ? CinematicChunkSchema : SceneChunkSchema;
       const res = await generateStructured({
         ...base,
         chain: current,
         user: buildChunkPrompt(req, outline, spec),
         schemaName: "video_scenes",
-        zodSchema: SceneChunkSchema,
-        jsonSchema: toCompatJsonSchema(SceneChunkSchema),
-        validate: chunkValidator(spec, newGuard(), accepted),
+        zodSchema: chunkSchema,
+        jsonSchema: toCompatJsonSchema(chunkSchema),
+        validate: chunkValidator(spec, newGuard(), accepted, req.cinematic),
         what: `часть ${k + 1} из ${groups.length}`,
       });
       current = rotateTo(current, res.target);
-      scenes.push(...res.value);
+      scenes.push(...shiftReuse(res.value, scenes.length));
       previousTail = res.value.slice(-2).map((s) => s.narration);
     }
     const merged = coerceScriptCandidate(
@@ -450,6 +469,7 @@ async function generateWith(
         language: req.language ?? "ru",
         format: "landscape",
         theme: outline.theme,
+        ...(req.cinematic && outline.style ? { style: outline.style } : {}),
         scenes,
       },
       req,

@@ -5,7 +5,7 @@
 
 import type { z } from "zod";
 import type { Format, ScriptRequest } from "../contracts";
-import { CAMERA_MOVES, QUIZ_PAUSE_SEC, SCENE_KINDS, SHOT_FRAMINGS, SHOT_LIMITS, THEME_NAMES, findBeat, isCinematic, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
+import { CAMERA_MOVES, QUIZ_PAUSE_SEC, SCENE_KINDS, SHOT_FRAMINGS, SHOT_LIMITS, THEME_NAMES, findBeat, framesBudget, isCinematic, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
 import { stems } from "./covered";
 import { LIMITS, ScriptSceneSchema, VideoScriptSchema } from "./schema";
 
@@ -447,7 +447,7 @@ export function shotLints(shots: Loose[], narration: string, label: string, opts
 
 // Весь ролик: сколько НОВЫХ картинок (планы без reuse) и куда ссылаются
 // повторы — только на более ранний план с картинкой.
-export function storyboardLints(scenes: unknown[]): string[] {
+export function storyboardLints(scenes: unknown[], budget: number = SHOT_LIMITS.newFrames): string[] {
   const out: string[] = [];
   const known = new Set<string>();
   let fresh = 0;
@@ -464,7 +464,7 @@ export function storyboardLints(scenes: unknown[]): string[] {
       }
     });
   });
-  if (fresh > SHOT_LIMITS.newFrames) out.push(`новых картинок ${fresh} — бюджет ролика ${SHOT_LIMITS.newFrames}: там, где герой и место те же, повтори кадр через reuse с другим движением камеры`);
+  if (fresh > budget) out.push(`новых картинок ${fresh} — бюджет ${budget}: там, где герой и место те же, повтори кадр через reuse с другим движением камеры`);
   return out;
 }
 
@@ -537,7 +537,7 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
   // Викторина строится из раундов — там сцены media не к месту. Викторина — от двух
   // раундов: один вопрос внутри обычного ролика не освобождает его от правила.
   const quiz = scenes.filter((s) => isObj(s) && s.kind === "quiz").length >= 2;
-  if (opts.cinematic) out.push(...framingVariety(scenes), ...storyboardLints(scenes));
+  if (opts.cinematic) out.push(...framingVariety(scenes), ...storyboardLints(scenes, framesBudget(shorts ? "shorts" : "landscape", words / WORDS_PER_SECOND)));
   else if (shorts && !quiz && scenes.length) {
     const media = scenes.filter((s) => isObj(s) && s.kind === "media").length;
     const { min, max } = SHORTS_RULES.media;

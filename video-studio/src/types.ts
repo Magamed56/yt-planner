@@ -118,6 +118,12 @@ export interface StyleCharacter {
 // планы повторяют кадры через reuse): бесплатной квоты Cloudflare хватает на
 // ≈ 60 кадров в сутки, а одна картинка с движением камеры держит 3–5 с.
 export const SHOT_LIMITS = { perScene: 6, minSec: 1, maxSec: 10, newFrames: 12, callouts: 2 } as const;
+// Новых кадров на ролик: у Shorts — SHOT_LIMITS.newFrames, у «Разбора» — один на ~7 с
+// (7 минут ≈ 60 кадров: суточная бесплатная квота Cloudflare — около 60 картинок,
+// часть планов закрывает настоящая съёмка и повторы reuse).
+export function framesBudget(format: "shorts" | "landscape", seconds: number): number {
+  return format === "shorts" ? SHOT_LIMITS.newFrames : Math.max(SHOT_LIMITS.newFrames, Math.round(seconds / 7));
+}
 // План короче секунды мелькает: такие точки склейки сдвигаются.
 export const MIN_SHOT_FRAMES = 30;
 // Склейка на фразу — чуть раньше первого слова: картинка «ведёт» голос.

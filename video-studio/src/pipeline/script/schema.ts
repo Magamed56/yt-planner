@@ -224,7 +224,13 @@ export const OutlineSchema = z.object({
     .max(14),
 });
 
-export type Outline = z.infer<typeof OutlineSchema>;
+// Кинорежим «Разбора»: план несёт «библию» ролика (style), части — сцены с планами shots.
+export const CinematicOutlineSchema = OutlineSchema.extend({ style: VisualStyleSchema });
+export const CinematicChunkSchema = z.object({
+  scenes: z.array(ScriptSceneSchema).min(1).max(40),
+});
+
+export type Outline = z.infer<typeof OutlineSchema> & { style?: z.infer<typeof VisualStyleSchema> };
 export type SceneChunk = z.infer<typeof SceneChunkSchema>;
 
 // Компилятор следит, чтобы схема не разошлась с общим контрактом types.ts.
