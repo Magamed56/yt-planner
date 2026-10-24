@@ -80,7 +80,7 @@ const stage: Stage = {
   rank: 0,
   media: "image",
   async run(input) {
-    const prompt = imagePromptFor(input.scene, input.ctx.format, input.deps.env.VISUALS_STYLE);
+    const prompt = imagePromptFor(input.scene, input.ctx.format, input.ctx.style ?? input.deps.env.VISUALS_STYLE);
     if (!prompt) return [];
     const override = input.deps.env.CLOUDFLARE_IMAGE_MODEL?.trim();
     const models = override ? [override] : [FLUX2, SDXL];

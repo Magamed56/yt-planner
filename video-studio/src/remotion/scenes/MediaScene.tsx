@@ -1,7 +1,9 @@
 import React from "react";
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Sequence, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { KineticText } from "../components/KineticText";
 import { Illustration } from "../components/Illustration";
+import { MediaLayer } from "../components/MediaLayer";
+import { isCinematicScene, shotLayers } from "../lib/shots";
 import { FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
 import { withAlpha } from "../theme";
@@ -11,7 +13,22 @@ import { ContentBox, SceneFrame, type SceneProps } from "./common";
 // Полноэкранный визуал (сток / AI-картинка) с подписью в нижней трети
 // контентной зоны — над полосой субтитров. Если визуала нет (сток не нашёлся
 // или ключей нет), вместо него — моушен-иллюстрация (components/Illustration).
-export const MediaScene: React.FC<SceneProps> = (p) => {
+export const MediaScene: React.FC<SceneProps> = (p) => (isCinematicScene(p.scene) ? <CinematicShots {...p} /> : <MediaSceneLayout {...p} />);
+
+// Кинорежим: планы сцены встык (жёсткие склейки внутри сцены), у каждого свой
+// кадр и движение камеры. Ни подписи, ни плашек, ни затемнения — текст на
+// экране только субтитры.
+const CinematicShots: React.FC<SceneProps> = (p) => (
+  <AbsoluteFill style={{ backgroundColor: p.theme.bgFrom }}>
+    {shotLayers(p.scene).map((layer, k) => (
+      <Sequence key={k} from={layer.from} durationInFrames={layer.durationInFrames} name={`План ${k + 1} · ${layer.camera}`}>
+        <MediaLayer visual={layer.visual} theme={p.theme} durationInFrames={layer.durationInFrames} seed={p.index * 10 + k} dim={layer.dim} camera={layer.camera} motionSeed={layer.motionSeed} />
+      </Sequence>
+    ))}
+  </AbsoluteFill>
+);
+
+const MediaSceneLayout: React.FC<SceneProps> = (p) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const layout = useLayout();

@@ -5,7 +5,7 @@
 
 import type { z } from "zod";
 import type { Format, ScriptRequest } from "../contracts";
-import { QUIZ_PAUSE_SEC, SCENE_KINDS, THEME_NAMES, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
+import { CAMERA_MOVES, QUIZ_PAUSE_SEC, SCENE_KINDS, SHOT_FRAMINGS, THEME_NAMES, findBeat, isCinematic, type SceneKind, type ScriptScene, type VideoScript } from "../../types";
 import { stems } from "./covered";
 import { LIMITS, ScriptSceneSchema, VideoScriptSchema } from "./schema";
 
@@ -173,6 +173,16 @@ export function checkSceneRules(scenes: unknown[], opts: SceneRuleOptions): stri
       const v = str(raw[field]);
       if (v && CYRILLIC.test(v)) out.push(`${label}: ${field} должен быть на английском (сейчас «${v.slice(0, 40)}»)`);
     }
+    // Промпт плана уходит в генератор картинок как есть: кириллицу он не понимает.
+    if (Array.isArray(raw.shots)) {
+      raw.shots.forEach((shot, k) => {
+        if (!isObj(shot)) return;
+        for (const field of ["prompt", "subject"] as const) {
+          const v = str(shot[field]);
+          if (v && CYRILLIC.test(v)) out.push(`${label}, план ${k + 1}: ${field} должен быть на английском (сейчас «${v.slice(0, 40)}»)`);
+        }
+      });
+    }
   });
   return out;
 }
@@ -185,6 +195,16 @@ function checkScriptRules(raw: Loose): string[] {
   }
   if (Array.isArray(raw.scenes)) {
     out.push(...checkSceneRules(raw.scenes, { hookFirst: true, ctaLast: true, allowHook: true, allowCta: true, checkIds: true }));
+    // Кинорежим: заголовков поверх кадра нет, поэтому сцена без планов осталась бы
+    // голым текстом на фоне. Финал (cta) — карточка канала, ему планы не нужны.
+    if (raw.mode === "cinematic") {
+      raw.scenes.forEach((sc, i) => {
+        if (!isObj(sc) || str(sc.kind) === "cta") return;
+        if (!Array.isArray(sc.shots) || sc.shots.length === 0) {
+          out.push(`сцена №${i + 1}${str(sc.id) ? ` (${str(sc.id)})` : ""}: в кинорежиме (mode "cinematic") нужны планы shots — 1–6 кадров по 2–3 с`);
+        }
+      });
+    }
   }
   return out;
 }
@@ -233,6 +253,7 @@ export function validateScenes(scenes: unknown, opts: SceneRuleOptions, what: st
 export interface LintOptions {
   format: Format;
   targetSeconds?: number;
+  cinematic?: boolean; // mode "cinematic": кадры дают планы, правило media и visualQuery не нужны
 }
 
 // Темп ГОТОВОГО ролика — слова narration на секунду вместе с паузами между сценами:
@@ -300,6 +321,62 @@ export function titleRepeatsHook(title: string, hook: string): boolean {
   return common / t.size >= 0.6;
 }
 
+// ---- Планы кинорежима: мягкие замечания ----
+
+const SIM_STOP = new Set("the a an of in on at with and or to from by into over under its his her their this that".split(" "));
+const promptWords = (s: string) => new Set(s.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 2 && !SIM_STOP.has(w)));
+
+// Доля общих значимых слов двух промптов (0…1): почти одинаковые кадры —
+// лишняя склейка, а не новый аспект истории.
+export function promptSimilarity(a: string, b: string): number {
+  const x = promptWords(a);
+  const y = promptWords(b);
+  if (!x.size || !y.size) return 0;
+  let common = 0;
+  for (const w of x) if (y.has(w)) common++;
+  return common / (x.size + y.size - common);
+}
+
+export const SHOT_RULES = { minSec: 1.2, duplicate: 0.85, duplicateSameFraming: 0.6, sumTolerance: 0.5 } as const;
+
+export function shotLints(shots: Loose[], narration: string, label: string): string[] {
+  const out: string[] = [];
+  const est = countWords(narration) / WORDS_PER_SECOND;
+  const n = shots.length;
+  if (est > 0 && n > 1 && est / n < SHOT_RULES.minSec) {
+    out.push(`${label}: ${n} планов на ~${est.toFixed(1)} с речи — план короче ${SHOT_RULES.minSec} с мелькает; оставь ${Math.max(1, Math.floor(est / 2))}`);
+  }
+  const secs = shots.map((sh) => (typeof sh.seconds === "number" ? sh.seconds : null));
+  if (est > 0 && secs.every((v) => v !== null)) {
+    const sum = (secs as number[]).reduce((a, b) => a + b, 0);
+    if (Math.abs(sum - est) / est > SHOT_RULES.sumTolerance) {
+      out.push(`${label}: планы в сумме ${sum.toFixed(1)} с, а сцена звучит ~${est.toFixed(1)} с — длины планов растянутся пропорционально голосу`);
+    }
+  }
+  const words = narration.split(/\s+/).map((text) => ({ text, startMs: 0, endMs: 0 }));
+  shots.forEach((sh, k) => {
+    if (k > 0) {
+      const prev = shots[k - 1]!;
+      const sim = promptSimilarity(str(prev.prompt), str(sh.prompt));
+      const sameFraming = Boolean(sh.framing) && sh.framing === prev.framing;
+      if (sim >= SHOT_RULES.duplicate || (sameFraming && sim >= SHOT_RULES.duplicateSameFraming)) {
+        out.push(`${label}: планы ${k} и ${k + 1} почти одинаковые — покажи другой аспект истории (место, героя, деталь, реакцию), а не тот же кадр ещё раз`);
+      }
+      const beat = str(sh.beat).trim();
+      if (beat && !findBeat(beat, words)) out.push(`${label}, план ${k + 1}: beat «${beat}» не найден в narration — склейка встанет по длине плана`);
+    }
+  });
+  return out;
+}
+
+// Все планы ролика одной крупности — монтаж без «общий → средний → деталь».
+function framingVariety(scenes: unknown[]): string[] {
+  const framings = scenes.flatMap((s) => (isObj(s) && Array.isArray(s.shots) ? s.shots.filter(isObj).map((sh) => str(sh.framing)) : []));
+  if (framings.length < 4) return [];
+  const distinct = new Set(framings.filter(Boolean));
+  return distinct.size <= 1 ? [`все ${framings.length} планов одной крупности${distinct.size ? ` («${[...distinct][0]}»)` : " (framing не задан)"} — чередуй общий план, средний, деталь и реакцию`] : [];
+}
+
 export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
   const out: string[] = [];
   const queries = new Map<string, string>();
@@ -323,7 +400,9 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
     // условии фото не ищет, и запрос им не нужен.
     const compareItems = isObj(raw.compare) && Array.isArray(raw.compare.items) ? raw.compare.items.length : 0;
     const drawn = kind !== "hook" && kind !== "cta" && (Boolean(raw.map) || compareItems >= 2);
-    if (!q && kind !== "cta" && !drawn) out.push(`${label}: нет visualQuery — визуал придётся подбирать наугад`);
+    const shots = opts.cinematic && Array.isArray(raw.shots) ? raw.shots.filter(isObj) : [];
+    if (!q && kind !== "cta" && !drawn && !shots.length) out.push(`${label}: нет visualQuery — визуал придётся подбирать наугад`);
+    if (shots.length) out.push(...shotLints(shots, narration, label));
     if (q) {
       if (queries.has(q)) out.push(`${label}: visualQuery «${q}» повторяет сцену ${queries.get(q)} — визуал будет однообразным`);
       else queries.set(q, str(raw.id));
@@ -359,7 +438,8 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
   // Викторина строится из раундов — там сцены media не к месту. Викторина — от двух
   // раундов: один вопрос внутри обычного ролика не освобождает его от правила.
   const quiz = scenes.filter((s) => isObj(s) && s.kind === "quiz").length >= 2;
-  if (shorts && !quiz && scenes.length) {
+  if (opts.cinematic) out.push(...framingVariety(scenes));
+  else if (shorts && !quiz && scenes.length) {
     const media = scenes.filter((s) => isObj(s) && s.kind === "media").length;
     const { min, max } = SHORTS_RULES.media;
     if (media < min || media > max) out.push(`сцен kind "media" — ${media}, в Shorts нужно ${min}–${max}: живое видео по visualQuery там, где есть что показать (действие, место, процесс)`);
@@ -375,7 +455,10 @@ export function lintScenes(scenes: unknown[], opts: LintOptions): string[] {
 
 export function lintScript(script: VideoScript, opts: Partial<LintOptions> = {}): string[] {
   const format = opts.format ?? script.format;
-  const out = lintScenes(script.scenes, { format, targetSeconds: opts.targetSeconds });
+  const cinematic = isCinematic(script);
+  const out = lintScenes(script.scenes, { format, targetSeconds: opts.targetSeconds, cinematic });
+  if (!cinematic && script.scenes.some((s) => s.shots?.length)) out.push(`у сцен есть планы shots, но mode не "cinematic" — ролик соберётся в обычном режиме, планы не используются`);
+  if (cinematic && !script.style) out.push(`кинорежим без style — кадры получат общий стиль по умолчанию; задай style (освещение, палитра, атмосфера), чтобы планы выглядели одним фильмом`);
   if (script.title.length > 70) out.push(`title длиннее 70 символов — в поиске YouTube обрежется`);
   else if (format === "shorts" && script.title.length > SHORTS_RULES.titleChars) {
     out.push(`title ${script.title.length} символов — для Shorts лучше до ${SHORTS_RULES.titleChars}: в ленте видно только начало`);
@@ -589,6 +672,7 @@ export function coerceScene(raw: unknown, index: number): unknown {
     if (s.kind !== "quiz") delete s.quiz;
   }
   if (s.kind === "quiz" && s.quiz !== undefined) s.quiz = coerceQuiz(s.quiz);
+  if (Array.isArray(s.shots)) s.shots = s.shots.map(coerceShot);
   if (typeof s.chapter === "string") {
     s.chapter = cleanChapter(s.chapter);
     if (!s.chapter) delete s.chapter;
@@ -610,6 +694,38 @@ export function coerceScene(raw: unknown, index: number): unknown {
     s.stat = st;
   }
   return dropNulls(s);
+}
+
+// Вольности моделей в планах: «zoom in», «Close Up», «2.5s».
+const CAMERA_ALIASES: Record<string, string> = { zoomin: "push-in", pushin: "push-in", dollyin: "push-in", zoomout: "pull-out", pullout: "pull-out", dollyout: "pull-out", pan: "pan-right", panleft: "pan-left", panright: "pan-right", tilt: "tilt-up", tiltup: "tilt-up", tiltdown: "tilt-down", handheld: "handheld", shake: "handheld" };
+const FRAMING_ALIASES: Record<string, string> = { closeup: "close-up", close: "close-up", extremecloseup: "detail", macro: "detail", insert: "detail", establishingshot: "establishing", wideshot: "wide", longshot: "wide", mediumshot: "medium", midshot: "medium", lowangle: "low-angle", highangle: "high-angle", topdown: "overhead", birdseye: "overhead", firstperson: "pov" };
+const aliasKey = (v: string) => v.toLowerCase().replace(/[^a-z]/g, "");
+
+function coerceShot(raw: unknown): unknown {
+  if (!isObj(raw)) return raw;
+  const sh = dropNulls(raw);
+  for (const f of ["prompt", "subject", "beat"]) {
+    if (typeof sh[f] === "string") {
+      sh[f] = (sh[f] as string).replace(/\s+/g, " ").trim();
+      if (!sh[f]) delete sh[f];
+    }
+  }
+  if (typeof sh.camera === "string" && !(CAMERA_MOVES as string[]).includes(sh.camera)) {
+    const c = CAMERA_ALIASES[aliasKey(sh.camera)];
+    if (c) sh.camera = c;
+    else delete sh.camera; // непонятное движение — подберётся по крупности
+  }
+  if (typeof sh.framing === "string" && !(SHOT_FRAMINGS as string[]).includes(sh.framing)) {
+    const f = FRAMING_ALIASES[aliasKey(sh.framing)];
+    if (f) sh.framing = f;
+    else delete sh.framing;
+  }
+  if (typeof sh.seconds === "string") {
+    const n = Number(sh.seconds.replace(",", ".").replace(/[^\d.]/g, ""));
+    if (Number.isFinite(n) && n > 0) sh.seconds = n;
+    else delete sh.seconds;
+  }
+  return sh;
 }
 
 function coerceTags(v: unknown): unknown {
@@ -652,10 +768,18 @@ export function coerceMeta(o: Loose): Loose {
   return out;
 }
 
-export function coerceScriptCandidate(raw: unknown, req: Pick<ScriptRequest, "format" | "language">): unknown {
+export function coerceScriptCandidate(raw: unknown, req: Pick<ScriptRequest, "format" | "language"> & { cinematic?: boolean }): unknown {
   const top = unwrap(raw, "scenes");
   if (!isObj(top)) return top;
   const out = coerceMeta(top);
+  // Режим задаёт запрос, а не модель: в обычном режиме поля кино убираем,
+  // в кинорежиме mode ставим сами.
+  if (req.cinematic) out.mode = "cinematic";
+  else {
+    delete out.mode;
+    delete out.style;
+    if (Array.isArray(out.scenes)) out.scenes = out.scenes.map((sc) => (isObj(sc) ? (({ shots: _s, ...rest }) => rest)(sc) : sc));
+  }
   // Язык, как и формат, задаёт запрос: в системном промпте пример с "ru", и модель
   // переписывает его даже в английском сценарии (npm run script -- --lang en).
   out.language = req.language?.trim() || (typeof out.language === "string" && out.language.trim() ? out.language.trim() : "ru");

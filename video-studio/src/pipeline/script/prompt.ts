@@ -16,6 +16,7 @@ import { SHORTS_RULES, WORDS_PER_SECOND } from "./validate";
 export interface ScriptExtras {
   long?: boolean; // «Разбор»: landscape 5–8 мин, разделы = главы
   quiz?: boolean; // Shorts-викторина «Правда или миф?»
+  cinematic?: boolean; // Shorts в кинорежиме: планы shots и общий style, без текста поверх кадра
   covered?: CoveredEntry[]; // что канал уже рассказал (не повторять)
   searchPhrases?: string[]; // ключевые фразы → подсказки поиска YouTube
   suggestions?: string[]; // готовые подсказки (иначе их получит generateScript)
@@ -187,6 +188,7 @@ const formatLine = (f: Format) =>
 
 export function buildShortsPrompt(req: ScriptGenRequest, t: ShortsTargets): string {
   if (req.quiz) return buildQuizPrompt(req, t);
+  if (req.cinematic) return buildCinematicPrompt(req, t);
   const { media, ctaWordsMax, titleChars } = SHORTS_RULES;
   return `${header(req)}
 ${formatLine("shorts")}
@@ -194,6 +196,34 @@ ${formatLine("shorts")}
 
 Сначала про себя найди самый неожиданный и полезный факт по теме и развязку ролика, подбери 4–6 конкретных фактов, которые к ней ведут. Затем напиши сценарий целиком: первая сцена — "hook", последняя — "cta": один вопрос зрителю до ${ctaWordsMax} слов, который возвращает к хуку, без «подпишись». title — до ${titleChars} символов и не повторяет хук.${recentCtaBlock(req)}
 Ответ — JSON-объект с полями title, description, tags, language, format, theme, scenes.`;
+}
+
+// Кинорежим: ролик как короткий фильм — текста поверх кадра нет, картинку несут
+// планы (shots) в одном стиле (style). Системный промпт общий, поэтому правила
+// кино (и отмена правила про сцены media) — здесь.
+function buildCinematicPrompt(req: ScriptGenRequest, t: ShortsTargets): string {
+  const { ctaWordsMax, titleChars } = SHORTS_RULES;
+  return `${header(req)}
+${formatLine("shorts")}
+Режим — КИНО (поле mode: "cinematic"): ролик выглядит как короткий фильм. Текста поверх кадра нет, только субтитры голоса, поэтому историю показывают планы (shots), а не заголовки.
+Длительность: около ${t.seconds} секунд — это ${t.wordsMin}–${t.wordsMax} слов narration суммарно, ${t.scenesMin}–${t.scenesMax} сцен.${channelContext(req)}
+
+Сначала про себя найди самый неожиданный и полезный факт по теме и развязку ролика, подбери 4–6 конкретных фактов, которые к ней ведут. Затем напиши сценарий целиком: первая сцена — "hook", последняя — "cta": один вопрос зрителю до ${ctaWordsMax} слов, который возвращает к хуку, без «подпишись». title — до ${titleChars} символов и не повторяет хук.${recentCtaBlock(req)}
+
+Правила кинорежима (сильнее общих правил про сцены "media" и visualQuery):
+- style — общий вид ВСЕХ кадров ролика, по-английски и коротко: direction (художественное направление), lighting (свет), palette (палитра), realism (степень реализма), mood (атмосфера), environment (повторяющееся окружение). Один стиль на ролик: кадры должны выглядеть как один фильм.
+- kind сцен — только "hook", "statement", "media" и "cta": цифры, пункты и цитаты на экран не выводятся. onScreen всё равно заполни — коротко мысль сцены (в кадре его не будет).
+- У каждой сцены, кроме "cta", — поле shots: 2–3 плана по 2–3 секунды (у "hook" — 1–2, и первый кадр сразу показывает героя или главный предмет). Сумма seconds планов ≈ длине фразы сцены (≈ ${WORDS_PER_SECOND} слова в секунду).
+- Соседние планы показывают РАЗНЫЕ стороны одной истории: место действия, героя, важную деталь, реакцию, последствие. Например, общий план места → герой средним планом → крупно деталь → реакция героя, — но это пример, а не шаблон: бери то, что двигает именно эту историю. Двух почти одинаковых кадров подряд не делай — лучше меньше планов.
+- Поля плана:
+  - prompt — ПО-АНГЛИЙСКИ: кто или что в кадре, действие, окружение — конкретно и зримо; без слов о стиле, свете и камере (они в style и framing) и без надписей в кадре.
+  - framing — крупность или ракурс: establishing, wide, medium, close-up, detail, reaction, pov, low-angle, high-angle, overhead.
+  - camera — движение: push-in, pull-out, pan-left, pan-right, tilt-up, tilt-down, handheld; чередуй, а не ставь одно на все планы.
+  - seconds — 2–3.
+  - subject — по-английски, кто или что в центре кадра; один и тот же герой называется одинаково во всех планах ("old fisherman with a grey beard").
+  - beat — у 2-го и следующих планов сцены: первые 1–3 слова narration этой сцены, на которых план начинается (слово в слово).
+- visualQuery и imagePrompt в кинорежиме не нужны.
+Ответ — JSON-объект с полями title, description, tags, language, format, theme, mode, style, scenes.`;
 }
 
 // Викторина: t — цели по словам уже без тишины раундов (её добавит ролик).

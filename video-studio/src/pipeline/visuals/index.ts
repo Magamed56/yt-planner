@@ -254,7 +254,8 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
     const prefer = (env.VISUALS_PREFER ?? "").trim().toLowerCase();
     const realFirst = Boolean(ctx.realFirst) || prefer === "real";
     const perScene = { calls: 0 };
-    for (const step of buildPlan(ready, ctx.format, prefer === "image", realFirst)) {
+    const plan = buildPlan(ready, ctx.format, prefer === "image", realFirst);
+    for (const step of ctx.aiOnly ? plan.filter((s) => s.provider.kind === "ai") : plan) {
       const { provider } = step;
       if (disabled.has(provider.name)) continue;
       if (provider.kind !== "ai" && queries.length === 0) continue;

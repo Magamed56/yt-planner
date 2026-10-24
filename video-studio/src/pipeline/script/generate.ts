@@ -29,7 +29,7 @@ import {
   type ChunkSpec,
   type ScriptGenRequest,
 } from "./prompt";
-import { LIMITS, OutlineSchema, SceneChunkSchema, VideoScriptSchema, toCompatJsonSchema, type Outline } from "./schema";
+import { ClassicVideoScriptSchema, LIMITS, OutlineSchema, SceneChunkSchema, VideoScriptSchema, toCompatJsonSchema, type Outline } from "./schema";
 import { suggestEnabled, suggestionsFor } from "./suggest";
 import type { LlmCallInfo } from "./usage-log";
 import {
@@ -43,6 +43,7 @@ import {
   lintScript,
   ScriptValidationError,
   SHORTS_RULES,
+  shotLints,
   trimCta,
   unwrap,
   validateScenes,
@@ -171,8 +172,15 @@ function shortsValidator(req: ScriptGenRequest, seconds: number, guard: RepeatGu
     const rep = guard.check(looseScenes(scenes));
     problems.push(...rep.problems);
     warnings.push(...rep.warnings);
+    // Кинорежим: одинаковые планы подряд, мелькание, фраза склейки мимо текста —
+    // первый ответ в ремонт, после ремонта только замечание (оно и так в lintScript).
+    if (req.cinematic && strict) {
+      scenes.forEach((sc, i) => {
+        if (isObj(sc) && Array.isArray(sc.shots)) problems.push(...shotLints(sc.shots.filter(isObj), typeof sc.narration === "string" ? sc.narration : "", `сцена №${i + 1}`));
+      });
+    }
     if (problems.length || !script) {
-      const soft = [...warnings, ...lintScenes(scenes, { format: "shorts", targetSeconds: voiceSeconds }), ...ctaRepeatWarnings(scenes, recent)];
+      const soft = [...warnings, ...lintScenes(scenes, { format: "shorts", targetSeconds: voiceSeconds, cinematic: req.cinematic }), ...ctaRepeatWarnings(scenes, recent)];
       return { ok: false, problems, warnings: softOnly(soft, problems) };
     }
     guard.accept(rep.warnings);
@@ -371,10 +379,11 @@ async function generateWith(
       chain,
       user: buildShortsPrompt(req, shortsTargets(voiceSeconds)),
       schemaName: "video_script",
-      zodSchema: VideoScriptSchema,
-      jsonSchema: toCompatJsonSchema(VideoScriptSchema),
+      // Обычный режим — прежняя схема без полей кино; кинорежим — с планами и стилем.
+      zodSchema: req.cinematic ? VideoScriptSchema : ClassicVideoScriptSchema,
+      jsonSchema: toCompatJsonSchema(req.cinematic ? VideoScriptSchema : ClassicVideoScriptSchema),
       validate: shortsValidator(req, seconds, newGuard(), recent, accepted),
-      what: req.quiz ? "сценарий викторины" : "сценарий Shorts",
+      what: req.quiz ? "сценарий викторины" : req.cinematic ? "сценарий Shorts (кинорежим)" : "сценарий Shorts",
     });
     script = value;
   } else {

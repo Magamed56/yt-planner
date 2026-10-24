@@ -1,7 +1,7 @@
 // Запросы для стоков и промпты для генерации из полей сцены.
 
 import { createHash } from "node:crypto";
-import type { Format, ScriptScene } from "../../types";
+import type { Format, SceneShot, ScriptScene, ShotFraming, VisualStyle } from "../../types";
 
 const CYRILLIC = /[Ѐ-ӿ]/;
 
@@ -42,6 +42,46 @@ export function buildQueries(scene: ScriptScene): string[] {
   if (words.length >= 3) add(words.slice(0, 2).join(" "));
   if (scene.imagePrompt) add(keywords(scene.imagePrompt, 3));
   return out.slice(0, 3);
+}
+
+// ---- Кинорежим: план и общий стиль ролика ----
+
+// Общий стиль ролика (VideoScript.style) → хвост промпта каждого AI-кадра.
+// «Без надписей» — всегда: генераторы любят рисовать буквы.
+export function styleText(style: VisualStyle | undefined): string | undefined {
+  if (!style) return undefined;
+  const t = (v: string | undefined) => v?.trim().replace(/[.\s]+$/, "") || "";
+  const parts = [
+    t(style.direction),
+    t(style.realism),
+    t(style.lighting),
+    t(style.palette) && `${t(style.palette)} color palette`,
+    t(style.mood) && `${t(style.mood)} mood`,
+    t(style.environment) && `setting: ${t(style.environment)}`,
+  ].filter(Boolean);
+  return parts.length ? `${parts.join(", ")}, no text, no letters, no watermark` : undefined;
+}
+
+const FRAMING_TEXT: Record<ShotFraming, string> = {
+  establishing: "establishing extreme wide shot",
+  wide: "wide shot",
+  medium: "medium shot",
+  "close-up": "close-up shot",
+  detail: "extreme close-up detail shot",
+  reaction: "close-up reaction shot, expressive face",
+  pov: "first-person point-of-view shot",
+  "low-angle": "low-angle shot",
+  "high-angle": "high-angle shot",
+  overhead: "overhead top-down shot",
+};
+
+// Промпт плана без стиля: крупность + описание + герой (если его не назвали в
+// описании — иначе кадры одного героя расходятся). Стиль добавит imagePromptFor.
+export function shotImagePrompt(shot: SceneShot): string {
+  const body = shot.prompt.trim().replace(/[.\s]+$/, "");
+  const subject = shot.subject?.trim();
+  const full = subject && !body.toLowerCase().includes(subject.toLowerCase()) ? `${body}, featuring ${subject}` : body;
+  return shot.framing ? `${FRAMING_TEXT[shot.framing]}: ${full}` : full;
 }
 
 export const DEFAULT_STYLE =

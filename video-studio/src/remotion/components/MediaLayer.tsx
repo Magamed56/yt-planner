@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AbsoluteFill, Img, Loop, OffthreadVideo, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import type { SceneVisual } from "../../types";
+import type { CameraMove, SceneVisual } from "../../types";
+import { cameraState, cameraTransform } from "../lib/camera";
 import { useLayout } from "../lib/layout";
 import { withAlpha, type Theme } from "../theme";
 
@@ -13,7 +14,9 @@ export const resolveSrc = (src: string): string => (/^(https?:|data:|blob:)/.tes
 //          утверждение, цифра): ровная подложка под текстом, контраст добирает
 //          тень-ореол у содержимого сцены (SceneFrame);
 // soft   — визуал главный, подпись в нижней трети (media).
-export type MediaDim = "strong" | "medium" | "soft";
+// none   — кинорежим: кадр без тонировки и затемнения (субтитры читаются по
+//          своей обводке), текста поверх нет.
+export type MediaDim = "strong" | "medium" | "soft" | "none";
 
 // Визуал сцены на весь кадр: картинка — медленный Ken Burns, видео — по
 // кругу в <Loop> (OffthreadVideo декодирует в Rust-композиторе Remotion,
@@ -25,9 +28,11 @@ export const MediaLayer: React.FC<{
   durationInFrames: number;
   seed: number;
   dim: MediaDim;
-}> = ({ visual, theme, durationInFrames, seed, dim }) => {
+  camera?: CameraMove; // кинорежим: движение камеры плана вместо Ken Burns
+  motionSeed?: string; // зерно «дыхания» с рук — своё у каждого плана
+}> = ({ visual, theme, durationInFrames, seed, dim, camera, motionSeed }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
   const [failed, setFailed] = useState(false);
   if (visual.type === "none" || failed) return null;
 
@@ -40,7 +45,7 @@ export const MediaLayer: React.FC<{
     width: "100%",
     height: "100%",
     objectFit: "cover",
-    transform: `scale(${scale}) translate(${tx}%, ${ty}%)`,
+    transform: camera ? cameraTransform(cameraState(camera, p, frame / fps, motionSeed ?? String(seed)), width, height) : `scale(${scale}) translate(${tx}%, ${ty}%)`,
   };
   const onError = () => {
     console.warn(`[визуал] не удалось загрузить ${visual.src} — сцена пойдёт без фона`);
@@ -51,10 +56,10 @@ export const MediaLayer: React.FC<{
   // визуал — главный, показываем целиком «карточкой» поверх своей размытой
   // копии: обрезка по центру потеряла бы сам объект (пирамиду, шлем, акулу).
   // При medium карточка встала бы под крупный текст — там фото на весь кадр.
-  if (visual.type === "image" && visual.fit === "contain" && dim === "soft") {
+  if (visual.type === "image" && visual.fit === "contain" && (dim === "soft" || dim === "none")) {
     return <ContainedImage src={resolveSrc(visual.src)} theme={theme} p={p} dir={dir} onError={onError} />;
   }
-  const shade = DIM_SHADE[dim];
+  const shade = dim === "none" ? null : DIM_SHADE[dim];
   return (
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: theme.bgFrom }}>
       {visual.type === "image" ? (
@@ -66,17 +71,21 @@ export const MediaLayer: React.FC<{
           </AbsoluteFill>
         </Loop>
       )}
-      {/* Тонировка в цвет темы связывает сток с палитрой ролика */}
-      <AbsoluteFill style={{ background: withAlpha(theme.bgFrom, shade.tint) }} />
-      <AbsoluteFill style={{ background: shade.gradient }} />
-      <AbsoluteFill
-        style={{ background: `radial-gradient(ellipse 90% 75% at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,${shade.vignette}) 100%)` }}
-      />
+      {shade ? (
+        <>
+          {/* Тонировка в цвет темы связывает сток с палитрой ролика */}
+          <AbsoluteFill style={{ background: withAlpha(theme.bgFrom, shade.tint) }} />
+          <AbsoluteFill style={{ background: shade.gradient }} />
+          <AbsoluteFill
+            style={{ background: `radial-gradient(ellipse 90% 75% at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,${shade.vignette}) 100%)` }}
+          />
+        </>
+      ) : null}
     </AbsoluteFill>
   );
 };
 
-const DIM_SHADE: Record<MediaDim, { tint: number; gradient: string; vignette: number }> = {
+const DIM_SHADE: Record<Exclude<MediaDim, "none">, { tint: number; gradient: string; vignette: number }> = {
   strong: {
     tint: 0.5,
     gradient: `linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.45) 65%, rgba(0,0,0,0.85) 100%)`,

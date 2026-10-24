@@ -4,6 +4,7 @@ import type { TransitionPresentation, TransitionPresentationComponentProps } fro
 import { slide } from "@remotion/transitions/slide";
 import { wipe } from "@remotion/transitions/wipe";
 import { iris } from "@remotion/transitions/iris";
+import { fade } from "@remotion/transitions/fade";
 import type { RenderScene } from "../../types";
 
 // Выбор перехода между сценами. Фон ролика общий и непрерывный (лежит под
@@ -66,7 +67,9 @@ const Lift: React.FC<TransitionPresentationComponentProps<LiftProps>> = ({ child
 };
 export const lift = (distance: number): TransitionPresentation<LiftProps> => ({ component: Lift, props: { distance } });
 
-const hasVisual = (s: RenderScene) => s.visual.type !== "none";
+// Сцена кинорежима непрозрачна, даже если визуала сцены нет: кадры у планов.
+const hasVisual = (s: RenderScene) => s.visual.type !== "none" || (s.shots?.length ?? 0) > 0;
+const cinematic = (s: RenderScene) => (s.shots?.length ?? 0) > 0;
 
 export function pickTransition(
   prev: RenderScene,
@@ -76,6 +79,9 @@ export function pickTransition(
 ): TransitionPresentation<Record<string, unknown>> {
   const anyP = <T extends Record<string, unknown>>(p: TransitionPresentation<T>) => p as unknown as TransitionPresentation<Record<string, unknown>>;
   const alt = index % 2 === 0;
+  // Кинорежим: между сценами — короткий наплыв кадра на кадр (текста поверх
+  // нет, «шторки» и пролёты выглядели бы инфографикой).
+  if (cinematic(next) && hasVisual(prev)) return anyP(fade());
   if (hasVisual(next)) {
     // Непрозрачная сцена может «вытирать» предыдущую.
     if (next.kind === "media") return anyP(wipe({ direction: alt ? "from-bottom-left" : "from-top-right" }));

@@ -28,6 +28,7 @@ const HELP = `Черновик сценария для проверки пере
   npm run script -- --topic "тема" [--format shorts|landscape] [--notes "пожелания"] [--seconds 45] [--out scripts/]
   npm run script -- --plan 08a,08b [--seconds 45]
   npm run script -- --plan 08a --quiz     викторина «Правда или миф?» (Shorts)
+  npm run script -- --topic "тема" --cinematic   Shorts в кинорежиме: планы и общий стиль кадров
   npm run script -- --plan 08a --long     «Разбор» 5–8 минут, 16:9, с главами (и с --topic)
   npm run script -- --plan 08a --lang en  ролик на другом языке (en, kk, uz…) → scripts/en/
   npm run script -- --long-plan L01       «Разбор» на тему из content/long-plan.json (коды L01… можно и в --plan)
@@ -39,6 +40,8 @@ const HELP = `Черновик сценария для проверки пере
 пожелания LLM, файл — scripts/sut-<код>-<имя>.json, в плане тема получает status script-ready.
 Темы, у которых сценарий уже есть, пропускаются.
 
+--cinematic — Shorts как короткий фильм: у сцен планы (shots) по 2–3 с, общий style кадров,
+  текста поверх кадра нет (только субтитры). Кадры — AI-генерация (VISUALS: cloudflare, pollinations).
 --quiz — Shorts из 2 раундов (с --seconds 60 и больше — до 3): утверждение → пауза с отсчётом → «Правда»/«Миф» → ответ.
 --long — «Разбор» (по умолчанию ${LONG_DEFAULT_SECONDS} с, 25–45 сцен, главы с карточками и таймкодами в описании).
   С --plan файл — scripts/razbor-<код>-<имя>.json: Shorts той же темы и план не трогаются.
@@ -74,6 +77,7 @@ function uniquePath(dir: string, slug: string): string {
 interface Mode {
   long: boolean;
   quiz: boolean;
+  cinematic?: boolean;
 }
 
 interface PlanDraft {
@@ -150,6 +154,7 @@ async function draftFromPlan(codesArg: string, seconds: number | undefined, mode
         targetSeconds: seconds,
         long,
         quiz: mode.quiz,
+        cinematic: mode.cinematic,
         // Своя тема (и её «Разбор»/Shorts) повтором не считается.
         covered: loadCovered(ROOT, { plan: coveredPlan, exclude: [code] }),
         searchPhrases: searchPhrases(item.title),
@@ -225,6 +230,7 @@ async function main() {
         out: { type: "string" },
         long: { type: "boolean", default: false },
         quiz: { type: "boolean", default: false },
+        cinematic: { type: "boolean", default: false },
         lang: { type: "string" },
         help: { type: "boolean", short: "h", default: false },
       },
@@ -247,12 +253,16 @@ async function main() {
   const planCodes = longPlanCodes || (typeof values.plan === "string" ? values.plan.trim() : "");
   const seconds = values.seconds ? Number(values.seconds) : undefined;
   if (seconds !== undefined && !(seconds > 0)) throw new UserError("--seconds: нужно положительное число.");
-  const mode: Mode = { long: Boolean(values.long), quiz: Boolean(values.quiz) };
+  const mode: Mode = { long: Boolean(values.long), quiz: Boolean(values.quiz), cinematic: Boolean(values.cinematic) };
   const lang = parseLangArg(typeof values.lang === "string" ? values.lang : undefined) ?? "ru";
   if (mode.long && mode.quiz) throw new UserError("--long и --quiz вместе нельзя: викторина — это Shorts, «Разбор» — длинный ролик.");
   const formatArg = typeof values.format === "string" ? values.format : undefined;
   if (mode.long && formatArg && formatArg !== "landscape") throw new UserError("--long — горизонтальный ролик: уберите --format или укажите --format landscape.");
   if (mode.quiz && formatArg && formatArg !== "shorts") throw new UserError("--quiz — только Shorts: уберите --format или укажите --format shorts.");
+  if (mode.cinematic && (mode.long || mode.quiz)) throw new UserError("--cinematic пока только для обычных Shorts: без --long и --quiz.");
+  if (mode.cinematic && formatArg && formatArg !== "shorts") throw new UserError("--cinematic — только Shorts: уберите --format или укажите --format shorts.");
+  if (mode.cinematic && planCodes.split(/[\s,]+/).some((c) => isLongCode(c))) throw new UserError("--cinematic — только Shorts, а L01… — «Разборы».");
+  if (mode.cinematic && lang !== "ru") throw new UserError("--cinematic пока только по-русски — уберите --lang.");
   if (planCodes) {
     if (topic || values.notes || values.out || formatArg) throw new UserError("--plan берёт тему, пожелания, формат и папку из плана — без --topic, --notes, --format и --out.");
     if (lang !== "ru" && planCodes.split(/[\s,]+/).some((c) => isLongCode(c))) throw new UserError("«Разборы» по длинному плану (L01…) пока только по-русски — уберите --lang.");
@@ -265,7 +275,7 @@ async function main() {
   if (format !== "shorts" && format !== "landscape") throw new UserError(`--format: shorts или landscape, а не «${format}».`);
   const outDir = path.resolve(typeof values.out === "string" ? values.out : path.join(ROOT, langScriptDir(lang)));
 
-  console.log(`video-studio · черновик сценария\n  тема: «${topic}», формат: ${format}${mode.long ? " («Разбор» с главами)" : mode.quiz ? " (викторина)" : ""}`);
+  console.log(`video-studio · черновик сценария\n  тема: «${topic}», формат: ${format}${mode.long ? " («Разбор» с главами)" : mode.quiz ? " (викторина)" : mode.cinematic ? " (кинорежим)" : ""}`);
   let generated: Awaited<ReturnType<typeof generateScript>>;
   const usage = usageCollector(null);
   let plan: ContentPlan | null = null;
@@ -284,6 +294,7 @@ async function main() {
         targetSeconds: seconds,
         long: mode.long,
         quiz: mode.quiz,
+        cinematic: mode.cinematic,
         covered: loadCovered(ROOT, { plan }),
         // Подсказки поиска — по русской теме; для другого языка они не к месту.
         searchPhrases: lang === "ru" ? searchPhrases(topic) : undefined,

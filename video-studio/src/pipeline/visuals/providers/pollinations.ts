@@ -14,7 +14,7 @@ const stage: Stage = {
   media: "image",
   async run(input) {
     const { deps, ctx, scene } = input;
-    const prompt = imagePromptFor(scene, ctx.format, deps.env.VISUALS_STYLE);
+    const prompt = imagePromptFor(scene, ctx.format, ctx.style ?? deps.env.VISUALS_STYLE);
     if (!prompt) return [];
     const { width, height } = cfSize(ctx.format);
     const q = new URLSearchParams({ width: String(width), height: String(height), seed: String(seedFor(`${scene.id}|${prompt}`)), model: "flux", nologo: "true" });

@@ -43,7 +43,7 @@ export interface Candidate {
 
 export interface StageInput {
   scene: ScriptScene;
-  ctx: VisualContext;
+  ctx: VisualContext & VisualHints;
   queries: string[]; // английские запросы для стоков, по убыванию точности
   query?: VisualQuery; // разобранный запрос сцены — для проверки «по теме» (relevance.ts)
   deps: VisualDeps;
@@ -79,6 +79,8 @@ export interface VisualHints {
   realFirst?: boolean;
   topicQueries?: string[];
   topic?: string;
+  style?: string; // общий стиль AI-кадров ролика (styleText(VideoScript.style)); нет — VISUALS_STYLE
+  aiOnly?: boolean; // только генерация: кадры планов кинорежима — в одном стиле, без стоков
 }
 
 // Ошибка источника. quota/auth выключают источник до конца запуска, чтобы не

@@ -53,6 +53,13 @@
   композиции Video в конце хука, тот же кадр → `thumb_offset`), `telegram.ts` (канал Telegram:
   sendVideo с `cover.jpg`, подпись `telegram.txt`/`instagram.txt` ≤ 1024, пережатие > 50 МБ,
   отметка `telegram-result.json` «sending» до запроса — против дублей).
+- **Кинорежим** (`VideoScript.mode = "cinematic"`, README «Кинорежим»): планы `ScriptScene.shots` и
+  общий `VideoScript.style` — в `types.ts` (`layoutShots`/`renderShots` делят длину сцены, не трогая
+  тайминг звука и субтитров); кадры планов — `visuals/shots.ts` (тот же `findVisual` с `aiOnly`,
+  промпт — `query.ts`: `shotImagePrompt` + `styleText`, ключ манифеста — `shotVisualKey`); рисует
+  `MediaScene` (`lib/shots.ts`, движения камеры — `lib/camera.ts`, `MediaLayer` с `dim="none"`).
+  Обычный ответ LLM — `ClassicVideoScriptSchema` (JSON Schema для модели без полей кино);
+  проверки — `src/dev/cinematic-test.ts`.
 - `src/pipeline/plan.ts` — `content/plan.json` (60 тем: хук, угол, факты с источниками): `parsePlan`,
   `planNotes` (пожелания LLM), `scriptCode` (код из `scripts/sut-08a-….json`); `npm run script --
   --plan 08a,08b` пишет сценарии по плану. `google-api.ts` — access token и разбор ошибок API без

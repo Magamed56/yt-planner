@@ -11,7 +11,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { FPS, THEME_NAMES, layoutScenes, type Format, type ThemeName, type VideoProps, type VideoScript } from "../types";
+import { FPS, THEME_NAMES, isCinematic, layoutScenes, type Format, type ThemeName, type VideoProps, type VideoScript } from "../types";
 import type { Credit, LlmUsage, VisualResult, VoiceProvider, VoiceResult, VoiceUsed } from "../pipeline/contracts";
 import { makeSfx, prepareMusic } from "../pipeline/audio/index";
 import { applyChannelDefaults, applyPillarVoice, brandIntroEnabled, type ChannelConfig } from "../pipeline/channel";
@@ -37,6 +37,8 @@ import { isLongCode } from "../pipeline/codes";
 import { LONG_PLAN_FILE, parseLongPlan } from "../pipeline/long-plan";
 import { findVisual, realFirstForPillar, visualsJudgeStats } from "../pipeline/visuals/index";
 import { readVisualsManifest, reusableEntry, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
+import { styleText } from "../pipeline/visuals/query";
+import { findShotVisuals } from "../pipeline/visuals/shots";
 import { getVoiceProvider, resolvePiperVoice } from "../pipeline/voice/index";
 import { describeVoice, failureReason, fallbackDisabled, fallbackProviderNames, isQuotaError, providerLabel, voiceFailureSummary, voiceQcIssues, voiceUsed } from "../pipeline/voice/fallback";
 import { EDGE_DEFAULT_VOICE } from "../pipeline/voice/providers/edge";
@@ -75,6 +77,8 @@ const HELP = `Сборка ролика одной командой.
   --lang   en|kk|uz|…          язык ролика (иначе — из сценария): канал channels/<язык>.json, голос языка; без --upload
   --notes  "..."               пожелания к сценарию (только с --topic)
   --seconds N                  желаемая длительность (только с --topic)
+  --cinematic                  кинорежим (только с --topic, Shorts): планы по 2–3 с, общий стиль AI-кадров,
+                               без текста поверх кадра; у готового сценария режим — поле "mode" в JSON
   --mood   calm|inspiring|upbeat|tech|dark   настроение музыки (иначе MUSIC_MOOD)
   --out    out/                куда класть папку ролика (по умолчанию out/)
   --no-render                  только подготовить звук, визуал и props.json
@@ -101,6 +105,7 @@ interface Args {
   lang?: string;
   notes?: string;
   seconds?: number;
+  cinematic: boolean;
   mood?: string;
   out: string;
   render: boolean;
@@ -125,6 +130,7 @@ function parse(): Args {
         lang: { type: "string" },
         notes: { type: "string" },
         seconds: { type: "string" },
+        cinematic: { type: "boolean", default: false },
         mood: { type: "string" },
         out: { type: "string" },
         "no-render": { type: "boolean", default: false },
@@ -157,6 +163,8 @@ function parse(): Args {
 
   const format = str("format");
   if (format && format !== "shorts" && format !== "landscape") throw new UserError(`--format: shorts или landscape, а не «${format}».`);
+  if (values.cinematic && !str("topic")) throw new UserError('--cinematic — для --topic (сценарий напишет LLM); у готового сценария кинорежим задаёт поле "mode": "cinematic" в JSON.');
+  if (values.cinematic && format === "landscape") throw new UserError("--cinematic пока только для Shorts: уберите --format landscape.");
   const theme = str("theme");
   if (theme && theme !== "auto" && !THEME_NAMES.includes(theme as ThemeName)) throw new UserError(`--theme: одна из ${THEME_NAMES.join(", ")}.`);
   const upload = parseUploadTargets(str("upload"));
@@ -181,6 +189,7 @@ function parse(): Args {
     lang: parseLangArg(str("lang")),
     notes: str("notes"),
     seconds: num("seconds"),
+    cinematic: Boolean(values.cinematic),
     mood: str("mood"),
     out: path.resolve(str("out") ?? path.join(ROOT, "out")),
     render: !values["no-render"],
@@ -302,7 +311,7 @@ async function main() {
       const llmCalls: LlmCallInfo[] = []; // → content/usage.jsonl
       try {
         r = await generateScript(
-          { topic: args.topic, format, language: lang, notes: args.notes, targetSeconds: args.seconds, covered: loadCovered(ROOT), searchPhrases: searchPhrases(args.topic) },
+          { topic: args.topic, format, language: lang, notes: args.notes, targetSeconds: args.seconds, cinematic: args.cinematic, covered: loadCovered(ROOT), searchPhrases: searchPhrases(args.topic) },
           { onLlmCall: (c) => llmCalls.push(c) },
         );
       } catch (e) {
@@ -400,6 +409,8 @@ async function main() {
   console.log(`  голос ролика: ${describeVoice(usedVoice)}`);
 
   // 3. Визуал
+  // Кинорежим: кадры планов (по порядку сцен; null — у сцены нет планов).
+  const shotVisuals: (VisualResult[] | null)[] = [];
   const visuals: VisualResult[] = await steps.run("Визуал", async () => {
     // Визуал прошлого запуска этой папки берём повторно, если входы сцены не
     // менялись (manifest.ts): квоты стоков и генерации не тратятся заново.
@@ -408,7 +419,11 @@ async function main() {
     const minDur = (i: number) => voices[i].durationMs / 1000 + 0.8;
     const realFirst = realFirstForPillar(pillar);
     if (realFirst) console.log(`  рубрика «${pillar}»: сначала реальные фото (Wikimedia Commons, Openverse)`);
-    const keys = script.scenes.map((scene) => visualKey(scene, format, process.env, { realFirst }));
+    // Общий стиль сценария — в промпт каждого AI-кадра (и в ключ манифеста, только если задан).
+    const style = styleText(script.style);
+    const cinematic = isCinematic(script);
+    if (cinematic) console.log(`  кинорежим: кадр на каждый план — только генерация (${style ? "стиль сценария" : "стиль по умолчанию"})`);
+    const keys = script.scenes.map((scene) => visualKey(scene, format, process.env, { realFirst, style }));
     // Запросы всех сцен: слово, которое повторяется во многих («cat»), — предмет ролика (visuals/relevance.ts).
     const topicQueries = script.scenes.map((s) => s.visualQuery ?? "");
     const reused = script.scenes.map((scene, i) => reusableEntry(prev[scene.id], keys[i], publicDir, minDur(i)));
@@ -416,7 +431,27 @@ async function main() {
     const usedIds = new Set<string>(reused.flatMap((e) => (e?.candidateId ? [e.candidateId] : [])));
     const out: VisualResult[] = [];
     // По очереди, а не параллельно: у стоков лимиты запросов в час.
+    let shotTotal = 0;
+    let shotFound = 0;
+    let shotReused = 0;
     for (const [i, scene] of script.scenes.entries()) {
+      const shots = cinematic ? scene.shots : undefined;
+      if (shots?.length) {
+        const sv = await findShotVisuals({ scene, shots, format, publicDir, sceneIndex: i, usedIds, prev, style: script.style, topic: script.title });
+        Object.assign(next, sv.entries);
+        shotVisuals.push(sv.results);
+        const ok = sv.results.filter((r) => r.visual.type !== "none").length;
+        shotTotal += shots.length;
+        shotFound += ok;
+        shotReused += sv.reused;
+        console.log(`  ${scene.id}: планов с кадром ${ok} из ${shots.length}${sv.reused ? ` (${sv.reused} — из прошлого запуска)` : ""}`);
+        // Хоть один кадр есть — визуал сцены не нужен (квоты стоков не тратим).
+        if (ok > 0) {
+          out.push({ visual: { type: "none" }, credit: null });
+          continue;
+        }
+        console.log(`  ${scene.id}: ни одного кадра плана — ищу визуал сцены обычным путём`);
+      } else shotVisuals.push(null);
       const old = reused[i];
       let r: VisualResult;
       let candidateId: string | null = null;
@@ -425,7 +460,7 @@ async function main() {
         candidateId = old.candidateId;
       } else {
         const before = new Set(usedIds);
-        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds, realFirst, topicQueries, topic: script.title });
+        r = await findVisual(scene, { format, publicDir, sceneIndex: i, minDurationSec: minDur(i), usedIds, realFirst, topicQueries, topic: script.title, style });
         candidateId = [...usedIds].find((id) => !before.has(id)) ?? null;
       }
       next[scene.id] = { key: keys[i], result: r, candidateId, minDurationSec: minDur(i) };
@@ -434,6 +469,7 @@ async function main() {
       if (v.type !== "none") console.log(`  ${scene.id}: ${v.type === "video" ? `видео ${v.durationSec.toFixed(1)} с` : "картинка"} — ${r.credit?.provider ?? "?"}${r.credit?.author ? `, ${r.credit.author}` : ""}${old ? " (из прошлого запуска)" : ""}`);
     }
     writeVisualsManifest(publicDir, next);
+    if (shotTotal) console.log(`  планы: кадр есть у ${shotFound} из ${shotTotal}${shotReused ? `, из прошлого запуска — ${shotReused}` : ""}`);
     const found = out.filter((r) => r.visual.type !== "none").length;
     const again = reused.filter(Boolean).length;
     console.log(`  визуал найден для ${found} из ${out.length} сцен${found < out.length ? " (остальные — чистая моушен-графика)" : ""}`);
@@ -462,11 +498,14 @@ async function main() {
   const props = await steps.run("Сборка таймлинии (props.json)", async () => {
     // Канал языка (channels/en.json) — в props: заставка покажет его название, а не вшитое «Суть за минуту».
     const brandChannel = brandChannelOf(channel);
-    const p = buildVideoProps({ script, publicDir, voices, visuals, music, whooshSrc, sfx, brandIntro, brandChannel, format, theme: script.theme, channelName: channel.name });
+    const p = buildVideoProps({ script, publicDir, voices, visuals, shotVisuals, music, whooshSrc, sfx, brandIntro, brandChannel, format, theme: script.theme, channelName: channel.name });
     writeJson(path.join(runDir, "props.json"), p);
     console.log(`  длительность ${(p.durationInFrames / FPS).toFixed(1)} с (${p.durationInFrames} кадров), голос ${(voiceDurationMs / 1000).toFixed(1)} с, слов в субтитрах: ${p.captions.length}`);
     return p;
   });
+
+  // Авторство и стоимость — и по кадрам планов кинорежима.
+  const allCredits = [...visuals.map((v) => v.credit), ...shotVisuals.flatMap((r) => r?.map((v) => v.credit) ?? [])];
 
   // 6. Субтитры, описание, стоимость — до рендера: пригодятся, даже если рендер упадёт.
   const files = await steps.run("Субтитры, описание и стоимость", async () => {
@@ -475,7 +514,7 @@ async function main() {
     const meta = buildYoutubeMeta({
       script,
       format,
-      visualCredits: visuals.map((v) => v.credit),
+      visualCredits: allCredits,
       musicCredit: music?.credit ?? null,
       voiceProvider: voice.name,
       voiceName: voiceLabel(voice.name),
@@ -488,7 +527,7 @@ async function main() {
     // Instagram: подпись (правится руками в instagram.txt) и кадр обложки — тот же, что в cover.jpg.
     const igMeta: InstagramMeta = { caption: buildInstagramCaption(script, channel), thumbOffsetMs: frameToMs(coverFrame(props)), shareToFeed: true, cover: null };
     const ig = writeInstagramAssets(runDir, igMeta);
-    const cost = buildCost(usage, voice.name, script, visuals.map((v) => v.credit));
+    const cost = buildCost(usage, voice.name, script, allCredits);
     writeJson(path.join(runDir, "cost.json"), cost);
     console.log(`  стоимость запуска: $${cost.totalUsd.toFixed(4)}${cost.totalUsd === 0 ? " (всё бесплатно)" : ""}`);
     return { srt, description, meta, cost, igMeta, igCaption: ig.captionFile };

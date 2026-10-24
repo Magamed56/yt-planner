@@ -5,19 +5,23 @@
 //   npx tsx src/dev/preview.ts
 //   npx tsx src/dev/preview.ts --format=landscape --theme=sunset --frames=0-299 --concurrency=4
 //   npx tsx src/dev/preview.ts --visual        (картинка/клип-пример на сценах s3/s5)
+//   npx tsx src/dev/preview.ts --cinematic     (кинорежим: examples/cinematic-30a.json, кадры планов —
+//                                               узоры-заглушки 768×1344 через системный ffmpeg, без AI)
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { renderMedia, selectComposition } from "@remotion/renderer";
+import { validateScript } from "../pipeline/script/validate";
 import { buildFixtureProps } from "../remotion/fixtures/buildFixture";
-import { FPS, THEME_NAMES, type Format, type SceneVisual, type ThemeName } from "../types";
+import { FPS, THEME_NAMES, type Format, type SceneVisual, type ThemeName, type VideoScript } from "../types";
 import {
   OUT_DEV,
   bundleComposition,
   getBrowserOpts,
   parseArgs,
   preparePublicDir,
+  ROOT,
   readDemoScript,
   synthMusic,
   synthVoice,
@@ -52,15 +56,41 @@ function makeClip(image: string, out: string): boolean {
   return r.status === 0 && fs.existsSync(out);
 }
 
+// Кадры-заглушки для планов кинорежима (как картинка Cloudflare FLUX.2 768×1344):
+// у каждого плана свой узор и оттенок — видны склейки, движение камеры и края.
+// Системный ffmpeg — только здесь, в dev; без него — null (планы без кадров).
+const PATTERNS = ["testsrc2", "smptehdbars", "mandelbrot", "rgbtestsrc", "testsrc", "yuvtestsrc"];
+function makeShotFrames(publicDir: string, script: VideoScript): ((id: string, k: number) => SceneVisual) | null {
+  const dir = path.join(publicDir, "visuals");
+  fs.mkdirSync(dir, { recursive: true });
+  let n = 0;
+  for (const scene of script.scenes) {
+    for (const [k] of (scene.shots ?? []).entries()) {
+      const file = path.join(dir, `${scene.id}-k${k + 1}.png`);
+      const src = `${PATTERNS[n % PATTERNS.length]}=s=768x1344`;
+      const r = spawnSync("ffmpeg", ["-y", "-loglevel", "error", "-f", "lavfi", "-i", src, "-frames:v", "1", "-vf", `hue=h=${(n * 47) % 360}`, file], { stdio: "inherit" });
+      if (r.status !== 0 || !fs.existsSync(file)) {
+        console.warn("[preview] системный ffmpeg не сделал кадры-заглушки — планы без кадров");
+        return null;
+      }
+      n++;
+    }
+  }
+  console.log(`[preview] кинорежим: ${n} кадров-заглушек планов (без AI)`);
+  return (id, k) => ({ type: "image", src: `visuals/${id}-k${k + 1}.png` });
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const format: Format = args.format === "landscape" ? "landscape" : "shorts";
   const theme: ThemeName = THEME_NAMES.includes(args.theme as ThemeName) ? (args.theme as ThemeName) : "midnight";
   const concurrency = args.concurrency ? Number(args.concurrency) : null;
-  const out = path.resolve(args.out ?? path.join(OUT_DEV, format === "shorts" ? "preview.mp4" : "preview-landscape.mp4"));
+  const cinematic = Boolean(args.cinematic);
+  const out = path.resolve(args.out ?? path.join(OUT_DEV, cinematic ? "preview-cinematic.mp4" : format === "shorts" ? "preview.mp4" : "preview-landscape.mp4"));
 
-  const script = readDemoScript();
+  const script = cinematic ? validateScript(JSON.parse(fs.readFileSync(path.join(ROOT, "examples", "cinematic-30a.json"), "utf8"))) : readDemoScript();
   const publicDir = preparePublicDir("preview");
+  const shotVisual = cinematic ? makeShotFrames(publicDir, script) ?? undefined : undefined;
 
   // Визуалы-примеры (по флагу --visual)
   let visual: ((id: string) => SceneVisual) | undefined;
@@ -87,6 +117,7 @@ async function main() {
     format,
     theme,
     visual,
+    shotVisual,
     audioSrc: (id) => `voice/${id}.wav`,
     music: { src: "music/pad.wav", volume: 0.32, duckedVolume: 0.08 },
     whooshSrc: "sfx/whoosh.wav",

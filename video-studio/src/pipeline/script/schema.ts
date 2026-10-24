@@ -4,7 +4,19 @@
 // Типы обязаны совпадать с src/types.ts — это проверяет компилятор ниже.
 
 import { z } from "zod";
-import { SCENE_KINDS, THEME_NAMES, type SceneKind, type ScriptScene, type ThemeName, type VideoScript } from "../../types";
+import {
+  CAMERA_MOVES,
+  SCENE_KINDS,
+  SHOT_FRAMINGS,
+  SHOT_LIMITS,
+  THEME_NAMES,
+  type CameraMove,
+  type SceneKind,
+  type ScriptScene,
+  type ShotFraming,
+  type ThemeName,
+  type VideoScript,
+} from "../../types";
 
 // Пределы подобраны под раскладку сцен в композиции и лимиты YouTube
 // (заголовок ≤ 100 символов, теги суммарно ≤ 500).
@@ -32,6 +44,10 @@ export const LIMITS = {
   quizExplanation: 120, // пояснение под вердиктом (в промпте — до 12 слов)
   quizQuestion: 80,
   chapter: 60, // название главы: карточка в ролике и строка таймкода в описании
+  shotPrompt: 400, // промпт плана (стиль добавляется отдельно)
+  shotSubject: 60,
+  shotBeat: 120,
+  styleField: 160,
 } as const;
 
 export const SceneStatSchema = z.object({
@@ -58,6 +74,27 @@ export const SceneCompareSchema = z.object({
 });
 // ---- конец: карта и сравнение ----
 
+// ---- Кинорежим (SceneShot / VisualStyle в types.ts) ----
+export const SceneShotSchema = z.object({
+  prompt: z.string().trim().min(1).max(LIMITS.shotPrompt).describe("ENGLISH shot description: who/what, action, setting; no style words, no text in frame"),
+  seconds: z.number().min(SHOT_LIMITS.minSec).max(SHOT_LIMITS.maxSec).optional().describe("желаемая длина плана в секундах, 2–3"),
+  framing: z.enum(SHOT_FRAMINGS as [ShotFraming, ...ShotFraming[]]).optional().describe("крупность или ракурс плана"),
+  camera: z.enum(CAMERA_MOVES as [CameraMove, ...CameraMove[]]).optional().describe("движение камеры"),
+  subject: z.string().trim().min(1).max(LIMITS.shotSubject).optional().describe("ENGLISH name of the hero or object in frame, the same in every shot"),
+  beat: z.string().trim().min(1).max(LIMITS.shotBeat).optional().describe("первые 1–3 слова narration, на которых начинается план"),
+});
+
+const styleField = (about: string) => z.string().trim().min(1).max(LIMITS.styleField).optional().describe(about);
+export const VisualStyleSchema = z.object({
+  direction: styleField("ENGLISH art direction"),
+  lighting: styleField("ENGLISH lighting"),
+  palette: styleField("ENGLISH color palette"),
+  realism: styleField("ENGLISH degree of realism"),
+  mood: styleField("ENGLISH mood"),
+  environment: styleField("ENGLISH recurring environment"),
+});
+// ---- конец: кинорежим ----
+
 export const ScriptSceneSchema = z.object({
   id: z.string().regex(/^s\d+$/).describe("s1, s2, … по порядку"),
   kind: z.enum(SCENE_KINDS as [SceneKind, ...SceneKind[]]),
@@ -80,6 +117,7 @@ export const ScriptSceneSchema = z.object({
   chapter: z.string().trim().min(1).max(LIMITS.chapter).optional().describe("название главы — у первой сцены каждой главы длинного ролика"),
   map: SceneMapSchema.optional().describe("место на карте (необязательно)"),
   compare: SceneCompareSchema.optional().describe("сравнение 2–4 чисел столбиками (необязательно)"),
+  shots: z.array(SceneShotSchema).min(1).max(SHOT_LIMITS.perScene).optional().describe("кинорежим: планы сцены по порядку"),
 });
 
 export const VideoScriptSchema = z.object({
@@ -90,11 +128,20 @@ export const VideoScriptSchema = z.object({
   format: z.enum(["shorts", "landscape"]),
   theme: z.enum(THEME_NAMES as [ThemeName, ...ThemeName[]]).optional(),
   scenes: z.array(ScriptSceneSchema).min(LIMITS.scenesMin).max(LIMITS.scenesMax),
+  mode: z.enum(["infographic", "cinematic"]).optional().describe("cinematic — кинорежим: планы shots и общий style"),
+  style: VisualStyleSchema.optional().describe("общий стиль AI-кадров ролика"),
+});
+
+// Ответ модели в обычном режиме — без полей кинорежима: JSON Schema, которую
+// видит модель, остаётся прежней, и планы она не выдумывает.
+export const ClassicSceneSchema = ScriptSceneSchema.omit({ shots: true });
+export const ClassicVideoScriptSchema = VideoScriptSchema.omit({ mode: true, style: true }).extend({
+  scenes: z.array(ClassicSceneSchema).min(LIMITS.scenesMin).max(LIMITS.scenesMax),
 });
 
 // Ответ для части длинного ролика: только сцены, id перенумеруем при склейке.
 export const SceneChunkSchema = z.object({
-  scenes: z.array(ScriptSceneSchema).min(1).max(40),
+  scenes: z.array(ClassicSceneSchema).min(1).max(40),
 });
 
 // План длинного ролика: сначала структура, потом сцены по разделам.

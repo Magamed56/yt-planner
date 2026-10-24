@@ -140,6 +140,7 @@ npm run make -- --topic "Почему мы забываем выученное"
 | `npm run make -- --demo` | Демо-ролик из `examples/demo-ru.json` |
 | `npm run make -- --topic "тема" [--format landscape] [--notes "…"] [--seconds 60]` | Полный автомат: сценарий от LLM → видео |
 | `npm run script -- --topic "тема" [--format …] [--notes "…"]` | Только черновик сценария → `scripts/<имя>.json` |
+| `npm run script -- --topic "тема" --cinematic` (и `make -- --topic … --cinematic`) | Shorts в кинорежиме: планы по 2–3 с и общий стиль кадров (см. «Кинорежим») |
 | `npm run script -- --long-plan L01` | «Разбор» по теме длинного плана → `scripts/razbor-L01-<имя>.json` (см. «Разборы») |
 | `npm run plan-extend -- --long --count 6` | Новые темы «Разбора» в `content/long-plan.json` (без `--long` — темы Shorts в `plan.json`) |
 | `npm run make -- --script scripts/<имя>.json` | Видео по вашему (отредактированному) сценарию |
@@ -301,6 +302,30 @@ Workflow: `.github/workflows/video-studio.yml` (в корне репозитор
   релиз (`upload = release`, релизы в эту квоту не входят; артефакт тогда хранится сутки).
 - Одновременно идёт один запуск, остальные (до 100) ждут в очереди по порядку.
 - Расписание: раскомментируйте блок `schedule` в workflow и задайте переменную `SCHEDULED_TOPIC`.
+
+---
+
+## Кинорежим (Shorts как короткий фильм)
+
+Включается полем `"mode": "cinematic"` в сценарии (или `--cinematic` при генерации по теме).
+Старые сценарии без этого поля собираются как раньше.
+
+- У каждой сцены, кроме финала, — `shots`: планы по 2–3 с. У плана — `prompt` (что в кадре,
+  по-английски), `framing` (крупность или ракурс), `camera` (`push-in`, `pull-out`, `pan-left`,
+  `pan-right`, `tilt-up`, `tilt-down`, `handheld`), `seconds`, `subject` (герой — одинаково во всех
+  планах) и `beat` (слова narration, на которых план начинается).
+- `style` — общий вид всех кадров: `direction`, `lighting`, `palette`, `realism`, `mood`,
+  `environment`. Уходит в промпт каждого кадра.
+- Длину сцены по-прежнему задаёт голос: планы её только делят, звук и субтитры не сдвигаются.
+- Кадры планов — только генерация (`cloudflare`, `pollinations` из `VISUALS`), без стоков — ради
+  единого стиля. Ни одного кадра у сцены — визуал ищется обычным путём.
+- Повторная сборка берёт кадры из `public/visuals/manifest.json`. Новый кадр генерируется, только
+  если у плана изменились промпт, стиль, формат или генераторы.
+- В кадре нет заголовков, плашек и затемнения — только субтитры.
+
+Пример — `examples/cinematic-30a.json` (копия 30a с планами). Проверка без AI и без голоса
+(кадры-заглушки, «гудки» по таймингам слов): `npx tsx src/dev/preview.ts --cinematic` →
+`out/dev/preview-cinematic.mp4`.
 
 ---
 

@@ -86,8 +86,9 @@ export function compareRevealFrames(scene: CueScene, fps: number): number[] {
 
 // Какую сцену рисует композиция: карта/сравнение заменяют обычную раскладку
 // (кроме хука и призыва) — так же решают Video.tsx и звуки.
-export function specialLayout(scene: Pick<RenderScene, "kind" | "map" | "compare">): "map" | "compare" | null {
+export function specialLayout(scene: Pick<RenderScene, "kind" | "map" | "compare" | "shots">): "map" | "compare" | null {
   if (scene.kind === "hook" || scene.kind === "cta") return null;
+  if (scene.shots?.length) return null; // кинорежим: сцену рисуют планы
   if (scene.map && Number.isFinite(scene.map.lat) && Number.isFinite(scene.map.lon)) return "map";
   if (scene.compare && scene.compare.items.length >= 2) return "compare";
   return null;

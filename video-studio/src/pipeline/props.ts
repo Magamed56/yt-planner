@@ -10,7 +10,9 @@ import {
   FPS,
   THEME_NAMES,
   buildTimelineCaptions,
+  isCinematic,
   layoutScenes,
+  renderShots,
   type Format,
   type RenderScene,
   type SceneVisual,
@@ -35,6 +37,7 @@ export interface BuildPropsInput {
   publicDir: string;
   voices: VoiceResult[]; // по порядку script.scenes
   visuals?: (VisualResult | null | undefined)[]; // по порядку script.scenes
+  shotVisuals?: (VisualResult[] | null | undefined)[]; // кинорежим: кадры планов по порядку script.scenes и shots
   music: MusicChoice | null;
   whooshSrc: string | null; // уже относительно publicDir ("sfx/whoosh.wav")
   sfx?: SfxSet | null; // остальные звуки монтажа (audio/makeSfx)
@@ -109,7 +112,9 @@ export function buildVideoProps(input: BuildPropsInput): VideoProps {
   }
   const transitionFrames = Math.max(0, Math.round(input.transitionFrames ?? DEFAULT_TRANSITION_FRAMES));
 
-  const base = script.scenes.map((scene, i) => {
+  // Планы сценария (без кадров) в сцену рендера не идут: их место займут
+  // планы с кадром и таймингом (renderShots) — только в кинорежиме.
+  const base = script.scenes.map(({ shots: _shots, ...scene }, i) => {
     const voice = voices[i];
     return {
       ...scene,
@@ -120,7 +125,12 @@ export function buildVideoProps(input: BuildPropsInput): VideoProps {
     };
   });
   const laid = layoutScenes(base, transitionFrames);
-  const scenes: RenderScene[] = laid.scenes;
+  const cinematic = isCinematic(script);
+  const scenes: RenderScene[] = laid.scenes.map((s, i) => {
+    const frames = (input.shotVisuals?.[i] ?? []).map((v) => sanitizeVisual(publicDir, v?.visual));
+    const shots = cinematic ? renderShots(s, script.scenes[i]!.shots, frames, transitionFrames) : undefined;
+    return shots ? { ...s, shots } : s;
+  });
 
   const theme: ThemeName = input.theme ?? (script.theme && THEME_NAMES.includes(script.theme) ? script.theme : "midnight");
   const channelEnv = process.env.CHANNEL_NAME?.trim() || null;

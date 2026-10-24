@@ -1,0 +1,242 @@
+{
+  "title": "Мурашки по коже: зачем они нужны человеку",
+  "description": "Почему по коже бегут мурашки и при чём тут шерсть наших предков. Разбираем пилоэрекцию: как крошечные мышцы поднимают волосы, зачем это зверям и какой неожиданный бонус нашли учёные в 2020 году.\n#shorts #мурашки #биология #наука #тело",
+  "tags": [
+    "мурашки по коже",
+    "мурашки",
+    "пилоэрекция",
+    "гусиная кожа",
+    "биология",
+    "эволюция",
+    "дарвин",
+    "тело человека",
+    "стволовые клетки",
+    "волосы",
+    "наука",
+    "goosebumps",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "mode": "cinematic",
+  "style": {
+    "direction": "cinematic science documentary film still",
+    "lighting": "low-key lighting with a cold blue rim light",
+    "palette": "deep blue and teal with natural warm skin tones",
+    "realism": "photorealistic",
+    "mood": "intimate and curious",
+    "environment": "dark studio interiors and quiet winter nights"
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Мурашки — это шерсть, которой у тебя больше нет.",
+      "onScreen": "Мурашки — это *шерсть*, которой нет",
+      "icon": "zap",
+      "visualQuery": "goosebumps skin arm",
+      "imagePrompt": "cinematic macro shot of human forearm skin with goosebumps and tiny raised hairs, cold blue rim light, dark background, shallow depth of field",
+      "shots": [
+        {
+          "framing": "detail",
+          "prompt": "human forearm skin covered in goosebumps, tiny hairs standing upright",
+          "subject": "human forearm",
+          "camera": "push-in",
+          "seconds": 2
+        },
+        {
+          "framing": "medium",
+          "prompt": "a young woman shivering and hugging herself in a cold dark room, goosebumps on her bare arms",
+          "subject": "young woman",
+          "camera": "handheld",
+          "seconds": 1.5,
+          "beat": "которой у тебя"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Под каждым волоском сидит крошечная мышца. Она сокращается и ставит волос дыбом.",
+      "onScreen": "У каждого волоска своя *мышца*",
+      "icon": "dumbbell",
+      "visualQuery": "hair follicle microscope",
+      "imagePrompt": "cinematic microscopic cross-section of skin showing a hair follicle and a tiny muscle pulling it upright, glowing blue and teal tones, dark background",
+      "shots": [
+        {
+          "framing": "close-up",
+          "prompt": "microscopic cross-section of human skin with a single hair follicle and a tiny muscle attached to it",
+          "subject": "hair follicle",
+          "camera": "push-in",
+          "seconds": 2.5
+        },
+        {
+          "framing": "detail",
+          "prompt": "the tiny muscle contracting and pulling the hair upright out of the skin, microscope view",
+          "subject": "hair follicle",
+          "camera": "tilt-up",
+          "seconds": 2.5,
+          "beat": "Она сокращается"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "У зверей так встаёт шерсть. Воздух между волосками держит тепло.",
+      "onScreen": "Пушистая шерсть = *шуба* из воздуха",
+      "icon": "leaf",
+      "visualQuery": "fluffy cat winter snow",
+      "imagePrompt": "cinematic shot of a fluffy cat with puffed fur sitting in snow, cold blue light, soft breath vapor, shallow depth of field",
+      "shots": [
+        {
+          "framing": "wide",
+          "prompt": "a fluffy cat with puffed fur sitting in a snowy winter yard",
+          "subject": "fluffy cat",
+          "camera": "pan-right",
+          "seconds": 2
+        },
+        {
+          "framing": "detail",
+          "prompt": "frost crystals on thick puffed cat fur, warm air trapped between the hairs",
+          "subject": "fluffy cat",
+          "camera": "push-in",
+          "seconds": 2,
+          "beat": "Воздух между"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "А распушённый зверь ещё и выглядит крупнее. Отличный способ отпугнуть врага.",
+      "onScreen": "Шерсть дыбом — зверь *крупнее*",
+      "icon": "shield",
+      "visualQuery": "arched back cat hissing",
+      "imagePrompt": "cinematic side view of a black cat with arched back and bristling fur, dramatic blue rim light, dark moody background",
+      "shots": [
+        {
+          "framing": "low-angle",
+          "prompt": "a black cat with arched back and bristling fur standing on a wooden fence at night",
+          "subject": "black cat",
+          "camera": "tilt-up",
+          "seconds": 2.5
+        },
+        {
+          "framing": "reaction",
+          "prompt": "a small dog backing away nervously with flattened ears on a night street",
+          "subject": "small dog",
+          "camera": "handheld",
+          "seconds": 2,
+          "beat": "Отличный способ"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Ещё Дарвин писал об этом в тысяча восемьсот семьдесят втором. Шерсти у нас почти нет, а рефлекс остался.",
+      "onScreen": "Шерсть ушла, *рефлекс* остался",
+      "icon": "book-open",
+      "visualQuery": "Charles Darwin portrait",
+      "imagePrompt": "cinematic vintage 19th century naturalist desk with an open book and sketches of animals with raised fur, blue-tinted candle light, dark mood",
+      "shots": [
+        {
+          "framing": "medium",
+          "prompt": "Charles Darwin as an elderly bearded naturalist writing at a candlelit Victorian desk",
+          "subject": "Charles Darwin",
+          "camera": "push-in",
+          "seconds": 2.5
+        },
+        {
+          "framing": "detail",
+          "prompt": "pen sketches of animals with raised fur in an old 19th century notebook",
+          "subject": "old notebook",
+          "camera": "pan-left",
+          "seconds": 2
+        },
+        {
+          "framing": "close-up",
+          "prompt": "goosebumps rising on the bare arm of a modern person listening to music in headphones",
+          "subject": "modern person",
+          "camera": "handheld",
+          "seconds": 2.5,
+          "beat": "а рефлекс"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "list",
+      "narration": "Но в две тысячи двадцатом году учёные нашли бонус. Нерв мурашек, мышца волоска и стволовые клетки работают в одной связке.",
+      "onScreen": "Бонус 2020: одна *связка*",
+      "items": [
+        "Симпатический нерв",
+        "Мышца волоска",
+        "Стволовые клетки"
+      ],
+      "icon": "microscope",
+      "visualQuery": "stem cells microscope laboratory",
+      "imagePrompt": "cinematic glowing neural fiber wrapping around a hair follicle with luminous stem cells at its base, deep blue and teal palette, dark background",
+      "shots": [
+        {
+          "framing": "medium",
+          "prompt": "scientists in a dark laboratory looking at a glowing microscope screen",
+          "subject": "scientists",
+          "camera": "pan-right",
+          "seconds": 2.5
+        },
+        {
+          "framing": "detail",
+          "prompt": "a glowing nerve fiber wrapping around a hair follicle under a fluorescence microscope",
+          "subject": "hair follicle",
+          "camera": "push-in",
+          "seconds": 3,
+          "beat": "Нерв мурашек"
+        },
+        {
+          "framing": "close-up",
+          "prompt": "luminous stem cells clustered at the base of a hair follicle, fluorescence microscopy",
+          "subject": "hair follicle",
+          "camera": "pull-out",
+          "seconds": 2.5,
+          "beat": "и стволовые клетки"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Значит, мурашки — не пустой пережиток. Эти нервы помогают волосам обновляться.",
+      "onScreen": "Не пережиток, а *помощник* волос",
+      "icon": "dna",
+      "visualQuery": "hair growth scalp macro",
+      "imagePrompt": "cinematic macro of new hair strands growing from skin, soft blue rim light, shallow depth of field, dark background",
+      "shots": [
+        {
+          "framing": "detail",
+          "prompt": "new hair strands sprouting from human skin, macro",
+          "subject": "human skin",
+          "camera": "push-in",
+          "seconds": 2
+        },
+        {
+          "framing": "wide",
+          "prompt": "a person standing on a windy cliff at dawn with hair blowing, seen from behind",
+          "subject": "person",
+          "camera": "pan-left",
+          "seconds": 2.5,
+          "beat": "Эти нервы"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "Когда у тебя последний раз бежали мурашки?",
+      "onScreen": "Когда у тебя бежали *мурашки*?",
+      "icon": "message-circle"
+    }
+  ]
+}

@@ -15,8 +15,10 @@ import { sceneComponent } from "./scenes";
 import { ChapterWrap } from "./scenes/ChapterCard"; // карточки глав «Разбора»
 import { CompareScene } from "./scenes/CompareScene";
 import { MapScene } from "./scenes/MapScene";
+import { MediaScene } from "./scenes/MediaScene";
 import { StatementScene } from "./scenes/StatementScene";
 import { getTheme } from "./theme";
+import { isCinematicScene } from "./lib/shots";
 
 // Composition требует Props extends Record<string, unknown>, а VideoProps —
 // interface; пересечение снимает ограничение, не меняя общий контракт.
@@ -25,6 +27,8 @@ export type VideoCompositionProps = VideoProps & Record<string, unknown>;
 const TRANSITION_EASING = Easing.bezier(0.65, 0, 0.35, 1);
 
 function pickScene(scene: RenderScene) {
+  // Кинорежим: планы сцены рисует MediaScene — без заголовков и плашек.
+  if (isCinematicScene(scene)) return MediaScene;
   // Карта и сравнение (необязательные поля сцены) заменяют обычную раскладку.
   const special = specialLayout(scene);
   if (special === "map") return MapScene;
