@@ -424,6 +424,11 @@ export function shotLints(shots: Loose[], narration: string, label: string, opts
         if (countWords(str(c.label)) > 3) out.push(`${label}, план ${k + 1}: подпись «${str(c.label)}» длиннее 3 слов — на экране не успеть прочитать`);
       });
     }
+    for (const f of ["footage", "photo"]) {
+      const q = str(sh[f]);
+      if (q && /[а-яё]/i.test(q)) out.push(`${label}, план ${k + 1}: ${f} «${q}» — по-английски: так ищут стоки и Wikimedia`);
+      else if (q && countWords(q) > 8) out.push(`${label}, план ${k + 1}: ${f} «${q}» — длинно для поиска; 2–6 слов: главный предмет первым`);
+    }
     if (k > 0 && !str(sh.reuse) && !str(shots[k - 1]!.reuse)) {
       const prev = shots[k - 1]!;
       const sim = promptSimilarity(promptCore(str(prev.prompt), complete), promptCore(str(sh.prompt), complete));
@@ -799,7 +804,7 @@ const aliasKey = (v: string) => v.toLowerCase().replace(/[^a-z]/g, "");
 function coerceShot(raw: unknown): unknown {
   if (!isObj(raw)) return raw;
   const sh = dropNulls(raw);
-  for (const f of ["prompt", "subject", "beat"]) {
+  for (const f of ["prompt", "subject", "beat", "footage", "photo"]) {
     if (typeof sh[f] === "string") {
       sh[f] = (sh[f] as string).replace(/\s+/g, " ").trim();
       if (!sh[f]) delete sh[f];
@@ -825,6 +830,10 @@ function coerceShot(raw: unknown): unknown {
     if (m) sh.reuse = `s${Number(m[1])}-k${Number(m[2])}`;
     else delete sh.reuse;
   } else if (sh.reuse !== undefined) delete sh.reuse;
+  for (const f of ["footage", "photo"]) {
+    // Повтор кадра — уже готовая картинка: искать съёмку для него незачем.
+    if (sh[f] !== undefined && (typeof sh[f] !== "string" || sh.reuse)) delete sh[f];
+  }
   if (Array.isArray(sh.callouts)) {
     const list = sh.callouts
       .filter(isObj)

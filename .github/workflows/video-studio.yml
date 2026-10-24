@@ -23,15 +23,15 @@
 
 name: "video-studio: ролик"
 # Коды роликов в названии запуска — по ним веб-панель видит, что сейчас пишется или собирается.
-run-name: "${{ github.event_name == 'schedule' && 'draft: по расписанию' || format('{0}: {1}{2}', inputs.mode || 'draft', inputs.plan || inputs.topic || inputs.script || 'демо', inputs.lang && inputs.lang != 'ru' && format(' [{0}]', inputs.lang) || '') }}"
+run-name: "${{ github.event_name == 'schedule' && 'draft: по расписанию' || inputs.mode == 'topics' && format('topics: {0}', inputs.ideas || '20,6') || format('{0}: {1}{2}', inputs.mode || 'draft', inputs.plan || inputs.topic || inputs.script || 'демо', inputs.lang && inputs.lang != 'ru' && format(' [{0}]', inputs.lang) || '') }}"
 
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "draft — только сценарий на проверку; render — собрать видео; batch — несколько сценариев подряд"
+        description: "draft — только сценарий на проверку; render — собрать видео; batch — несколько сценариев подряд; topics — темы, которые смотрят (просмотры на YouTube)"
         type: choice
-        options: [draft, render, batch]
+        options: [draft, render, batch, topics]
         default: draft
       topic:
         description: "Тема ролика (draft; для render без script — полный автомат)"
@@ -106,6 +106,10 @@ on:
         description: "Готовое видео — ещё и в скрытый черновой релиз preview-… (виден только владельцу): проверить ролик без публикации"
         type: boolean
         default: false
+      ideas:
+        description: "mode = topics: сколько тем Shorts и «Разборов» через запятую (20,6)"
+        type: string
+        default: "20,6"
   # Запуск по расписанию (раскомментируйте): черновик на тему из переменной
   # репозитория SCHEDULED_TOPIC, например по понедельникам и четвергам в 05:17 UTC.
   # schedule:
@@ -125,6 +129,7 @@ concurrency:
 jobs:
   video:
     name: ${{ inputs.mode == 'batch' && 'Пакет роликов' || ((inputs.mode || 'draft') == 'render' && 'Рендер ролика' || 'Черновик сценария') }}
+    if: github.event_name == 'schedule' || inputs.mode != 'topics'
     # Явная версия: ubuntu-latest переезжает на 26.04 с 2026-10-19.
     runs-on: ubuntu-24.04
     # Сборке — всегда 2 ч: черновик landscape рендерится с format = auto (формат берётся из
@@ -938,3 +943,104 @@ jobs:
             echo "Откройте шаг с красным крестиком — в конце его лога строка «✖ Ошибка:» с причиной и подсказкой."
             echo "Частые причины: не задан секрет (GEMINI_API_KEY для темы), ошибка в JSON сценария, исчерпана квота API."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------- topics: темы, которые смотрят ----------
+  # Claude предлагает темы массового интереса (с веб-поиском), YouTube Data API меряет спрос —
+  # просмотры роликов, которые поиск YouTube находит по каждой теме (регион RU, ≈ 101 единица квоты
+  # на тему). Список с цифрами — в сводке запуска и в content/topic-ideas.json (коммит в ветку);
+  # выбранные номера дописывает в план npm run topic-ideas -- --add 1,4,7.
+  topics:
+    name: Темы, которые смотрят
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'topics'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: video-studio
+        shell: bash
+    env:
+      LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
+      LLM_MODEL: ${{ vars.LLM_MODEL }}
+      LLM_FALLBACKS: ${{ vars.LLM_FALLBACKS }}
+      LLM_EFFORT: ${{ vars.LLM_EFFORT }}
+      NO_COLOR: "1"
+    steps:
+      - name: Код репозитория
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+
+      - name: Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video-studio/package-lock.json
+
+      - name: Зависимости (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      - name: Темы и спрос на YouTube
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          # Ввод пользователя — только через env, не подставляем в текст команды.
+          IDEAS: ${{ inputs.ideas }}
+        run: |
+          ideas="${IDEAS// /}"
+          if ! [[ "$ideas" =~ ^[0-9]{1,2},[0-9]{1,2}$ ]]; then
+            echo "::error::ideas — два числа через запятую: темы Shorts и «Разборов» (например 20,6), а не «$IDEAS»."
+            exit 1
+          fi
+          npm run topic-ideas -- --shorts "${ideas%,*}" --long "${ideas#*,}"
+
+      - name: Закоммитить темы
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for p in content/topic-ideas.json content/usage.jsonl; do
+            if [ -e "$p" ]; then git add -A -- "$p"; fi
+          done
+          if git diff --cached --quiet; then
+            echo "Коммитить нечего."
+            exit 0
+          fi
+          msg="video-studio: темы, которые смотрят"
+          git diff --cached --quiet -- content/topic-ideas.json && msg="video-studio: расход"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Токен — только в этом шаге (checkout его не сохраняет).
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          gitauth() { git -c "http.$GITHUB_SERVER_URL/.extraheader=$auth" "$@"; }
+          git commit -q -m "$msg"
+          pushed=""
+          for i in 1 2 3; do
+            if gitauth pull --rebase --quiet origin "$GITHUB_REF_NAME" && gitauth push --quiet origin "HEAD:$GITHUB_REF_NAME"; then
+              pushed=1
+              break
+            fi
+            git rebase --abort 2>/dev/null || true
+            echo "Пуш не удался (попытка $i), повторяю…"
+            sleep $((i * 5))
+          done
+          if [ -z "$pushed" ]; then
+            echo "::error::Не удалось запушить в $GITHUB_REF_NAME. Темы — в артефакте запуска."
+            exit 1
+          fi
+
+      - name: Темы в артефакте (пуш не прошёл)
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: topic-ideas-${{ github.run_number }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: video-studio/content/topic-ideas.json

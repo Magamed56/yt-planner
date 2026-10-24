@@ -50,6 +50,7 @@ export const LIMITS = {
   styleField: 300,
   calloutLabel: 32,
   calloutTarget: 80,
+  realQuery: 80, // shot.footage / shot.photo — запрос к стокам и архивам
   stickerText: 12,
   characterName: 40,
   characterLook: 300,
@@ -115,6 +116,20 @@ export const SceneShotSchema = z.object({
     })
     .optional()
     .describe("крупная цифра поверх кадра"),
+  footage: z
+    .string()
+    .trim()
+    .min(1)
+    .max(LIMITS.realQuery)
+    .optional()
+    .describe("ENGLISH 2–6 words: real stock video to search instead of a drawing (place, nature, process); not found — the image by prompt"),
+  photo: z
+    .string()
+    .trim()
+    .min(1)
+    .max(LIMITS.realQuery)
+    .optional()
+    .describe("ENGLISH 2–6 words: real archive photo (Wikimedia Commons) of a real person, object or event; not found — the image by prompt"),
 });
 
 const styleField = (about: string) => z.string().trim().min(1).max(LIMITS.styleField).optional().describe(about);

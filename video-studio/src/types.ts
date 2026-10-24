@@ -73,6 +73,10 @@ export interface SceneShot {
   reuse?: string; // "s2-k1": кадр того плана ещё раз, с другим движением камеры — без новой генерации
   callouts?: ShotCallout[]; // подписи со стрелкой к предметам в кадре (моушен поверх картинки)
   sticker?: ShotSticker; // крупная цифра или дата поверх кадра
+  // Настоящая съёмка вместо рисунка (ENGLISH, 2–6 слов): видео со стоков или фото из
+  // архивов (Wikimedia Commons, Openverse). Не нашлось по теме — кадр по prompt.
+  footage?: string;
+  photo?: string;
 }
 
 // Подпись к предмету в кадре: где он — скажет проверка кадра (visuals/review.ts).

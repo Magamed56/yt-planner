@@ -24,7 +24,7 @@ import {
   LONG_SCENES,
   QUIZ_ROUNDS_PLANNED,
   QUIZ_SILENCE_SEC,
-  SHORTS_DEFAULT_SECONDS,
+  shortsSeconds,
   shortsTargets,
   type ChunkSpec,
   type ScriptGenRequest,
@@ -374,7 +374,8 @@ async function generateWith(
 
   let script: VideoScript;
   if (req.format === "shorts") {
-    const seconds = req.targetSeconds ?? SHORTS_DEFAULT_SECONDS;
+    // История от поиска материала — около минуты, иначе 40–45 с (prompt.ts, shortsSeconds).
+    const seconds = req.targetSeconds ?? shortsSeconds(req);
     // Для викторины цели по словам — без тишины раундов (её добавит ролик).
     const voiceSeconds = req.quiz ? Math.max(15, seconds - QUIZ_ROUNDS_PLANNED * QUIZ_SILENCE_SEC) : seconds;
     const { value } = await generateStructured({

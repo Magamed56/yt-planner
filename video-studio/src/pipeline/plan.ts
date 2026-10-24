@@ -7,6 +7,10 @@ export interface PlanFact {
   source: string;
 }
 
+// Жанр ролика решает поиск материала (script/research.ts): история с героями и
+// развязкой — около минуты, объяснение явления — 40–45 секунд.
+export type Genre = "story" | "explainer";
+
 export interface PlanItem {
   id: string; // «08a» — код ролика: в имени сценария (sut-08a-…), файла видео и черновика Studio
   day: number; // порядковый день выкладки, а не дата
@@ -20,6 +24,10 @@ export interface PlanItem {
   script?: string; // scripts/sut-08a-….json — когда сценарий написан
   sequelOf?: string; // «Часть 2»: код первой части (npm run plan-sequel)
   chapters?: string[]; // «Разбор» (content/long-plan.json): набросок глав — сценарист может уточнить
+  // Материал от веб-поиска Claude перед сценарием (keyFacts дополнены им же):
+  genre?: Genre;
+  story?: string; // линия рассказа: завязка → развитие → поворот → развязка
+  researched?: string; // дата поиска (ГГГГ-ММ-ДД) — второй раз не ищем
 }
 
 export interface ContentPlan {
@@ -57,23 +65,28 @@ export function scriptCode(file: string): string | null {
   return m[1] ? m[1].toLowerCase() : `L${m[2]!.slice(1)}`;
 }
 
-// «Пожелания автора» для LLM: хук, угол и только факты из плана — у каждого есть источник,
-// а факты без источника в план не попадают (см. note в plan.json).
+// «Пожелания автора» для LLM: хук, угол, линия рассказа и только факты из плана — у каждого
+// есть источник, а факты без источника в план не попадают (см. note в plan.json).
+// Хук плана — идея, а не готовая фраза: дословный хук часто выдавал развязку («…и проиграла»).
 // strict: false — для «Разбора» на 5–8 минут: факты плана обязательны, но двух-трёх
 // фактов на такой ролик мало — можно добавить общеизвестные проверяемые.
-export function planNotes(item: PlanItem, opts: { strict?: boolean; sequel?: PlanItem | null } = {}): string {
+export function planNotes(
+  item: Pick<PlanItem, "hook" | "angle" | "keyFacts" | "story">,
+  opts: { strict?: boolean; sequel?: PlanItem | null } = {},
+): string {
   const strict = opts.strict ?? true;
   const facts = item.keyFacts.map((f, i) => `${i + 1}. ${f.claim.trim()} (источник: ${f.source.trim()})`);
   const sequel = opts.sequel
     ? `Это вторая часть ролика ${opts.sequel.id} «${opts.sequel.title.trim()}»: можно одной фразой сослаться на первую часть, но её факты не повторяй.`
     : "";
   return [
-    item.hook.trim() ? `Первая фраза — хук: «${item.hook.trim()}»` : "",
-    item.angle.trim() ? `Угол подачи: ${item.angle.trim()}` : "",
+    item.hook.trim() ? `Идея хука (перепиши сильнее своими словами, если можешь; развязку в хук не выноси): «${item.hook.trim()}»` : "",
+    item.angle.trim() ? `Угол подачи (развязка — ближе к концу ролика): ${item.angle.trim()}` : "",
+    item.story?.trim() ? `Линия рассказа по источникам: ${item.story.trim()}` : "",
     sequel,
     facts.length
       ? strict
-        ? `Опирайся только на эти проверенные факты, других фактов и цифр не добавляй:\n${facts.join("\n")}`
+        ? `Материал ролика — проверенные факты и эпизоды; используй большую часть, в порядке рассказа. Имена, даты, числа и цитаты — только отсюда, других фактов и цифр не добавляй (связки, реакции героев и обстановку, которые прямо следуют из фактов, — можно):\n${facts.join("\n")}`
         : `Обязательно используй эти проверенные факты; другие добавляй, только если они общеизвестны и проверяемы, без выдуманных цифр и исследований:\n${facts.join("\n")}`
       : "Добавляй только общеизвестные проверяемые факты, без цифр, которых нельзя проверить.",
   ]

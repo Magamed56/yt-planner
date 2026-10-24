@@ -90,7 +90,7 @@ export function extractUrl(source: string): string | null {
   }
 }
 
-const urlKey = (u: string) => {
+export const urlKey = (u: string) => {
   try {
     const x = new URL(u);
     return `${x.hostname.replace(/^www\./, "").replace(/^(\w+)\.m\./, "$1.")}${decodeURI(x.pathname).replace(/\/+$/, "")}`.toLowerCase();
