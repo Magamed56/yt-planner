@@ -16,7 +16,7 @@ import { ScriptValidationError, coerceScriptCandidate, completePromptLints, cree
 import { resetVisualsState } from "../pipeline/visuals/index";
 import { readVisualsManifest, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { APPEAL, DEFAULT_STYLE, aiPromptFor, imagePromptFor, styleText } from "../pipeline/visuals/query";
-import { capNewFrames, findShotVisuals, resolveReuse, shotId, shotScene, shotVisualKey } from "../pipeline/visuals/shots";
+import { capNewFrames, findShotVisuals, resolveReuse, shotId, shotScene, shotSource, shotVisualKey } from "../pipeline/visuals/shots";
 import { cleanBox, parseAnswer, reviewConfig, reviewFrames, type ReviewClient, type ReviewItem } from "../pipeline/visuals/review";
 import { sceneCues } from "../remotion/lib/cues";
 import { buildFixtureProps, estimateWords } from "../remotion/fixtures/buildFixture";
@@ -348,6 +348,54 @@ await test("без генераторов в VISUALS кадров планов �
   assert.ok(r.results.every((x) => x.visual.type === "none"));
 });
 
+
+const FULL_EMU = "A flock of emus runs through a golden wheat field in Western Australia in 1932, late afternoon sun, 35mm film photograph, wide shot, the birds fill the upper two thirds of the vertical frame, calm wheat in the lower third.";
+
+await test("настоящая съёмка: footage — видео Pexels вместо рисунка; не нашлось фото — кадр рисуется по prompt", async () => {
+  resetVisualsState();
+  const dir = await mkdtemp(path.join(os.tmpdir(), "video-studio-real-test-"));
+  try {
+    const publicDir = path.join(dir, "public");
+    const env = { VISUALS: "pexels,cloudflare", CLOUDFLARE_ACCOUNT_ID: "acc", CLOUDFLARE_API_TOKEN: "tok", PEXELS_API_KEY: "k", VISUALS_AI_CACHE_DIR: "off" };
+    const scene = {
+      ...newScript.scenes[1]!,
+      shots: [
+        { prompt: FULL_EMU, footage: "emu running wheat field", framing: "wide" as const },
+        { prompt: FULL_EMU, photo: "Lewis gun", framing: "detail" as const },
+      ],
+    };
+    const cf = cloudflareMock();
+    const seen: string[] = [];
+    const fetchMock = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      const url = String(input);
+      seen.push(url);
+      if (url.startsWith("https://api.pexels.com/videos/search")) {
+        return Response.json({
+          videos: [{ id: 77, duration: 9, url: "https://www.pexels.com/video/emu-running-in-a-wheat-field-77/", user: { name: "Ann" }, video_files: [{ file_type: "video/mp4", width: 1080, height: 1920, link: "https://videos.pexels.com/77.mp4" }] }],
+        });
+      }
+      if (url === "https://videos.pexels.com/77.mp4") return new Response(new Uint8Array(4096), { headers: { "content-type": "video/mp4", "content-length": "4096" } });
+      return cf.fn(input, init);
+    };
+    const r = await findShotVisuals(
+      { scene, shots: scene.shots, format: "shorts", publicDir, sceneIndex: 1, usedIds: new Set(), prev: {}, style: newScript.style, complete: true },
+      { env, fetch: fetchMock, log: { info: () => {}, warn: () => {} }, cacheDir: path.join(dir, "cache") },
+    );
+    assert.equal(r.results[0]!.visual.type, "video", "footage → настоящее видео");
+    assert.equal(r.results[0]!.credit?.provider, "Pexels");
+    assert.equal(shotSource(r.entries[shotId(scene.id, 0)]!.candidateId), "stock");
+    assert.equal(r.results[1]!.visual.type, "image", "photo без архивов в VISUALS → рисунок");
+    assert.equal(shotSource(r.entries[shotId(scene.id, 1)]!.candidateId), "ai");
+    assert.equal(cf.prompts.length, 1, "рисуется только план без найденной съёмки");
+    assert.ok(!seen.some((u) => u.includes("api.pexels.com/v1/search")), "footage — только видео, не фото стоков");
+    const plain = JSON.parse(shotVisualKey(scene, { prompt: FULL_EMU }, 0, "shorts", env, undefined, { complete: true })) as Record<string, unknown>;
+    assert.equal(plain.real, undefined, "у рисованных планов ключ прежний — старые кадры не пересоздаются");
+    const real = JSON.parse(shotVisualKey(scene, scene.shots[0]!, 0, "shorts", env, undefined, { complete: true })) as Record<string, unknown>;
+    assert.deepEqual(real.real, ["emu running wheat field", ""]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
 
 // ---- Полные промпты (сценарий кинорежима от 10.2026) ----
 

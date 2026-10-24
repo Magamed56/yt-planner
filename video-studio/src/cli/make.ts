@@ -40,7 +40,7 @@ import { findVisual, realFirstForPillar, visualsJudgeStats } from "../pipeline/v
 import { readVisualsManifest, reusableEntry, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { styleText } from "../pipeline/visuals/query";
 import { ReviewError, reviewConfig, reviewFrames, type ReviewItem, type ReviewOutcome, type ReviewVerdict } from "../pipeline/visuals/review";
-import { capNewFrames, findShotVisuals, regenerateShot, resolveReuse, shotId } from "../pipeline/visuals/shots";
+import { capNewFrames, findShotVisuals, regenerateShot, resolveReuse, shotId, shotSource } from "../pipeline/visuals/shots";
 import { getVoiceProvider, resolvePiperVoice } from "../pipeline/voice/index";
 import { describeVoice, failureReason, fallbackDisabled, fallbackProviderNames, isQuotaError, providerLabel, voiceFailureSummary, voiceQcIssues, voiceUsed } from "../pipeline/voice/fallback";
 import { EDGE_DEFAULT_VOICE } from "../pipeline/voice/providers/edge";
@@ -814,7 +814,9 @@ async function reviewAndFixShots(a: {
   a.script.scenes.forEach((scene, i) =>
     (scene.shots ?? []).forEach((shot, k) => {
       const r = a.shotVisuals[i]?.[k];
-      if (shot.reuse || !r || r.visual.type !== "image") return;
+      // Настоящие фото и видео (shot.photo / footage) уже проверил судья «по теме»: сравнивать
+      // их с промптом рисунка и перерисовывать незачем.
+      if (shot.reuse || !r || r.visual.type !== "image" || shotSource(a.next[shotId(scene.id, k)]?.candidateId) !== "ai") return;
       all.push({ i, k, item: { id: shotId(scene.id, k), file: path.join(a.publicDir, ...r.visual.src.split("/")), phrase: phraseOf(scene, shot), prompt: shot.prompt, targets: (shot.callouts ?? []).map((c) => c.target) } });
     }),
   );

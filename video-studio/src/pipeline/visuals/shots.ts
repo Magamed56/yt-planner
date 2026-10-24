@@ -1,16 +1,18 @@
 // Кадры планов кинорежима (VideoScript.mode = "cinematic"): на каждый план —
 // AI-картинка в общем стиле ролика. Это тот же findVisual, только источники —
 // генерация из VISUALS (cloudflare, pollinations), а промпт — план + style.
-// Стоки здесь не берём: фото другого автора и света ломает единый стиль.
+// Настоящая съёмка — только по просьбе сценариста: shot.footage (видео стоков) и
+// shot.photo (фото Wikimedia Commons / Openverse) ищутся первыми, с проверкой «по
+// теме» (судья Claude); не нашлось — кадр рисуется по prompt, как обычно.
 // Повторный запуск берёт кадр из манифеста, пока не изменились итоговый промпт
-// (план, крупность, герой, стиль, ориентация), формат и генераторы.
+// (план, крупность, герой, стиль, ориентация), запросы съёмки, формат и генераторы.
 
 import type { VisualResult } from "../contracts";
 import type { Format, SceneShot, ScriptScene, VisualStyle } from "../../types";
-import { findVisual, parseVisualsList } from "./index";
+import { findVisual, parseVisualsList, VISUAL_PROVIDERS } from "./index";
 import { reusableEntry, type ManifestEntry } from "./manifest";
 import { completePrompt, imagePromptFor, shotImagePrompt, styleText } from "./query";
-import type { Env, VisualDeps } from "./types";
+import type { Env, VisualDeps, VisualProvider } from "./types";
 
 // Имя кадра плана: s3-k2 → visuals/s3-k2.jpg (и ключ в манифесте).
 export const shotId = (sceneId: string, index: number): string => `${sceneId}-k${index + 1}`;
@@ -19,6 +21,19 @@ export const shotId = (sceneId: string, index: number): string => `${sceneId}-k$
 // (полный — как есть, иначе с крупностью и героем; стиль добавит генератор).
 export function shotScene(scene: ScriptScene, shot: SceneShot, index: number, complete = false): ScriptScene {
   return { id: shotId(scene.id, index), kind: "media", narration: scene.narration, onScreen: scene.onScreen, imagePrompt: complete ? shot.prompt : shotImagePrompt(shot) };
+}
+
+// Псевдосцена настоящей съёмки: запрос — footage/photo плана, а narration и prompt —
+// контекст судьи Claude: подходит ли видео или фото к этому месту рассказа.
+export function realShotScene(scene: ScriptScene, shot: SceneShot, index: number, query: string): ScriptScene {
+  return { id: shotId(scene.id, index), kind: "media", narration: scene.narration, onScreen: scene.onScreen, visualQuery: query, imagePrompt: shot.prompt };
+}
+
+// Откуда кадр плана — по префиксу id кандидата (pexels:video:…, wikimedia:…, cloudflare:…).
+// Проверка кадров зрением и перегенерация — только для рисованных (kind "ai").
+export function shotSource(candidateId: string | null | undefined): VisualProvider["kind"] | null {
+  const name = candidateId?.split(":")[0] ?? "";
+  return VISUAL_PROVIDERS[name]?.kind ?? null;
 }
 
 const quiet = { info: () => {}, warn: () => {} };
@@ -33,6 +48,8 @@ export function shotVisualKey(scene: ScriptScene, shot: SceneShot, index: number
     ai: aiProviders(env),
     ...(model ? { cfm: model } : {}),
     ...(opts.salt ? { salt: opts.salt } : {}),
+    // Только у планов со съёмкой: ключи прежних (рисованных) кадров не меняются.
+    ...(shot.footage || shot.photo ? { real: [shot.footage ?? "", shot.photo ?? ""] } : {}),
   });
 }
 
@@ -76,11 +93,24 @@ export async function findShotVisuals(input: ShotVisualsInput, overrides: Partia
       continue;
     }
     const before = new Set(input.usedIds);
-    const r = await findVisual(
-      shotScene(input.scene, shot, k, input.complete),
-      { format: input.format, publicDir: input.publicDir, sceneIndex: input.sceneIndex, minDurationSec: 0, usedIds: input.usedIds, aiOnly: true, style, topic: input.topic, rawPrompt: input.complete },
-      overrides,
-    );
+    let r: VisualResult = { visual: { type: "none" }, credit: null };
+    for (const [only, query] of [["footage", shot.footage], ["photo", shot.photo]] as const) {
+      if (!query) continue;
+      r = await findVisual(
+        realShotScene(input.scene, shot, k, query),
+        // Видео короче плана крутится по кругу — просим хотя бы его длину.
+        { format: input.format, publicDir: input.publicDir, sceneIndex: input.sceneIndex, minDurationSec: Math.min(6, shot.seconds ?? 3), usedIds: input.usedIds, only, topic: input.topic },
+        overrides,
+      );
+      if (r.visual.type !== "none") break;
+    }
+    if (r.visual.type === "none") {
+      r = await findVisual(
+        shotScene(input.scene, shot, k, input.complete),
+        { format: input.format, publicDir: input.publicDir, sceneIndex: input.sceneIndex, minDurationSec: 0, usedIds: input.usedIds, aiOnly: true, style, topic: input.topic, rawPrompt: input.complete },
+        overrides,
+      );
+    }
     out.searched++;
     out.entries[id] = { key, result: r, candidateId: [...input.usedIds].find((x) => !before.has(x)) ?? null, minDurationSec: 0 };
     out.results.push(r);
