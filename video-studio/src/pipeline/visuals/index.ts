@@ -255,7 +255,14 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
     const realFirst = Boolean(ctx.realFirst) || prefer === "real";
     const perScene = { calls: 0 };
     const plan = buildPlan(ready, ctx.format, prefer === "image", realFirst);
-    for (const step of ctx.aiOnly ? plan.filter((s) => s.provider.kind === "ai") : plan) {
+    const steps = ctx.aiOnly
+      ? plan.filter((s) => s.provider.kind === "ai")
+      : ctx.only === "footage"
+        ? plan.filter((s) => s.provider.kind === "stock" && s.stage.media === "video")
+        : ctx.only === "photo"
+          ? plan.filter((s) => s.provider.kind === "photo")
+          : plan;
+    for (const step of steps) {
       const { provider } = step;
       if (disabled.has(provider.name)) continue;
       if (provider.kind !== "ai" && queries.length === 0) continue;
@@ -296,7 +303,7 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
         }
       }
     }
-    deps.log.info(`${tag}: подходящего визуала по теме не нашлось — сцена будет на моушен-графике.`);
+    deps.log.info(ctx.only ? `${tag}: ${ctx.only === "footage" ? "видео" : "фото"} по теме не нашлось — будет рисованный кадр.` : `${tag}: подходящего визуала по теме не нашлось — сцена будет на моушен-графике.`);
     return NONE;
   } catch (e) {
     // Страховка: ни одна ошибка визуала не должна ронять сборку ролика.

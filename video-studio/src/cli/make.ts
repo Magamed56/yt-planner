@@ -24,6 +24,7 @@ import { buildVideoProps } from "../pipeline/props";
 import { qcMode, qcSummary, runQc, writeQc, type QcReport } from "../pipeline/qc";
 import { checkBrowserEnv, preparePublicDir, renderVideo, type RenderResult } from "../pipeline/render";
 import { generateScript, lintScript, ScriptGenerationError } from "../pipeline/script/index";
+import { researchEnabled, researchNotes, researchTopic } from "../pipeline/script/research";
 // Журнал расхода (content/usage.jsonl) и «уже было на канале» — см. src/pipeline/script/.
 import { coveredCode, loadCovered } from "../pipeline/script/covered";
 import { searchPhrases } from "../pipeline/script/suggest";
@@ -313,8 +314,21 @@ async function main() {
       let r: Awaited<ReturnType<typeof generateScript>>;
       const llmCalls: LlmCallInfo[] = []; // → content/usage.jsonl
       try {
+        // Материал из интернета (факты, эпизоды, жанр) — Shorts по-русски, только с Claude.
+        const found = format === "shorts" && lang === "ru" && researchEnabled(process.env) ? await researchTopic({ topic: args.topic, facts: [] }, { onLlmCall: (c) => llmCalls.push(c) }) : null;
+        if (found) usage.push(...found.usage);
         r = await generateScript(
-          { topic: args.topic, format, language: lang, notes: args.notes, targetSeconds: args.seconds, cinematic: args.cinematic, covered: loadCovered(ROOT), searchPhrases: searchPhrases(args.topic) },
+          {
+            topic: args.topic,
+            format,
+            language: lang,
+            notes: found ? [args.notes, researchNotes(found)].filter(Boolean).join("\n") : args.notes,
+            targetSeconds: args.seconds,
+            cinematic: args.cinematic,
+            genre: found?.genre,
+            covered: loadCovered(ROOT),
+            searchPhrases: searchPhrases(args.topic),
+          },
           { onLlmCall: (c) => llmCalls.push(c) },
         );
       } catch (e) {

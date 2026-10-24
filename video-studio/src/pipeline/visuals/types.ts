@@ -81,6 +81,9 @@ export interface VisualHints {
   topic?: string;
   style?: string; // общий стиль AI-кадров ролика (styleText(VideoScript.style)); нет — VISUALS_STYLE
   aiOnly?: boolean; // только генерация: кадры планов кинорежима — в одном стиле, без стоков
+  // Настоящая съёмка плана кинорежима (shot.footage / shot.photo): footage — только видео
+  // стоков, photo — только реальные фото архивов (Wikimedia Commons, Openverse).
+  only?: "footage" | "photo";
   rawPrompt?: boolean; // imagePrompt — полный промпт плана: стиль не дописывать (shotPrompts "complete")
   seedSalt?: string; // новая попытка кадра: другой seed при том же промпте
 }

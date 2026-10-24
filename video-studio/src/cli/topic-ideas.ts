@@ -13,7 +13,7 @@ import { nextLongPositions } from "../pipeline/long-plan";
 import { nextPlanPositions, refreshPlanStats, type PlanItem } from "../pipeline/plan";
 import { accessToken } from "../pipeline/google-api";
 import { loadCovered } from "../pipeline/script/covered";
-import { fmtViews, generateTopicIdeas, type TopicIdea } from "../pipeline/script/topic-ideas";
+import { fmtViews, generateTopicIdeas, type TopicIdea, type YoutubeAccess } from "../pipeline/script/topic-ideas";
 import { collectLlmUsage } from "../pipeline/script/usage-log";
 import { missingYoutubeEnv, youtubeAuth } from "../pipeline/youtube";
 import { ROOT, UserError, argsError, escapeMd, fail, ghOutput, ghSummary, loadEnv, rel, writeJson } from "./common";
@@ -28,9 +28,10 @@ const HELP = `Темы, которые смотрят → content/topic-ideas.js
 --long N     сколько тем «Разбора» показать (по умолчанию 6)
 --add 1,4,7  номера из content/topic-ideas.json → в план (Shorts и «Разборы» — каждый в свой)
 
-Темы предлагает LLM сценариев (с ANTHROPIC_API_KEY — с веб-поиском). С YT_CLIENT_ID, YT_CLIENT_SECRET
-и YT_REFRESH_TOKEN у каждой темы — просмотры роликов, которые YouTube находит по ней (≈ 101 единица
-квоты на тему из 10 000 в сутки); без них — темы без цифр.
+Темы предлагает LLM сценариев (с ANTHROPIC_API_KEY — с веб-поиском), подсказка — самые читаемые статьи
+Википедии прошлого месяца. У каждой темы — сколько людей в месяц читают о ней в Википедии (открытый API,
+без ключей), а с YT_CLIENT_ID + YT_CLIENT_SECRET + YT_REFRESH_TOKEN или YOUTUBE_API_KEY — ещё и просмотры
+роликов, которые YouTube находит по теме (≈ 101 единица квоты на тему из 10 000 в сутки).
 `;
 
 const FILE = path.join(ROOT, "content", "topic-ideas.json");
@@ -50,7 +51,9 @@ function readIdeas(): IdeasFile {
   }
 }
 
-const demandText = (i: TopicIdea) => (i.demand ? `медиана ${fmtViews(i.demand.median)}, максимум ${fmtViews(i.demand.max)}${i.demand.hits1m ? `, миллионников ${i.demand.hits1m}` : ""}` : "не измерено");
+const demandText = (i: TopicIdea) => (i.demand ? `медиана ${fmtViews(i.demand.median)}, максимум ${fmtViews(i.demand.max)}${i.demand.hits1m ? `, миллионников ${i.demand.hits1m}` : ""}` : "—");
+const readersText = (i: TopicIdea) =>
+  i.readers ? [i.readers.ru !== null ? `ru ${fmtViews(i.readers.ru)}/мес` : "", i.readers.en !== null ? `en ${fmtViews(i.readers.en)}/мес` : ""].filter(Boolean).join(", ") || "статьи нет" : "—";
 const interestText = (i: TopicIdea) => `${i.fresh ? "🔥 свежее · " : ""}${i.interest}${i.interestUrl ? ` (${i.interestUrl}${i.interestSeen ? "" : ", ссылка не из поиска — проверить"})` : ""}`;
 
 async function generate(shorts: number, long: number): Promise<void> {
@@ -58,19 +61,21 @@ async function generate(shorts: number, long: number): Promise<void> {
   const longPlan = readLongPlan();
   const { channel, pillars } = readChannelInfo(plan);
   const existing = [...new Set([...plan.items.map((i) => i.title), ...longPlan.items.map((i) => i.title), ...loadCovered(ROOT, { plan }).map((c) => c.title)])];
-  let token: string | null = null;
-  if (!missingYoutubeEnv().length) {
+  // Просмотры YouTube — с токеном канала (YT_*) или ключом API (YOUTUBE_API_KEY); без них —
+  // только интерес по Википедии.
+  let youtube: YoutubeAccess | null = process.env.YOUTUBE_API_KEY?.trim() ? { key: process.env.YOUTUBE_API_KEY.trim() } : null;
+  if (!youtube && !missingYoutubeEnv().length) {
     try {
-      token = await accessToken(youtubeAuth());
+      youtube = { token: await accessToken(youtubeAuth()) };
     } catch (e) {
-      console.warn(`  ⚠ ${e instanceof Error ? e.message : String(e)} — темы без замера спроса`);
+      console.warn(`  ⚠ ${e instanceof Error ? e.message : String(e)} — без просмотров YouTube`);
     }
   }
-  console.log(`video-studio · темы, которые смотрят: Shorts ${shorts}, «Разборы» ${long}${token ? "" : " (без замера спроса на YouTube)"}`);
+  console.log(`video-studio · темы, которые смотрят: Shorts ${shorts}, «Разборы» ${long}${youtube ? "" : " (просмотры YouTube не меряю: нет YT_* и YOUTUBE_API_KEY)"}`);
   const usage = collectLlmUsage(ROOT, null);
   let res: Awaited<ReturnType<typeof generateTopicIdeas>>;
   try {
-    res = await generateTopicIdeas({ channel, pillars, shorts, long, existing, youtubeToken: token }, { onLlmCall: usage.onLlmCall });
+    res = await generateTopicIdeas({ channel, pillars, shorts, long, existing, youtube }, { onLlmCall: usage.onLlmCall });
   } finally {
     usage.flush();
   }
@@ -78,18 +83,18 @@ async function generate(shorts: number, long: number): Promise<void> {
   writeJson(FILE, out);
   const cost = res.usage.reduce((a, u) => a + u.costUsd, 0);
   console.log(`\n✔ ${rel(FILE)}: ${out.items.length} тем · LLM $${cost.toFixed(4)} · квота YouTube ≈ ${res.quotaUnits}`);
-  for (const it of out.items) console.log(`  ${String(it.n).padStart(2)}. [${it.format === "long" ? "Разбор" : "Shorts"}] ${it.title} — YouTube: ${demandText(it)}; интерес: ${interestText(it)}`);
+  for (const it of out.items) console.log(`  ${String(it.n).padStart(2)}. [${it.format === "long" ? "Разбор" : "Shorts"}] ${it.title} — читают: ${readersText(it)}; YouTube: ${demandText(it)}; интерес: ${interestText(it)}`);
   for (const n of res.notes) console.log(`  замечание: ${n}`);
   ghOutput({ ideas_file: rel(FILE), count: String(out.items.length) });
   ghSummary(
     [
       `## 💡 Темы, которые смотрят (${out.items.length})`,
       "",
-      `YouTube — просмотры роликов, которые поиск YouTube находит по запросу темы (регион RU). Интерес — где о теме читают и спорят в интернете. LLM $${cost.toFixed(4)}, квота YouTube ≈ ${res.quotaUnits}.`,
+      `Читают — сколько людей в месяц открывают статью Википедии о теме (в среднем за год). YouTube — просмотры роликов, которые поиск YouTube находит по теме (регион RU). Интерес — где о теме говорят в интернете. LLM $${cost.toFixed(4)}, квота YouTube ≈ ${res.quotaUnits}.`,
       "",
-      "| № | Формат | Тема | YouTube | Интерес в интернете | Почему посмотрят |",
-      "|---|---|---|---|---|---|",
-      ...out.items.map((it) => `| ${it.n} | ${it.format === "long" ? "Разбор" : "Shorts"} | ${escapeMd(it.title)} | ${escapeMd(demandText(it))} | ${escapeMd(interestText(it))} | ${escapeMd(it.why)} |`),
+      "| № | Формат | Тема | Читают | YouTube | Интерес в интернете | Почему посмотрят |",
+      "|---|---|---|---|---|---|---|",
+      ...out.items.map((it) => `| ${it.n} | ${it.format === "long" ? "Разбор" : "Shorts"} | ${escapeMd(it.title)} | ${escapeMd(readersText(it))} | ${escapeMd(demandText(it))} | ${escapeMd(interestText(it))} | ${escapeMd(it.why)} |`),
       "",
       res.notes.length ? `**Замечания:**\n${res.notes.map((n) => `- ${escapeMd(n)}`).join("\n")}\n` : "",
       "Выбранные номера — в план: `npm run topic-ideas -- --add 1,4,7`.",

@@ -1,13 +1,16 @@
 // Темы, которые смотрят (npm run topic-ideas): Claude предлагает темы массового
 // интереса — известные истории, загадки, катастрофы и спасения, животные, космос,
-// деньги, — а YouTube Data API меряет спрос: сколько просмотров у роликов, которые
-// по этой теме уже находит поиск. Список с цифрами человек смотрит и выбирает сам;
-// выбранные темы дописываются в план (--add), факты к ним найдёт research.ts перед
-// сценарием.
+// деньги. Интерес меряем по открытым данным: сколько людей в месяц читают статью
+// Википедии о теме (ru и en, Wikimedia API — без ключей), а что читают больше всего
+// прямо сейчас, Claude видит в списке самых читаемых статей прошлого месяца. С ключами
+// YouTube — ещё и просмотры роликов, которые поиск YouTube находит по теме. Список с
+// цифрами человек смотрит и выбирает сам; выбранные темы дописываются в план (--add),
+// факты к ним найдёт research.ts перед сценарием.
 
 import { z } from "zod";
 import type { LlmUsage } from "../contracts";
 import type { Genre } from "../plan";
+import { userAgent } from "../visuals/providers/open-licenses";
 import { parseIsoDuration } from "../youtube-fill";
 import type { ScriptDeps } from "./generate";
 import { resolveChain } from "./llm/chain";
@@ -40,7 +43,15 @@ export interface TopicIdea {
   interestUrl: string; // страница из выдачи поиска, где этот интерес виден
   interestSeen?: boolean; // ссылка была в выдаче веб-поиска (а не по памяти модели)
   fresh?: boolean; // держится на свежей новости или годовщине — выпускать скоро
-  demand?: IdeaDemand | null; // null — спрос не измерен (нет YT_* или кончилась квота)
+  wiki?: string; // статья русской Википедии о теме — по ней меряем интерес
+  wikiEn?: string; // то же в английской
+  readers?: WikiReaders | null; // читателей статьи в месяц; null — не измерено
+  demand?: IdeaDemand | null; // null — спрос не измерен (нет ключей YouTube или кончилась квота)
+}
+
+export interface WikiReaders {
+  ru: number | null; // в среднем за 12 месяцев; null — статьи нет
+  en: number | null;
 }
 
 const IdeaSchema = z.object({
@@ -53,7 +64,9 @@ const IdeaSchema = z.object({
   why: z.string().trim().min(1).max(300).describe("почему это посмотрят, одно предложение"),
   interest: z.string().trim().min(1).max(300).describe("где в интернете виден интерес и насколько: «Reddit r/todayilearned — 40 тыс. голосов»"),
   interestUrl: z.string().trim().min(1).max(500).describe("ссылка https://… на эту страницу из результатов поиска"),
-  fresh: z.boolean().optional().describe("true — тема держится на свежей новости или годовщине"),
+  fresh: z.boolean().optional().describe("true — тема держится на громкой свежей новости или годовщине"),
+  wiki: z.string().trim().min(1).max(200).optional().describe("точное название статьи русской Википедии о теме"),
+  wikiEn: z.string().trim().min(1).max(200).optional().describe("точное название статьи английской Википедии о теме"),
 });
 
 export const IdeasSchema = z.object({ items: z.array(IdeaSchema).min(1).max(60) });
@@ -79,33 +92,39 @@ export function buildIdeasSystemPrompt(pillars: { id: string; title: string }[],
 - hook — первая фраза ролика: загадка или парадокс до 12 слов, без развязки.
 - why — почему это посмотрят: одно предложение (известность, эмоция, неожиданный поворот).
 
-## Где искать интерес
-${
+## Состав списка
+- Не меньше двух третей — вечные темы массового интереса: известные события, люди, места, животные, загадки, катастрофы, тело, космос, деньги. Их смотрят годами.
+- Свежие новости — не больше пятой части и только громкие: то, что обсуждают все, а не новость научного журнала (новый вид моллюска, уточнение тёмной энергии — мимо).
+
+## Где виден интерес
+- В запросе — самые читаемые статьи Википедии за прошлый месяц: это то, что люди ищут прямо сейчас. Подходящее каналу из этого списка бери в первую очередь (с новым углом).${
     webSearch
-      ? `Ищи в интернете (8–12 поисков), что людям интересно прямо сейчас и всегда:
-- самые читаемые статьи Википедии (ru и en) за неделю и месяц;
-- популярные посты и вопросы: Reddit (r/todayilearned, r/history, r/space, r/natureisfuckinglit, r/AskScience), Пикабу, Хабр, «Яндекс Кью»;
-- новости науки и открытий последних недель, громкие годовщины ближайших месяцев;
-- частые вопросы людей («почему…», «что будет, если…», «правда ли…»).`
-      : "Опирайся на то, что известно о популярных вопросах и историях; ссылки дай только те, в которых уверен."
+      ? `
+- Поищи в интернете (5–10 поисков), что людям интересно: популярные посты и вопросы (Reddit r/todayilearned, r/history, r/space, r/natureisfuckinglit, r/AskScience; Пикабу; «Яндекс Кью»), подборки «самые популярные загадки / истории / катастрофы», громкие годовщины ближайших месяцев.`
+      : ""
   }
-- interest — одно предложение: где виден интерес к теме и насколько (цифра, если есть): «Reddit r/todayilearned — 40 тыс. голосов», «Википедия — в топе просмотров недели», «открытие на прошлой неделе, о нём пишут крупные СМИ».
-- interestUrl — ссылка https://… на эту страницу${webSearch ? " из результатов поиска" : ""}.
-- fresh: true — если тема держится на свежей новости или годовщине (ролик нужно выпустить скоро).
+- wiki — точное название статьи русской Википедии, о которой ролик («Эму-война», «Титаник»), wikiEn — то же в английской («Emu War», "Titanic"). По ним измерят, сколько людей в месяц читают о теме; нет статьи — не указывай.
+- interest — одно предложение: где виден интерес и насколько (цифра, если есть): «в топе Википедии за сентябрь — 1,2 млн просмотров», «Reddit r/todayilearned — 40 тыс. голосов».
+- interestUrl — ссылка https://… на эту страницу${webSearch ? " (из результатов поиска или статья Википедии)" : ""}.
+- fresh: true — только если тема держится на громкой свежей новости или годовщине (ролик нужно выпустить скоро).
 - Темы — проверяемые, без слухов и непроверенных «сенсаций».
 
 ## Формат ответа
-Ответь ТОЛЬКО одним JSON-объектом, без markdown и пояснений: {"items": [{"title", "format", "genre", "pillar", "query", "hook", "why", "interest", "interestUrl", "fresh"}]}.`;
+Ответь ТОЛЬКО одним JSON-объектом, без markdown и пояснений: {"items": [{"title", "format", "genre", "pillar", "query", "hook", "why", "interest", "interestUrl", "fresh", "wiki", "wikiEn"}]}.`;
 }
 
-export function buildIdeasPrompt(input: { channel: PlanChannel; shorts: number; long: number; existing: string[] }): string {
+export function buildIdeasPrompt(input: { channel: PlanChannel; shorts: number; long: number; existing: string[]; top?: { ru: WikiTop[]; en: WikiTop[]; month: string } }): string {
   const ch = [input.channel.name ? `Канал: «${input.channel.name}».` : "", input.channel.niche ? `Ниша: ${input.channel.niche}` : "", input.channel.audience ? `Аудитория: ${input.channel.audience}` : ""]
     .filter(Boolean)
     .join("\n");
+  const list = (items: WikiTop[]) => items.map((t) => `${t.title} — ${fmtViews(t.views)}`).join("; ");
+  const top = input.top && (input.top.ru.length || input.top.en.length)
+    ? `\n\nСамые читаемые статьи Википедии за ${input.top.month} (что люди ищут сейчас; большая часть — не для канала, бери только подходящее):${input.top.ru.length ? `\nРусская: ${list(input.top.ru)}` : ""}${input.top.en.length ? `\nАнглийская: ${list(input.top.en)}` : ""}`
+    : "";
   return `${ch}
 
 Нужно ${input.shorts} тем для Shorts (format "shorts") и ${input.long} тем для «Разборов» (format "long") — разные рубрики, без повторов между собой.
-Эти темы на канале уже были — их и близкие к ним не предлагай: ${input.existing.map((t) => `«${t}»`).join("; ")}.
+Эти темы на канале уже были — их и близкие к ним не предлагай: ${input.existing.map((t) => `«${t}»`).join("; ")}.${top}
 Ответ — {"items": [...]}.`;
 }
 
@@ -128,6 +147,11 @@ export function checkIdeas(raw: unknown, ctx: { existing: string[]; pillars: str
     if (typeof o.query === "string") o.query = o.query.replace(/["«»]/g, "").toLowerCase();
     if (typeof o.interestUrl === "string") o.interestUrl = extractUrl(o.interestUrl) ?? "";
     if (typeof o.fresh === "string") o.fresh = /^(true|да|yes|1)$/i.test(o.fresh);
+    for (const f of ["wiki", "wikiEn"]) {
+      // «https://ru.wikipedia.org/wiki/Эму-война» и «Эму-война» — одно и то же.
+      if (typeof o[f] === "string") o[f] = decodeURIComponent((o[f] as string).replace(/^https?:\/\/[a-z-]+\.(?:m\.)?wikipedia\.org\/wiki\//i, "")).replace(/_/g, " ").trim() || undefined;
+      if (o[f] === undefined || o[f] === null || o[f] === "") delete o[f];
+    }
     const parsed = IdeaSchema.safeParse(o);
     if (!parsed.success) {
       notes.push(`тема «${String(o.title ?? "?").slice(0, 60)}» пропущена: ${formatZodIssues(parsed.error, o, "items").slice(0, 2).join("; ")}`);
@@ -168,10 +192,13 @@ export function median(values: number[]): number {
   return s.length % 2 ? s[m]! : Math.round((s[m - 1]! + s[m]!) / 2);
 }
 
-async function ytGet(url: string, token: string, fetchImpl: FetchLike, timeoutMs: number): Promise<Loose> {
+// Доступ к Data API: OAuth-токен канала (YT_*) или простой ключ API (YOUTUBE_API_KEY).
+export type YoutubeAccess = { token: string } | { key: string };
+
+async function ytGet(url: string, access: YoutubeAccess, fetchImpl: FetchLike, timeoutMs: number): Promise<Loose> {
   const { signal, cleanup } = linkedAbort(timeoutMs);
   try {
-    const res = await fetchImpl(url, { headers: { authorization: `Bearer ${token}` }, signal });
+    const res = await fetchImpl("key" in access ? `${url}&key=${encodeURIComponent(access.key)}` : url, { headers: "token" in access ? { authorization: `Bearer ${access.token}` } : {}, signal });
     const body = await res.text();
     if (!res.ok) {
       const stop = res.status === 401 || /quotaExceeded|dailyLimitExceeded|insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(body);
@@ -186,14 +213,14 @@ async function ytGet(url: string, token: string, fetchImpl: FetchLike, timeoutMs
 // Просмотры роликов, которые YouTube находит по запросу темы (регион RU, русский язык).
 // Shorts сравниваем с короткими роликами, «Разборы» — с роликами длиннее 3 минут.
 // ≈ 101 единица квоты на тему (search.list — 100, videos.list — 1).
-export async function youtubeDemand(query: string, format: IdeaFormat, deps: { token: string; fetch: FetchLike; timeoutMs?: number }): Promise<IdeaDemand> {
+export async function youtubeDemand(query: string, format: IdeaFormat, deps: { access: YoutubeAccess; fetch: FetchLike; timeoutMs?: number }): Promise<IdeaDemand> {
   const timeoutMs = deps.timeoutMs ?? 15_000;
   const p = new URLSearchParams({ part: "id", type: "video", q: query, maxResults: "20", regionCode: "RU", relevanceLanguage: "ru", order: "relevance", safeSearch: "none" });
   if (format === "shorts") p.set("videoDuration", "short");
-  const found = await ytGet(`${YT}/search?${p}`, deps.token, deps.fetch, timeoutMs);
+  const found = await ytGet(`${YT}/search?${p}`, deps.access, deps.fetch, timeoutMs);
   const ids = (Array.isArray(found.items) ? found.items : []).map((x) => (isObj(x) && isObj(x.id) ? String(x.id.videoId ?? "") : "")).filter(Boolean);
   if (!ids.length) return { query, videos: 0, median: 0, max: 0, hits1m: 0, sample: [] };
-  const stats = await ytGet(`${YT}/videos?${new URLSearchParams({ part: "statistics,snippet,contentDetails", id: ids.join(","), maxResults: "50" })}`, deps.token, deps.fetch, timeoutMs);
+  const stats = await ytGet(`${YT}/videos?${new URLSearchParams({ part: "statistics,snippet,contentDetails", id: ids.join(","), maxResults: "50" })}`, deps.access, deps.fetch, timeoutMs);
   const list = (Array.isArray(stats.items) ? stats.items : []).filter(isObj).map((v) => {
     const st = isObj(v.statistics) ? v.statistics : {};
     const sn = isObj(v.snippet) ? v.snippet : {};
@@ -212,13 +239,72 @@ export async function youtubeDemand(query: string, format: IdeaFormat, deps: { t
   };
 }
 
-// Сначала свежее (новость или годовщина — у неё ещё нет роликов с просмотрами, но интерес
-// виден в интернете), дальше — что смотрят больше: медиана просмотров, затем миллионники.
+// ---- Интерес в Википедии (Wikimedia REST API, без ключей) ----
+
+const WIKIMEDIA = "https://wikimedia.org/api/rest_v1/metrics/pageviews";
+
+export interface WikiTop {
+  title: string;
+  views: number;
+}
+
+async function wikiJson(url: string, deps: { fetch: FetchLike; env?: Record<string, string | undefined>; timeoutMs?: number }): Promise<Loose | null> {
+  const { signal, cleanup } = linkedAbort(deps.timeoutMs ?? 15_000);
+  try {
+    const res = await deps.fetch(url, { headers: { "user-agent": userAgent(deps.env ?? process.env), accept: "application/json" }, signal });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Wikimedia ${res.status}`);
+    return (await res.json()) as Loose;
+  } finally {
+    cleanup();
+  }
+}
+
+const ym = (d: Date) => ({ y: d.getUTCFullYear(), m: String(d.getUTCMonth() + 1).padStart(2, "0") });
+// Последний полный месяц: данные за текущий ещё неполные.
+export const lastFullMonth = (now: Date): Date => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+
+// Служебные страницы и порталы — не темы.
+const NOT_TOPIC = /^(Заглавная страница|Main Page|Special:|Служебная:|Википедия:|Wikipedia:|Портал:|Portal:|Файл:|File:|Шаблон:|Template:|Категория:|Category:|-$)/;
+
+// Самые читаемые статьи месяца (топ Википедии): что люди ищут прямо сейчас.
+export async function wikiTop(lang: "ru" | "en", month: Date, limit: number, deps: { fetch: FetchLike; env?: Record<string, string | undefined> }): Promise<WikiTop[]> {
+  const { y, m } = ym(month);
+  const data = await wikiJson(`${WIKIMEDIA}/top/${lang}.wikipedia/all-access/${y}/${m}/all-days`, deps);
+  const first = data && Array.isArray(data.items) && isObj(data.items[0]) ? data.items[0] : null;
+  const articles = first && Array.isArray(first.articles) ? first.articles.filter(isObj) : [];
+  return articles
+    .map((a) => ({ title: String(a.article ?? "").replace(/_/g, " "), views: Number(a.views ?? 0) || 0 }))
+    .filter((a) => a.title && !NOT_TOPIC.test(a.title))
+    .slice(0, limit);
+}
+
+// Читателей статьи в месяц — в среднем за 12 полных месяцев; редирект («Эму война» →
+// «Эму-война») разворачиваем: у самого редиректа просмотров почти нет. null — статьи нет.
+export async function wikiMonthlyReaders(lang: "ru" | "en", title: string, now: Date, deps: { fetch: FetchLike; env?: Record<string, string | undefined> }): Promise<number | null> {
+  const q = new URLSearchParams({ action: "query", format: "json", redirects: "1", titles: title });
+  const page = await wikiJson(`https://${lang}.wikipedia.org/w/api.php?${q}`, deps);
+  const pages = page && isObj(page.query) && isObj(page.query.pages) ? Object.values(page.query.pages).filter(isObj) : [];
+  const found = pages.find((p) => p.missing === undefined && typeof p.title === "string");
+  if (!found) return null;
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0)); // последний день прошлого месяца
+  const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - 11, 1));
+  const day = (d: Date) => `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}00`;
+  const article = encodeURIComponent(String(found.title).replace(/ /g, "_"));
+  const views = await wikiJson(`${WIKIMEDIA}/per-article/${lang}.wikipedia/all-access/user/${article}/monthly/${day(start)}/${day(end)}`, deps);
+  const items = views && Array.isArray(views.items) ? views.items.filter(isObj) : [];
+  if (!items.length) return 0;
+  return Math.round(items.reduce((a, it) => a + (Number(it.views ?? 0) || 0), 0) / items.length);
+}
+
+// Интерес к теме одним числом: русская Википедия — наш зритель, английская — мировой
+// интерес (впятеро «дешевле»: у неё и аудитория в разы больше).
+export const readersScore = (r: WikiReaders | null | undefined): number => (r ? (r.ru ?? 0) + Math.round((r.en ?? 0) / 5) : -1);
+
+// Порядок: сначала то, о чём больше читают, затем — что больше смотрят на YouTube.
 export function rankIdeas(ideas: TopicIdea[]): TopicIdea[] {
-  const score = (i: TopicIdea) => (i.demand ? i.demand.median : -1);
-  return [...ideas].sort(
-    (a, b) => Number(Boolean(b.fresh)) - Number(Boolean(a.fresh)) || score(b) - score(a) || (b.demand?.hits1m ?? 0) - (a.demand?.hits1m ?? 0) || (b.demand?.max ?? 0) - (a.demand?.max ?? 0),
-  );
+  const yt = (i: TopicIdea) => (i.demand ? i.demand.median : -1);
+  return [...ideas].sort((a, b) => readersScore(b.readers) - readersScore(a.readers) || yt(b) - yt(a) || (b.demand?.hits1m ?? 0) - (a.demand?.hits1m ?? 0));
 }
 
 // «1,2 млн», «450 тыс.», «980».
@@ -236,7 +322,8 @@ export interface IdeasInput {
   shorts: number;
   long: number;
   existing: string[]; // названия тем плана и роликов канала — не повторять
-  youtubeToken?: string | null; // нет — без замера спроса
+  youtube?: YoutubeAccess | null; // нет — без замера просмотров YouTube
+  now?: Date;
 }
 
 export interface IdeasResult {
@@ -254,12 +341,23 @@ export async function generateTopicIdeas(input: IdeasInput, deps: ScriptDeps = {
   if (!chain.length) throw new Error("Нет ни одной доступной LLM: задайте ANTHROPIC_API_KEY (с веб-поиском) или GEMINI_API_KEY.");
   const searchOn = chain[0]!.provider === "claude" && !/^(0|off|false|no)$/i.test((env.PLAN_WEB_SEARCH ?? "").trim());
   const usage = new UsageBook();
-  // С запасом: часть отсеется как повтор, а слабые по спросу человек и сам не выберет.
-  const ask = { shorts: Math.ceil(input.shorts * 1.3), long: Math.ceil(input.long * 1.3) };
+  const now = input.now ?? new Date();
+  const notes: string[] = [];
+  const wikiDeps = { fetch: fetchImpl, env };
+  // Что читают прямо сейчас — подсказка Claude (без сети или при сбое — без неё).
+  const month = lastFullMonth(now);
+  const top = { ru: [] as WikiTop[], en: [] as WikiTop[], month: `${ym(month).m}.${ym(month).y}` };
+  try {
+    [top.ru, top.en] = await Promise.all([wikiTop("ru", month, 300, wikiDeps), wikiTop("en", month, 150, wikiDeps)]);
+  } catch (e) {
+    notes.push(`топ Википедии не получен (${e instanceof Error ? e.message : String(e)}) — темы без него`);
+  }
+  // С запасом: часть отсеется как повтор, а слабые по интересу человек и сам не выберет.
+  const ask = { shorts: Math.ceil(input.shorts * 1.4), long: Math.ceil(input.long * 1.5) };
   const res = await generateStructured({
     chain,
     system: buildIdeasSystemPrompt(input.pillars, searchOn),
-    user: buildIdeasPrompt({ channel: input.channel, ...ask, existing: input.existing }),
+    user: buildIdeasPrompt({ channel: input.channel, ...ask, existing: input.existing, top }),
     schemaName: "topic_ideas",
     zodSchema: IdeasSchema,
     jsonSchema: toCompatJsonSchema(IdeasSchema),
@@ -269,32 +367,42 @@ export async function generateTopicIdeas(input: IdeasInput, deps: ScriptDeps = {
     log,
     signal: deps.signal,
     onCall: deps.onLlmCall,
-    ...(searchOn ? { webSearch: { maxUses: 12 } } : {}),
+    ...(searchOn ? { webSearch: { maxUses: 10 } } : {}),
   });
-  const notes = [...res.value.notes];
+  notes.push(...res.value.notes);
   const ideas = res.value.ideas;
   // Ссылка «где интерес» — из выдачи поиска или по памяти модели: человеку стоит знать разницу.
   const seen = new Set(res.sources.map(urlKey));
-  for (const idea of ideas) idea.interestSeen = Boolean(idea.interestUrl) && seen.has(urlKey(idea.interestUrl));
+  for (const idea of ideas) idea.interestSeen = Boolean(idea.interestUrl) && (seen.has(urlKey(idea.interestUrl)) || /wikipedia\.org\/wiki\//.test(idea.interestUrl));
+  // Читатели Википедии — у каждой темы (несколько запросов к открытому API, без квот).
+  let wikiOff = false;
+  for (const idea of ideas) {
+    if (wikiOff || (!idea.wiki && !idea.wikiEn)) continue;
+    try {
+      const [ru, en] = await Promise.all([idea.wiki ? wikiMonthlyReaders("ru", idea.wiki, now, wikiDeps) : null, idea.wikiEn ? wikiMonthlyReaders("en", idea.wikiEn, now, wikiDeps) : null]);
+      idea.readers = { ru, en };
+    } catch (e) {
+      wikiOff = true;
+      notes.push(`читатели Википедии не измерены (${e instanceof Error ? e.message : String(e)})`);
+    }
+  }
   let quotaUnits = 0;
-  if (input.youtubeToken) {
+  if (input.youtube) {
     for (const idea of ideas) {
       try {
-        idea.demand = await youtubeDemand(idea.query, idea.format, { token: input.youtubeToken, fetch: fetchImpl });
+        idea.demand = await youtubeDemand(idea.query, idea.format, { access: input.youtube, fetch: fetchImpl });
         quotaUnits += 101;
         log.info(`[темы] «${idea.query}»: медиана ${fmtViews(idea.demand.median)}, максимум ${fmtViews(idea.demand.max)} (${idea.demand.videos} роликов)`);
       } catch (e) {
         idea.demand = null;
         const msg = e instanceof Error ? e.message : String(e);
         if (e instanceof DemandError && e.stop) {
-          notes.push(`замер спроса остановлен: ${msg}`);
+          notes.push(`замер просмотров YouTube остановлен: ${msg}`);
           break;
         }
-        notes.push(`«${idea.query}»: спрос не измерен — ${msg}`);
+        notes.push(`«${idea.query}»: просмотры YouTube не измерены — ${msg}`);
       }
     }
-  } else {
-    notes.push("YT_* не заданы — спрос на YouTube не измерен, темы без цифр");
   }
   const ranked = rankIdeas(ideas);
   const pick = [...ranked.filter((i) => i.format === "shorts").slice(0, input.shorts), ...ranked.filter((i) => i.format === "long").slice(0, input.long)];

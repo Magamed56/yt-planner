@@ -945,10 +945,11 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # ---------- topics: темы, которые смотрят ----------
-  # Claude предлагает темы массового интереса (с веб-поиском), YouTube Data API меряет спрос —
-  # просмотры роликов, которые поиск YouTube находит по каждой теме (регион RU, ≈ 101 единица квоты
-  # на тему). Список с цифрами — в сводке запуска и в content/topic-ideas.json (коммит в ветку);
-  # выбранные номера дописывает в план npm run topic-ideas -- --add 1,4,7.
+  # Claude предлагает темы массового интереса (с веб-поиском; подсказка — самые читаемые статьи
+  # Википедии прошлого месяца), интерес меряется открытыми данными: читатели статьи Википедии
+  # о теме в месяц; с YT_* или YOUTUBE_API_KEY — ещё и просмотры роликов по теме на YouTube
+  # (≈ 101 единица квоты на тему). Список с цифрами — в сводке запуска и в content/topic-ideas.json
+  # (коммит в ветку); выбранные номера дописывает в план npm run topic-ideas -- --add 1,4,7.
   topics:
     name: Темы, которые смотрят
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'topics'
@@ -990,6 +991,8 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          # Необязательно: ключ Google Cloud с YouTube Data API v3 — просмотры без OAuth канала.
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           # Ввод пользователя — только через env, не подставляем в текст команды.
           IDEAS: ${{ inputs.ideas }}
         run: |

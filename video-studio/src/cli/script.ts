@@ -17,6 +17,7 @@ import { isLongCode, normCode } from "../pipeline/codes";
 import { LONG_PLAN_FILE, longPlanNotes, parseLongPlan } from "../pipeline/long-plan";
 import { generateScript, lintScript, loadCovered, LONG_DEFAULT_SECONDS, ScriptGenerationError, searchPhrases, WORDS_PER_SECOND, type ScriptGenRequest } from "../pipeline/script/index";
 import { collectLlmUsage } from "../pipeline/script/usage-log";
+import { researchEnabled, researchNotes, researchTopic } from "../pipeline/script/research";
 import { slugify } from "../pipeline/slug";
 import { ROOT, UserError, argsError, escapeMd, fail, fmtDuration, ghOutput, ghSummary, loadEnv, rel, reportFailedLlmUsage, writeJson } from "./common";
 import { langScriptDir } from "../pipeline/lang";
@@ -144,7 +145,19 @@ async function draftFromPlan(codesArg: string, seconds: number | undefined, mode
     }
     const t0 = Date.now();
     const usage = usageCollector(code);
+    let researchCost = 0;
     try {
+      // Материал из интернета (факты, эпизоды, линия рассказа, жанр) — один раз на тему:
+      // сохраняется в план, повторная генерация его не покупает заново.
+      if (!mode.quiz && !item.researched && researchEnabled(process.env)) {
+        const r = await researchTopic({ topic: item.title, hook: item.hook, angle: item.angle, facts: item.keyFacts, long }, { onLlmCall: usage.onLlmCall });
+        if (r) {
+          researchCost = r.usage.reduce((a, u) => a + u.costUsd, 0);
+          Object.assign(item, { keyFacts: r.facts, genre: r.genre, story: r.story, researched: new Date().toISOString().slice(0, 10) });
+          writeJson(fromLong ? LONG_PLAN_PATH : PLAN_FILE, fromLong ? longPlan : plan);
+          console.log(`  ${code}: материал из интернета — +${r.added} пунктов, жанр: ${r.genre === "story" ? "история" : "объяснение"}`);
+        }
+      }
       const sequel = item.sequelOf ? plan.items.find((i) => i.id === item.sequelOf) ?? null : null;
       const req: ScriptGenRequest = {
         topic: item.title,
@@ -155,6 +168,7 @@ async function draftFromPlan(codesArg: string, seconds: number | undefined, mode
         long,
         quiz: mode.quiz,
         cinematic: mode.cinematic,
+        genre: item.genre,
         // Своя тема (и её «Разбор»/Shorts) повтором не считается.
         covered: loadCovered(ROOT, { plan: coveredPlan, exclude: [code] }),
         searchPhrases: searchPhrases(item.title),
@@ -173,7 +187,7 @@ async function draftFromPlan(codesArg: string, seconds: number | undefined, mode
         item.script = rel(file);
         writeJson(PLAN_FILE, plan);
       }
-      const cost = spent.reduce((a, u) => a + u.costUsd, 0);
+      const cost = spent.reduce((a, u) => a + u.costUsd, 0) + researchCost;
       console.log(`  ${code}: ✔ ${rel(file)} — «${script.title}», ${script.scenes.length} сцен, $${cost.toFixed(4)}, ${fmtDuration(Date.now() - t0)}`);
       for (const w of warnings) console.log(`    замечание: ${w}`);
       results.push({ item, file: rel(file), script, cost, warnings });
@@ -284,17 +298,23 @@ async function main() {
   } catch {
     plan = null; // без плана — сверяемся только со сценариями
   }
+  let researchCost = 0;
   try {
+    const userNotes = typeof values.notes === "string" ? values.notes : undefined;
+    // Материал из интернета — и для темы вне плана (по-русски: поиск и правила — русские).
+    const r = !mode.quiz && lang === "ru" && researchEnabled(process.env) ? await researchTopic({ topic, facts: [], long: mode.long }, { onLlmCall: usage.onLlmCall }) : null;
+    if (r) researchCost = r.usage.reduce((a, u) => a + u.costUsd, 0);
     generated = await generateScript(
       {
         topic,
         format,
         language: lang,
-        notes: typeof values.notes === "string" ? values.notes : undefined,
+        notes: r ? [userNotes, researchNotes(r, { strict: !mode.long })].filter(Boolean).join("\n") : userNotes,
         targetSeconds: seconds,
         long: mode.long,
         quiz: mode.quiz,
         cinematic: mode.cinematic,
+        genre: r?.genre,
         covered: loadCovered(ROOT, { plan }),
         // Подсказки поиска — по русской теме; для другого языка они не к месту.
         searchPhrases: lang === "ru" ? searchPhrases(topic) : undefined,
@@ -312,7 +332,7 @@ async function main() {
   const file = uniquePath(outDir, slugify(script.title));
   writeJson(file, script);
 
-  const cost = spent.reduce((a, u) => a + u.costUsd, 0);
+  const cost = spent.reduce((a, u) => a + u.costUsd, 0) + researchCost;
   const last = spent.at(-1);
   const words = script.scenes.reduce((a, s) => a + s.narration.split(/\s+/).filter(Boolean).length, 0);
   console.log(`\n✔ Черновик готов за ${fmtDuration(Date.now() - t0)}: ${rel(file)}`);
