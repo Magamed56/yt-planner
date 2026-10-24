@@ -42,7 +42,8 @@ export interface ReviewConfig {
 }
 
 export function reviewConfig(env: Env): { config: ReviewConfig | null; problem: string | null } {
-  const mode = (env.VISUALS_REVIEW ?? "claude").trim().toLowerCase();
+  // Пусто — по умолчанию: в Actions незаданная переменная репозитория приходит пустой строкой.
+  const mode = (env.VISUALS_REVIEW?.trim() || "claude").toLowerCase();
   if (mode === "off" || mode === "none" || mode === "0") return { config: null, problem: null };
   if (mode !== "claude") return { config: null, problem: `VISUALS_REVIEW=${mode}: поддерживается только claude — кадры не проверяю.` };
   const apiKey = env.ANTHROPIC_API_KEY?.trim() ?? "";

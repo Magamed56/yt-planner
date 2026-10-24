@@ -17,7 +17,7 @@ import { resetVisualsState } from "../pipeline/visuals/index";
 import { readVisualsManifest, visualKey, writeVisualsManifest, type ManifestEntry } from "../pipeline/visuals/manifest";
 import { APPEAL, DEFAULT_STYLE, aiPromptFor, imagePromptFor, styleText } from "../pipeline/visuals/query";
 import { capNewFrames, findShotVisuals, resolveReuse, shotId, shotScene, shotVisualKey } from "../pipeline/visuals/shots";
-import { cleanBox, parseAnswer, reviewFrames, type ReviewClient, type ReviewItem } from "../pipeline/visuals/review";
+import { cleanBox, parseAnswer, reviewConfig, reviewFrames, type ReviewClient, type ReviewItem } from "../pipeline/visuals/review";
 import { sceneCues } from "../remotion/lib/cues";
 import { buildFixtureProps, estimateWords } from "../remotion/fixtures/buildFixture";
 import { CAMERA_MOVES, FPS, MIN_SHOT_FRAMES, SHOT_LIMITS, findBeat, layoutShots, renderShots, type CameraMove, type RenderScene, type SceneShot, type SceneVisual, type VideoScript } from "../types";
@@ -442,6 +442,10 @@ await test("подписи и цифра: появляются на словах
 });
 
 await test("проверка кадров: разбор ответа, рамки в пределах кадра, кэш вердиктов — второй раз без запроса", async () => {
+  // Прогон 37: в Actions незаданная переменная — пустая строка, проверка молча выключалась.
+  assert.ok(reviewConfig({ VISUALS_REVIEW: "", ANTHROPIC_API_KEY: "k" }).config, "пусто — проверка включена");
+  assert.equal(reviewConfig({ VISUALS_REVIEW: "off", ANTHROPIC_API_KEY: "k" }).config, null);
+  assert.equal(reviewConfig({ VISUALS_REVIEW: "", VISUALS_REVIEW_MODEL: "", ANTHROPIC_API_KEY: "k" }).config?.model, "claude-opus-5-5");
   assert.deepEqual(cleanBox({ x: -0.1, y: 0.2, w: 0.5, h: 2 }), { x: 0, y: 0.2, w: 0.5, h: 0.8 });
   assert.equal(cleanBox({ x: 0.5, y: 0.5, w: 0.001, h: 0.3 }), null, "точка — не рамка");
   const dir = await mkdtemp(path.join(os.tmpdir(), "vs-review-"));
