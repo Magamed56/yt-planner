@@ -130,6 +130,12 @@ await test("Википедия: топ месяца без служебных с
   assert.deepEqual(top.map((t) => t.title), ["Титаник", "Эму-война"]);
   assert.equal(await wikiMonthlyReaders("ru", "Эму война", now, { fetch: wiki, env: {} }), 40000);
   assert.equal(await wikiMonthlyReaders("ru", "Нет", now, { fetch: wiki, env: {} }), null);
+  // 429 — ждём и повторяем, а не сдаёмся.
+  let hits = 0;
+  const waits: number[] = [];
+  const busy = (async (input: string | URL | Request, init?: RequestInit) => (++hits <= 2 ? new Response("slow down", { status: 429, headers: { "retry-after": "1" } }) : wiki(input, init))) as typeof fetch;
+  assert.equal(await wikiMonthlyReaders("ru", "Эму война", now, { fetch: busy, env: {}, waitMs: async (ms) => void waits.push(ms) }), 40000);
+  assert.deepEqual(waits, [1000, 1000]);
   const prompt = buildIdeasPrompt({ channel: { name: "Суть за минуту" }, shorts: 2, long: 1, existing: ["Эму-война"], top: { ru: top, en: [], month: "09.2026" } });
   assert.match(prompt, /Самые читаемые статьи Википедии за 09\.2026[\s\S]*Титаник — 120 тыс\./);
   assert.match(buildIdeasSystemPrompt([{ id: "history", title: "История" }], true), /Свежие новости — не больше пятой части/);

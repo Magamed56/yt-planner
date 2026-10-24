@@ -248,15 +248,25 @@ export interface WikiTop {
   views: number;
 }
 
-async function wikiJson(url: string, deps: { fetch: FetchLike; env?: Record<string, string | undefined>; timeoutMs?: number }): Promise<Loose | null> {
-  const { signal, cleanup } = linkedAbort(deps.timeoutMs ?? 15_000);
-  try {
-    const res = await deps.fetch(url, { headers: { "user-agent": userAgent(deps.env ?? process.env), accept: "application/json" }, signal });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`Wikimedia ${res.status}`);
-    return (await res.json()) as Loose;
-  } finally {
-    cleanup();
+// 429 у Wikimedia — частый ответ на серию запросов подряд: ждём (Retry-After или 2, 4, 8 с)
+// и повторяем, а не бросаем замер остальных тем.
+async function wikiJson(url: string, deps: { fetch: FetchLike; env?: Record<string, string | undefined>; timeoutMs?: number; waitMs?: (ms: number) => Promise<void> }): Promise<Loose | null> {
+  const wait = deps.waitMs ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  for (let attempt = 0; ; attempt++) {
+    const { signal, cleanup } = linkedAbort(deps.timeoutMs ?? 15_000);
+    try {
+      const res = await deps.fetch(url, { headers: { "user-agent": userAgent(deps.env ?? process.env), accept: "application/json" }, signal });
+      if (res.status === 404) return null;
+      if ((res.status === 429 || res.status >= 500) && attempt < 3) {
+        const after = Number(res.headers.get("retry-after"));
+        await wait(Number.isFinite(after) && after > 0 ? Math.min(30, after) * 1000 : 2000 * 2 ** attempt);
+        continue;
+      }
+      if (!res.ok) throw new Error(`Wikimedia ${res.status}`);
+      return (await res.json()) as Loose;
+    } finally {
+      cleanup();
+    }
   }
 }
 
@@ -268,7 +278,7 @@ export const lastFullMonth = (now: Date): Date => new Date(Date.UTC(now.getUTCFu
 const NOT_TOPIC = /^(Заглавная страница|Main Page|Special:|Служебная:|Википедия:|Wikipedia:|Портал:|Portal:|Файл:|File:|Шаблон:|Template:|Категория:|Category:|-$)/;
 
 // Самые читаемые статьи месяца (топ Википедии): что люди ищут прямо сейчас.
-export async function wikiTop(lang: "ru" | "en", month: Date, limit: number, deps: { fetch: FetchLike; env?: Record<string, string | undefined> }): Promise<WikiTop[]> {
+export async function wikiTop(lang: "ru" | "en", month: Date, limit: number, deps: { fetch: FetchLike; env?: Record<string, string | undefined>; waitMs?: (ms: number) => Promise<void> }): Promise<WikiTop[]> {
   const { y, m } = ym(month);
   const data = await wikiJson(`${WIKIMEDIA}/top/${lang}.wikipedia/all-access/${y}/${m}/all-days`, deps);
   const first = data && Array.isArray(data.items) && isObj(data.items[0]) ? data.items[0] : null;
@@ -281,7 +291,7 @@ export async function wikiTop(lang: "ru" | "en", month: Date, limit: number, dep
 
 // Читателей статьи в месяц — в среднем за 12 полных месяцев; редирект («Эму война» →
 // «Эму-война») разворачиваем: у самого редиректа просмотров почти нет. null — статьи нет.
-export async function wikiMonthlyReaders(lang: "ru" | "en", title: string, now: Date, deps: { fetch: FetchLike; env?: Record<string, string | undefined> }): Promise<number | null> {
+export async function wikiMonthlyReaders(lang: "ru" | "en", title: string, now: Date, deps: { fetch: FetchLike; env?: Record<string, string | undefined>; waitMs?: (ms: number) => Promise<void> }): Promise<number | null> {
   const q = new URLSearchParams({ action: "query", format: "json", redirects: "1", titles: title });
   const page = await wikiJson(`https://${lang}.wikipedia.org/w/api.php?${q}`, deps);
   const pages = page && isObj(page.query) && isObj(page.query.pages) ? Object.values(page.query.pages).filter(isObj) : [];
@@ -374,16 +384,19 @@ export async function generateTopicIdeas(input: IdeasInput, deps: ScriptDeps = {
   // Ссылка «где интерес» — из выдачи поиска или по памяти модели: человеку стоит знать разницу.
   const seen = new Set(res.sources.map(urlKey));
   for (const idea of ideas) idea.interestSeen = Boolean(idea.interestUrl) && (seen.has(urlKey(idea.interestUrl)) || /wikipedia\.org\/wiki\//.test(idea.interestUrl));
-  // Читатели Википедии — у каждой темы (несколько запросов к открытому API, без квот).
-  let wikiOff = false;
+  // Читатели Википедии — у каждой темы, запросы по одному (открытый API без квот, но с
+  // ограничением частоты); сбой одной темы не мешает остальным.
+  let wikiFails = 0;
   for (const idea of ideas) {
-    if (wikiOff || (!idea.wiki && !idea.wikiEn)) continue;
+    if (wikiFails >= 3 || (!idea.wiki && !idea.wikiEn)) continue;
     try {
-      const [ru, en] = await Promise.all([idea.wiki ? wikiMonthlyReaders("ru", idea.wiki, now, wikiDeps) : null, idea.wikiEn ? wikiMonthlyReaders("en", idea.wikiEn, now, wikiDeps) : null]);
+      const ru = idea.wiki ? await wikiMonthlyReaders("ru", idea.wiki, now, wikiDeps) : null;
+      const en = idea.wikiEn ? await wikiMonthlyReaders("en", idea.wikiEn, now, wikiDeps) : null;
       idea.readers = { ru, en };
+      wikiFails = 0;
     } catch (e) {
-      wikiOff = true;
-      notes.push(`читатели Википедии не измерены (${e instanceof Error ? e.message : String(e)})`);
+      wikiFails++;
+      notes.push(`«${idea.title}»: читатели Википедии не измерены (${e instanceof Error ? e.message : String(e)})`);
     }
   }
   let quotaUnits = 0;

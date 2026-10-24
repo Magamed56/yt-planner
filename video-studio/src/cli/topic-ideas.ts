@@ -40,6 +40,18 @@ interface IdeasFile {
   generatedAt: string;
   quotaUnits?: number;
   items: (TopicIdea & { n: number; added?: string })[];
+  // Темы, которые человек отверг (убраны из плана и т. п.), и все прошлые предложения: новый
+  // подбор их не повторяет.
+  rejected?: string[];
+  seen?: string[];
+}
+
+function readIdeasIfAny(): IdeasFile | null {
+  try {
+    return fs.existsSync(FILE) ? readIdeas() : null;
+  } catch {
+    return null;
+  }
 }
 
 function readIdeas(): IdeasFile {
@@ -60,7 +72,10 @@ async function generate(shorts: number, long: number): Promise<void> {
   const plan = readPlan();
   const longPlan = readLongPlan();
   const { channel, pillars } = readChannelInfo(plan);
-  const existing = [...new Set([...plan.items.map((i) => i.title), ...longPlan.items.map((i) => i.title), ...loadCovered(ROOT, { plan }).map((c) => c.title)])];
+  const prev = readIdeasIfAny();
+  const rejected = prev?.rejected ?? [];
+  const seenBefore = [...new Set([...(prev?.seen ?? []), ...(prev?.items ?? []).map((i) => i.title)])];
+  const existing = [...new Set([...plan.items.map((i) => i.title), ...longPlan.items.map((i) => i.title), ...loadCovered(ROOT, { plan }).map((c) => c.title), ...rejected, ...seenBefore])];
   // Просмотры YouTube — с токеном канала (YT_*) или ключом API (YOUTUBE_API_KEY); без них —
   // только интерес по Википедии.
   let youtube: YoutubeAccess | null = process.env.YOUTUBE_API_KEY?.trim() ? { key: process.env.YOUTUBE_API_KEY.trim() } : null;
@@ -79,7 +94,7 @@ async function generate(shorts: number, long: number): Promise<void> {
   } finally {
     usage.flush();
   }
-  const out: IdeasFile = { generatedAt: new Date().toISOString(), quotaUnits: res.quotaUnits, items: res.ideas.map((x, i) => ({ n: i + 1, ...x })) };
+  const out: IdeasFile = { generatedAt: new Date().toISOString(), quotaUnits: res.quotaUnits, items: res.ideas.map((x, i) => ({ n: i + 1, ...x })), rejected, seen: seenBefore };
   writeJson(FILE, out);
   const cost = res.usage.reduce((a, u) => a + u.costUsd, 0);
   console.log(`\n✔ ${rel(FILE)}: ${out.items.length} тем · LLM $${cost.toFixed(4)} · квота YouTube ≈ ${res.quotaUnits}`);

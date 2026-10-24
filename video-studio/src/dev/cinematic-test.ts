@@ -23,7 +23,7 @@ import { buildFixtureProps, estimateWords } from "../remotion/fixtures/buildFixt
 import { CAMERA_MOVES, FPS, MIN_SHOT_FRAMES, SHOT_LIMITS, findBeat, layoutShots, renderShots, type CameraMove, type RenderScene, type SceneShot, type SceneVisual, type VideoScript } from "../types";
 import { cameraState, coversFrame } from "../remotion/lib/camera";
 import { specialLayout } from "../remotion/lib/cues";
-import { shotLayers } from "../remotion/lib/shots";
+import { shotLayers, shotsAfterCard } from "../remotion/lib/shots";
 import { pickTransition } from "../remotion/lib/transitions";
 
 const ROOT = path.resolve(import.meta.dirname, "..", "..");
@@ -356,7 +356,7 @@ await test("настоящая съёмка: footage — видео Pexels вм�
   const dir = await mkdtemp(path.join(os.tmpdir(), "video-studio-real-test-"));
   try {
     const publicDir = path.join(dir, "public");
-    const env = { VISUALS: "pexels,cloudflare", CLOUDFLARE_ACCOUNT_ID: "acc", CLOUDFLARE_API_TOKEN: "tok", PEXELS_API_KEY: "k", VISUALS_AI_CACHE_DIR: "off" };
+    const env = { VISUALS: "pexels,cloudflare", CLOUDFLARE_ACCOUNT_ID: "acc", CLOUDFLARE_API_TOKEN: "tok", PEXELS_API_KEY: "k" };
     const scene = {
       ...newScript.scenes[1]!,
       shots: [
@@ -395,6 +395,14 @@ await test("настоящая съёмка: footage — видео Pexels вм�
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+await test("карточка главы «Разбора»: планы сдвигаются на её длину, план под карточкой выпадает", () => {
+  const v: SceneVisual = { type: "image", src: "visuals/a.png" };
+  const shot = (from: number, durationInFrames: number) => ({ prompt: "p", visual: v, camera: "push-in" as CameraMove, from, durationInFrames });
+  const out = shotsAfterCard([shot(0, 40), { ...shot(40, 50), marks: { callouts: [], sticker: { text: "1970", at: 30, place: "top" as const } } }, shot(90, 60)], 60);
+  assert.deepEqual(out.map((s) => [s.from, s.durationInFrames]), [[0, 30], [30, 60]]);
+  assert.equal(out[0]!.marks?.sticker?.at, 10, "цифра — на тех же словах, что и до сдвига");
 });
 
 // ---- Полные промпты (сценарий кинорежима от 10.2026) ----
