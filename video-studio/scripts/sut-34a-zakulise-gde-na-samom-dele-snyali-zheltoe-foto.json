@@ -1,0 +1,301 @@
+{
+  "title": "Закулисье: где на самом деле сняли жёлтое фото",
+  "description": "Откуда взялось жуткое фото Закулисья: как один снимок пустой жёлтой комнаты превратился в легенду, в YouTube-серию шестнадцатилетнего Кейна Парсонса и в фильм A24. В конце узнаешь, где на самом деле сняли исходное фото.\n#shorts #закулисье #backrooms #крипипаста #a24",
+  "tags": [
+    "закулисье",
+    "закулисье теория",
+    "закулисье фото",
+    "backrooms",
+    "кейн парсонс",
+    "kane pixels",
+    "крипипаста",
+    "мемы",
+    "интернет-легенды",
+    "a24",
+    "фильм закулисье",
+    "жёлтая комната",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "midnight",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Это пустое жёлтое фото напугало весь интернет. Где его сняли?",
+      "onScreen": "Где сняли *жёлтое* фото?",
+      "shots": [
+        {
+          "prompt": "A vacant mustard-yellow office room with beige carpet, plain yellow patterned wallpaper and rows of bright fluorescent ceiling panels, a single doorway opening into another identical yellow room, quiet midday stillness, 35mm digital cinema photograph, 35mm lens, bright warm yellow fluorescent light, gentle film grain, wide shot, the doorway and glowing ceiling in the upper two thirds of the vertical frame, calm empty carpet in the lower third",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "push-in",
+          "subject": "yellow room"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "В две тысячи девятнадцатом снимок оброс легендой: бесконечные заброшенные офисы под гудящими лампами.",
+      "onScreen": "Легенда о *Закулисье*",
+      "visualQuery": "fluorescent lights office ceiling",
+      "imagePrompt": "endless maze of bright mustard-yellow office rooms under rows of fluorescent panels, warm golden light, high-angle wide shot, 35mm film grain",
+      "shots": [
+        {
+          "prompt": "Long rows of bright fluorescent tube lights on an office ceiling stretching into the distance, warm yellow glow over beige ceiling tiles, inside the yellow office maze, 35mm digital cinema photograph, 35mm lens, bright warm yellow fluorescent light, gentle film grain, low-angle shot, the receding rows of lights filling the upper two thirds of the vertical frame, smooth plain ceiling in the lower third",
+          "seconds": 3,
+          "framing": "low-angle",
+          "camera": "tilt-down",
+          "subject": "fluorescent lights",
+          "sticker": {
+            "text": "2019",
+            "beat": "В две тысячи"
+          },
+          "footage": "fluorescent lights office ceiling"
+        },
+        {
+          "prompt": "An endless maze of mustard-yellow office rooms seen from above, dozens of identical yellow walled cubicles and doorways repeating to the horizon under bright fluorescent panels, 35mm digital cinema photograph, 35mm lens, bright warm yellow fluorescent light with honey gold tones, gentle film grain, high-angle wide shot, the repeating maze filling the upper two thirds of the vertical frame, a calm stretch of beige carpet in the lower third",
+          "seconds": 3,
+          "framing": "high-angle",
+          "camera": "pan-right",
+          "subject": "yellow maze",
+          "beat": "бесконечные заброшенные офисы"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Коридоры никуда не ведут, а за углом прячутся жуткие существа.",
+      "onScreen": "Коридоры *никуда* не ведут",
+      "shots": [
+        {
+          "prompt": "A long narrow beige corridor bending around a corner into a bright yellow glow, beige carpet, plain yellow walls and fluorescent panels overhead, inside the yellow office maze, 35mm digital cinema photograph, 35mm lens, bright warm yellow fluorescent light, gentle film grain, point-of-view medium shot at eye level, the glowing corner in the upper two thirds of the vertical frame, quiet carpet in the lower third",
+          "seconds": 5,
+          "framing": "pov",
+          "camera": "handheld",
+          "subject": "beige corridor"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "В ноябре двадцать первого за легенду взялся шестнадцатилетний Кейн Парсонс из Петалумы.",
+      "onScreen": "Кейну *16* лет",
+      "shots": [
+        {
+          "prompt": "Kane, a slim young man with short wavy brown hair, light skin, clean-shaven youthful face, wearing a plain charcoal gray hoodie, sits at a desk building a 3D model of a yellow hallway on a large computer monitor, focused and curious, cozy sunlit bedroom in Petaluma California in the afternoon, 35mm digital cinema photograph, 35mm lens, soft golden window light and a warm desk lamp, gentle film grain, medium shot, Kane and the glowing monitor in the upper two thirds of the vertical frame, light wooden desk in the lower third",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Kane",
+          "callouts": [
+            {
+              "label": "Кейн Парсонс",
+              "target": "Kane",
+              "beat": "Кейн Парсонс"
+            }
+          ],
+          "sticker": {
+            "text": "2021",
+            "beat": "В ноябре"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Его ролик вышел в январе двадцать второго, и про Закулисье узнали все.",
+      "onScreen": "Ролик увидел *весь* интернет",
+      "visualQuery": "teenager computer video bedroom",
+      "imagePrompt": "young man in a gray hoodie smiling at a yellow hallway video on his monitor, cozy sunlit bedroom, warm golden light, close-up, 35mm film grain",
+      "shots": [
+        {
+          "prompt": "Kane, a slim young man with short wavy brown hair, light skin, clean-shaven youthful face, wearing a plain charcoal gray hoodie, leans back in his chair smiling as a yellow hallway video plays on his computer monitor, cozy sunlit bedroom in Petaluma California in the afternoon, 35mm digital cinema photograph, 35mm lens, warm golden window light and yellow screen glow on his face, gentle film grain, close-up over the shoulder, his face and the glowing screen in the upper two thirds of the vertical frame, light wooden desk in the lower third",
+          "seconds": 6,
+          "framing": "close-up",
+          "camera": "pan-left",
+          "subject": "Kane",
+          "sticker": {
+            "text": "2022",
+            "beat": "в январе"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Больше ста девяноста миллионов просмотров. И студия А двадцать четыре доверила Кейну целый фильм.",
+      "onScreen": "Из YouTube — *в кино*",
+      "shots": [
+        {
+          "prompt": "Kane, a slim young man with short wavy brown hair, light skin, clean-shaven youthful face, wearing a plain charcoal gray hoodie, holds his phone with both hands and laughs in happy disbelief, eyebrows raised, standing by the window of his bedroom in Petaluma California in soft morning light, 35mm digital cinema photograph, 35mm lens, gentle golden daylight with warm tones, gentle film grain, reaction close-up, his surprised face in the upper two thirds of the vertical frame, soft blurred room in the lower third",
+          "seconds": 4,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "Kane",
+          "sticker": {
+            "text": "190 млн",
+            "beat": "Больше ста девяноста"
+          }
+        },
+        {
+          "prompt": "slow pull-out from Kane smiling at his glowing monitor",
+          "seconds": 3,
+          "framing": "medium",
+          "camera": "pull-out",
+          "subject": "Kane",
+          "beat": "И студия",
+          "reuse": "s5-k1"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Для съёмок построили лабиринт в тридцать тысяч квадратных футов.",
+      "onScreen": "Лабиринт стал *настоящим*",
+      "visualQuery": "film studio set construction",
+      "imagePrompt": "huge mustard-yellow maze set inside a bright film soundstage, crew walking between walls, warm golden light, overhead wide shot, 35mm film grain",
+      "shots": [
+        {
+          "prompt": "A vast brightly lit film soundstage holding a huge built set of mustard-yellow maze walls with dozens of rooms and doorways under rows of fluorescent panels, film lights on tall stands around the edges, a few cheerful crew members walking between walls, 35mm digital cinema photograph, 35mm lens, bright warm yellow fluorescent light and golden work lights, gentle film grain, overhead wide shot, the sprawling maze set in the upper two thirds of the vertical frame, plain light studio floor in the lower third",
+          "seconds": 5,
+          "framing": "overhead",
+          "camera": "tilt-down",
+          "subject": "yellow maze set",
+          "callouts": [
+            {
+              "label": "декорация",
+              "target": "yellow maze walls",
+              "beat": "построили лабиринт"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Но где сняли исходное фото? В будущем магазине Хоббитаун в Ошкоше.",
+      "onScreen": "Разгадка: *Ошкош*, США",
+      "map": {
+        "lat": 44.02,
+        "lon": -88.54,
+        "label": "Ошкош",
+        "zoom": "city"
+      },
+      "shots": [
+        {
+          "prompt": "A neglected empty retail space with faded yellow walls, old carpet and a row of plain fluorescent ceiling panels, bright daylight pouring through a large front window, the room looks exactly like the famous yellow room but plainly ordinary, Oshkosh in the daytime, 35mm digital cinema photograph, 35mm lens, bright natural daylight mixed with warm fluorescent light, gentle film grain, wide shot, the yellow walls and window in the upper two thirds of the vertical frame, worn carpet in the lower third",
+          "seconds": 5,
+          "framing": "establishing",
+          "camera": "pan-right",
+          "subject": "empty retail space"
+        }
+      ]
+    },
+    {
+      "id": "s9",
+      "kind": "media",
+      "narration": "В дневнике ремонта записано: протечки, горы хлама и грязь. Никакого портала.",
+      "onScreen": "Не портал, а *ремонт*",
+      "visualQuery": "water damaged ceiling junk room",
+      "imagePrompt": "water-stained ceiling tiles above a pile of old boxes and junk in an empty yellow-walled store before renovation, bright daylight, detail shot, 35mm film grain",
+      "shots": [
+        {
+          "prompt": "Brown water-stained ceiling tiles above a pile of junk, old cardboard boxes, broken shelving and dusty debris heaped on a dirty carpet, inside a neglected empty retail space with faded yellow walls before renovation, Oshkosh in the daytime, 35mm digital cinema photograph, 35mm lens, bright natural daylight, gentle film grain, detail shot, the stained tiles and junk pile in the upper two thirds of the vertical frame, a calm patch of carpet in the lower third",
+          "seconds": 5,
+          "framing": "detail",
+          "camera": "tilt-up",
+          "subject": "pile of junk",
+          "callouts": [
+            {
+              "label": "протечки",
+              "target": "water-stained ceiling tiles",
+              "beat": "протечки"
+            },
+            {
+              "label": "хлам",
+              "target": "pile of junk",
+              "beat": "горы хлама"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "А фильм с бюджетом десять миллионов долларов собрал четыреста один миллион.",
+      "onScreen": "Бюджет $10 млн — сборы *$401 млн*",
+      "shots": [
+        {
+          "prompt": "A packed cinema audience watching a glowing yellow screen, happy faces, people smiling and leaning forward with popcorn, inside a modern movie theater with warm house lights, 35mm digital cinema photograph, 35mm lens, warm golden light reflected from the screen onto the crowd, gentle film grain, wide shot from the side, the audience and screen glow in the upper two thirds of the vertical frame, red seat backs in the lower third",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "cinema audience",
+          "sticker": {
+            "text": "$401 млн",
+            "beat": "четыреста один"
+          },
+          "footage": "cinema audience watching movie"
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "kind": "statement",
+      "narration": "В двадцать лет Кейн возглавил мировой прокат. А жуткая комната была залом перед ремонтом.",
+      "onScreen": "Жуткое оказалось *обычным*",
+      "shots": [
+        {
+          "prompt": "Kane, a slim young man with short wavy brown hair, light skin, clean-shaven youthful face, wearing a plain charcoal gray hoodie, stands in a bright cinema lobby with a calm proud smile, applauding crowd softly blurred behind him, modern movie theater lobby, 35mm digital cinema photograph, 35mm lens, warm golden lobby light with yellow accents, gentle film grain, medium shot from a low angle, Kane in the upper two thirds of the vertical frame, soft blurred carpet in the lower third",
+          "seconds": 4,
+          "framing": "low-angle",
+          "camera": "push-in",
+          "subject": "Kane"
+        },
+        {
+          "prompt": "slow pull-out from the ordinary yellow room",
+          "seconds": 3,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "yellow room",
+          "beat": "А жуткая",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s12",
+      "kind": "cta",
+      "narration": "А тебе пустые офисы кажутся жуткими?",
+      "onScreen": "Тебе *жутко* в пустом офисе?"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "playful internet mystery that resolves into warm everyday reality",
+    "lighting": "bright overhead fluorescent tubes, warm golden lamps, soft daylight in the real store",
+    "palette": "mustard yellow, beige, cream, warm honey gold",
+    "realism": "photorealistic",
+    "mood": "curious, intriguing, warm and amused",
+    "environment": "yellow office maze, bedroom desk, soundstage, renovation site",
+    "world": "present-day United States: an endless maze of mustard-yellow office rooms under bright fluorescent ceiling lights, a teenager's bedroom in Petaluma California, a big film soundstage, and a neglected empty retail space in Oshkosh waiting for renovation",
+    "look": "35mm digital cinema photograph, 35mm lens, bright warm yellow fluorescent light and soft golden daylight, mustard, cream and honey tones, gentle film grain, vertical 9:16 frame",
+    "characters": [
+      {
+        "name": "Kane",
+        "look": "a slim young man with short wavy brown hair, light skin, clean-shaven youthful face, wearing a plain charcoal gray hoodie"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}
