@@ -345,15 +345,6 @@ await test("429 у Pexels → источник выключается до ко�
   assert.ok(logs.some((l) => l.includes("Pexels выключен")));
 });
 
-await test("Pollinations — только по явному списку; картинка сохраняется", async ({ publicDir, cacheDir }) => {
-  const { fn, calls } = mockFetch((c) => (c.url.startsWith("https://image.pollinations.ai/prompt/") ? new Response(JPG, { headers: { "content-type": "image/jpeg" } }) : null));
-  const r = await findVisual(scene({ id: "s9" }), ctxFor(publicDir), { fetch: fn, env: { VISUALS: "pollinations" }, log, cacheDir });
-  assert.equal(r.visual.type === "image" && r.visual.src, "visuals/s9.jpg");
-  const u = new URL(calls[0].url);
-  assert.equal(u.searchParams.get("width"), "768");
-  assert.equal(u.searchParams.get("nologo"), "true");
-});
-
 await test("Сцена без английского запроса и промпта → none без запросов к стокам", async ({ publicDir, cacheDir }) => {
   const { fn, calls } = mockFetch(() => null);
   const r = await findVisual(scene({ visualQuery: "календарь", imagePrompt: undefined }), ctxFor(publicDir), { fetch: fn, env: { PEXELS_API_KEY: "k", PIXABAY_API_KEY: "p" }, log, cacheDir });

@@ -26,7 +26,6 @@ import { cloudflareProvider } from "./providers/cloudflare";
 import { pexelsProvider } from "./providers/pexels";
 import { pixabayProvider } from "./providers/pixabay";
 import { openverseProvider } from "./providers/openverse";
-import { pollinationsProvider } from "./providers/pollinations";
 import { wikimediaProvider } from "./providers/wikimedia";
 import { buildQueries } from "./query";
 import { visualQuery } from "./relevance";
@@ -39,7 +38,6 @@ export const VISUAL_PROVIDERS: Record<string, VisualProvider> = {
   wikimedia: wikimediaProvider,
   openverse: openverseProvider,
   cloudflare: cloudflareProvider,
-  pollinations: pollinationsProvider,
 };
 
 export const DEFAULT_VISUALS = "pexels,pixabay,wikimedia,openverse,cloudflare";

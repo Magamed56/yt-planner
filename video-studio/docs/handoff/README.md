@@ -9,7 +9,7 @@ https://claude.ai/code/session_012aVSwGhxayJ9brrDRFytMg — её можно пе
   времени — в заметках `schedule.note` и `longSlots.note`. Тесты переведены на своё расписание
   (`panel/lib/fixture-channel.ts`, `LEGACY` в `src/dev/long-test.ts`); все `*-test.ts`, tsc и tsc панели — зелёные.
 - `.github/workflows/video-studio.yml`: без переменных VISUALS и VISUALS_JUDGE включены генерация картинки
-  для сцен без кадра по теме (Cloudflare FLUX при ключе, иначе Pollinations) и судья Claude для кадров.
+  для сцен без кадра по теме (Cloudflare FLUX при ключе) и судья Claude для кадров.
 - Сценарии Shorts 25a–30b (написал Claude Opus в CI), названия 25a, 25b, 27b, 28b, 29b улучшены.
 - L01: убран дословный повтор сцен s22–s25 (в старом видео фрагмент звучит дважды), обложка — лимон и
   «12-й → 62-й». **Старое видео L01 не публиковать**: нужен новый файл из релиза.

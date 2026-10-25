@@ -146,7 +146,7 @@ const VOICE_TITLES: Record<string, string> = {
   fish: "Fish Speech",
 };
 
-const AI_VISUAL = /cloudflare|flux|sdxl|stable diffusion|pollinations/i;
+const AI_VISUAL = /cloudflare|flux|sdxl|stable diffusion/i;
 
 export function voiceCreditLine(provider: string, voice?: string | null): string {
   const title = VOICE_TITLES[provider] ?? provider;

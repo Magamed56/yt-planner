@@ -161,9 +161,9 @@ jobs:
       LLM_PROVIDER: ${{ vars.LLM_PROVIDER }}
       LLM_MODEL: ${{ vars.LLM_MODEL }}
       # Порядок источников кадров. Без переменной — стоки, реальные фото, затем генерация картинки по
-      # imagePrompt (Cloudflare FLUX при ключе, иначе бесключевой Pollinations) — только для сцены, где
+      # imagePrompt (Cloudflare FLUX при ключе) — только для сцены, где
       # не нашлось ничего по теме. Без генерации: переменная VISUALS = pexels,pixabay,wikimedia,openverse.
-      VISUALS: ${{ vars.VISUALS || 'pexels,pixabay,wikimedia,openverse,cloudflare,pollinations' }}
+      VISUALS: ${{ vars.VISUALS || 'pexels,pixabay,wikimedia,openverse,cloudflare' }}
       # Кнопка «Пересобрать» в панели может выключить музыку (music = none) для одного запуска.
       MUSIC: ${{ inputs.music == 'none' && 'none' || vars.MUSIC }}
       CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}

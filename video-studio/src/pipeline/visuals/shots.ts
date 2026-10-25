@@ -1,6 +1,6 @@
 // Кадры планов кинорежима (VideoScript.mode = "cinematic"): на каждый план —
 // AI-картинка в общем стиле ролика. Это тот же findVisual, только источники —
-// генерация из VISUALS (cloudflare, pollinations), а промпт — план + style.
+// генерация из VISUALS (cloudflare), а промпт — план + style.
 // Настоящая съёмка — только по просьбе сценариста: shot.footage (видео стоков) и
 // shot.photo (фото Wikimedia Commons / Openverse) ищутся первыми, с проверкой «по
 // теме» (судья Claude); не нашлось — кадр рисуется по prompt, как обычно.
