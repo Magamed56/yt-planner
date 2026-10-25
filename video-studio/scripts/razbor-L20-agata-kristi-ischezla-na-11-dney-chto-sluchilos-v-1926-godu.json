@@ -1,0 +1,1352 @@
+{
+  "title": "Агата Кристи исчезла на 11 дней: что случилось в 1926 году",
+  "description": "Разбираем одно из самых известных исчезновений XX века. В декабре 1926 года Агата Кристи уехала из дома, а утром её машину нашли у мелового карьера. В ролике по шагам: брошенный «Моррис», тысячи добровольцев, Конан Дойл с медиумом и чужое имя в книге постояльцев отеля в Харрогите. А в конце разберём, почему спор о том, что это было, не утихает почти сто лет.\n#агатакристи #детектив #история #загадкиистории #англия",
+  "tags": [
+    "агата кристи",
+    "агата кристи исчезла",
+    "агата кристи исчезла навсегда",
+    "исчезновение агаты кристи",
+    "агата кристи 1926",
+    "тайна агаты кристи",
+    "харрогит",
+    "конан дойл",
+    "нэнси нил",
+    "загадки истории",
+    "детектив",
+    "история англии",
+    "agatha christie",
+    "agatha christie disappearance"
+  ],
+  "language": "ru",
+  "format": "landscape",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Королева детективов пропала без следа. Искать её бросилась вся Англия.",
+      "onScreen": "Королева детективов *пропала*",
+      "icon": "eye",
+      "visualQuery": "foggy country lane frost",
+      "imagePrompt": "Empty frosty country lane in thick fog at dawn, Surrey 1926, 35mm documentary film photograph, slightly desaturated colors, soft film grain, gentle vignetting",
+      "chapter": "Королева детективов пропала",
+      "shots": [
+        {
+          "prompt": "An empty narrow country lane lined with bare winter trees and frost-covered grass, thick fog drifting low between the hedgerows, Surrey countryside at grey dawn in December 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting. Establishing wide shot, the lane vanishing toward the centre of a horizontal 16:9 frame, calm uncluttered frosty ground across the lower fifth.",
+          "seconds": 3,
+          "framing": "establishing",
+          "camera": "push-in",
+          "subject": "foggy country lane",
+          "footage": "foggy country lane frost dawn"
+        },
+        {
+          "prompt": "A crowd of 1920s English villagers in wool overcoats, flat caps and cloche hats stands together on a frosty village green, all turning toward distant misty hills with curious, surprised faces, Surrey village on a cold December morning in 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting. Medium wide shot, crowd across the upper two thirds of a horizontal 16:9 frame, calm frosty grass in the lower fifth.",
+          "seconds": 2,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "villagers",
+          "beat": "Искать её"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Одиннадцать дней газеты перебирали версии: убийство, самоубийство, рекламный трюк. А то, где и под каким именем её нашли, озадачивает до сих пор. Об этом в конце.",
+      "onScreen": "11 дней и *три* версии",
+      "icon": "search",
+      "visualQuery": "police search frosty field",
+      "imagePrompt": "1920s English police constables searching a frosty field in fog, 35mm documentary film photograph, slightly desaturated colors, soft film grain",
+      "shots": [
+        {
+          "prompt": "A long line of English police constables in 1920s dark uniforms and tall helmets walks slowly across a frost-covered field, searching the ground with calm, focused faces, bare trees and drifting fog behind them, Surrey countryside on a December morning in 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting. Wide shot, the line of constables on the middle third of a horizontal 16:9 frame, calm frosty grass in the lower fifth.",
+          "seconds": 6,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "police constables",
+          "sticker": {
+            "text": "11 дней",
+            "beat": "Одиннадцать дней"
+          }
+        },
+        {
+          "prompt": "slow pan across the curious villagers on the frosty green",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "pan-left",
+          "subject": "villagers",
+          "beat": "А то",
+          "reuse": "s1-k2"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Пропавшую зовут Агата Кристи. Ей тридцать шесть, и она на пике славы: в тысяча девятьсот двадцать шестом году вышел её шестой роман, Убийство Роджера Экройда. Читатели спорят о его развязке.",
+      "onScreen": "1926: Кристи на *пике* славы",
+      "icon": "book-open",
+      "visualQuery": "The Murder of Roger Ackroyd first edition",
+      "imagePrompt": "1920s Englishwoman writer smiling at a wooden desk with a typewriter, warm study light, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, sits at a wooden writing desk beside a black typewriter and smiles softly while holding a fresh manuscript, cosy study on a winter afternoon in 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Medium shot, Agatha on the right third of a horizontal 16:9 frame, calm desk surface in the lower fifth.",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Agatha Christie"
+        },
+        {
+          "prompt": "A 1926 first edition hardback novel with a plain cloth binding lies on a polished wooden desk next to a fountain pen and a teacup, warm lamplight in a quiet English study. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Detail shot, the book centred in a horizontal 16:9 frame, calm wooden surface across the lower fifth.",
+          "seconds": 5,
+          "framing": "detail",
+          "camera": "push-in",
+          "subject": "novel",
+          "beat": "в тысяча",
+          "sticker": {
+            "text": "1926",
+            "beat": "в тысяча девятьсот"
+          },
+          "photo": "The Murder of Roger Ackroyd first edition"
+        },
+        {
+          "prompt": "slow push-in on Agatha smiling at her desk",
+          "seconds": 5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Agatha Christie",
+          "beat": "Читатели спорят",
+          "reuse": "s3-k1"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "В том же году по настоянию мужа Кристи покупают особняк в Саннингдейле. Арчи предлагает назвать дом Стайлз, в честь её первого опубликованного романа.",
+      "onScreen": "Дом по имени *Стайлз*",
+      "icon": "house",
+      "visualQuery": "english country house winter",
+      "imagePrompt": "Red brick English country mansion with frosted lawn and bare oaks, Sunningdale 1926, 35mm documentary film photograph, slightly desaturated colors, soft film grain",
+      "shots": [
+        {
+          "prompt": "A large red brick English country mansion with tall chimneys and bay windows stands behind a gravel drive and frosted lawn, bare oaks around it, Sunningdale in Berkshire on a pale winter afternoon in 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting. Establishing wide shot, house centred in a horizontal 16:9 frame, calm gravel and lawn across the lower fifth.",
+          "seconds": 5,
+          "framing": "establishing",
+          "camera": "tilt-up",
+          "subject": "the red brick mansion",
+          "footage": "english country house winter"
+        },
+        {
+          "prompt": "Archie Christie, a 37-year-old Englishman, tall and lean, clean-shaven, dark brown hair neatly slicked back, sharp jaw, wearing a charcoal three-piece tweed suit, white shirt and dark striped tie, points cheerfully toward the red brick mansion while Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, smiles beside him on the gravel drive, Sunningdale, spring afternoon 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting. Medium wide shot, couple on the left third, house on the right, calm gravel in the lower fifth.",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Archie Christie",
+          "beat": "Арчи предлагает",
+          "callouts": [
+            {
+              "label": "Стайлз",
+              "target": "the red brick mansion",
+              "beat": "назвать дом Стайлз"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "Дом, названный в честь её первой загадки. Через несколько месяцев она уедет из него в ночь. А найдут её под чужим именем. Чьим, станет ясно в конце, и это имя тебя удивит.",
+      "onScreen": "Найдут её под *чужим* именем",
+      "icon": "key",
+      "visualQuery": "mansion night lit window",
+      "imagePrompt": "Red brick country mansion at night with one warm glowing window and fog over the lawn, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A red brick English country mansion at night with a single warm amber window glowing on the upper floor, thin fog drifting across the frosted lawn and bare oaks, Sunningdale on a cold December night in 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Wide shot, the glowing window on the upper right third of a horizontal 16:9 frame, calm dark lawn in the lower fifth.",
+          "seconds": 6,
+          "framing": "wide",
+          "camera": "push-in",
+          "subject": "the red brick mansion"
+        },
+        {
+          "prompt": "slow pull-out from Agatha at her desk",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pull-out",
+          "subject": "Agatha Christie",
+          "beat": "А найдут",
+          "reuse": "s3-k1"
+        },
+        {
+          "prompt": "slow pan across the mansion in winter",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "the red brick mansion",
+          "beat": "Чьим",
+          "reuse": "s4-k1"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Но в доме не всё так, как кажется. Арчибальд Кристи, бывший военный лётчик, влюбился в молодую Нэнси Нил. В августе он попросил у Агаты развода.",
+      "onScreen": "Муж влюбился в *другую*",
+      "icon": "heart",
+      "visualQuery": "couple walking garden path roses",
+      "imagePrompt": "1920s English man in tweed suit and young woman in navy dress walking along a sunny rose garden path, 35mm documentary film photograph, soft film grain",
+      "chapter": "Ночь третьего декабря",
+      "shots": [
+        {
+          "prompt": "Archie Christie, a 37-year-old Englishman, tall and lean, clean-shaven, dark brown hair neatly slicked back, sharp jaw, wearing a charcoal three-piece tweed suit, white shirt and dark striped tie, walks and laughs beside Nancy Neele, a 27-year-old Englishwoman, round youthful face, dark brown shingle-cut hair, wearing a navy drop-waist dress with a cream collar and a camel wool coat, along a sunny garden path lined with late-summer roses in 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting. Medium wide shot, the pair on the centre of a horizontal 16:9 frame, calm path in the lower fifth.",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "Archie Christie",
+          "callouts": [
+            {
+              "label": "Нэнси Нил",
+              "target": "the young woman in a navy dress",
+              "beat": "Нэнси Нил"
+            }
+          ]
+        },
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, stands at a tall window of her drawing room and gazes out with a calm, thoughtful expression, soft late-summer afternoon light, 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Close-up, Agatha on the left third of a horizontal 16:9 frame, calm window sill in the lower fifth.",
+          "seconds": 6,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "Agatha Christie",
+          "beat": "В августе"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "media",
+      "narration": "Третье декабря, пятница. Весь день в Стайлзе ссоры. Арчи говорит прямо: он любит женщину моложе и скоро уйдёт из семьи.",
+      "onScreen": "3 декабря: *ссора* весь день",
+      "icon": "flame",
+      "visualQuery": "stone fireplace drawing room",
+      "imagePrompt": "1920s English drawing room with stone fireplace, man in tweed suit speaking to a woman in an armchair, warm interior light, 35mm documentary film photograph",
+      "shots": [
+        {
+          "prompt": "Archie Christie, a 37-year-old Englishman, tall and lean, clean-shaven, dark brown hair neatly slicked back, sharp jaw, wearing a charcoal three-piece tweed suit, white shirt and dark striped tie, stands by a stone fireplace and speaks with a firm, composed face to Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, who sits upright in an armchair, drawing room on a grey December afternoon in 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Medium shot, Archie on the left third, Agatha on the right third, calm rug in the lower fifth.",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Archie Christie",
+          "sticker": {
+            "text": "3 дек",
+            "beat": "Третье декабря"
+          }
+        },
+        {
+          "prompt": "slow push-in on Archie speaking by the fireplace",
+          "seconds": 5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Archie Christie",
+          "beat": "Арчи говорит",
+          "reuse": "s7-k1"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "Вечером Арчи уже нет дома. Агата поднимается наверх, в детскую, и целует на ночь семилетнюю дочь Розалинду. Обычный жест, но этот вечер обычным не будет.",
+      "onScreen": "Поцелуй на *ночь*",
+      "icon": "moon",
+      "visualQuery": "old wooden staircase lamp",
+      "imagePrompt": "Old wooden staircase in an English country house at night lit by a small brass oil lamp, warm glow, 35mm documentary film photograph",
+      "shots": [
+        {
+          "prompt": "An old wooden staircase in an English country house at night, a small brass oil lamp glowing warmly on the landing, polished banister and patterned runner carpet leading upstairs, December 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Low-angle shot looking up the stairs, the lamp on the upper right third of a horizontal 16:9 frame, calm lower steps in the lower fifth.",
+          "seconds": 5,
+          "framing": "low-angle",
+          "camera": "tilt-up",
+          "subject": "staircase",
+          "footage": "old wooden staircase warm lamp"
+        },
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, bends over a small bed and tenderly kisses the forehead of a sleepy seven-year-old girl with a dark bob, who smiles under a patchwork quilt, cosy nursery lit by a bedside lamp at night, 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Medium close-up, figures on the centre of a horizontal 16:9 frame, calm quilt in the lower fifth.",
+          "seconds": 6,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Agatha Christie",
+          "beat": "и целует"
+        }
+      ]
+    },
+    {
+      "id": "s9",
+      "kind": "media",
+      "narration": "Без четверти десять вечера она кладёт в свой Моррис Каули небольшой чемодан, водительские права, фотографию дочери и крупную сумму наличными.",
+      "onScreen": "21:45. *Чемодан* в машину",
+      "icon": "clock",
+      "visualQuery": "Morris Cowley 1926",
+      "imagePrompt": "Dark 1920s Morris Cowley tourer car on a gravel drive at night with glowing headlamps and frost, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A dark 1920s Morris Cowley open tourer car parked on a gravel drive beside a red brick house at night, its round headlamps glowing softly, frost glittering on the gravel, December 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Wide shot, the car on the centre of a horizontal 16:9 frame, calm frosty gravel across the lower fifth.",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "Morris Cowley",
+          "sticker": {
+            "text": "21:45",
+            "beat": "Без четверти"
+          },
+          "photo": "Morris Cowley 1926"
+        },
+        {
+          "prompt": "A small open leather suitcase on the leather seat of a 1920s car, holding a folded driving licence booklet, a small framed photograph of a young girl, and a neat stack of banknotes, warm lamplight falling across it at night, 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Overhead detail shot, suitcase centred in a horizontal 16:9 frame, calm seat leather in the lower fifth.",
+          "seconds": 5,
+          "framing": "overhead",
+          "camera": "push-in",
+          "subject": "suitcase",
+          "beat": "небольшой чемодан",
+          "callouts": [
+            {
+              "label": "Фото дочери",
+              "target": "small framed photograph of a young girl",
+              "beat": "фотографию дочери"
+            },
+            {
+              "label": "Наличные",
+              "target": "stack of banknotes",
+              "beat": "крупную сумму"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "И уезжает в холодную декабрьскую темноту. Фары исчезают за поворотом. Куда и зачем, она толком не объяснит никогда.",
+      "onScreen": "Уехала в *ночь*",
+      "icon": "triangle-alert",
+      "visualQuery": "vintage car night fog road",
+      "imagePrompt": "1920s tourer car driving away down a foggy country lane at night, headlamp beams in the fog, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A dark 1920s Morris Cowley open tourer car drives away down a narrow country lane at night, its red tail lamp glowing as the beams of its headlamps light up thick fog and bare trees ahead, frosty Surrey countryside, December 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting. Wide shot from behind, the car on the centre of a horizontal 16:9 frame, calm dark road in the lower fifth.",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Morris Cowley"
+        },
+        {
+          "prompt": "slow pull-out from the empty foggy lane",
+          "seconds": 4,
+          "framing": "establishing",
+          "camera": "pull-out",
+          "subject": "foggy country lane",
+          "beat": "Куда и",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "kind": "media",
+      "narration": "А где же Арчи? В Годалминге, в доме друзей, Сэма и Мэдж Джеймс. Выходные он проводит там с Нэнси Нил.",
+      "onScreen": "Арчи у друзей с *Нэнси*",
+      "icon": "users",
+      "visualQuery": "Godalming old town street",
+      "imagePrompt": "Old English market town street on a winter evening with gas lamps and glowing windows, 1926, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A quiet English market town street on a winter evening, old timber and brick houses with warm glowing windows, gas street lamps and a wet cobbled road, Godalming in Surrey, December 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Establishing wide shot, street receding toward the centre of a horizontal 16:9 frame, calm cobbles in the lower fifth.",
+          "seconds": 4,
+          "framing": "establishing",
+          "camera": "pan-right",
+          "subject": "town street",
+          "footage": "old english town street evening"
+        },
+        {
+          "prompt": "Archie Christie, a 37-year-old Englishman, tall and lean, clean-shaven, dark brown hair neatly slicked back, sharp jaw, wearing a charcoal three-piece tweed suit, white shirt and dark striped tie, sits relaxed by a crackling fireplace and smiles at Nancy Neele, a 27-year-old Englishwoman, round youthful face, dark brown shingle-cut hair, wearing a navy drop-waist dress with a cream collar and a camel wool coat, who laughs holding a teacup, warm drawing room of a country house at night, 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Medium shot, pair across the centre of a horizontal 16:9 frame, calm carpet in the lower fifth.",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "pan-left",
+          "subject": "Archie Christie",
+          "beat": "Выходные он"
+        }
+      ]
+    },
+    {
+      "id": "s12",
+      "kind": "statement",
+      "narration": "О пропаже жены Арчи узнаёт по телефону. Звонит Шарлотта, секретарша Агаты. Хозяйка уехала на машине и не вернулась.",
+      "onScreen": "Звонок от *секретарши*",
+      "icon": "bell-ring",
+      "visualQuery": "candlestick telephone",
+      "imagePrompt": "Black 1920s candlestick telephone on a polished side table beside a brass lamp, warm interior light, 35mm documentary film photograph",
+      "shots": [
+        {
+          "prompt": "A black 1920s candlestick telephone with its receiver hanging on the hook stands on a polished side table beside a small brass lamp, warm drawing room light, English country house, December 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Detail shot, telephone on the right third of a horizontal 16:9 frame, calm table surface in the lower fifth.",
+          "seconds": 4,
+          "framing": "detail",
+          "camera": "push-in",
+          "subject": "candlestick telephone",
+          "photo": "candlestick telephone"
+        },
+        {
+          "prompt": "slow push-in on Archie by the fireplace",
+          "seconds": 5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Archie Christie",
+          "beat": "Звонит Шарлотта",
+          "reuse": "s11-k2"
+        }
+      ]
+    },
+    {
+      "id": "s13",
+      "kind": "statement",
+      "narration": "А в одиннадцать утра четвёртого декабря суперинтенданту полиции в Гилдфорде сообщают: у холма Ньюлендс-Корнер нашли брошенный Моррис. И с этой машиной что-то не так.",
+      "onScreen": "Найден *брошенный* Моррис",
+      "icon": "triangle-alert",
+      "visualQuery": "Newlands Corner Surrey Hills",
+      "imagePrompt": "Chalk downland hills in thick morning fog with bare hawthorn bushes, Surrey 1926, 35mm documentary film photograph, slightly desaturated colors",
+      "shots": [
+        {
+          "prompt": "A 1920s English police superintendent with a neat grey moustache, wearing a dark uniform with silver buttons, sits at a wooden desk in a modest police station office and listens attentively with a surprised raised brow while writing a note, pale morning light through a tall window, Guildford, December 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting. Medium shot, officer on the left third of a horizontal 16:9 frame, calm desk in the lower fifth.",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "police superintendent",
+          "sticker": {
+            "text": "11:00",
+            "beat": "в одиннадцать утра"
+          }
+        },
+        {
+          "prompt": "Rolling chalk downland hills with pale grass, bare hawthorn bushes and thick morning fog drifting over the slope, Newlands Corner in the Surrey Hills on a cold December morning in 1926. 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting. Establishing wide shot, the hill ridge across the upper third of a horizontal 16:9 frame, calm grassy slope in the lower fifth.",
+          "seconds": 6,
+          "framing": "establishing",
+          "camera": "pan-right",
+          "subject": "chalk hills",
+          "beat": "у холма",
+          "footage": "chalk hills fog morning"
+        }
+      ]
+    },
+    {
+      "id": "s14",
+      "kind": "statement",
+      "narration": "Моррис стоит не на дороге, а над меловым карьером. Суперинтендант запишет в рапорте: всё выглядит так, будто машина вышла из-под контроля.",
+      "onScreen": "Машина над меловым *карьером*",
+      "visualQuery": "Newlands Corner chalk downs",
+      "imagePrompt": "A dark green 1920s Morris Cowley car abandoned above a white chalk pit on foggy Surrey downs, December morning, 35mm documentary film photograph, soft film grain",
+      "chapter": "Машина над меловым карьером",
+      "shots": [
+        {
+          "prompt": "A dark green 1920s Morris Cowley open tourer car stands abandoned on frosty grass at the edge above a white chalk pit, front wheels turned toward the slope, on the chalk downs of Newlands Corner in Surrey on a foggy December morning, bare trees in the mist, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, car on the right third, calm frosty grass across the lower part of the frame",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "push-in",
+          "subject": "Morris Cowley car",
+          "callouts": [
+            {
+              "label": "Моррис",
+              "target": "Morris Cowley car",
+              "beat": "Моррис стоит"
+            },
+            {
+              "label": "Меловой карьер",
+              "target": "white chalk pit",
+              "beat": "меловым карьером"
+            }
+          ]
+        },
+        {
+          "prompt": "A middle-aged English police superintendent with a neat grey moustache, wearing a dark 1920s police uniform with silver buttons, calmly writes a report with a fountain pen at a wooden desk in the Guildford police station on a grey December morning, a brass lamp glowing warmly beside him, 35mm documentary film photograph, period lenses, natural window light with warm amber interior glow, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, medium shot, superintendent in the centre, plain desk surface along the bottom of the frame",
+          "seconds": 5.5,
+          "framing": "medium",
+          "camera": "pan-left",
+          "subject": "police superintendent",
+          "beat": "Суперинтендант запишет"
+        }
+      ]
+    },
+    {
+      "id": "s15",
+      "kind": "media",
+      "narration": "Полицейские подходят ближе. Первая странность: фары всё ещё горят, хотя давно рассвело. Похоже, машину бросили ещё ночью.",
+      "onScreen": "Фары горят *днём*",
+      "visualQuery": "Morris Cowley headlamps",
+      "imagePrompt": "Close-up of glowing chrome headlamps of a 1920s Morris Cowley car in pale foggy daylight, frost on the bonnet, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Close-up of the round chrome headlamps of a dark green 1920s Morris Cowley car still glowing softly in pale daylight, frost on the radiator and bonnet, foggy chalk downs of Surrey on a December morning behind, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, glowing headlamp on the left third, soft misty grass along the lower part of the frame",
+          "seconds": 4,
+          "framing": "detail",
+          "camera": "push-in",
+          "subject": "Morris Cowley car",
+          "photo": "Morris Cowley 1926"
+        },
+        {
+          "prompt": "Slow pull-out from the abandoned car above the chalk pit in the morning fog",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Morris Cowley car",
+          "beat": "Похоже, машину",
+          "reuse": "s14-k1"
+        }
+      ]
+    },
+    {
+      "id": "s16",
+      "kind": "statement",
+      "narration": "Вторая странность: на заднем сиденье чемодан и пальто. А самой Агаты нет. Кто в декабрьский холод уходит в ночь, бросив пальто в машине?",
+      "onScreen": "Пальто здесь. Агаты *нет*",
+      "visualQuery": "vintage car leather suitcase coat",
+      "imagePrompt": "A small leather suitcase and folded wool coat on the back seat of a 1920s car, frost and fog outside, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A small brown leather suitcase and a folded dark wool coat with a fur collar lie on the worn leather back seat of a 1920s Morris Cowley open tourer car, frost on the seat edges, foggy Surrey chalk downs on a December morning beyond the car door, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, close-up, suitcase and coat in the centre, calm leather seat across the lower part of the frame",
+          "seconds": 5,
+          "framing": "close-up",
+          "camera": "tilt-down",
+          "subject": "suitcase and coat",
+          "callouts": [
+            {
+              "label": "Чемодан",
+              "target": "small leather suitcase",
+              "beat": "чемодан"
+            },
+            {
+              "label": "Пальто",
+              "target": "dark wool coat",
+              "beat": "и пальто"
+            }
+          ]
+        },
+        {
+          "prompt": "Slow pan across the empty abandoned car standing alone above the chalk pit",
+          "seconds": 6,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "Morris Cowley car",
+          "beat": "А самой",
+          "reuse": "s14-k1"
+        }
+      ]
+    },
+    {
+      "id": "s17",
+      "kind": "media",
+      "narration": "Позже объявится свидетель. Он расскажет полиции, что видел её в то утро: слишком легко одета для такой ненастной погоды и ведёт себя странно.",
+      "onScreen": "Слишком *легко* одета",
+      "visualQuery": "frosty country lane morning",
+      "imagePrompt": "A 1920s Englishwoman in a grey cardigan and cloche hat walking along a frosty misty country lane in Surrey, December morning, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A weathered middle-aged English farm labourer in a flat cap and tweed jacket earnestly describes something with his hands to a young 1920s Surrey police constable in a tall helmet who writes in a small notebook, standing by a wooden gate on a frosty country lane on a grey December morning, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, medium shot, two men on the left and right thirds, quiet frosty lane along the bottom of the frame",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "witness and constable"
+        },
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, walks slowly along a frosty country lane with a distant thoughtful gaze, among bare trees in the Surrey countryside on a misty December morning, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, Agatha on the right third, calm misty road in the lower part of the frame",
+          "seconds": 6,
+          "framing": "wide",
+          "camera": "tilt-up",
+          "subject": "Agatha Christie",
+          "beat": "слишком легко"
+        }
+      ]
+    },
+    {
+      "id": "s18",
+      "kind": "statement",
+      "narration": "Сложи всё вместе, и картина выходит мрачная. Женщина после тяжёлой ссоры с мужем, ночь, обрыв, брошенная машина. Полиция сразу думает о худшем.",
+      "onScreen": "Полиция думает о *худшем*",
+      "visualQuery": "fog winter hills",
+      "imagePrompt": "Thick fog rolling over bare winter hills of the Surrey downs, frosted grass, pale grey sky, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Thick morning fog rolling slowly over bare winter hills and frosted grass of the Surrey downs in December, pale grey sky, leafless trees fading into the mist, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, horizon on the upper third, smooth frosty slope across the lower part of the frame",
+          "seconds": 5,
+          "framing": "establishing",
+          "camera": "pan-left",
+          "subject": "foggy hills",
+          "footage": "fog over winter hills"
+        },
+        {
+          "prompt": "Slow push-in on the superintendent pausing over his report",
+          "seconds": 5.5,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "police superintendent",
+          "beat": "Полиция сразу",
+          "reuse": "s14-k2"
+        }
+      ]
+    },
+    {
+      "id": "s19",
+      "kind": "media",
+      "narration": "А совсем рядом лежит пруд Сайлент-Пул, что значит Тихий пруд. Вода в нём прозрачная и спокойная, но место это пользуется дурной славой.",
+      "onScreen": "Сайлент-Пул — *Тихий* пруд",
+      "visualQuery": "Silent Pool Surrey",
+      "imagePrompt": "A small clear blue-green spring pond among bare winter trees and reeds, low mist over the still water, Surrey, December morning, 35mm documentary film photograph, soft film grain",
+      "map": {
+        "lat": 51.2345,
+        "lon": -0.48,
+        "label": "Сайлент-Пул",
+        "zoom": "region"
+      },
+      "shots": [
+        {
+          "prompt": "The Silent Pool, a small spring-fed pond with clear blue-green water surrounded by bare winter trees and reeds, mist hanging low over the still surface, near Shere in Surrey on a grey December morning, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, pond in the centre of the frame, calm water filling the lower part of the frame",
+          "seconds": 5.5,
+          "framing": "establishing",
+          "camera": "push-in",
+          "subject": "Silent Pool",
+          "photo": "Silent Pool Surrey"
+        },
+        {
+          "prompt": "Still clear green water of a small woodland pond reflecting bare winter branches, a few fallen leaves drifting slowly across the surface, December morning mist in a Surrey wood, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, close-up of the water surface, reflections in the upper two thirds, smooth calm water at the bottom of the frame",
+          "seconds": 5,
+          "framing": "close-up",
+          "camera": "pan-right",
+          "subject": "Silent Pool",
+          "beat": "Вода в нём",
+          "footage": "clear pond water winter trees"
+        }
+      ]
+    },
+    {
+      "id": "s20",
+      "kind": "statement",
+      "narration": "По преданию, король Иоанн погнался здесь за девушкой, которая купалась в пруду. Она пыталась убежать и утонула. А следом утонул её брат, бросившийся на помощь.",
+      "onScreen": "Легенда о *короле Иоанне*",
+      "visualQuery": "King John effigy Worcester Cathedral",
+      "imagePrompt": "A medieval English king in a red tunic and gold crown on a grey horse at the edge of a clear woodland pond, misty winter morning, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A medieval English king in a red tunic, fur-trimmed cloak and gold crown sits proudly on a grey horse at the reedy edge of a clear woodland pond among tall bare trees on a misty winter morning in Surrey, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, king on the left third, calm pond water across the lower part of the frame",
+          "seconds": 5.5,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "King John",
+          "photo": "King John effigy Worcester Cathedral"
+        },
+        {
+          "prompt": "Slow tilt down onto the still green water of the pond",
+          "seconds": 6,
+          "framing": "close-up",
+          "camera": "tilt-down",
+          "subject": "Silent Pool",
+          "beat": "Она пыталась",
+          "reuse": "s19-k2"
+        }
+      ]
+    },
+    {
+      "id": "s21",
+      "kind": "statement",
+      "narration": "Старая легенда вдруг звучит пугающе к месту. Многие решают: Агату постигла та же участь, и пруд оказывается в центре поисков.",
+      "onScreen": "Та же *участь*?",
+      "visualQuery": "pond shore bare trees mist",
+      "imagePrompt": "1920s English constables and villagers standing on the shore of a clear misty pond among bare trees, December morning, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A small group of 1920s Surrey police constables in tall helmets and long dark coats stand with curious villagers in flat caps and wool coats on the shore of a clear pond, attentively gazing at the calm water, bare trees and morning mist around them on a December morning, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, medium shot, people along the left two thirds, clear pond on the right, calm shore in the lower part of the frame",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "constables and villagers",
+          "callouts": [
+            {
+              "label": "Сайлент-Пул",
+              "target": "clear pond",
+              "beat": "и пруд"
+            }
+          ]
+        },
+        {
+          "prompt": "Slow pull-out from the misty pond surrounded by bare trees",
+          "seconds": 4.5,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Silent Pool",
+          "beat": "и пруд",
+          "reuse": "s19-k1"
+        }
+      ]
+    },
+    {
+      "id": "s22",
+      "kind": "media",
+      "narration": "Но пока это лишь догадки. А в Суррее начинаются поиски, каких Англия ещё не видела.",
+      "onScreen": "Поиски, каких Англия *не видела*",
+      "visualQuery": "frosty heathland morning fog",
+      "imagePrompt": "A long line of 1920s searchers and constables with sniffer dogs crossing frosty Surrey heathland in morning fog, high angle, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Slow push-in on Agatha walking alone along the misty lane",
+          "seconds": 3,
+          "framing": "wide",
+          "camera": "push-in",
+          "subject": "Agatha Christie",
+          "reuse": "s17-k2"
+        },
+        {
+          "prompt": "A long line of 1920s searchers, constables in tall helmets and villagers in flat caps and wool coats, walks steadily across frosty open heathland of the Surrey downs with walking sticks, a pair of sniffer dogs leading the way, bare trees and fog on the horizon on a December morning, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, high-angle wide shot, line of people across the middle third, calm frosty heath along the bottom of the frame",
+          "seconds": 4,
+          "framing": "high-angle",
+          "camera": "pan-right",
+          "subject": "search party",
+          "beat": "А в Суррее",
+          "footage": "frosty heathland morning fog"
+        }
+      ]
+    },
+    {
+      "id": "s23",
+      "kind": "media",
+      "narration": "Сначала Агату ищут с воздуха: над меловыми холмами Суррея кружат самолёты. Но сквозь декабрьский туман с высоты мало что разглядишь.",
+      "onScreen": "Поиски начинаются *с воздуха*",
+      "icon": "plane",
+      "visualQuery": "vintage biplane fog hills",
+      "imagePrompt": "A 1920s biplane flying low over foggy chalk downs in Surrey on a December morning, 35mm documentary film photograph, soft film grain, slightly desaturated colors",
+      "chapter": "Вся Англия ищет Агату",
+      "shots": [
+        {
+          "prompt": "A 1920s biplane with pale canvas wings flying low over rolling chalk downs in Surrey on a foggy December morning, frost on the grass and bare trees below, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, the plane placed on the upper right third, calm misty fields filling the lower fifth of the frame",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "1920s biplane",
+          "footage": "vintage biplane flying fog"
+        },
+        {
+          "prompt": "Slow pull-out from the biplane disappearing into the fog over the chalk downs",
+          "seconds": 4.5,
+          "framing": "establishing",
+          "camera": "pull-out",
+          "subject": "1920s biplane",
+          "beat": "Но сквозь",
+          "reuse": "s23-k1"
+        }
+      ]
+    },
+    {
+      "id": "s24",
+      "kind": "statement",
+      "narration": "Тогда на землю выходят больше шестисот полицейских из четырёх графств: Суррея, Сассекса, Кента и Беркшира. Два пруда в округе прочёсывают до самого дна.",
+      "onScreen": "600+ полицейских из *4 графств*",
+      "icon": "shield",
+      "visualQuery": "1920s police search field",
+      "imagePrompt": "A long line of 1920s English policemen searching a frosty Surrey field in fog, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A long single row of English policemen in 1920s dark uniforms and tall custodian helmets walking slowly in a line across a frosty field, searching the ground, damp Surrey countryside with bare trees and low fog on a grey December morning, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, the row of officers across the middle third, quiet frosted grass in the lower fifth",
+          "seconds": 6,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "policemen line",
+          "sticker": {
+            "text": "600+",
+            "beat": "больше шестисот полицейских"
+          }
+        },
+        {
+          "prompt": "Two men in 1920s wool coats and flat caps standing in a small wooden rowing boat on a still misty pond, calmly lowering a long pole into the clear water, reeds and bare trees on the bank, cold December morning in Surrey, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, medium shot, boat centered, calm water in the lower fifth",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "pond searchers",
+          "beat": "Два пруда",
+          "footage": "misty pond reeds winter"
+        }
+      ]
+    },
+    {
+      "id": "s25",
+      "kind": "media",
+      "narration": "А следом выходят простые люди. Около пятнадцати тысяч добровольцев-сыщиков бродят по мокрым полям, словно сами попали в её роман.",
+      "onScreen": "15 000 *добровольцев*-сыщиков",
+      "icon": "users",
+      "visualQuery": "crowd walking foggy meadow",
+      "imagePrompt": "A crowd of 1920s English villagers walking across a damp foggy meadow in Surrey, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A large crowd of 1920s English villagers in tweed coats, flat caps and cloche hats walking together across a damp green meadow toward a foggy wood, some smiling and chatting, one man pointing ahead with curiosity, Surrey countryside on a cold December day, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, high-angle wide shot, crowd across the upper two thirds, open wet grass in the lower fifth",
+          "seconds": 5,
+          "framing": "high-angle",
+          "camera": "tilt-down",
+          "subject": "volunteer searchers",
+          "sticker": {
+            "text": "15 000",
+            "beat": "Около пятнадцати тысяч"
+          }
+        },
+        {
+          "prompt": "Frosty English meadow in thick morning fog with bare trees along a hedgerow, December countryside in Surrey, 35mm documentary film photograph, natural light, slightly desaturated colors, soft film grain, wide shot, horizon on the upper third, calm grass in the lower fifth",
+          "seconds": 4,
+          "framing": "establishing",
+          "camera": "pan-right",
+          "subject": "foggy meadow",
+          "beat": "бродят по",
+          "footage": "frosty field fog morning"
+        }
+      ]
+    },
+    {
+      "id": "s26",
+      "kind": "media",
+      "narration": "Двенадцатого декабря по следу пускают ищеек. Собаки обнюхивают каждый куст на холмах, но Агату не находят и они.",
+      "onScreen": "12 декабря: в ход идут *ищейки*",
+      "icon": "compass",
+      "visualQuery": "Bloodhound sniffing grass",
+      "imagePrompt": "Two bloodhounds on a leash sniffing frosty grass on a misty Surrey hillside, 1920s, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Two eager bloodhounds with long ears sniffing the frosty grass on a leash held by a policeman in a 1920s dark uniform and helmet, walking along a hedgerow on a misty Surrey hillside in December, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, medium shot, dogs on the left third, calm grass in the lower fifth",
+          "seconds": 4.5,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "bloodhounds",
+          "sticker": {
+            "text": "12.12",
+            "beat": "Двенадцатого декабря"
+          },
+          "footage": "bloodhound dog sniffing grass"
+        },
+        {
+          "prompt": "Slow pull-out revealing the bloodhounds and the policeman small against the wide foggy hillside",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "bloodhounds",
+          "beat": "но Агату",
+          "reuse": "s26-k1"
+        }
+      ]
+    },
+    {
+      "id": "s27",
+      "kind": "statement",
+      "narration": "И тут за дело берутся мастера жанра. Артур Конан Дойл, создатель Шерлока Холмса, и Дороти Сэйерс тоже включаются в поиски.",
+      "onScreen": "На поиски выходят *мастера детектива*",
+      "icon": "book-open",
+      "visualQuery": "Arthur Conan Doyle portrait",
+      "imagePrompt": "Arthur Conan Doyle in a warm wood-panelled study, 1920s, 35mm documentary film photograph, warm amber light, soft film grain",
+      "shots": [
+        {
+          "prompt": "Portrait of Sir Arthur Conan Doyle, a broad-shouldered Englishman with a thick moustache in a dark three-piece suit, sitting calmly in a warm wood-panelled study with bookshelves, 1920s, 35mm documentary film photograph, period lenses, warm amber interior light, soft film grain, gentle vignetting, medium shot, figure on the right third, calm desk surface in the lower fifth",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Arthur Conan Doyle",
+          "photo": "Arthur Conan Doyle portrait"
+        },
+        {
+          "prompt": "Portrait of Dorothy L. Sayers, an English writer in her early thirties with short dark hair and round spectacles, wearing a dark 1920s dress, sitting at a writing desk by a window in a cosy London room, 35mm documentary film photograph, period lenses, natural light, warm interior tones, soft film grain, gentle vignetting, medium close-up, figure on the left third, calm desk in the lower fifth",
+          "seconds": 4.5,
+          "framing": "close-up",
+          "camera": "pan-left",
+          "subject": "Dorothy L. Sayers",
+          "beat": "и Дороти",
+          "photo": "Dorothy L. Sayers"
+        }
+      ]
+    },
+    {
+      "id": "s28",
+      "kind": "media",
+      "narration": "Дойл, увлечённый оккультизмом, выбирает самый странный метод. Он относит медиуму одну из перчаток Агаты: пусть вещь подскажет, где хозяйка.",
+      "onScreen": "Перчатка Агаты — *у медиума*",
+      "icon": "eye",
+      "visualQuery": "leather glove candle table",
+      "imagePrompt": "An elderly spiritualist medium holding a grey leather glove at a candlelit round table in a cosy 1920s parlour, 35mm documentary film photograph, warm amber glow",
+      "shots": [
+        {
+          "prompt": "An elderly English spiritualist medium with silver hair and a lace shawl sitting at a round wooden table, gently holding a single lady's grey leather glove in both hands with a calm, focused smile, a lit candle and a crystal ball on the velvet tablecloth, cosy 1920s parlour with heavy curtains in the evening, 35mm documentary film photograph, period lenses, warm amber interior glow, soft film grain, gentle vignetting, medium shot, medium centered, quiet tablecloth in the lower fifth",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "spiritualist medium",
+          "callouts": [
+            {
+              "label": "перчатка Агаты",
+              "target": "grey leather glove",
+              "beat": "одну из перчаток"
+            }
+          ]
+        },
+        {
+          "prompt": "Detail on the grey glove resting in the medium's hands beside the candle",
+          "seconds": 4,
+          "framing": "detail",
+          "camera": "tilt-down",
+          "subject": "grey leather glove",
+          "beat": "пусть вещь",
+          "reuse": "s28-k1"
+        }
+      ]
+    },
+    {
+      "id": "s29",
+      "kind": "statement",
+      "narration": "А в полиции нет согласия. Заместитель начальника полиции Суррея Кенвард уверен, что это преступление. Другие офицеры думают о самоубийстве.",
+      "onScreen": "Преступление или *самоубийство*?",
+      "icon": "triangle-alert",
+      "visualQuery": "old police officer map desk",
+      "imagePrompt": "A senior 1920s English police officer pinning a countryside map on a wooden desk under a green lamp, 35mm documentary film photograph, warm amber glow",
+      "shots": [
+        {
+          "prompt": "A senior English police officer in his fifties with a grey moustache and a dark 1920s uniform with silver buttons, leaning over a large hand-drawn countryside map spread on a wooden desk, thoughtfully placing a pin on it, two younger officers watching with raised eyebrows, police station office with a green desk lamp on a winter afternoon, 35mm documentary film photograph, period lenses, warm amber interior glow, soft film grain, gentle vignetting, medium shot, officer on the left third, calm desk edge in the lower fifth",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Deputy Chief Constable Kenward",
+          "callouts": [
+            {
+              "label": "Кенвард",
+              "target": "senior police officer with grey moustache",
+              "beat": "Заместитель начальника"
+            }
+          ]
+        },
+        {
+          "prompt": "Push-in on the two younger officers exchanging doubtful glances over the map",
+          "seconds": 4,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "younger police officers",
+          "beat": "Другие офицеры",
+          "reuse": "s29-k1"
+        }
+      ]
+    },
+    {
+      "id": "s30",
+      "kind": "media",
+      "narration": "И тогда неудобные вопросы задают мужу. По округе ползёт слух: не убил ли Арчи жену, чтобы жить с любовницей?",
+      "onScreen": "Под подозрением — *муж*",
+      "icon": "key",
+      "visualQuery": "man tweed suit window",
+      "imagePrompt": "A tall lean man in a charcoal tweed suit standing by a tall window of a country house in winter, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Archie Christie, a 37-year-old Englishman, tall and lean, clean-shaven, dark brown hair neatly slicked back, sharp jaw, wearing a charcoal three-piece tweed suit, white shirt and dark striped tie, standing by a tall window of a country house drawing room, looking out at the foggy garden with a tense, thoughtful expression, December afternoon in Sunningdale, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, medium shot, figure on the right third, calm floor in the lower fifth",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Archie Christie"
+        },
+        {
+          "prompt": "Slow pan across the quiet drawing room settling on Archie at the window",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "Archie Christie",
+          "beat": "По округе",
+          "reuse": "s30-k1"
+        }
+      ]
+    },
+    {
+      "id": "s31",
+      "kind": "statement",
+      "narration": "Арчи сам подливает масла в огонь. Газете Дейли Мейл он говорит: жена обсуждала, что может исчезнуть по своей воле, вероятно, для работы.",
+      "onScreen": "Она думала *исчезнуть* сама",
+      "icon": "quote",
+      "visualQuery": "reporter notebook interview vintage",
+      "imagePrompt": "A man in a tweed suit talking to a 1920s newspaper reporter with a notebook in a warm country house hallway, 35mm documentary film photograph",
+      "shots": [
+        {
+          "prompt": "Archie Christie, a 37-year-old Englishman, tall and lean, clean-shaven, dark brown hair neatly slicked back, sharp jaw, wearing a charcoal three-piece tweed suit, white shirt and dark striped tie, talking calmly with an open hand gesture to a curious young newspaper reporter in a 1920s overcoat and trilby who writes in a small notebook, in a warm country house hallway on a winter evening, 35mm documentary film photograph, period lenses, warm amber interior glow, soft film grain, gentle vignetting, medium shot, two figures on the thirds, calm floor in the lower fifth",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Archie Christie",
+          "callouts": [
+            {
+              "label": "репортёр",
+              "target": "young newspaper reporter",
+              "beat": "Газете Дейли Мейл"
+            }
+          ]
+        },
+        {
+          "prompt": "Close push-in on the reporter's pencil moving quickly across the notebook",
+          "seconds": 5,
+          "framing": "detail",
+          "camera": "push-in",
+          "subject": "newspaper reporter",
+          "beat": "исчезнуть по",
+          "reuse": "s31-k1"
+        }
+      ]
+    },
+    {
+      "id": "s32",
+      "kind": "media",
+      "narration": "Так рождается третья версия: рекламный трюк. Вдруг королева детектива превратила всю Англию в массовку для нового сюжета?",
+      "onScreen": "Версия третья: *рекламный трюк*",
+      "icon": "bell-ring",
+      "visualQuery": "newsboy vintage newspapers street",
+      "imagePrompt": "A cheerful 1920s English newsboy holding up folded newspapers on a foggy village street, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A cheerful English newsboy in a flat cap and short wool jacket holding up a stack of folded newspapers on a damp village street, passers-by in 1920s coats and cloche hats turning with surprised faces, a vintage 1920s motorcar parked behind, foggy December morning in Surrey, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, medium wide shot, newsboy centered, calm cobblestones in the lower fifth",
+          "seconds": 4.5,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "newsboy"
+        },
+        {
+          "prompt": "Low-angle tilt-up from the cobblestones to the newsboy raising the newspapers high",
+          "seconds": 4,
+          "framing": "low-angle",
+          "camera": "tilt-up",
+          "subject": "newsboy",
+          "beat": "Вдруг королева",
+          "reuse": "s32-k1"
+        }
+      ]
+    },
+    {
+      "id": "s33",
+      "kind": "statement",
+      "narration": "Но пока Суррей прочёсывают пруды и кусты, Агата за сотни километров к северу живёт в модном отеле. Под чужим именем.",
+      "onScreen": "А она — в *модном отеле*",
+      "icon": "house",
+      "visualQuery": "Old Swan Hotel Harrogate",
+      "imagePrompt": "A woman in a cloche hat sipping tea in an elegant 1920s spa hotel lounge with palms and chandeliers, 35mm documentary film photograph, warm amber glow",
+      "shots": [
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, sitting calmly in a velvet armchair with a cup of tea and a faint mysterious smile, elegant spa hotel lounge in Harrogate with palms and chandeliers in the evening, 35mm documentary film photograph, period lenses, warm amber interior glow, soft film grain, gentle vignetting, wide shot, figure on the right third, calm patterned carpet in the lower fifth",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "push-in",
+          "subject": "Agatha Christie"
+        },
+        {
+          "prompt": "Slow pan to a close-up of Agatha's calm face and faint smile over the teacup",
+          "seconds": 4.5,
+          "framing": "close-up",
+          "camera": "pan-left",
+          "subject": "Agatha Christie",
+          "beat": "живёт в",
+          "reuse": "s33-k1"
+        }
+      ]
+    },
+    {
+      "id": "s34",
+      "kind": "statement",
+      "narration": "Её новое убежище — отель Суон Гидропатик в Харрогите, модном курортном городке Йоркшира. Здесь лечатся водами, а по вечерам играет оркестр.",
+      "onScreen": "Курортный *Харрогит*, Йоркшир",
+      "visualQuery": "Old Swan Hotel Harrogate",
+      "imagePrompt": "Elegant Victorian stone spa hotel with warm amber windows among frosty lawns in Harrogate, misty December afternoon 1926, 35mm documentary film photograph, soft film grain, gentle vignetting",
+      "chapter": "Чужое имя в Харрогите",
+      "map": {
+        "lat": 53.99,
+        "lon": -1.54,
+        "label": "Харрогит",
+        "zoom": "region"
+      },
+      "shots": [
+        {
+          "prompt": "An elegant Victorian stone spa hotel with tall windows glowing warm amber, set among frosty lawns and bare trees in the spa town of Harrogate, Yorkshire, on a misty December afternoon in 1926, a 1920s automobile parked by the entrance, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, establishing wide shot, hotel centered, calm empty gravel drive across the lower fifth of the frame",
+          "seconds": 5,
+          "framing": "establishing",
+          "camera": "push-in",
+          "subject": "Swan Hydropathic hotel",
+          "photo": "Old Swan Hotel Harrogate"
+        },
+        {
+          "prompt": "A small hotel dance orchestra in evening suits playing violin, piano and banjo on a low stage in a grand spa hotel ballroom in Harrogate, December 1926 evening, guests in 1920s evening wear dancing on a polished parquet floor, crystal chandeliers, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, wide shot, stage on the right third, calm polished floor across the lower fifth of the frame",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "hotel orchestra",
+          "beat": "Здесь лечатся"
+        }
+      ]
+    },
+    {
+      "id": "s35",
+      "kind": "statement",
+      "narration": "В книге постояльцев она записывается миссис Терезой Нил. Нил. Та же фамилия, что у Нэнси, любовницы её мужа.",
+      "onScreen": "Миссис Тереза *Нил*",
+      "visualQuery": "hotel guest ledger fountain pen",
+      "imagePrompt": "Woman in a cloche hat holding a fountain pen over an open leather hotel guest ledger on a polished reception desk, 1926, warm brass lamp, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, calmly holding a fountain pen over an open leather guest ledger on a polished wooden reception desk of a Harrogate spa hotel, December 1926 afternoon, brass desk lamp glowing, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, close-up, her face and the ledger on the left third, quiet dark wood across the lower fifth",
+          "seconds": 5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Agatha Christie",
+          "callouts": [
+            {
+              "label": "чужое имя",
+              "target": "open leather guest ledger",
+              "beat": "миссис Терезой Нил"
+            }
+          ]
+        },
+        {
+          "prompt": "Nancy Neele, a 27-year-old Englishwoman, round youthful face, dark brown shingle-cut hair, wearing a navy drop-waist dress with a cream collar and a camel wool coat, standing by a frosty garden gate of a country house in Surrey on a grey December morning in 1926, looking aside with a gentle surprised expression, bare trees behind her, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, medium shot, figure on the right third, calm frosted grass across the lower fifth of the frame",
+          "seconds": 4,
+          "framing": "medium",
+          "camera": "pan-left",
+          "subject": "Nancy Neele",
+          "beat": "Нил. Та"
+        }
+      ]
+    },
+    {
+      "id": "s36",
+      "kind": "media",
+      "narration": "Пока газеты гадают, жива ли она, миссис Нил спокойно живёт среди отдыхающих. А её ищут в прудах Суррея.",
+      "onScreen": "Ищут в Суррее. Она — *здесь*",
+      "visualQuery": "hotel lounge armchair reading",
+      "imagePrompt": "Calm woman in a cloche hat reading a book in a velvet armchair by a tall window of a warm 1920s spa hotel lounge, potted palms, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, sitting calmly in a velvet armchair with a faint serene smile, reading a book by a tall window in a warm spa hotel lounge in Harrogate, December 1926 afternoon, potted palms and other guests softly blurred behind, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, medium shot, her figure centered, calm patterned carpet across the lower fifth",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pan-left",
+          "subject": "Agatha Christie"
+        },
+        {
+          "prompt": "A still woodland pond surrounded by bare winter trees and reeds under low grey fog in the Surrey countryside, December morning, frost on the banks, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, water centered, quiet reflective surface across the lower fifth",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Silent Pool",
+          "beat": "А её ищут",
+          "footage": "foggy forest pond winter"
+        }
+      ]
+    },
+    {
+      "id": "s37",
+      "kind": "statement",
+      "narration": "Раскрывает её не полицейский и не сыщик. Примерно через десять дней банджист гостиничного оркестра узнаёт в тихой постоялице ту самую пропавшую писательницу.",
+      "onScreen": "Её узнал *банджист*",
+      "visualQuery": "banjo player vintage orchestra",
+      "imagePrompt": "Young banjo player in a black evening suit on a 1920s hotel ballroom stage, pleasantly surprised expression, chandeliers glowing, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "A friendly young banjo player in a black evening suit and bow tie, holding his banjo on a small hotel ballroom stage, raising his eyebrows in pleasant surprise as he looks across the room, grand spa hotel in Harrogate, December 1926 evening, chandeliers glowing, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, medium close-up reaction shot, musician on the left third, calm dark stage floor across the lower fifth",
+          "seconds": 6,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "banjo player",
+          "callouts": [
+            {
+              "label": "банджист",
+              "target": "banjo",
+              "beat": "банджист гостиничного оркестра"
+            }
+          ],
+          "sticker": {
+            "text": "10 дней",
+            "beat": "через десять дней"
+          }
+        },
+        {
+          "prompt": "slow push-in on the calm woman reading in the hotel lounge",
+          "seconds": 6,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Agatha Christie",
+          "beat": "узнаёт в тихой",
+          "reuse": "s36-k1"
+        }
+      ]
+    },
+    {
+      "id": "s38",
+      "kind": "media",
+      "narration": "Так, на одиннадцатый день после исчезновения, поиски заканчиваются. Самая громкая загадка Англии раскрыта. Или нет?",
+      "onScreen": "Нашлась. Но загадка — *осталась*",
+      "visualQuery": "Old Swan Hotel Harrogate exterior",
+      "imagePrompt": "Victorian spa hotel glowing amber on a misty winter afternoon in Harrogate, 1926, frosty lawns, 35mm documentary film photograph, soft film grain, gentle vignetting",
+      "shots": [
+        {
+          "prompt": "slow pull-out from the glowing spa hotel on a misty afternoon",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Swan Hydropathic hotel",
+          "reuse": "s34-k1",
+          "sticker": {
+            "text": "11 дней",
+            "beat": "на одиннадцатый день"
+          }
+        },
+        {
+          "prompt": "tilt up from the book to the woman's calm enigmatic face",
+          "seconds": 4,
+          "framing": "close-up",
+          "camera": "tilt-up",
+          "subject": "Agatha Christie",
+          "beat": "Самая громкая",
+          "reuse": "s36-k1"
+        }
+      ]
+    },
+    {
+      "id": "s39",
+      "kind": "statement",
+      "narration": "Сама Агата говорила о потере памяти. И за всю долгую жизнь так толком ничего и не объяснила. Ни газетам, ни читателям.",
+      "onScreen": "«Я *ничего* не помню»",
+      "visualQuery": "woman frosted window thoughtful",
+      "imagePrompt": "Thoughtful woman in a cloche hat at a frosted hotel window with a quiet enigmatic half-smile, pale winter daylight, 1926, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, standing at a frosted window of a warm hotel room in Harrogate, looking out thoughtfully with a quiet enigmatic half-smile, December 1926 morning, pale daylight on her face, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, close-up, face on the right third, soft curtain fabric across the lower fifth",
+          "seconds": 5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Agatha Christie"
+        },
+        {
+          "prompt": "Agatha Christie's hands, a 36-year-old Englishwoman wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, resting folded on a closed leather notebook on a small wooden writing table in a Harrogate hotel room, December 1926 morning, warm lamp glow and a teacup nearby, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, detail shot, notebook centered, calm polished table surface across the lower fifth",
+          "seconds": 5,
+          "framing": "detail",
+          "camera": "tilt-down",
+          "subject": "Agatha Christie",
+          "beat": "Ни газетам"
+        }
+      ]
+    },
+    {
+      "id": "s40",
+      "kind": "media",
+      "narration": "Поэтому спор идёт до сих пор. Одни видят нервный срыв женщины, у которой рушилась семья. Другие — продуманный ход: брошенная машина, чужое имя, фамилия соперницы.",
+      "onScreen": "Срыв или *продуманный* ход?",
+      "visualQuery": "Bullnose Morris Cowley",
+      "imagePrompt": "1920s Morris Cowley touring car with glowing headlamps at the edge of a chalk pit on a foggy frosty December morning in Surrey, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "slow pan across the woman's thoughtful face at the frosted window",
+          "seconds": 6,
+          "framing": "medium",
+          "camera": "pan-left",
+          "subject": "Agatha Christie",
+          "beat": "Поэтому спор",
+          "reuse": "s39-k1"
+        },
+        {
+          "prompt": "A 1920s bullnose Morris Cowley touring car standing alone with its headlamps glowing at the grassy edge of a chalk pit at Newlands Corner, Surrey, frosty foggy December morning in 1926, bare trees in the mist, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, car on the left third, calm frosted grass across the lower fifth",
+          "seconds": 6,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "Morris Cowley",
+          "beat": "Другие",
+          "photo": "Bullnose Morris Cowley"
+        }
+      ]
+    },
+    {
+      "id": "s41",
+      "kind": "media",
+      "narration": "Третьего декабря две тысячи двадцать шестого года этой истории исполнится ровно сто лет. А ответа как не было, так и нет.",
+      "onScreen": "Ровно *100 лет* без ответа",
+      "visualQuery": "fog countryside hills winter",
+      "imagePrompt": "Rolling English countryside hills with bare trees under drifting winter fog, frost on grass, soft pale light, 35mm documentary film photograph, soft film grain, gentle vignetting",
+      "shots": [
+        {
+          "prompt": "Rolling English countryside hills with bare trees under drifting morning fog in winter, frost on the grass, soft pale light, 35mm documentary film photograph, natural light, slightly desaturated true-to-life colors, soft film grain, gentle vignetting, wide shot, horizon on the upper third, calm meadow across the lower fifth",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "Surrey hills",
+          "sticker": {
+            "text": "100 лет",
+            "beat": "ровно сто лет"
+          },
+          "footage": "fog over countryside hills winter"
+        },
+        {
+          "prompt": "slow push-in on the still foggy pond among bare trees",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "push-in",
+          "subject": "Silent Pool",
+          "beat": "А ответа",
+          "reuse": "s36-k2"
+        }
+      ]
+    },
+    {
+      "id": "s42",
+      "kind": "statement",
+      "narration": "И, может быть, в этом её последний урок. Даже самый точный детектив не раскроет тайну, если единственный свидетель решил молчать.",
+      "onScreen": "Свидетель *молчит* — тайна жива",
+      "visualQuery": "misty street dusk townhouses",
+      "imagePrompt": "Woman in a cloche hat walking along a misty tree-lined street of stone townhouses at dusk, glancing back with a faint knowing smile, 1926, 35mm documentary film photograph, soft film grain",
+      "shots": [
+        {
+          "prompt": "Agatha Christie, a 36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace, walking calmly away along a misty tree-lined street of elegant stone townhouses in Harrogate, glancing back over her shoulder with a faint knowing smile, December 1926 dusk, warm lamps glowing in windows, 35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, medium wide shot, figure centered, quiet wet pavement across the lower fifth",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pull-out",
+          "subject": "Agatha Christie"
+        },
+        {
+          "prompt": "final slow tilt down across the woman's enigmatic half-smile at the window",
+          "seconds": 4.5,
+          "framing": "close-up",
+          "camera": "tilt-down",
+          "subject": "Agatha Christie",
+          "beat": "Даже самый",
+          "reuse": "s39-k1"
+        }
+      ]
+    },
+    {
+      "id": "s43",
+      "kind": "cta",
+      "narration": "А ты как думаешь, она правда всё забыла?",
+      "onScreen": "Она правда всё *забыла*?"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "Documentary period reconstruction of 1926 England, restrained observational framing, intimate domestic interiors contrasted with cold open Surrey downs and crowded search lines",
+    "lighting": "Low winter daylight, overcast diffuse skies, warm tungsten and oil-lamp interiors at night, car headlights cutting through mist",
+    "palette": "Muted chalk white, damp moss green, slate grey, faded burgundy and warm amber interior glow",
+    "realism": "Photorealistic historical reconstruction, period-accurate costumes, cars and props, no fantasy elements",
+    "mood": "Tense, melancholic, quietly suspenseful, an unsolved mystery",
+    "environment": "Sunningdale country house Styles, Newlands Corner chalk pit on the Surrey downs, Silent Pool, foggy country lanes, Swan Hydropathic hotel in Harrogate",
+    "world": "England, December 1926, early winter: cold, damp, foggy Surrey countryside with frost on grass and bare trees, interwar villages, 1920s automobiles, newspapers and police in period uniforms; later the elegant spa town of Harrogate in Yorkshire",
+    "look": "35mm documentary film photograph, period lenses, natural light, slightly desaturated true-to-life colors with warm interiors, soft film grain, gentle vignetting, no text in frame",
+    "characters": [
+      {
+        "name": "Агата Кристи",
+        "look": "36-year-old Englishwoman, oval face, light grey-blue eyes, auburn wavy bobbed hair under a dark cloche hat, slim, wearing a knee-length grey cardigan over a pale green knitted dress, pearl string necklace"
+      },
+      {
+        "name": "Арчи Кристи",
+        "look": "37-year-old Englishman, tall and lean, clean-shaven, dark brown hair neatly slicked back, sharp jaw, wearing a charcoal three-piece tweed suit, white shirt and dark striped tie"
+      },
+      {
+        "name": "Нэнси Нил",
+        "look": "27-year-old Englishwoman, round youthful face, dark brown shingle-cut hair, wearing a navy drop-waist dress with a cream collar and a camel wool coat"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}
