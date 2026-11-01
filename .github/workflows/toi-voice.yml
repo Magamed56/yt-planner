@@ -1,0 +1,42 @@
+# Озвучка приглашения на той (toi-voice/text.txt) голосом Gemini TTS.
+# Запускается пушем изменений в toi-voice/ на ветку claude/gracious-bardeen-zscal1
+# или кнопкой; готовые WAV коммитятся обратно в toi-voice/out/.
+name: "toi-voice: озвучка приглашения"
+
+on:
+  push:
+    branches: ["claude/gracious-bardeen-zscal1"]
+    paths: ["toi-voice/text.txt", "toi-voice/tts.mjs", ".github/workflows/toi-voice.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: toi-voice
+  cancel-in-progress: false
+
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Gemini TTS
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          TOI_VOICES: Charon,Kore
+        run: node toi-voice/tts.mjs
+      - name: Сохранить аудио в ветку
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add toi-voice/out || true
+          git commit -m "toi-voice: озвучка Gemini" || { echo "Нечего сохранять"; exit 0; }
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
