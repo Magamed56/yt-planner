@@ -1,0 +1,16 @@
+[
+  {
+    "voice": "Charon",
+    "model": "gemini-3.8-flash-tts",
+    "key": 1,
+    "language": "ky",
+    "bytes": 2517476
+  },
+  {
+    "voice": "Kore",
+    "model": "gemini-3.8-flash-tts",
+    "key": 1,
+    "language": "ky",
+    "bytes": 2680676
+  }
+]
