@@ -142,6 +142,9 @@ await test("Википедия: топ месяца без служебных с
   // Подбор тем: нелепое и актуальное — поровну, школьная программа — мимо (решение владельца, 19.11.2026).
   const ideasSystem = buildIdeasSystemPrompt([{ id: "history", title: "История" }], true);
   assert.match(ideasSystem, /Нелепое, но правдивое — основа канала/);
+  assert.match(ideasSystem, /Хитрости и скрытая механика привычных вещей/);
+  assert.match(ideasSystem, /Название — загадка без ответа/);
+  assert.match(ideasSystem, /уже есть ролик-миллионник/);
   assert.match(ideasSystem, /Около половины — актуальное/);
   assert.match(ideasSystem, /Не бери школьную программу/);
   assert.match(ideasSystem, /Нелепый факт обязан быть правдой/);
