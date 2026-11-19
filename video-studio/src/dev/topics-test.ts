@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import type { BetaMessage, BetaMessageStreamParams } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import type { AnthropicLike } from "../pipeline/script/llm/claude";
 import { planNotes } from "../pipeline/plan";
+import { buildPlanSystemPrompt } from "../pipeline/script/plan-gen";
 import { buildShortsPrompt, buildSystemPrompt, shortsSeconds, shortsTargets, STORY_SECONDS } from "../pipeline/script/prompt";
 import { buildResearchPrompt, checkResearch, researchNotes, researchTopic } from "../pipeline/script/research";
 import { buildIdeasPrompt, buildIdeasSystemPrompt, checkIdeas, fmtViews, lastFullMonth, median, rankIdeas, readersScore, wikiMonthlyReaders, wikiTop, youtubeDemand, DemandError, type TopicIdea } from "../pipeline/script/topic-ideas";
@@ -138,7 +139,18 @@ await test("Википедия: топ месяца без служебных с
   assert.deepEqual(waits, [1000, 1000]);
   const prompt = buildIdeasPrompt({ channel: { name: "Суть за минуту" }, shorts: 2, long: 1, existing: ["Эму-война"], top: { ru: top, en: [], month: "09.2026" } });
   assert.match(prompt, /Самые читаемые статьи Википедии за 09\.2026[\s\S]*Титаник — 120 тыс\./);
-  assert.match(buildIdeasSystemPrompt([{ id: "history", title: "История" }], true), /Свежие новости — не больше пятой части/);
+  // Подбор тем: нелепое и актуальное — поровну, школьная программа — мимо (решение владельца, 19.11.2026).
+  const ideasSystem = buildIdeasSystemPrompt([{ id: "history", title: "История" }], true);
+  assert.match(ideasSystem, /Нелепое, но правдивое — основа канала/);
+  assert.match(ideasSystem, /Около половины — актуальное/);
+  assert.match(ideasSystem, /Не бери школьную программу/);
+  assert.match(ideasSystem, /Нелепый факт обязан быть правдой/);
+  assert.match(ideasSystem, /афиши ближайшего месяца/, "с веб-поиском — подсказка, где искать актуальное");
+  assert.ok(!/афиши ближайшего месяца/.test(buildIdeasSystemPrompt([{ id: "history", title: "История" }], false)), "без веб-поиска подсказки о поиске нет");
+  assert.ok(!/Свежие новости — не больше пятой части/.test(ideasSystem), "старое правило «свежего — пятая часть» снято");
+  // Тот же принцип — у тем плана (plan-extend), но только у Shorts: «Разборы» не трогаем.
+  assert.match(buildPlanSystemPrompt(false), /Школьную программу не бери/);
+  assert.ok(!/Школьную программу не бери/.test(buildPlanSystemPrompt(false, true)));
 });
 
 const quiet = { info: () => {}, warn: () => {} };
