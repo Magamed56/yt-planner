@@ -99,9 +99,11 @@ on:
         options: [ru, en, kk, uz]
         default: ru
       cinematic:
-        description: "Кинорежим: Shorts как короткий связный фильм — Claude пишет сценарий с кадрами-планами (draft и batch по теме или плану; render берёт режим из сценария)"
+        description: "Кинорежим (по умолчанию): Shorts как короткий связный фильм — Claude пишет сценарий с кадрами-планами (draft и batch по теме или плану; render берёт режим из сценария). Снять галочку — сценарий в прежнем виде"
         type: boolean
-        default: false
+        # По умолчанию включён (решение владельца, 19.11.2026): панель и автопилот запускают сборку без
+        # этого поля — GitHub подставляет значение по умолчанию, и новые сценарии выходят в новом формате.
+        default: true
       preview:
         description: "Готовое видео — ещё и в скрытый черновой релиз preview-… (виден только владельцу): проверить ролик без публикации"
         type: boolean
@@ -203,7 +205,8 @@ jobs:
       CAPTION_ALIGN: ${{ vars.CAPTION_ALIGN }}
       # На 2 vCPU (приватный репозиторий) 2 потока быстрее авто-значения (1) на ~12 %.
       RENDER_CONCURRENCY: ${{ vars.RENDER_CONCURRENCY || '2' }}
-      CINEMATIC: ${{ inputs.cinematic && '1' || '' }}
+      # Только по-русски: с --lang (en, kk, uz) сценарий — перевод готового, а --cinematic там ошибка.
+      CINEMATIC: ${{ inputs.cinematic && (inputs.lang == 'ru' || inputs.lang == '') && '1' || '' }}
       # Кадры кинорежима: проверка зрением Claude (off — выключить), бюджет новых картинок
       # на ролик и общий кэш кадров между запусками (шаги «Кэш AI-кадров»).
       VISUALS_REVIEW: ${{ vars.VISUALS_REVIEW }}
