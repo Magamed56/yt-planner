@@ -17,6 +17,7 @@ import { isLongCode, normCode } from "../pipeline/codes";
 import { LONG_PLAN_FILE, longPlanNotes, parseLongPlan } from "../pipeline/long-plan";
 import { generateScript, lintScript, loadCovered, LONG_DEFAULT_SECONDS, ScriptGenerationError, searchPhrases, WORDS_PER_SECOND, type ScriptGenRequest } from "../pipeline/script/index";
 import { collectLlmUsage } from "../pipeline/script/usage-log";
+import { researchEnabled, researchNotes, researchTopic } from "../pipeline/script/research";
 import { slugify } from "../pipeline/slug";
 import { ROOT, UserError, argsError, escapeMd, fail, fmtDuration, ghOutput, ghSummary, loadEnv, rel, reportFailedLlmUsage, writeJson } from "./common";
 import { langScriptDir } from "../pipeline/lang";
@@ -28,6 +29,7 @@ const HELP = `Черновик сценария для проверки пере
   npm run script -- --topic "тема" [--format shorts|landscape] [--notes "пожелания"] [--seconds 45] [--out scripts/]
   npm run script -- --plan 08a,08b [--seconds 45]
   npm run script -- --plan 08a --quiz     викторина «Правда или миф?» (Shorts)
+  npm run script -- --topic "тема" --cinematic   Shorts в кинорежиме: планы и общий стиль кадров
   npm run script -- --plan 08a --long     «Разбор» 5–8 минут, 16:9, с главами (и с --topic)
   npm run script -- --plan 08a --lang en  ролик на другом языке (en, kk, uz…) → scripts/en/
   npm run script -- --long-plan L01       «Разбор» на тему из content/long-plan.json (коды L01… можно и в --plan)
@@ -39,6 +41,10 @@ const HELP = `Черновик сценария для проверки пере
 пожелания LLM, файл — scripts/sut-<код>-<имя>.json, в плане тема получает status script-ready.
 Темы, у которых сценарий уже есть, пропускаются.
 
+--cinematic — ролик как фильм: у сцен планы (shots), общая «библия» кадров (style), текста поверх
+  кадра нет (только субтитры и подписи монтажа). Кадры — AI-генерация (VISUALS: cloudflare)
+  и настоящая съёмка по запросу сценариста (footage — стоки, photo — Wikimedia).
+  Shorts и «Разборы» (--long, коды L01…).
 --quiz — Shorts из 2 раундов (с --seconds 60 и больше — до 3): утверждение → пауза с отсчётом → «Правда»/«Миф» → ответ.
 --long — «Разбор» (по умолчанию ${LONG_DEFAULT_SECONDS} с, 25–45 сцен, главы с карточками и таймкодами в описании).
   С --plan файл — scripts/razbor-<код>-<имя>.json: Shorts той же темы и план не трогаются.
@@ -74,6 +80,7 @@ function uniquePath(dir: string, slug: string): string {
 interface Mode {
   long: boolean;
   quiz: boolean;
+  cinematic?: boolean;
 }
 
 interface PlanDraft {
@@ -140,7 +147,19 @@ async function draftFromPlan(codesArg: string, seconds: number | undefined, mode
     }
     const t0 = Date.now();
     const usage = usageCollector(code);
+    let researchCost = 0;
     try {
+      // Материал из интернета (факты, эпизоды, линия рассказа, жанр) — один раз на тему:
+      // сохраняется в план, повторная генерация его не покупает заново.
+      if (!mode.quiz && !item.researched && researchEnabled(process.env)) {
+        const r = await researchTopic({ topic: item.title, hook: item.hook, angle: item.angle, facts: item.keyFacts, long }, { onLlmCall: usage.onLlmCall });
+        if (r) {
+          researchCost = r.usage.reduce((a, u) => a + u.costUsd, 0);
+          Object.assign(item, { keyFacts: r.facts, genre: r.genre, story: r.story, researched: new Date().toISOString().slice(0, 10) });
+          writeJson(fromLong ? LONG_PLAN_PATH : PLAN_FILE, fromLong ? longPlan : plan);
+          console.log(`  ${code}: материал из интернета — +${r.added} пунктов, жанр: ${r.genre === "story" ? "история" : "объяснение"}`);
+        }
+      }
       const sequel = item.sequelOf ? plan.items.find((i) => i.id === item.sequelOf) ?? null : null;
       const req: ScriptGenRequest = {
         topic: item.title,
@@ -150,6 +169,8 @@ async function draftFromPlan(codesArg: string, seconds: number | undefined, mode
         targetSeconds: seconds,
         long,
         quiz: mode.quiz,
+        cinematic: mode.cinematic,
+        genre: item.genre,
         // Своя тема (и её «Разбор»/Shorts) повтором не считается.
         covered: loadCovered(ROOT, { plan: coveredPlan, exclude: [code] }),
         searchPhrases: searchPhrases(item.title),
@@ -168,7 +189,7 @@ async function draftFromPlan(codesArg: string, seconds: number | undefined, mode
         item.script = rel(file);
         writeJson(PLAN_FILE, plan);
       }
-      const cost = spent.reduce((a, u) => a + u.costUsd, 0);
+      const cost = spent.reduce((a, u) => a + u.costUsd, 0) + researchCost;
       console.log(`  ${code}: ✔ ${rel(file)} — «${script.title}», ${script.scenes.length} сцен, $${cost.toFixed(4)}, ${fmtDuration(Date.now() - t0)}`);
       for (const w of warnings) console.log(`    замечание: ${w}`);
       results.push({ item, file: rel(file), script, cost, warnings });
@@ -225,6 +246,7 @@ async function main() {
         out: { type: "string" },
         long: { type: "boolean", default: false },
         quiz: { type: "boolean", default: false },
+        cinematic: { type: "boolean", default: false },
         lang: { type: "string" },
         help: { type: "boolean", short: "h", default: false },
       },
@@ -247,12 +269,14 @@ async function main() {
   const planCodes = longPlanCodes || (typeof values.plan === "string" ? values.plan.trim() : "");
   const seconds = values.seconds ? Number(values.seconds) : undefined;
   if (seconds !== undefined && !(seconds > 0)) throw new UserError("--seconds: нужно положительное число.");
-  const mode: Mode = { long: Boolean(values.long), quiz: Boolean(values.quiz) };
+  const mode: Mode = { long: Boolean(values.long), quiz: Boolean(values.quiz), cinematic: Boolean(values.cinematic) };
   const lang = parseLangArg(typeof values.lang === "string" ? values.lang : undefined) ?? "ru";
   if (mode.long && mode.quiz) throw new UserError("--long и --quiz вместе нельзя: викторина — это Shorts, «Разбор» — длинный ролик.");
   const formatArg = typeof values.format === "string" ? values.format : undefined;
   if (mode.long && formatArg && formatArg !== "landscape") throw new UserError("--long — горизонтальный ролик: уберите --format или укажите --format landscape.");
   if (mode.quiz && formatArg && formatArg !== "shorts") throw new UserError("--quiz — только Shorts: уберите --format или укажите --format shorts.");
+  if (mode.cinematic && mode.quiz) throw new UserError("--cinematic и --quiz вместе нельзя: у викторины свой экран с отсчётом.");
+  if (mode.cinematic && lang !== "ru") throw new UserError("--cinematic пока только по-русски — уберите --lang.");
   if (planCodes) {
     if (topic || values.notes || values.out || formatArg) throw new UserError("--plan берёт тему, пожелания, формат и папку из плана — без --topic, --notes, --format и --out.");
     if (lang !== "ru" && planCodes.split(/[\s,]+/).some((c) => isLongCode(c))) throw new UserError("«Разборы» по длинному плану (L01…) пока только по-русски — уберите --lang.");
@@ -265,7 +289,7 @@ async function main() {
   if (format !== "shorts" && format !== "landscape") throw new UserError(`--format: shorts или landscape, а не «${format}».`);
   const outDir = path.resolve(typeof values.out === "string" ? values.out : path.join(ROOT, langScriptDir(lang)));
 
-  console.log(`video-studio · черновик сценария\n  тема: «${topic}», формат: ${format}${mode.long ? " («Разбор» с главами)" : mode.quiz ? " (викторина)" : ""}`);
+  console.log(`video-studio · черновик сценария\n  тема: «${topic}», формат: ${format}${mode.long ? " («Разбор» с главами)" : mode.quiz ? " (викторина)" : mode.cinematic ? " (кинорежим)" : ""}`);
   let generated: Awaited<ReturnType<typeof generateScript>>;
   const usage = usageCollector(null);
   let plan: ContentPlan | null = null;
@@ -274,16 +298,23 @@ async function main() {
   } catch {
     plan = null; // без плана — сверяемся только со сценариями
   }
+  let researchCost = 0;
   try {
+    const userNotes = typeof values.notes === "string" ? values.notes : undefined;
+    // Материал из интернета — и для темы вне плана (по-русски: поиск и правила — русские).
+    const r = !mode.quiz && lang === "ru" && researchEnabled(process.env) ? await researchTopic({ topic, facts: [], long: mode.long }, { onLlmCall: usage.onLlmCall }) : null;
+    if (r) researchCost = r.usage.reduce((a, u) => a + u.costUsd, 0);
     generated = await generateScript(
       {
         topic,
         format,
         language: lang,
-        notes: typeof values.notes === "string" ? values.notes : undefined,
+        notes: r ? [userNotes, researchNotes(r, { strict: !mode.long })].filter(Boolean).join("\n") : userNotes,
         targetSeconds: seconds,
         long: mode.long,
         quiz: mode.quiz,
+        cinematic: mode.cinematic,
+        genre: r?.genre,
         covered: loadCovered(ROOT, { plan }),
         // Подсказки поиска — по русской теме; для другого языка они не к месту.
         searchPhrases: lang === "ru" ? searchPhrases(topic) : undefined,
@@ -301,7 +332,7 @@ async function main() {
   const file = uniquePath(outDir, slugify(script.title));
   writeJson(file, script);
 
-  const cost = spent.reduce((a, u) => a + u.costUsd, 0);
+  const cost = spent.reduce((a, u) => a + u.costUsd, 0) + researchCost;
   const last = spent.at(-1);
   const words = script.scenes.reduce((a, s) => a + s.narration.split(/\s+/).filter(Boolean).length, 0);
   console.log(`\n✔ Черновик готов за ${fmtDuration(Date.now() - t0)}: ${rel(file)}`);

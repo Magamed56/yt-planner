@@ -1,0 +1,306 @@
+{
+  "title": "Почему Amazon чуть не назвали Кадаброй",
+  "description": "Летом 1994 года Джефф Безос зарегистрировал фирму под названием Cadabra, но юрист услышал по телефону совсем другое слово. В ролике: история названия Amazon, запасное имя Relentless, домены, которые Безос скупал заранее, и почему новое имя должно было начинаться на букву A.\n#shorts #amazon #безос #историябизнеса #бренд",
+  "tags": [
+    "amazon",
+    "безос",
+    "джефф безос",
+    "история amazon",
+    "кадабра",
+    "cadabra",
+    "relentless",
+    "название компании",
+    "нейминг",
+    "история бизнеса",
+    "стартапы",
+    "amazon прикол",
+    "amazon история названия",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Первое имя Амазона по телефону звучало почти как труп.",
+      "onScreen": "Первое имя Amazon звучало как *труп*",
+      "shots": [
+        {
+          "prompt": "A 30-year-old man with short dark thinning hair, clean-shaven round face and a wide grin, wearing a light blue button-down shirt with rolled sleeves and khaki trousers, holds a chunky 1990s brick mobile phone to his ear and laughs, sitting in a parked car by a sunny highway in summer 1994. 35mm film photograph, 35mm lens, warm afternoon sunlight, soft grain, close-up, his face in the upper two thirds, calm car dashboard below.",
+          "seconds": 4,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Jeff"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "media",
+      "narration": "Лето тысяча девятьсот девяносто четвёртого. Джефф Безос едет через всю страну в Сиэтл.",
+      "onScreen": "1994: дорога в *Сиэтл*",
+      "visualQuery": "empty highway summer hills",
+      "shots": [
+        {
+          "prompt": "An empty two-lane American highway stretching to the horizon through dry golden hills under a clear summer sky, afternoon sun. 35mm film photograph, 35mm lens, warm true-to-life colors, soft grain, wide establishing shot, horizon and sky in the upper two thirds, quiet asphalt in the lower third.",
+          "seconds": 3,
+          "framing": "establishing",
+          "camera": "pan-right",
+          "sticker": {
+            "text": "1994",
+            "beat": "Лето тысяча"
+          },
+          "footage": "empty highway summer hills"
+        },
+        {
+          "prompt": "A 30-year-old man with short dark thinning hair, clean-shaven round face and a wide grin, wearing a light blue button-down shirt with rolled sleeves and khaki trousers, drives a mid-nineties sedan along a sunny interstate highway, one hand on the wheel, looking ahead with excitement. 35mm film photograph, 35mm lens, warm afternoon sunlight through the windshield, soft grain, medium shot from the passenger seat, his face in the upper two thirds.",
+          "seconds": 3,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "Jeff",
+          "beat": "Джефф Безос"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "statement",
+      "narration": "Он звонит юристу Тодду Тарберту прямо с дороги и диктует: Кадабра, как в абракадабре.",
+      "onScreen": "Кадабра, как в *абракадабре*",
+      "shots": [
+        {
+          "prompt": "A 30-year-old man with short dark thinning hair, clean-shaven round face and a wide grin, wearing a light blue button-down shirt with rolled sleeves and khaki trousers, stands proudly beside his car at a sunny roadside, speaking into a chunky 1990s brick mobile phone and gesturing theatrically with his free hand like a magician. 35mm film photograph, 35mm lens, golden afternoon light, soft grain, wide shot, man in the upper two thirds, calm gravel shoulder below.",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "Jeff",
+          "callouts": [
+            {
+              "label": "Мобильный",
+              "target": "brick mobile phone",
+              "beat": "прямо с дороги"
+            }
+          ]
+        },
+        {
+          "prompt": "Slow pull-out from the laughing man holding the brick phone in the parked car.",
+          "seconds": 3,
+          "framing": "medium",
+          "camera": "pull-out",
+          "subject": "Jeff",
+          "beat": "Кадабра",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "media",
+      "narration": "Тарберт переспрашивает: вы сказали кадавр? По-английски это труп.",
+      "onScreen": "Вы сказали — *кадавр*?",
+      "visualQuery": "vintage office desk phone",
+      "shots": [
+        {
+          "prompt": "A 40-year-old lawyer with neat side-parted brown hair, wire-rimmed glasses, white dress shirt and navy blue tie sits at a wooden desk in a small sunlit Seattle office in 1994, holding a beige corded desk phone to his ear, eyebrows raised in comic surprise. 35mm film photograph, 35mm lens, soft window daylight, warm colors, soft grain, medium reaction shot, his face in the upper two thirds, tidy desk below.",
+          "seconds": 4,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "Todd"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "И отсылку к фокусам могут не понять. Но в июле фирму регистрируют как Кадабру.",
+      "onScreen": "Июль 1994: фирма *Cadabra*",
+      "shots": [
+        {
+          "prompt": "A 40-year-old lawyer with neat side-parted brown hair, wire-rimmed glasses, white dress shirt and navy blue tie shrugs with a wry smile and pulls a stamp toward an official paper document on his wooden desk in a sunlit 1994 Seattle office. 35mm film photograph, 35mm lens, soft window daylight, warm colors, soft grain, detail shot of hands and the document in the upper two thirds.",
+          "seconds": 6,
+          "framing": "detail",
+          "camera": "tilt-down",
+          "subject": "Todd",
+          "callouts": [
+            {
+              "label": "Регистрация фирмы",
+              "target": "official paper document",
+              "beat": "Но в июле"
+            }
+          ],
+          "sticker": {
+            "text": "07.1994",
+            "beat": "Но в июле"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Безос скупает домены под запасные имена: Эвейк, Браус, Букмолл.",
+      "onScreen": "Запасные *домены*",
+      "visualQuery": "vintage desktop computer 1990s",
+      "shots": [
+        {
+          "prompt": "A 30-year-old man with short dark thinning hair, clean-shaven round face and a wide grin, wearing a light blue button-down shirt with rolled sleeves and khaki trousers, types eagerly on a beige 1990s desktop computer with a bulky monitor in a small cluttered home office with cardboard boxes, summer afternoon. 35mm film photograph, 35mm lens, warm window sunlight, soft grain, medium shot, man and monitor in the upper two thirds.",
+          "seconds": 5,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Jeff",
+          "callouts": [
+            {
+              "label": "Новые домены",
+              "target": "bulky monitor",
+              "beat": "скупает домены"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "И мрачное Релентлесс, беспощадный. Друзья бракуют: зловеще. Но этот адрес до сих пор ведёт на Амазон.",
+      "onScreen": "Relentless — *слишком* зловеще",
+      "shots": [
+        {
+          "prompt": "A 30-year-old man with short dark thinning hair, clean-shaven round face and a wide grin, wearing a light blue button-down shirt with rolled sleeves and khaki trousers, sits at a sunny kitchen table with two friends in casual summer clothes who wince and wave their hands in playful disapproval, coffee mugs on the table, 1994 rented house in Seattle. 35mm film photograph, 35mm lens, warm afternoon light, soft grain, wide shot, faces in the upper two thirds, calm tabletop below.",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "push-in",
+          "subject": "Jeff"
+        },
+        {
+          "prompt": "Slow pull-out from the man at the beige computer, still smiling.",
+          "seconds": 3,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Jeff",
+          "beat": "Но этот адрес",
+          "reuse": "s6-k1"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "statement",
+      "narration": "И тогда Безос читает в словаре весь раздел на А: первые каталоги сайтов шли по алфавиту.",
+      "onScreen": "Нужно имя на букву *А*",
+      "shots": [
+        {
+          "prompt": "A 30-year-old man with short dark thinning hair, clean-shaven round face and a wide grin, wearing a light blue button-down shirt with rolled sleeves and khaki trousers, sits cross-legged on a wooden floor reading a huge open dictionary with total concentration, cardboard boxes around him in a small sunlit 1994 Seattle room. 35mm film photograph, 35mm lens, golden window light, soft grain, high-angle shot, man and book in the upper two thirds.",
+          "seconds": 4,
+          "framing": "high-angle",
+          "camera": "tilt-down",
+          "subject": "Jeff",
+          "callouts": [
+            {
+              "label": "Буква А",
+              "target": "huge open dictionary",
+              "beat": "весь раздел"
+            }
+          ]
+        },
+        {
+          "prompt": "Slow push-in on the man reading the huge open dictionary on the floor.",
+          "seconds": 4,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Jeff",
+          "beat": "первые каталоги",
+          "reuse": "s8-k1"
+        }
+      ]
+    },
+    {
+      "id": "s9",
+      "kind": "media",
+      "narration": "Он выбирает Амазонку, самую большую реку мира. Под самый большой книжный магазин мира.",
+      "onScreen": "Самая большая *река* мира",
+      "visualQuery": "Amazon River aerial view",
+      "shots": [
+        {
+          "prompt": "Aerial view of a vast winding tropical river cutting through dense green rainforest under a bright blue sky with white clouds. 35mm film photograph look, warm true-to-life colors, soft grain, wide establishing shot, river curves in the upper two thirds, calm canopy below.",
+          "seconds": 3,
+          "framing": "establishing",
+          "camera": "pull-out",
+          "footage": "Amazon river aerial rainforest"
+        },
+        {
+          "prompt": "A 30-year-old man with short dark thinning hair, clean-shaven round face and a wide grin, wearing a light blue button-down shirt with rolled sleeves and khaki trousers, stands among tall stacks of books in a small sunlit garage, arms spread wide with a delighted laugh, summer 1994. 35mm film photograph, 35mm lens, warm afternoon light through an open door, soft grain, low-angle shot, man and book stacks in the upper two thirds.",
+          "seconds": 3,
+          "framing": "low-angle",
+          "camera": "tilt-up",
+          "subject": "Jeff",
+          "beat": "Под самый"
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Через три месяца Кадабра стала Амазоном. Инвестор Ханауэр назвал имя пустым сосудом и очень умным ходом.",
+      "onScreen": "Имя-*пустой сосуд*",
+      "shots": [
+        {
+          "prompt": "Slow pan across the delighted man among the tall stacks of books in the garage.",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "Jeff",
+          "reuse": "s9-k2",
+          "sticker": {
+            "text": "3 мес.",
+            "beat": "Через три месяца"
+          }
+        },
+        {
+          "prompt": "An empty clear glass vase standing on a sunlit wooden windowsill in a small 1994 office, warm light glowing through it, simple and calm. 35mm film photograph, 35mm lens, soft grain, detail close-up, vase in the upper two thirds, plain wooden sill below.",
+          "seconds": 4,
+          "framing": "detail",
+          "camera": "pan-right",
+          "subject": "glass vase",
+          "beat": "Инвестор Ханауэр",
+          "callouts": [
+            {
+              "label": "Пустой сосуд",
+              "target": "empty clear glass vase",
+              "beat": "пустым сосудом"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "kind": "cta",
+      "narration": "А твоё название прошло бы телефонный тест?",
+      "onScreen": "Твоё имя прошло бы *тест*?"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "warm humorous docudrama about a funny naming mistake",
+    "lighting": "soft natural daylight through windows, golden afternoon sun",
+    "palette": "warm amber, sky blue, khaki beige, soft cream",
+    "realism": "photorealistic film photography",
+    "mood": "light, curious, playful",
+    "environment": "car on the highway, cluttered small office, kitchen table",
+    "world": "United States, summer 1994: a long sunny interstate highway heading northwest to Seattle, then a small modest Seattle office and rented house with cardboard boxes, mid-nineties furniture and beige computers",
+    "look": "35mm film photograph, 35mm lens, natural warm afternoon sunlight, warm true-to-life colors, soft film grain, gentle mid-nineties feel",
+    "characters": [
+      {
+        "name": "Jeff",
+        "look": "a 30-year-old man with short dark thinning hair, clean-shaven round face and a wide grin, wearing a light blue button-down shirt with rolled sleeves and khaki trousers"
+      },
+      {
+        "name": "Todd",
+        "look": "a 40-year-old lawyer with neat side-parted brown hair, wire-rimmed glasses, white dress shirt and navy blue tie"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}

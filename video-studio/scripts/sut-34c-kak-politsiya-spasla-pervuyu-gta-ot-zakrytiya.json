@@ -1,0 +1,272 @@
+{
+  "title": "Как полиция спасла первую GTA от закрытия",
+  "description": "История первой Grand Theft Auto: в шотландской студии DMA Design делали скучные гонки за полицейского, срывали сроки, и издатель требовал закрыть проект. Креативный директор Гэри Пенн вспоминает, что игру оживили агрессивные полицейские машины, появившиеся, по его словам, кажется, из-за бага. Короткий рассказ о том, как почти проваленный проект дожил до GTA VI.\n#shorts #gta #историяигр #геймдев #видеоигры",
+  "tags": [
+    "gta",
+    "grand theft auto",
+    "история gta",
+    "первая gta",
+    "dma design",
+    "rockstar north",
+    "история видеоигр",
+    "геймдев",
+    "баг в игре",
+    "гэри пенн",
+    "полиция спасла",
+    "gta 6",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Первую ГТА собирались закрыть. Спасла её, похоже, ошибка в коде.",
+      "onScreen": "Первую GTA чуть не *закрыли*",
+      "shots": [
+        {
+          "prompt": "A 23-year-old young man with messy curly brown hair, round wire glasses, a forest-green knitted sweater leans toward a glowing beige CRT monitor, his curious face lit by teal light; the screen shows a top-down pixel-art city of grey rooftops where tiny blue police cars chase a small red car. Small game studio office in Dundee on a rainy 1995 afternoon. 35mm film photograph, 35mm lens, soft grain, close-up. Vertical 9:16, face and screen in the upper two thirds, calm dark desk below.",
+          "seconds": 5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Developer"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Шотландия, девяносто пятый. Студия Ди-Эм-Эй Дизайн делает игру про гонки и погони: ты — полицейский за рулём.",
+      "onScreen": "1995: гонки за *полицейского*",
+      "shots": [
+        {
+          "prompt": "Old grey sandstone buildings along a wet cobbled street in Dundee, Scotland, on a rainy autumn afternoon in 1995, warm lights glowing in the upper windows of a small office, puddles reflecting the grey sky. 35mm film photograph, 35mm lens, soft overcast daylight, warm true-to-life colors, soft grain, wide establishing shot. Vertical 9:16, buildings and lit windows in the upper two thirds, calm wet pavement below.",
+          "seconds": 3,
+          "framing": "establishing",
+          "camera": "tilt-up",
+          "sticker": {
+            "text": "1995",
+            "beat": "девяносто пятый"
+          },
+          "photo": "Dundee city centre"
+        },
+        {
+          "prompt": "A 23-year-old young man with messy curly brown hair, round wire glasses, a forest-green knitted sweater happily steers with a keyboard at a cluttered desk, eyes on a beige CRT monitor showing a top-down pixel-art city with a small blue police car speeding along grey streets. Small game studio office in Dundee, rainy afternoon, warm desk lamp. 35mm film photograph, 35mm lens, soft grain, medium shot. Vertical 9:16, man and monitor in the upper two thirds, plain desk surface below.",
+          "seconds": 4.5,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Developer",
+          "beat": "Студия",
+          "callouts": [
+            {
+              "label": "прототип",
+              "target": "beige CRT monitor",
+              "beat": "гонки и погони"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Но выходит скучно: в бешеной погоне всех задеваешь, а полицейского за это штрафуют.",
+      "onScreen": "За рулём полиции — *скучно*",
+      "visualQuery": "bored man computer desk",
+      "imagePrompt": "young man with curly brown hair and round glasses yawning in front of a glowing beige CRT monitor in a cozy 1995 game studio, rainy window, 35mm film look, warm soft grain",
+      "shots": [
+        {
+          "prompt": "A 23-year-old young man with messy curly brown hair, round wire glasses, a forest-green knitted sweater rests his chin on his hand and yawns widely in front of a glowing beige CRT monitor, a half-empty mug of tea beside the keyboard. Small game studio office in Dundee, grey rainy afternoon light through the window. 35mm film photograph, 35mm lens, warm true-to-life colors, soft grain, reaction shot. Vertical 9:16, his bored face in the upper two thirds, calm desk below.",
+          "seconds": 6,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "Developer"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "Роли меняют. Теперь ты преступник, и за те же аварии получаешь награду.",
+      "onScreen": "Теперь ты — *преступник*",
+      "shots": [
+        {
+          "prompt": "A glowing beige CRT monitor fills the frame, its screen showing a top-down pixel-art city of grey rooftops and streets where a small red sports car races away from three blue-and-white police cars around a corner. The monitor stands on a cluttered desk in a small Dundee game studio, rainy window reflected softly on the glass. 35mm film photograph, 35mm lens, teal CRT glow, soft grain, detail shot. Vertical 9:16, the screen in the upper two thirds, dark desk edge below.",
+          "seconds": 6,
+          "framing": "detail",
+          "camera": "pan-left",
+          "subject": "CRT monitor",
+          "callouts": [
+            {
+              "label": "игрок",
+              "target": "small red sports car",
+              "beat": "ты преступник"
+            },
+            {
+              "label": "полиция",
+              "target": "blue-and-white police cars",
+              "beat": "те же аварии"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "А проект буксует. Сроки сорваны, и американский офис издателя раз за разом требует его закрыть.",
+      "onScreen": "Издатель: *закрыть* проект",
+      "visualQuery": "vintage telephone ringing desk",
+      "imagePrompt": "young man with curly brown hair and round glasses holding a ringing beige telephone receiver away from his ear with a comic grimace, stack of floppy disks on desk, 1995 game studio, 35mm film look, warm lamp light",
+      "shots": [
+        {
+          "prompt": "A 23-year-old young man with messy curly brown hair, round wire glasses, a forest-green knitted sweater holds a ringing beige telephone receiver at arm's length with a comic grimace, a tall stack of floppy disks and cold coffee cups on his desk. Small game studio office in Dundee, late grey evening, warm desk lamp light. 35mm film photograph, 35mm lens, warm true-to-life colors, soft grain, medium shot. Vertical 9:16, man and receiver in the upper two thirds, calm desk below.",
+          "seconds": 4,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "Developer"
+        },
+        {
+          "prompt": "Slow pull-out from the bored developer at his glowing monitor.",
+          "seconds": 3.5,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Developer",
+          "beat": "требует его",
+          "reuse": "s3-k1"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "И тут, вспоминает Гэри Пенн, полицейские машины стали психованными и агрессивными и лезли прямо сквозь машину игрока.",
+      "onScreen": "Полиция вдруг *взбесилась*",
+      "visualQuery": "retro CRT monitor glow",
+      "imagePrompt": "glowing beige CRT monitor showing a top-down pixel-art city where a swarm of blue-and-white police cars rams a small red car with bright pixel sparks, cozy 1995 game studio desk, 35mm film look, teal glow",
+      "shots": [
+        {
+          "prompt": "A glowing beige CRT monitor shows a top-down pixel-art city street where a swarm of blue-and-white police cars rams a small red sports car from every side, bright pixel sparks flying. The monitor sits on a cluttered desk in a small Dundee game studio on a rainy afternoon. 35mm film photograph, 35mm lens, teal CRT glow, warm grain, close-up. Vertical 9:16, the chaotic screen in the upper two thirds, dark keyboard below.",
+          "seconds": 3.5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "CRT monitor",
+          "callouts": [
+            {
+              "label": "бешеные копы",
+              "target": "swarm of blue-and-white police cars",
+              "beat": "психованными"
+            }
+          ]
+        },
+        {
+          "prompt": "A 23-year-old young man with messy curly brown hair, round wire glasses, a forest-green knitted sweater leans back in his office chair laughing with delight, hands raised from the keyboard, teal light from a beige CRT monitor on his face. Small game studio office in Dundee, rainy afternoon window behind him. 35mm film photograph, 35mm lens, warm true-to-life colors, soft grain, reaction shot. Vertical 9:16, his laughing face in the upper two thirds, calm chair and desk below.",
+          "seconds": 3.5,
+          "framing": "reaction",
+          "camera": "handheld",
+          "subject": "Developer",
+          "beat": "и лезли"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Сам он говорит: кажется, это был баг. Но вышло так весело, что его оставили.",
+      "onScreen": "Баг, который *оставили*",
+      "shots": [
+        {
+          "prompt": "A 23-year-old young man with messy curly brown hair, round wire glasses, a forest-green knitted sweater sits at a beige CRT monitor while four smiling young colleagues in jumpers crowd behind his chair, pointing at the screen and laughing. Small game studio office in Dundee, warm desk lamps against a grey rainy window. 35mm film photograph, 35mm lens, warm true-to-life colors, soft grain, wide shot. Vertical 9:16, the group and monitor in the upper two thirds, calm floor below.",
+          "seconds": 3.5,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "Developer"
+        },
+        {
+          "prompt": "Slow pull-out from the monitor where police cars ram the red car.",
+          "seconds": 3,
+          "framing": "medium",
+          "camera": "pull-out",
+          "subject": "CRT monitor",
+          "beat": "Но вышло",
+          "reuse": "s6-k1"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "media",
+      "narration": "В ноябре девяносто седьмого Гранд Тефт Ауто выходит и быстро расходится полумиллионным тиражом.",
+      "onScreen": "1997: *полмиллиона* копий",
+      "visualQuery": "game boxes store shelf",
+      "imagePrompt": "tall stacks of plain glossy dark game boxes on shelves of a cozy 1997 computer game shop, fresh copies unpacked on the counter, rainy window, 35mm film look, warm shop lights",
+      "shots": [
+        {
+          "prompt": "Tall neat stacks of plain glossy dark game boxes fill the shelves of a cozy 1997 computer game shop, a cardboard box of fresh copies being unpacked on the counter, rain streaking the shop window. Warm shop lights on a grey November afternoon in Scotland. 35mm film photograph, 35mm lens, warm true-to-life colors, soft grain, medium shot. Vertical 9:16, the stacked boxes in the upper two thirds, calm wooden counter below.",
+          "seconds": 6,
+          "framing": "low-angle",
+          "camera": "tilt-up",
+          "subject": "game boxes",
+          "sticker": {
+            "text": "1997",
+            "beat": "девяносто седьмого"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "А почти проваленная серия девятнадцатого ноября две тысячи двадцать шестого дожила до шестой части.",
+      "onScreen": "2026: вышла *шестая* часть",
+      "shots": [
+        {
+          "prompt": "A sleek white game controller rests on a light wooden coffee table beside a cup of tea in a cozy modern living room, warm golden evening light pouring through a large window, a soft-focus television glowing in the background. 35mm film photograph, 35mm lens, warm true-to-life colors, soft grain, close-up. Vertical 9:16, the controller and glowing window in the upper two thirds, calm table surface below.",
+          "seconds": 3.5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "game controller",
+          "sticker": {
+            "text": "2026",
+            "beat": "две тысячи двадцать шестого"
+          }
+        },
+        {
+          "prompt": "Slow pull-out from the young developer leaning toward the glowing CRT city.",
+          "seconds": 3,
+          "framing": "wide",
+          "camera": "pull-out",
+          "subject": "Developer",
+          "beat": "дожила до",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "kind": "cta",
+      "narration": "А ты бы оставил такой баг?",
+      "onScreen": "Оставил бы *такой* баг?"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "warm nostalgic mid-90s game studio story, playful and human, the game world shown only on a glowing CRT monitor",
+    "lighting": "soft overcast window daylight mixed with the cool glow of a CRT monitor",
+    "palette": "warm beige, forest green, soft teal monitor glow, touches of red and police blue",
+    "realism": "photorealistic, true-to-life",
+    "mood": "cozy, funny, quietly triumphant",
+    "environment": "a cluttered small game studio office with beige computers, CRT monitors and rain on the windows",
+    "world": "Dundee, Scotland, 1995 to 1997, a small game studio in an old stone building, grey rainy autumn days, beige mid-90s computers and CRT monitors",
+    "look": "35mm film photograph, 35mm lens, soft overcast daylight with warm desk lamps and teal CRT glow, warm true-to-life colors, soft grain",
+    "characters": [
+      {
+        "name": "Developer",
+        "look": "a 23-year-old young man with messy curly brown hair, round wire glasses, a forest-green knitted sweater"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}

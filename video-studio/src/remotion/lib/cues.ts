@@ -10,7 +10,7 @@ import { listItemFrames, msToFrames, normalizeWord, voiceFrames } from "./timing
 
 type CueScene = Pick<
   RenderScene,
-  "kind" | "onScreen" | "narration" | "items" | "stat" | "map" | "compare" | "audioStartFrame" | "audioDurationMs" | "words" | "durationInFrames"
+  "kind" | "onScreen" | "narration" | "items" | "stat" | "map" | "compare" | "audioStartFrame" | "audioDurationMs" | "words" | "durationInFrames" | "shots"
 >;
 
 // Пункты списка: когда диктор произносит пункт (после заголовка).
@@ -86,8 +86,9 @@ export function compareRevealFrames(scene: CueScene, fps: number): number[] {
 
 // Какую сцену рисует композиция: карта/сравнение заменяют обычную раскладку
 // (кроме хука и призыва) — так же решают Video.tsx и звуки.
-export function specialLayout(scene: Pick<RenderScene, "kind" | "map" | "compare">): "map" | "compare" | null {
+export function specialLayout(scene: Pick<RenderScene, "kind" | "map" | "compare" | "shots">): "map" | "compare" | null {
   if (scene.kind === "hook" || scene.kind === "cta") return null;
+  if (scene.shots?.length) return null; // кинорежим: сцену рисуют планы
   if (scene.map && Number.isFinite(scene.map.lat) && Number.isFinite(scene.map.lon)) return "map";
   if (scene.compare && scene.compare.items.length >= 2) return "compare";
   return null;
@@ -104,6 +105,11 @@ export interface SceneCues {
 export function sceneCues(scene: CueScene, fps: number): SceneCues {
   const cues: SceneCues = { pops: [], impacts: [], rises: [] };
   const special = specialLayout(scene);
+  // Кинорежим: «пузырёк» — на подпись к предмету, удар — на крупную цифру.
+  for (const shot of scene.shots ?? []) {
+    for (const c of shot.marks?.callouts ?? []) cues.pops.push(shot.from + c.at + 6);
+    if (shot.marks?.sticker) cues.impacts.push(shot.from + shot.marks.sticker.at);
+  }
   if (special === "map") cues.pops.push(mapLandFrame(scene));
   else if (special === "compare") cues.pops.push(...compareRevealFrames(scene, fps));
   else if (scene.kind === "list" && scene.items && scene.items.length > 0) cues.pops.push(...listRevealFrames(scene, fps));

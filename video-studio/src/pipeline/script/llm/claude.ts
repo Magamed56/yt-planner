@@ -42,13 +42,13 @@ export interface ClaudeConfig {
   apiKey?: string;
 }
 
-const FALLBACK_BETA = "server-side-fallback-2026-07-01";
+export const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 
 // fallbacks: "default" документирован для этих моделей; Haiku 4.5 и старые
 // модели его не принимают.
-const supportsDefaultFallbacks = (model: string) => /^claude-(opus-5-5|opus-5|sonnet-5-5|fable-5-1)$/.test(model);
+export const supportsDefaultFallbacks = (model: string) => /^claude-(opus-5-5|opus-5|sonnet-5-5|fable-5-1)$/.test(model);
 // effort не поддерживают Haiku 4.5 / Sonnet 4.5 и старше.
-const supportsEffort = (model: string) => !/haiku|sonnet-4-5|opus-4-[01]|claude-3/.test(model);
+export const supportsEffort = (model: string) => !/haiku|sonnet-4-5|opus-4-[01]|claude-3/.test(model);
 
 // Веб-поиск (план тем: источники фактов). web_search_20260209 — с динамической
 // фильтрацией (Opus/Sonnet 4.6+ и 5.x); старым моделям — базовая версия.

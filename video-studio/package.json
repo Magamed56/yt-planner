@@ -13,6 +13,7 @@
     "youtube-auth": "tsx src/cli/youtube-auth.ts",
     "youtube-fill": "tsx src/cli/youtube-fill.ts",
     "title-ideas": "tsx src/cli/title-ideas.ts",
+    "topic-ideas": "tsx src/cli/topic-ideas.ts",
     "captions-translate": "tsx src/cli/captions-translate.ts",
     "instagram-token": "tsx src/cli/instagram-token.ts",
     "telegram-check": "tsx src/cli/telegram-check.ts",

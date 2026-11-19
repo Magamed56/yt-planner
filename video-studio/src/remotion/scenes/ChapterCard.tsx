@@ -4,6 +4,7 @@ import { chapterCardFrames, type RenderScene } from "../../types";
 import { KineticText } from "../components/KineticText";
 import { FONT_BODY, FONT_DISPLAY } from "../fonts";
 import { useLayout } from "../lib/layout";
+import { shotsAfterCard } from "../lib/shots";
 import { uiText } from "../lib/ui-text";
 import { withAlpha, type Theme } from "../theme";
 import { clamp, type SceneProps } from "./common";
@@ -23,7 +24,8 @@ export const textStartAfterChapter = (p: SceneProps, start: number): number =>
 export const ChapterWrap: React.FC<SceneProps & { Comp: React.FC<SceneProps> }> = ({ Comp, ...p }) => {
   const card = chapterCardFrames(p.scene, p.index);
   if (!card || !p.scene.chapter) return <Comp {...p} />;
-  const inner: RenderScene = { ...p.scene, audioStartFrame: p.scene.audioStartFrame - card, durationInFrames: Math.max(1, p.scene.durationInFrames - card) };
+  const shots = p.scene.shots ? shotsAfterCard(p.scene.shots, card) : undefined;
+  const inner: RenderScene = { ...p.scene, audioStartFrame: p.scene.audioStartFrame - card, durationInFrames: Math.max(1, p.scene.durationInFrames - card), ...(shots ? { shots } : {}) };
   const chapters = p.video.scenes.filter((s) => s.chapter?.trim());
   const number = Math.max(1, chapters.findIndex((s) => s.id === p.scene.id) + 1);
   return (

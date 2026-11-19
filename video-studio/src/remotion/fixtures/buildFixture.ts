@@ -1,7 +1,9 @@
 import {
   DEFAULT_TRANSITION_FRAMES,
   buildTimelineCaptions,
+  isCinematic,
   layoutScenes,
+  renderShots,
   type Format,
   type RenderScene,
   type SceneVisual,
@@ -36,6 +38,7 @@ export interface FixtureOptions {
   // Пути к голосу по id сцены ("" = без звука). Dev-скрипты подкладывают WAV.
   audioSrc?: (sceneId: string) => string;
   visual?: (sceneId: string, index: number) => SceneVisual;
+  shotVisual?: (sceneId: string, shotIndex: number) => SceneVisual; // кинорежим: кадр плана
   music?: VideoProps["music"];
   whooshSrc?: string | null;
   channelName?: string | null;
@@ -46,7 +49,7 @@ export interface FixtureOptions {
 
 export function buildFixtureProps(script: VideoScript, opts: FixtureOptions = {}): VideoProps {
   const transitionFrames = opts.transitionFrames ?? DEFAULT_TRANSITION_FRAMES;
-  const base = script.scenes.map((s, i) => {
+  const base = script.scenes.map(({ shots: _shots, ...s }, i) => {
     const { words, durationMs } = estimateWords(s.narration);
     return {
       ...s,
@@ -57,7 +60,12 @@ export function buildFixtureProps(script: VideoScript, opts: FixtureOptions = {}
     };
   });
   const laid = layoutScenes(base, transitionFrames);
-  const scenes: RenderScene[] = laid.scenes;
+  const cinematic = isCinematic(script);
+  const scenes: RenderScene[] = laid.scenes.map((s, i) => {
+    const src = script.scenes[i]!.shots;
+    const shots = cinematic && src ? renderShots(s, src, src.map((_, k) => opts.shotVisual?.(s.id, k)), transitionFrames) : undefined;
+    return shots ? { ...s, shots } : s;
+  });
   return {
     title: script.title,
     format: opts.format ?? script.format,

@@ -1,0 +1,854 @@
+{
+  "about": "Проверка фактов тем плана (content/plan.json): вердикт по исходной идее темы, оговорки (что спорно, что является легендой, чего в ролике не говорить) и дословные подтверждающие фразы источников — по порядку keyFacts темы. Сценарист этого файла не видит: главное из оговорок вписано в angle темы после слова «Важно:». Источник цитат — статьи Википедии (сверены с текстом статей скриптом) и страницы из выдачи веб-поиска; последние перед прямым цитированием в ролике стоит открыть и сверить.",
+  "items": [
+    {
+      "code": "34c",
+      "title": "Как взбесившаяся полиция спасла первую GTA",
+      "checked": "2026-11-19",
+      "verdict": "частично: баг не «породил» GTA, а, по рассказу одного разработчика, оживил проект, который издатель хотел закрыть. Про взбесившуюся полицию вспоминал креативный директор DMA Гэри Пенн (интервью 2011 года) — с оговоркой «думаю, это был баг»; играть за преступника придумали отдельно, потому что за полицейского было скучно. Давление «закрыть проект», выход в ноябре 1997-го и скандал от пиарщика Макса Клиффорда подтверждаются; GTA VI вышла 19 ноября 2026 года на PS5 и Xbox Series X/S.",
+      "timely": "GTA VI вышла 19 ноября 2026 года (PlayStation 5 и Xbox Series X/S) — пик интереса к серии прямо сейчас. Ролик на максимуме до конца декабря 2026-го и ещё раз сыграет к выходу версии для ПК; сама история вечная.",
+      "caveats": [
+        "История про баг известна только со слов Гэри Пенна (интервью Тристану Доновану для книги Replay, опубликовано на Gamasutra в 2011 году). Он сам говорит «I think it was a bug» и лишь предполагает причину («кажется, сломался поиск пути»). В статьях Википедии о первой GTA и о студии этой истории нет. В ролике — «по воспоминаниям разработчика», а не «доказанный факт».",
+        "Не говорить «GTA выросла из бага» и «полиция оказалась веселее самой игры»: баг добавил драйва уже существовавшей игре про полицейских и преступников. Смену ролей Википедия объясняет скукой игры за полицейского («nobody wants to be the cop, it's more fun to be bad» — тот же Пенн).",
+        "Race'n'Chase — не чистые гонки: в дизайн-документе это «car racing and crashing game», а по описанию Википедии — погони полицейского за преступниками.",
+        "Цитаты Пенна и Дэйлли взяты из выдачи поиска (фрагменты статей Game Developer, бывшая Gamasutra; те же слова Пенна пересказывают PC Gamer и GameSpot). Сами страницы из рабочей среды не открываются — перед публикацией открыть и сверить дословно.",
+        "Про Клиффорда в Википедии есть и прямое утверждение: «Publicist Max Clifford planted sensational stories in tabloids in order to help sell the first game.» Какие именно истории он подбрасывал, источники пересказывают по-разному — не уточнять.",
+        "Макс Клиффорд в 2014 году осуждён за преступления сексуального характера и умер в заключении в 2017-м (так начинается статья о нём в Википедии). Не делать его обаятельным героем; безопаснее «известный британский пиарщик» без имени. Обсуждение игры в палате лордов — политика по касательной, достаточно «таблоиды требовали запрета».",
+        "Сроки: английская Википедия называет разработку «четырёхлетней», но по её же датам от старта (4 апреля 1995; в статье о студии — март 1995) до выхода (ноябрь 1997) прошло около двух с половиной лет. Говорить «больше двух лет».",
+        "Дата выхода: в Европе на ПК — 28 ноября 1997 года. Дату для США не называть: в английской Википедии — 24 марта 1998, в русской — февраль 1998.",
+        "Механику «очки за сбитых пешеходов» не смаковать — сказать мягко («за нарушения стали давать очки»).",
+        "GTA VI: на старте только PS5 и Xbox Series X/S (на Xbox One — через облако); сроки версии для ПК — пока слухи. Оценки и рекорды первого дня из Википедии не использовать — они меняются. «Около 475 миллионов» копий серии: в одной статье Википедии стоит и «almost 475», и «over 475»."
+      ],
+      "wiki": {
+        "ru": "Grand Theft Auto (игра)",
+        "en": "Grand Theft Auto (video game)"
+      },
+      "evidence": [
+        "In the meantime, Dailly was experimenting with ways to render 3D buildings from a top-down perspective. To showcase this technology, he devised a game that saw the player control a dinosaur and destroy the city. After adding cars to make the scene more lively, a colleague suggested having the player drive these cars instead.",
+        "The development of Grand Theft Auto began on 4 April 1995 at DMA Design in Dundee. […] The game was originally titled Race'n'Chase. […] An original design document, dated 22 March 1995, was posted online by Mike Dailly on 22 March 2011. […] The original concept of Grand Theft Auto was \"to produce a fun, addictive and fast multi-player car racing and crashing game which uses a novel graphics method\".",
+        "Однако вскоре и команда DMA, и представители BMG осознали, что в своем нынешнем виде игра получилась скучной: преследуя преступников на высокой скорости, было практически невозможно не задеть пешеходов (обозначенных на тротуарах специальными значками), а поскольку игрок управлял полицейским, гибель мирных жителей приводила к штрафам. Разработчики решили поменять роли: теперь игроку предстояло взять на себя образ преступника. В таком случае наезд на пешехода приносил не штраф, а очки. Как отметил сценарист Брайан Бэглоу: «Ты — преступник, поэтому, совершая что-то плохое, получаешь награду!»",
+        "The development team consisted mostly of recent graduates with little development experience, with Hamilton as the lead programmer. […] Furthermore, the American division of BMG Interactive regularly pushed for Race'n'Chase to be cancelled because the team kept missing development milestones.",
+        "\"It never really felt like it was going anywhere,\" Penn said. \"It was almost canned.\" […] \"One day, I think it was a bug, the police suddenly became mental and aggressive.\" […] \"It was because they were trying to drive through you.\" […] \"That was awesome, so that stayed in. It was tweaked a little bit, but that stayed in because that was great fun.\"",
+        "In the lead-up to the debut of Race'n'Chase, now renamed Grand Theft Auto, BMG Interactive hired the publicist […] who wanted to use controversy to market the game. […] several tabloid newspapers called for it to be banned in the country. Grand Theft Auto was released in November 1997 and, despite mixed reviews, quickly sold 500,000 units and generated £25 million.",
+        "\"He designed all the outcry, which pretty much guaranteed MPs would get involved.\"",
+        "Dundee-based DMA Design began the series with 1997's Grand Theft Auto. […] It has shipped almost 475 million units, placing it amongst both the best-selling video game franchises and highest-grossing media franchises of all time.",
+        "The game was released for PlayStation 5 and Xbox Series X and Series S systems on 19 November 2026, with no Windows release scheduled as of October 2026."
+      ]
+    },
+    {
+      "code": "35a",
+      "title": "Почему рельсы нельзя просто положить без зазоров",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено: зазоры — под тепловое расширение, стук — от них, а бесстыковой путь закрепляют при расчётной температуре, нагревая или растягивая рельс; уточнение — путь не «выгибает дугой», а выбрасывает вбок волнами, и сплошные рельсы как раз работают — не работает только «положить без расчёта»",
+      "timely": "вечная тема; лучше всего заходит летом, в жару, когда из-за нагрева рельсов поездам ограничивают скорость",
+      "caveats": [
+        "Рабочее название из задания («Почему идеально ровные сплошные рельсы не работают») в лоб неверно: сплошные сварные рельсы сегодня — основной тип пути. Не работает наивное решение «положить без зазоров и без расчёта температуры», поэтому заголовок заменён на «Почему рельсы нельзя просто положить без зазоров»; в ролике это надо проговорить, иначе выйдет обман.",
+        "«Выгнуло бы дугой» — неточно: выброс — это резкое боковое искривление несколькими волнами в горизонтальной плоскости (en-wiki: «It is more common for rails to move laterally»), а не вертикальная арка.",
+        "Готового числового примера удлинения в прочитанных статьях нет — только коэффициент 11,8·10⁻⁶ на градус и формула λ = α·l·Δt, поэтому в keyFacts примера нет. Если нужен: по этой формуле свободный 25-метровый рельс при нагреве на 50 °C удлиняется примерно на 15 мм, километр рельса — примерно на 59 см. Это мой пересчёт, говорить «примерно» и «если рельс ничем не держать».",
+        "Бесстыковой путь не снимает риск совсем: выбросы бывают и на нём (поэтому в жару ограничивают скорость), а зимой растянутый рельс может лопнуть — по ru-wiki «разрыв сварного стыка», в en-wiki рельсы в сильный мороз подогревают от «pull aparts».",
+        "Температуру закрепления для России не называть: в ru-wiki сказано только, что она своя для каждой дороги РЖД. 27 °C — это Великобритания, 35–43 °C — США.",
+        "110 тонн-сил — для рельсов Р65, «максимально допустимые в кривых» (ru-wiki), то есть верхняя граница, а не обычное состояние.",
+        "«Стук колёс исчез» — не везде: звеньевой путь остаётся на малодеятельных линиях, а между плетями в России лежат короткие уравнительные пролёты со стыками.",
+        "Даты: в en-wiki «Welding of rails into longer lengths was first introduced around 1893», а «The first welded track was used in Germany in 1924»; в ru-wiki идея бесстыкового пути — инженер И. Ф. Стецевич, 1896 год, первый участок в СССР — 1933 год, станция Подмосковная, 477 метров. Аккуратно: «сваривать рельсы начали в конце XIX века, первый сварной путь — Германия, 1924».",
+        "Белые рельсы Deutsche Bahn — в en-wiki «is starting to paint», без даты и масштаба; подавать как эксперимент.",
+        "Конусность 1:20 и наклон рельсов 1:40 — «about» и «generally» в en-wiki; в разных странах профили разные. «Поезд держат не гребни» — упрощение: в крутых кривых и на стрелках работают именно гребни (ru-wiki), а на большой скорости лишняя конусность вызывает виляние.",
+        "В статье Buckling перечислены крушения из-за выброса пути — в ролик не брать (аварии с жертвами).",
+        "Веб-поиск в этой сессии был недоступен (исчерпан общий лимит), другие сайты закрыты сетью: всё проверено только по статьям en/ru Википедии. Первоисточники и сайты музеев/ведомств не читал — перед публикацией цифры стоит перепроверить по ним."
+      ],
+      "wiki": {
+        "ru": "Бесстыковой путь",
+        "en": "Railway track"
+      },
+      "evidence": [
+        "Small gaps which function as expansion joints are deliberately left between the rail ends to allow for expansion of the rails in hot weather. … Because of these small gaps, trains passing over jointed tracks make a \"clickety-clack\" sound, and over time, the rail ends are deflected downwards.",
+        "Рельс длиной l, нагретый на Δt, удлинился бы на величину λt … α = 11,8·10-6 °C-1 — коэффициент температурного расширения стали … наибольшие конструктивные зазоры (21 мм для Р50 и 23 мм для Р65 и Р75)",
+        "За время около 0,2 с образуется резкое искривление рельсов (до 0,3—0,5 м на длине 20—40 м) с несколькими волнами в горизонтальной плоскости. Рельсы приобретают остаточные деформации и становятся непригодными для работы в пути, часть шпал раскалывается, щебень с балластной призмы отбрасывается.",
+        "Distortion due to heat expansion is known in North America as sun kink, and elsewhere as buckling. … In North American practice, extreme temperatures will trigger slow orders to allow crews time to react to buckling or \"sun kinks\" if encountered. The German railway company Deutsche Bahn is starting to paint rails white to lower the peak temperatures reached in summer days.",
+        "Rail lengths are made as long as possible, as the joints between rails are a source of weakness. … In this form of track, the rails are welded together using flash butt welding to form a single continuous rail that may be several kilometres long. … The first welded track was used in Germany in 1924. … After new rail segments are laid or defective rails are replaced (welded in), the rails can be artificially stressed if the rail temperature at laying is cooler than desired. The stressing process involves either heating the rails, causing them to expand, or stretching the rails with hydraulic equipment. They are then fastened (clipped) to the sleepers in their expanded form. This process ensures that the rail will not expand much further in subsequent hot weather. … In effect, stressed rails are a bit like a piece of stretched elastic firmly fastened down.",
+        "In the United Kingdom, CWR is stressed to 27 °C (81 °F), the mean summer rail temperature. In the US, standard stress free temperatures vary from 35 to 43 °C (95 to 109 °F).",
+        "в бесстыковом пути температурные колебания компенсируются механическими напряжениями: при высокой температуре рельсы сжаты вдоль, при низкой — растянуты … Рельсы могут свариваться в плети длиной в перегон и достигать 30 и более километров … Механические напряжения сжатия и растяжения, возникающие в рельсовых нитях, для рельсов Р65 при эксплуатации достигают значений 110 тонн-сил в каждой из нитей (максимально допустимые в кривых). … В бесстыковом пути удлинения и укорочения плетей происходят только на концевых участках, эти концевые участки называют дышащими участками.",
+        "Most train wheels have a conical taper of about 1 in 20 to enable the wheelset to follow curves with less chance of the wheel flanges coming in contact with the rail sides, and to reduce curve resistance. The rails generally slant inwards at 1 in 40, a lesser angle than the wheel cone. … The Bay Area Rapid Transit (BART) system in San Francisco, built with cylindrical wheels and flat-topped rails, started to re-profile the wheels in 2016 with conical treads after years of complaints about the squeal by its passengers.",
+        "Вписывание в кривые больших радиусов (порядка 500 метров и более) осуществляется за счёт разности диаметров колёс по окружностям катания, возникающей при смещении колёсной пары поперёк пути. Эта разность обусловлена тем, что поверхность катания колёс (профиль колеса) — не цилиндрическая, а коническая … Движение колёсной пары по дуге малого радиуса (например, на стрелочных переводах) обеспечивается наличием гребней (реборд) на колёсах. … При движении по прямой гребни колёс несут скорее страховочную функцию, чем функцию поддержания стабильного прямолинейного движения."
+      ]
+    },
+    {
+      "code": "35b",
+      "title": "Чёрная пятница: название придумали вовсе не магазины",
+      "checked": "2026-11-19",
+      "verdict": "частично: название действительно придумали не магазины, они его не любили и в 1961 году пытались заменить на «Big Friday» — это подтверждается. Но «придумали полицейские Филадельфии» — упрощение: самое раннее известное употребление (1951) — про массовые «больничные» рабочих, а в полицейском жаргоне слово ходило ещё и в Рочестере; кто и в каком году сказал его первым, неизвестно.",
+      "timely": "В 2026 году «чёрная пятница» — 27 ноября (День благодарения — четверг 26 ноября). Выпускать до 27 ноября; тема актуальна до «киберпонедельника» 30 ноября, потом уходит до следующей осени.",
+      "caveats": [
+        "Когда именно так заговорили полицейские, источники датируют по-разному: Википедия — «примерно тогда же», что и в 1951–52 годах; History.com — «в 1950-х»; Philadelphia Inquirer — «в конце 1950-х или в 1960-м» (последние два — по выдаче поиска). Безопасная формулировка: «к началу 1960-х».",
+        "Русская Википедия пишет, что термин появился в 1966 году, — это устаревшая датировка (год заметки в журнале American Philatelist). Не говорить «появился в 1966-м».",
+        "Цитату 1966 года из American Philatelist («…так полиция Филадельфии называет пятницу после Дня благодарения. Это не ласковое прозвище») я убрал из keyFacts: сам текст страницы с ней открыть не удалось, поиск лишь подтвердил, что она там есть. Использовать только после перепроверки.",
+        "Матч Army–Navy — деталь из пересказов (Википедия, History.com); подавать со словами «по распространённой версии». Сейчас матч играют во вторую субботу декабря (с 2009 года; до этого — в выходные Дня благодарения, чаще всего в Филадельфии — по статье «Army–Navy Game»).",
+        "Версия «in the black» — не происхождение названия, а позднее переосмысление; не подавать её как правду. Паника 1869 года — другая «чёрная пятница», к распродажам отношения не имеет: не говорить, что название распродажи пошло от биржевого краха (так небрежно сказано в статье Википедии о фейке).",
+        "Миф про рабов — тема тяжёлая: в ролике либо не трогать, либо одной фразой «это выдумка из соцсетей», без подробностей.",
+        "По воспоминаниям репортёра Джозефа Барретта (1994), слово в газеты принесли он с напарником, а на пресс-релиз начальника полиции про «Big Friday» журналисты не поддались. Это мемуар, и видел я его только в выдаче поиска (vocabulary.com) — в keyFacts не включён. Оттуда же: пиарщика из истории про «Big Friday» звали Эйб Розен (Abe S. Rosen), источник — бюллетень Public Relations News от 18 декабря 1961 года.",
+        "Дата 2026 года проверена по календарю: четвёртый четверг ноября — 26-е, значит, пятница — 27-е; поиск это подтвердил. По данным СМИ в выдаче поиска (dp.ru), на первой российской «чёрной пятнице» 2013 года сайт акции ночью не выдержал наплыва посетителей — дословной цитаты нет, в keyFacts не включено.",
+        "Товарный знак «Black Friday» в России: по русской Википедии, в 2018 году Суд по интеллектуальным правам подтвердил решение ФАС. Название компании в ролике лучше не называть."
+      ],
+      "wiki": {
+        "ru": "Чёрная пятница (распродажи)",
+        "en": "Black Friday (shopping)"
+      },
+      "evidence": [
+        "For centuries, the adjective \"black\" has been applied to days upon which calamities occurred. […] When President Grant learned of this manipulation, he ordered the Treasury to release a large supply of gold, which halted the run and caused prices to drop by 18%.",
+        "The earliest known use of \"Black Friday\" to refer to the day after Thanksgiving occurred in the journal, Factory Management and Maintenance, for November 1951, and again in 1952. Here it referred to the practice of workers calling in sick on the day after Thanksgiving, in order to have a four-day weekend. However, this use does not appear to have caught on.",
+        "Around the same time, the terms \"Black Friday\" and \"Black Saturday\" came to be used by the police in Philadelphia and Rochester to describe the crowds and traffic congestion accompanying the start of the Christmas shopping season.",
+        "The annual Army-Navy football game was traditionally held in Philadelphia, Pennsylvania, on the Saturday after Thanksgiving and was drawing a significant number of visitors. […] Philadelphia police began calling the day \"Black Friday\" because of the headaches the large crowds caused for them.",
+        "In 1961, the city and merchants of Philadelphia attempted to improve conditions, and a public relations expert recommended rebranding the days \"Big Friday\" and \"Big Saturday\", but these terms were quickly forgotten.",
+        "The use of the phrase spread slowly, first appearing in The New York Times on November 29, 1975, in which it still refers specifically to \"the busiest shopping and traffic day of the year\" in Philadelphia. Although it soon became more widespread, The Philadelphia Inquirer reported in 1985 that retailers in Cincinnati and Los Angeles were still unaware of the term.",
+        "As the phrase gained national attention in the early 1980s, merchants objecting to the use of a derisive term to refer to one of the most important shopping days of the year suggested an alternative derivation […] The earliest known published reference to this explanation occurs in The Philadelphia Inquirer for November 28, 1981.",
+        "In 2018, a viral Facebook post made the false claim that the term \"Black Friday\" derives from a day when slave traders sold slaves at a discount. […] The claim has been debunked as a hoax by experts and the media",
+        "Впервые в России распродажи под названием «чёрная пятница» были проведены 6 декабря 2013 года, на неделю позже, чем во всём мире. […] В 2016 году на имя российской компании ООО «Блэк Фрайдэй» был зарегистрирован товарный знак «Black Friday». […] актом недобросовестной конкуренции"
+      ]
+    },
+    {
+      "code": "35c",
+      "title": "Зачем Marvel доказывала в суде, что Люди Икс — не люди",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено, с двумя уточнениями: суд решал не «люди ли мутанты», а по какой ставке облагать фигурки, — и признал, что они изображают «нечеловеческих существ» (ставки 12 % против 6,8 %, судья Джудит Барзилай, 3 января 2003 года); а истцом была не сама Marvel, а Toy Biz — игрушечная фирма, на 46 % принадлежавшая Marvel и к 2003 году ставшая её подразделением.",
+      "timely": "18 декабря 2026 года выходит Avengers: Doomsday (в странах СНГ — «Мстители: Доктор Дум», дословно «Судный день») с актёрами «Людей Икс» студии Fox. Ролик актуален с конца ноября до января 2027-го; без привязки это вечная тема.",
+      "caveats": [
+        "Решение касается только таможенной классификации фигурок, а не «правового статуса» персонажей. Корректно: «суд признал, что фигурки Людей Икс изображают не людей».",
+        "Судилась Toy Biz, а не Marvel напрямую — говорить «игрушечная компания Marvel» или «производитель игрушек Marvel».",
+        "«Нечеловеческими» суд признал не только Людей Икс: в деле были фигурки из разных серий Marvel, включая «Человека-паука» и «Фантастическую четвёрку» — поэтому там и оказался Кингпин.",
+        "Сколько длилась тяжба — источники говорят по-разному: номер дела 96-10-02291 указывает на 1996 год, выпуск Radiolab говорит о «десяти годах» разбирательств, а спорные партии фигурок ввозились ещё в 1993–1994 годах. В ролике — «годами», без цифры.",
+        "Ставки 12 % и 6,8 % — это тариф 1990-х. Сумму возврата источники не называют: не выдумывать «миллионы долларов».",
+        "Синий Зверь и когти Росомахи как главные доводы юристов («у людей не бывает синей шерсти») — из пересказа выпуска Radiolab «Mutant Rights» (2011) в выдаче поиска, дословно не сверено. Подавать как «по рассказу самих юристов» или не брать.",
+        "Описание Кингпина в решении («мужчина в костюме с тростью», в сюжете нет сверхспособностей), цитата про «причудливость», слова о «четвёртом и последнем решении» и анонс Radiolab взяты из выдачи поиска: страницы напрямую не открывались — сверить перед публикацией.",
+        "Про поправку 2007 года и «одно из самых странных дел» известно только из Википедии.",
+        "Фильм: в русской Википедии он называется «Мстители: Доктор Дум» («в локализации для стран СНГ — «Доктор Дум»»); «Судный день» — дословный перевод. 18 декабря 2026 года — дата проката в США; про российские кинотеатры ничего не обещать.",
+        "Патрик Стюарт (Профессор Икс) умер 28 октября 2026 года в возрасте 86 лет (CNN, NPR, Variety; русская Википедия: «Последний фильм с участием британского актера Патрика Стюарта, скончавшегося 28 октября 2026 года»). Упоминать его бережно, без шуток про «не людей».",
+        "Бонус-совпадение (выведено из двух дат Википедии, использовать по желанию): решение вынесено 3 января 2003 года — в день рождения судьи («Judith Morgenstern Barzilay (born January 3, 1944)»)."
+      ],
+      "wiki": {
+        "ru": null,
+        "en": "Toy Biz, Inc. v. United States"
+      },
+      "evidence": [
+        "This decision effectively halved the tariff rate, from 12 percent tax to 6.8 percent. […] The Harmonized Tariff Schedule in US law distinguished between two types of action figures for determining tariffs: dolls, which are defined to include human figures, and toys, which include nonhuman \"creatures\".",
+        "two international trade lawyers, Sherry Singer and Indie Singh, who noticed something interesting while looking at a book of tariff classifications […] \"Dolls,\" which represent human beings, are taxed at almost twice the rate of \"toys,\" which represent something not human - such as robots, monsters, or demons. […] went down to the customs office with a bag of XMEN action figures to convince the US government that these mutants are NOT human",
+        "In 1993, Toy Biz made a deal with Marvel Entertainment Group where Toy Biz were granted \"exclusive, perpetual, royalty-free licenses\" to create toys of Marvel Comics characters and intellectual property, in exchange for Marvel Entertainment Group acquiring 46 percent of Toy Biz equity. […] In June 1998, Marvel Entertainment Group merged with Toy Biz, Inc. The new company became Marvel Enterprises, with the 'Toy Biz' name used as its in-house toy division.",
+        "the fourth and final opinion for this Court in a case involving the tariff classification of dozens of action figures from various Marvel Comics series",
+        "Toy Biz, Inc. v. United States was a 2003 decision in the United States Court of International Trade that determined that for purposes of tariffs, Toy Biz's Marvel Comics action figures were toys, not dolls, because they represented \"nonhuman creatures\". […] On January 3, 2003, after examining more than 60 action figures, Judge Judith Barzilay ruled in their favor, granting Toy Biz reimbursement for import taxes on previous toys.",
+        "the freakishness of the figure's appearance coupled with the fabled 'Spider-Man' storyline to which it belongs does not warrant a finding that the figure",
+        "Because a common theme in Marvel Comics had been the struggle for mutants like the X-Men to prove their humanity, the ruling was surprising to fans. Marvel responded to these concerns by claiming \"our heroes are living, breathing human beings – but humans who have extraordinary abilities ... A decision that the X-Men figures indeed do have 'nonhuman' characteristics further proves our characters have special, out-of-this world powers\".",
+        "The case has often been cited as one of the strangest legal cases in US history. […] In 2007, the Harmonized Tariff Schedule was amended to eliminate the distinction between dolls and other toys, which are now in the same category.",
+        "The large cast features actors from previous MCU media and 20th Century Fox's X-Men film series […] Avengers: Doomsday is scheduled to be released in the United States on December 18, 2026, as part of Phase Six of the MCU. […] Ian McKellen as Erik Lehnsherr / Magneto […] James Marsden as Scott Summers / Cyclops […] Kelsey Grammer as Hank McCoy / Beast […] Alan Cumming as Kurt Wagner / Nightcrawler […] Rebecca Romijn as Raven Darkhölme / Mystique […] Patrick Stewart as Charles Xavier / Professor X […] Doomsday marks Stewart's final on-screen performance following his death in October 2026."
+      ]
+    },
+    {
+      "code": "36a",
+      "title": "Сосуд с драконами, который почуял землетрясение",
+      "checked": "2026-11-19",
+      "verdict": "частично: сюжет точно пересказывает хронику, но хроника составлена через три века после событий, и проверить её нечем — сам прибор не сохранился, его механизм неизвестен, а современные копии, по оценке исследователей, не достигли описанной чувствительности; год срабатывания в источниках не установлен",
+      "timely": "вечная тема",
+      "caveats": [
+        "Не говорить «предсказывал землетрясения» и «предупреждал»: прибор ничего не предсказывал — он отмечал уже случившийся далёкий толчок и его сторону.",
+        "Это сейсмоскоп, а не сейсмограф: он ничего не записывал (en-wiki: «unlike a seismometer, it does not retain a time record of those motions»). В русской Википедии прибор назван и сейсмографом, и сейсмоскопом — в ролике лучше «сейсмоскоп» или просто «прибор».",
+        "Единственный источник истории — «Книга Поздней Хань», V век. Подавать «по хронике», а не как установленный факт.",
+        "Год срабатывания не называть. В статье Zhang Heng — просто «on one occasion»; в статье Seismometer — «probably at the time of a large earthquake in Gansu in AD 143», хотя сам Чжан Хэн умер в 139-м. В популярных пересказах встречается 138 год — прочитанными источниками он не подтверждён.",
+        "Расстояние: в одном месте статьи «about 400 km to 500 km», в другом — «500 km», в третьем — «hundreds of miles/kilometers». Говорить «за сотни километров» или «в 400–500 километрах».",
+        "Сторона света: в статье Zhang Heng — «northwest» и гонец «from the west»; в статье Seismometer рядом стоит противоречащая фраза о землетрясении «somewhere in the east» и всаднике с востока. Берём запад/северо-запад (Лунси — нынешняя Ганьсу), но безопаснее сказать «в далёкой области Лунси».",
+        "«Через несколько дней» — по пересказу хроники («several days later»); в биографической части статьи — «shortly afterwards». Точного числа дней нет.",
+        "Все изображения прибора, включая знаменитую музейную модель, — реконструкции XX века; оригинала нет, есть только словесное описание. Диаметр «около 2 метров» — пересчёт древней меры в en-wiki.",
+        "Подробности механизма (рычаги, защёлки, кривошипы) в en-wiki описаны уверенно, но это реконструкция Ван Чжэньдо, а не текст хроники. Подвешенный был маятник или перевёрнутый — спор не решён.",
+        "Про реплику 2005 года в источнике сказано только, что о ней «объявили»; повторяет ли она описанную чувствительность — в прочитанном не сказано. Не говорить «тайна разгадана».",
+        "«Первый в мире сейсмоскоп» — по en-wiki «many historians consider»; сообщения о более ранних приборах (Древний Египет) там же названы неподтверждёнными.",
+        "Историк Барбьери-Лоу предполагает, что Чжан Хэн только спроектировал прибор, а отливали его мастера императорских мастерских, — «изготовил своими руками» не говорить.",
+        "Столица — Лоян (по ru-wiki: «приехал в столицу Лоян»).",
+        "Веб-поиск в этой сессии был недоступен (исчерпан общий лимит), другие сайты закрыты сетью: всё проверено только по статьям en/ru Википедии. Первоисточники и сайты музеев/ведомств не читал — перед публикацией цифры стоит перепроверить по ним."
+      ],
+      "wiki": {
+        "ru": "Чжан Хэн",
+        "en": "Zhang Heng"
+      },
+      "evidence": [
+        "In 132, Zhang Heng presented to the Han court what many historians consider to be his most impressive invention, the first seismoscope. … It was named \"earthquake weathervane\" (hòufēng dìdòngyí 候風地動儀), and it was able to roughly determine the direction (out of eight directions) where the earthquake came from.",
+        "The description we have, from the History of the Later Han Dynasty, says that it was a large bronze vessel, about 2 meters in diameter; at eight points around the top were dragon's heads holding bronze balls. When there was an earthquake, one of the dragons' mouths would open and drop its ball into a bronze toad at the base, making a sound and supposedly showing the direction of the earthquake.",
+        "On one occasion his device indicated that an earthquake had occurred in the northwest. As there was no perceivable tremor felt in the capital his political enemies were briefly able to relish the failure of his device, until a messenger arrived shortly afterwards to report that an earthquake had occurred about 400 km (248 mi) to 500 km (310 mi) northwest of Luoyang in Gansu province.",
+        "According to the Book of Later Han (compiled by Fan Ye in the 5th century), his bronze urn-shaped device, with a swinging pendulum inside, was able to detect the direction of an earthquake hundreds of miles/kilometers away. … The Book of Later Han records that, on one occasion, Zhang's device was triggered, though no observer had felt any seismic disturbance; several days later a messenger arrived from the west and reported that an earthquake had occurred in Longxi (modern Gansu Province), the same direction that Zhang's device had indicated, and thus the court was forced to admit the efficacy of the device.",
+        "This was essential for the Han government in sending quick aid and relief to regions devastated by this type of natural disaster.",
+        "The available text says that inside the vessel was a central column that could move along eight tracks; this is thought to refer to a pendulum, though it is not known exactly how this was linked to a mechanism that would open only one dragon's mouth.",
+        "By the time of the Yuan dynasty (1271–1368), it was acknowledged that all devices previously made were preserved, except for that of the seismoscope. This was discussed by the scholar Zhou Mi around 1290, who remarked that the books of Xindu Fang and Lin Xiaogong detailing their seismological devices were no longer to be found.",
+        "Hong-sen Yan states that modern replicas of Zhang's device have failed to reach the level of accuracy and sensitivity described in Chinese historical records. … In his 1936 reconstruction, the central pillar (du zhu) of the device was a suspended pendulum acting as a movement sensor, while the central pillar of his second model in 1963 was an inverted pendulum. … On June 13, 2005, modern Chinese seismologists announced that they had successfully created a replica of the instrument.",
+        "In 2018, China launched a research satellite called China Seismo-Electromagnetic Satellite (CSES) which is also named Zhangheng-1 (ZH-1)."
+      ]
+    },
+    {
+      "code": "36b",
+      "title": "Патинко: окошко за углом, которое обходит закон",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено (с оговорками: запрещено большинство азартных игр, а не все; залов уже не «на каждом углу» — их число упало более чем вдвое; третье звено «системы трёх лавок» в прочитанных статьях не описано)",
+      "timely": "Вечная тема. Дополнительный повод: по статье «Gambling in Japan», в апреле 2025 года в Осаке начали строить MGM Osaka — курорт с первым легальным казино, так что разговор «казино нельзя, а патинко можно» сейчас на слуху.",
+      "caveats": [
+        "Уточнение по закону (en «Businesses Affecting Public Morals Regulation Act»): залы патинко проходят по закону 1948 года о развлекательных заведениях — категория 6, вместе с клубами маджонга, — и работают по разрешению комиссии общественной безопасности префектуры. То есть официально это развлечение, а не азартная игра.",
+        "Проверено только по Википедии (en «Pachinko», «Gambling in Japan», «Businesses Affecting Public Morals Regulation Act»; ru «Патинко»): общий лимит веб-поиска был исчерпан, независимых источников (СМИ, японские ведомства) я не читал. Японская Википедия из сессии недоступна. Цифры рынка и эпизод 2005 года перед выпуском стоит перепроверить по первоисточнику.",
+        "Не говорить «азартные игры в Японии запрещены» без слова «почти» или «большинство»: по особым законам легальны ставки на скачки, вело-, мото- и лодочные гонки, лотереи и футбольный тотализатор, а в июле 2018 года парламент разрешил казино в составе курортов (в статье: три казино; MGM Osaka строится с апреля 2025).",
+        "«На каждом углу» — преувеличение для сегодняшнего дня: залов 7665 (2022) против 18 244 в 1997-м. Честнее — «тысячи залов по всей стране».",
+        "14,6 трлн иен — это не доход залов, а сумма, на которую игроки взяли шарики. В той же статье сказано, что около 85% возвращается игрокам, то есть реальная выручка залов — примерно 15% от этой цифры. Не называть 14,6 трлн «выручкой» или «прибылью».",
+        "«Система трёх лавок» в английской статье названа, но расписана как два звена: зал и лавка-скупщик, которая продаёт призы обратно залу. По памяти, «третья лавка» — оптовик между скупщиком и залом, но в этой сессии я этого не подтвердил: в ролике говорить «зал — окошко — и обратно в зал», а «три лавки» давать только как название схемы.",
+        "В самой Википедии разнобой: особый приз описан то как серебряная или золотая безделушка в пластике, то как зажигалки и шариковые ручки; независимость скупщика — «номинальная», «часто принадлежит владельцу зала». Русская статья пишет, что приз продают «нелегально», английская — что закон формально не нарушается. Безопасная формулировка: «формально закон не нарушен, и полиция это терпит».",
+        "Эпизод 2005 года в Канагаве известен мне только из Википедии; сумма там — «the equivalent of US$60,000», в ролике говорить «примерно на 60 тысяч долларов».",
+        "Пример «400 шариков → приз за 1500 иен» — иллюстрация из статьи («might be offered»), а не официальный курс.",
+        "Не брать фразу из «Gambling in Japan» про «почти половину всего досуга в Японии» — она без внятного источника. Якудзу, происхождение владельцев залов и игровую зависимость в ролик не тянуть."
+      ],
+      "wiki": {
+        "ru": "Патинко",
+        "en": "Pachinko"
+      },
+      "evidence": [
+        "In Japan, most forms of gambling are generally banned by the Criminal Code chapter 23. However, there are several exceptions, including betting on horse racing and certain motor sports.",
+        "Pachinko balls won from games cannot be exchanged directly for money in the parlor, nor can they be removed from the premises or exchanged with other parlors.",
+        "However, they can be legally traded to the parlor for so-called \"special prize\" tokens (tokushu keihin (特殊景品)), which can in turn be \"sold\" for cash to a separate vendor off-premises.",
+        "In Tokyo, the special prize exchange is handled exclusively by the Tokyo Union Circulation company (known as TUC), which sells pachinko and slot parlors gold slivers in standardized plastic cases, which it buys back from winning customers at its \"TUC Shop\" windows.",
+        "These vendors (ostensibly independent from, but often owned by, the parlor owner) then sell the tokens back to the parlor at the same price paid for them—plus a small commission, creating a cash profit—without technically violating the law.",
+        "For example, one special prize worth ¥1500 outside the parlor might be offered to a customer per 400 balls won, assuming each ball originally cost 4 yen.",
+        "This is tolerated by the police because the pachinko parlors that pay out goods and special prizes are nominally independent from the shops that buy back the special prizes.",
+        "Even with such information proving that this parlor was illegally operating an exchange center, which by law must be independent of the parlor, the police did not shut them down, but tracked down the thief.",
+        "The market size in 2022 was ¥14.6 trillion, less than half of the ¥35 trillion in 2005 when the market was at its peak, and the number of pachinko parlors in 2022 was 7,665, less than half of the 18,244 in 1997, when the number of parlors was at its peak."
+      ]
+    },
+    {
+      "code": "36c",
+      "title": "Последняя просьба изобретателя банки Pringles",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено: по просьбе Фреда Бора часть его праха похоронили в банке Pringles (остальное — в обычной урне рядом); суд о НДС 2008–2009 годов тоже подтверждается",
+      "timely": "Вечная тема, привязки к дате нет.",
+      "caveats": [
+        "В банке — только часть праха: остальное в обычной урне в той же могиле, ещё часть — у одного из внуков. Точнее говорить «часть праха похоронили в банке Pringles», а не «похоронили в банке».",
+        "Бор придумал банку и форму чипса, но не рецепт: вкус довёл Александр Лиепа, и патент на сами чипсы — на его имя. Не называть Бора «изобретателем Pringles» — только «изобретателем банки».",
+        "Год выдачи патента расходится: в тексте английской Википедии (со слов AP) — 1971-й, а в карточке патента US 3498798 в той же статье — подан 29.07.1966, выдан 03.03.1970. Говорить только «в 1966 году подал заявку».",
+        "Фамилия по-русски: в русской Википедии — Бор (статья «Бор, Фред»), в СМИ встречается и «Баур». Дата рождения: английская Википедия — 14 июля 1918, русская — 14 июня 1918; возраст 89 лет сходится. Место могилы: Спрингфилд-Тауншип под Цинциннати; русская Википедия допускает и кладбище Arlington Memorial Gardens в Маунт-Хелти.",
+        "Про 1980-е и спор о вкусе известно со слов одного человека — сына Ларри (Time, 2008); подавать как его рассказ. По пересказам той же статьи в поисковой выдаче, банку купили в аптечной сети Walgreens по дороге в похоронное бюро, а сын поначалу только посмеялся над идеей, — дословных цитат на это у меня нет, поэтому в keyFacts этого нет; перед использованием сверить со статьёй.",
+        "В сети ходит байка, будто прах изобретателя расфасовали по банкам и продали покупателям, — это неправда (в поисковой выдаче — разбор Snopes); не путать с реальной историей.",
+        "Суд о НДС шёл в три ступени: налоговый трибунал → Высокий суд (июль 2008, в пользу P&G) → Апелляционный суд (май 2009, против). Суммы (около £100 млн за прошлые годы, около £20 млн в год) приводит пресса, и они расходятся — в ролике не называть.",
+        "Причину смерти (болезнь Альцгеймера) не акцентировать. Цитаты Time: Цитаты не из Википедии взяты из поисковой выдачи: открыть сами страницы из этой сессии нельзя (сайты закрыты сетевыми правилами). Перед прямым цитированием в ролике сверить формулировку по ссылке."
+      ],
+      "wiki": {
+        "ru": "Бор, Фред",
+        "en": "Fred Baur"
+      },
+      "evidence": [
+        "In 1956, Procter & Gamble assigned a task to chemist Fredric J. Baur (1918–2008): to develop a new kind of potato chip to address consumer complaints about broken, greasy, and stale chips, as well as air in the bags. Baur spent two years developing saddle-shaped chips from fried dough, and selected a tubular can as the chips' container. The saddle-shape of Pringles chips is mathematically known as a hyperbolic paraboloid. However, Baur could not figure out how to make the chips palatable, and was pulled off the task to work on another brand.",
+        "In the mid-1960s, another P&G researcher, Alexander Liepa of Montgomery, Ohio, restarted Baur's work and succeeded in improving the taste. Although Baur designed the shape of the Pringles chip, Liepa's name is on the patent.",
+        "Baur filed for a patent for the tubular Pringles container and for the method of packaging the curved, stacked potato chip in the container in 1966, and it was granted in 1971. His other accomplishments included development of frying oils and freeze-dried ice cream.",
+        "Baur died on May 4, 2008 at the age of 89 due to Alzheimer's disease. Some of Baur's ashes were buried in a Pringles can at his request.",
+        "Baur's children said they honored his request to bury him in one of the cans by placing part of his cremated remains in an Original flavor Pringles container in his grave in suburban Springfield Township. The rest of his remains were placed in an urn buried along with the can, with some placed in another urn and given to one of Baur's grandchildren.",
+        "When my dad first raised the burial idea in the 1980s […] My siblings and I briefly debated what flavor to use […] Look, we need to use the original.",
+        "In July 2008, in the London High Court, P&G lawyers successfully argued that Pringles were not crisps (the term by which potato chips are known in British English), even though labelled \"Potato Crisps\" on the container, as the potato content was only 42% and their shape, P&G stated, \"is not found in nature\". This ruling, against a United Kingdom value added tax (VAT) and Duties Tribunal decision to the contrary, exempted Pringles from the then 17.5% VAT for potato crisps and potato-derived snacks.",
+        "In May 2009, the Court of Appeal reversed the earlier decision. A spokesman for P&G stated it had been paying the VAT proactively and owed no back taxes."
+      ]
+    },
+    {
+      "code": "37a",
+      "title": "Соломенный козёл из Евле: 60 лет его жгут, ломают, клюют",
+      "checked": "2026-11-19",
+      "verdict": "частично: козёл, охрана и нападения — правда, но «почти каждый год» — преувеличение. По английской Википедии на декабрь 2025-го пострадали 43 козла из 60, то есть 17 сезонов он пережил; а с 2017 года его сожгли лишь однажды (2021) — в 2023-м его расклевали галки, в 2025-м повалил шторм.",
+      "timely": "Юбилейного, 60-летнего козла открывают в воскресенье 29 ноября 2026 года. Лучше выпустить ролик к этой дате; тема живая, пока козёл стоит, — обычно до первых чисел января, если с ним ничего не случится раньше.",
+      "caveats": [
+        "Число 43 — это «уничтожен или повреждён», включая четыре сезона с частичным ущербом (1997, 2002, 2018, 2023). По хронологии английской Википедии (мой подсчёт по таблице) полностью козёл погиб в 39 сезонах, из них от огня — около 31; русская Википедия считает пожар 2021 года тридцатым. Не говорить «сожгли 43 раза» — говорить «пострадал в 43 сезонах из 60».",
+        "В 1971–1985 годах большого козла торговцев не ставили: хронология за эти годы — про козла школьного научного клуба (начинал с двух метров, к 1985-му вырос до 12,5 м). С 1986 года козлов два, и часть историй — про малого (в 2000-м его бросили в реку, в 2009-м увезли на грузовике). Таран «Вольво» в 1976 году — тоже козёл тех лет, он был меньше прежних.",
+        "Размеры 13 м, 7 м и 3 тонны — это первый козёл 1966 года. Про нынешнего источники расходятся: официальный сайт Visit Gävle (по выдаче поиска) пишет «ten metres tall and seven metres long» и около 3 тонн, СМИ часто — 13 м и 3,6 т. В ролике привязывать размер к 1966 году.",
+        "Турист 2001 года: в английской Википедии — 100 тысяч крон «in damages» (возмещение ущерба), в русской — «штраф» и другой пересчёт в доллары. В доллары не переводить, имя не называть.",
+        "Санта и пряничный человечек (2005) — со слов свидетелей, поджигателей не нашли (AP в пересказе NBC News, выдача поиска: «remain at large»). Вертолётный план (2010) — сообщение шведской газеты о предложенной взятке, сам угон не состоялся. Подавать со словами «по сообщениям газет».",
+        "Твит 2012 года в оригинале шведский: «tack jag har de bara bra här! Hur är det själv?» («спасибо, у меня тут всё хорошо! А у вас?»); «feeling good» — пересказ Википедии. Не цитировать как дословный.",
+        "Дата и место открытия-2026 — по фразе с сайта Visit Gävle из выдачи поиска; то же сообщает новость муниципалитета «Gävlebocken firar 60 år» от 4 ноября 2026 года (тоже выдача; сами страницы открыть нельзя). Площадь менялась: традиционно — Слоттсторгет, с 2022 года козла переносили, в 2025-м он стоял на Стурторгет. Безопасно говорить «в центре Евле».",
+        "Ставки: в источниках нашлась только запись про 1988 год; свежие коэффициенты проверить не удалось (кончился лимит поиска) — не говорить «ставят и сейчас».",
+        "Поджог — уголовное преступление, а не «весёлая традиция»: говорить без одобрения и без «попробуйте сами». Версию про козлов Тора и языческие корни не брать.",
+        "Запас проверенных деталей из той же хронологии английской Википедии: 2009 — перед поджогом веб-камеры вывели из строя DoS-атакой; 2015 — задержанный с опалённым лицом и зажигалкой назвал поджог «extremely bad idea»; 2016 — козёл сгорел в день открытия, через несколько часов после празднования своего 50-летия; 2024 — по соцсетям разошёлся дипфейк с горящим козлом, хотя он уцелел."
+      ],
+      "wiki": {
+        "ru": "Евльский козёл",
+        "en": "Gävle goat"
+      },
+      "evidence": [
+        "The design of the first goat was assigned to the then chief of the Gävle fire department, Gavlén's brother Jörgen Gavlén. […] On 1 December 1966, a 13-metre (43 ft) tall, 7-metre (23 ft) long, 3-tonne goat was erected in the square. On New Year's Eve, the goat was burnt down, and the perpetrator was found and convicted of vandalism.",
+        "As of December 2025, 43 out of 60 goats have been destroyed or damaged in some way. Burning or otherwise destroying the goat is illegal, and the Svea Court of Appeal has said that the offence normally carries a 3-month prison sentence. […] Gamblers were for the first time able to gamble on the fate of the goat with English bookmakers.",
+        "In 2001, the goat was burned down by a 51-year-old American visitor from Cleveland, Ohio, who spent 18 days in jail and was subsequently convicted and ordered to pay SEK 100,000 […] The court confiscated his cigarette lighter with the argument that he was not able to handle it. He stated in court that he was no \"goat burner\", and believed that he was taking part in a completely legal goat-burning tradition. After he was released from jail he returned to the US without paying his fine.",
+        "This year's goat was smaller than the previous ones. A student rammed the hind legs of the goat with a Volvo Amazon, collapsing the structure. […] Burnt by unknown vandals dressed as Santa and the gingerbread man, by shooting a flaming arrow at the goat.",
+        "On 17 December, a Swedish news site reported that one of the guards tasked with protecting the Southern Merchants' goat had been offered SEK 50,000 to leave his post so that the goat could be stolen via helicopter and transported to Stockholm. […] Both goats survived, were dismantled and returned to storage in early January 2011.",
+        "As the guards sheltered in a nearby restaurant to escape the cold, the goat was burned. […] the fire department fireproofed the goat with ice. […] At 23:46, the official @Gavlebocken account tweeted \"feeling good\". […] By 23:56, the goat was on fire.",
+        "24-hour guards on site, double fence, 24-hour public webcam stream. […] After a few flame-free years under 24-hour security, the goat was again burned on 17 December 2021. […] A 40 year-old man was arrested and later sentenced to six months in prison and ordered to pay SEK 109,000 in damages to the municipality.",
+        "In 2023, it was severely pecked at for grain by jackdaws, due to the straw used to construct the goat containing higher than usual amounts of seeds. In 2025, it was blown over by strong winds from Storm Johannes. […] On 27 December, the goat fell over due to strong winds from Storm Johannes.",
+        "Sunday 29 November 2026 at 4:00 pm, Stortorget, Gävle. […] Celebrate the first Sunday of Advent and the Gävle Goat's 60th anniversary with us!"
+      ]
+    },
+    {
+      "code": "37b",
+      "title": "Лотерея: почему продавцы выигрывали слишком часто",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено (с оговорками: «в разы чаще» цифрой не подтверждено — в прочитанных статьях нет ожидаемого числа выигрышей, есть только «более 200 продавцов» и вероятность «один на триллион триллионов триллионов триллионов»; мошенничеством была лишь часть этих выигрышей)",
+      "timely": "Вечная тема. 20 лет эфиру CBC исполнилось 25 октября 2026 года — можно сказать «двадцать лет назад».",
+      "caveats": [
+        "Проверено только по английской Википедии («Ontario Lottery and Gaming Corporation», «Lottery fraud», «Jeff Rosenthal», «André Marin», «Lotto Super 7»): общий лимит веб-поиска был исчерпан, материалы CBC, отчёт омбудсмена и статью Розенталя я не читал. Отдельной статьи «Bob Edmonds» в английской Википедии нет, а русская статья об OLG о скандале не упоминает. Перед выпуском стоит сверить цифры с отчётом омбудсмена Онтарио (март 2007) и материалами The Fifth Estate.",
+        "Сколько выигрышей «ожидалось» по теории вероятностей — в прочитанных статьях не сказано. По памяти, Розенталь называл около 57 ожидаемых крупных выигрышей против примерно 200 фактических, но в этой сессии я этого не подтвердил: формулировки «в 3–4 раза чаще» в ролик без проверки не брать. Подтверждено только «более 200 продавцов» и вероятность случайности.",
+        "«Триллион триллионов триллионов триллионов» — это вероятность того, что вся картина объясняется везением, а не «во сколько раз чаще выигрывали». Не путать в тексте.",
+        "Не все выигрыши продавцов были кражей: по отчёту омбудсмена из примерно 100 миллионов долларов мошенническими названы «десятки миллионов». Говорить «часть выигрышей оказалась украдена у покупателей», а не «все продавцы воровали».",
+        "Фраза «билет пустой» источником не подтверждена: в Википедии — «не сообщали покупателям о выигрыше». Что именно продавщица сказала Эдмондсу, в прочитанных статьях нет (по памяти — что он выиграл лишь бесплатный билет; не проверено).",
+        "Хронология дела Эдмондса в Википедии шероховатая: билет — 2001 год, «следующие четыре года» OLG его игнорировала, а решение судьи датировано 2004-м. В ролике говорить «несколько лет» и год решения суда не называть.",
+        "82 года Эдмондсу было во время эфира (2006), а не когда он купил билет (2001). OLG позже освободила его от соглашения о неразглашении — это есть в той же статье.",
+        "Про Хафиза Малика в статье сказано только, что он арестован, полиция арестовала или заморозила его активы более чем на 5 миллионов долларов, а настоящим победителям OLG выплатила приз с процентами. Приговора в источнике нет — не говорить «осуждён».",
+        "Encore — дополнительная игра к основным лотереям Онтарио (по статье «Lotto Super 7», максимальный приз в ней — 1 миллион долларов). OLG — государственная корпорация провинции, так что это история про госмонополию, а не про частную фирму.",
+        "В статье «Lottery fraud» сказано, что четверых сотрудников OLG оштрафовали и уволили; в статье об OLG — что 21 марта 2007 года правительство провинции сняло с должности главу корпорации Дункана Брауна. Первое перепроверить не удалось — не использовать. Министров и дебаты в парламенте провинции в ролик не тянуть (политика)."
+      ],
+      "wiki": {
+        "ru": "Ontario Lottery and Gaming Corporation",
+        "en": "Ontario Lottery and Gaming Corporation"
+      },
+      "evidence": [
+        "Authorities noticed that an improbably large number of lottery retailers in Ontario were winning major prizes, from $50,000 to $12.5 million. Evidence emerged that certain retailers were failing to inform customers of their winnings when they presented their lottery tickets in-store, and then fraudulently claiming prizes for themselves.",
+        "His $250,000 winning Encore ticket was stolen by a convenience store clerk when he went to have his ticket checked in 2001. For the next four years, OLG ignored Edmonds' inquiries after the clerk and her husband were falsely named the rightful winners.",
+        "Later, when the couple was arrested for fraud, OLG refused to return his winnings, maintaining that it wasn't their responsibility that they had been tricked; in 2004, a judge disagreed and forced OLG to give Edmonds his money. They did so, on the condition that Edmonds sign a confidentiality agreement, so that he would never tell the press about certain details of the ordeal.",
+        "On October 25, 2006, the CBC program The Fifth Estate aired an investigative report on lottery retailers winning major prizes, focusing on the ordeal of 82-year-old Bob Edmonds.",
+        "The report by The Fifth Estate added that over 200 lottery retailers in Ontario have won major prizes from 1999 to 2006. A statistician featured in the report, Jeff Rosenthal,  calculated that the chance that this would occur purely out of luck is one in a \"trillion trillion trillion trillion\" (or quindecillion).",
+        "Also, The Fifth Estate uncovered internal OLG memos where several employees admitted they believed Edmonds' story. Immediately following the broadcast, Edmonds received a call from OLG's president, Duncan Brown, who apologized and claimed he was ashamed about how his staff treated Edmonds.",
+        "In another case, Toronto variety store owner Hafiz Malik had defrauded four school board employees out of their $5.7 million prize. He was arrested after the original ticket owners filed a complaint with the police.",
+        "Provincial ombudsman André Marin released a report stating that Ontario store owners and their families claimed about $100 million in lottery wins between 1999 and 2006, with tens of millions of fraudulent claims being ignored by the OLGC.",
+        "OLG has since mandated new security measures to protect lottery customers, notably with customer-facing displays when tickets are checked, as well as special music played with a winning ticket. As of January 28, 2008, lottery retailers are required to ensure that tickets are signed. There is a signature box shown on the front of all online lottery tickets."
+      ]
+    },
+    {
+      "code": "37c",
+      "title": "Зачем моряки лили масло в штормовое море",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено: масло на волны — реальная морская практика (британским судам закон предписывал возить его до 1998 года) с реальной физикой; оговорка — плёнка сглаживает поверхность и мешает ветру разгонять волны, а не «выключает» шторм, и цифр эффекта в открытом море в прочитанных источниках нет",
+      "timely": "вечная тема",
+      "caveats": [
+        "Не обещать, что масло останавливает шторм. В источнике — «absorbs some of the energy of the waves» и «waves cannot form as easily»: плёнка забирает часть энергии и мешает ветру поднимать волны. Уточнение из задания («гасит рябь и срыв гребней, а не саму зыбь») прямым текстом прочитанных статей не подтверждено — формулировать мягко: «сглаживает», «волны перестают закипать».",
+        "Год опыта в Клэпхеме плавает: статья Langmuir–Blodgett film называет 1773-й, статья Clapham Common — «in the early 1770s» (когда Франклин об этом написал), Storm oil — «several years later» после 1757-го. Говорить «в начале 1770-х».",
+        "Площадь: мгновенный штиль — «several yards square» (цитата Франклина), а «about half an acre» — докуда затишье расползлось потом (пол-акра — около 0,2 гектара, это мой пересчёт). Не говорить «весь пруд».",
+        "Дервент-Уотер: по статье William Brownrigg — 1771 год; в статье Storm oil хронология спутана (опыты на озёрах приписаны приезду 1757 года). Год лучше не называть.",
+        "Происхождение выражения «pour oil on troubled waters» по прочитанным статьям подтвердить не удалось: отдельной статьи в en/ru Википедии нет, в статье Aidan of Lindisfarne эпизода с маслом нет. В ролик не брать (к тому же расхожая версия — церковное предание, а религию канал не трогает).",
+        "«Мешки с маслом» и нормы (сколько масла на шлюпку) в прочитанных статьях не описаны — не называть.",
+        "Фраза про Аристотеля в en-wiki сформулирована путано («spreading on the eyes of divers»); брать только общий факт — приём прослеживают до Аристотеля и Плиния Старшего. Про китобоев — «по рассказам» (в источнике «purported»).",
+        "Толщина плёнки: 1,6 нм — расчёт Рэлея (Langmuir–Blodgett film); у Поккельс — около 1,3 нм (Storm oil). Говорить «около полутора нанометров» или «в одну молекулу».",
+        "Не подавать как совет: сегодня лить масло в море — загрязнение (редакторская оговорка, не из источника).",
+        "Русской статьи о штормовом масле в Википедии нет («Штормовое масло» не найдено).",
+        "Веб-поиск в этой сессии был недоступен (исчерпан общий лимит), другие сайты закрыты сетью: всё проверено только по статьям en/ru Википедии. Первоисточники и сайты музеев/ведомств не читал — перед публикацией цифры стоит перепроверить по ним. В частности, письмо Франклина Браунриггу в Philosophical Transactions не читал — цитаты Франклина даны по en-wiki."
+      ],
+      "wiki": {
+        "ru": null,
+        "en": "Storm oil"
+      },
+      "evidence": [
+        "Storm oil is described as nearly water-insoluble oil acting as a surfactant, and has been used since ancient times to smooth ocean waves. It has been historically employed to facilitate sea rescues and improve navigational safety, involving pouring the oil onto the ocean surface to reduce wave intensity. … The practice can be traced back as far as 350 BC with Aristotle and to the early 1st century with Pliny the Elder. … Whaling vessels are purported to have dangled blubber around the hull when in heavy seas to help calm the ocean.",
+        "Steamships and lifeboats from many countries were required to carry them until the end of the 20th century. The United States Maritime Service Training Manual included storm oil in the list of general equipment aboard lifeboats, while the Merchant Shipping Act 1894 (57 & 58 Vict. c. 60) mandated them for British vessels until 1998. Frequently vegetable oil or fish oil was used as a cheap form of oil.",
+        "Communications between Franklin and William Brownrigg show that Franklin had first encountered the phenomenon aboard a ship in 1757 and investigated it several years later alongside Brownrigg and Sir John Pringle. This led to the discussion of the topic at the Royal Society on 2 June 1774.",
+        "While traveling on a ship, Franklin had observed that the wake of a ship was diminished when the cooks scuttled their greasy water. He studied the effects on a large pond in Clapham Common, London. \"I fetched out a cruet of oil and dropt a little of it on the water ... though not more than a teaspoon full, produced an instant calm over a space of several yards square.\"",
+        "Advances to the discovery of LB and LM films began with Benjamin Franklin in 1773 when he dropped about a teaspoon of oil onto a pond. Franklin noticed that the waves were calmed almost instantly and that the calming of the waves spread for about half an acre. What Franklin did not realize was that the oil had formed a monolayer on top of the pond surface. Over a century later, Lord Rayleigh quantified what Benjamin Franklin had seen. Knowing that the oil, oleic acid, had spread evenly over the water, Rayleigh calculated that the thickness of the film was 1.6 nm by knowing the volume of oil dropped and the area of coverage.",
+        "In the early 1770s, during his stay in London representing America in affairs of the state, Benjamin Franklin wrote a paper explaining how he used the ponds for science experiments, and in developing a \"magic\" trick. … He later used the trick to \"calm the waters\" by carrying \"a little oil in the hollow joint of my cane.\"",
+        "In 1771 Benjamin Franklin was on a tour of Britain with Sir John Pringle who advised him to visit William Brownrigg. … Franklin demonstrated his experiment of adding oil to the water surface of Derwent Water to calm the waves. He later corresponded with Brownrigg on the subject leading to another paper for The Royal Society's transactions.",
+        "Oil has a damping effect on water and quickly forms a thin layer over a large expanse of the surface, which absorbs some of the energy of the waves. This prevents wind from getting traction along the water; thus, waves cannot form as easily. … as waves locally stretch or compress, it leads to a concentration gradient inducing tangential shear forces leading to extra dissipation and damping",
+        "Pockels described the calming effect that oils can have on bodies of water, an effect first investigated in the published literature by Benjamin Franklin. … Commentators wrote: \"When Langmuir received the Nobel Prize for Chemistry in 1932, for his work in investigating monolayers on solids and on liquids, part of his achievement was [...] founded on original experiments first made with a button and a thin tray, by a young lady of 18 who had had no formal scientific training\"."
+      ]
+    },
+    {
+      "code": "38a",
+      "title": "Алмазное поле, которое обмануло самого Тиффани",
+      "checked": "2026-11-19",
+      "verdict": "частично: афера, имена (Филип Арнольд и Джон Слэк), оценка Тиффани и разоблачение Кларенсом Кингом подтверждены; не подтверждена деталь «камни лежали слишком удобно» — в прочитанных статьях Кинг понял обман по другому признаку (камни разного происхождения не встречаются в одном месторождении); суммы в источниках расходятся (600–660 тысяч долларов)",
+      "timely": "вечная тема",
+      "caveats": [
+        "Проверено только по английской Википедии («Great Diamond Hoax», «Philip Arnold», «Clarence King», «Charles Lewis Tiffany», «Asbury Harpending», «List of scams»): общий лимит веб-поиска был исчерпан, книг и журнальных статей я не читал. Русской статьи об афере нет. Суммы и даты перед выпуском стоит перепроверить по книге Роберта Уилсона «The Explorer King» (2006) или по письму Кинга совету директоров от 11 ноября 1872 года — оба названы в списке литературы Википедии.",
+        "Гипотеза «геолог заметил, что камни лежат слишком удобно» прочитанными источниками не подтверждается. Википедия называет один признак: алмазы, рубины, сапфиры и прочие камни образуются в разных условиях и вместе не залегают. По памяти, в отчёте Кинга были и другие приметы (камни только в потревоженной земле и в муравейниках, алмаз со следами огранки), но в этой сессии я их не подтвердил — в ролик без проверки не брать.",
+        "Суммы расходятся. Статья об афере: кузены продали свою долю за 660 тысяч долларов. Статья об Арнольде: задаток 50 тысяч, затем 100 тысяч, затем 450 тысяч (итого 600 тысяч), и «ушёл с более чем полумиллионом». Статья о Тиффани: афера стоила инвесторам «больше полумиллиона». Безопасная формулировка — «больше полумиллиона долларов».",
+        "Тиффани оценивал образцы камней, а не участок, и на месте не был. По статье об афере, камни ему привёз Асбери Харпендинг, по статье об Арнольде — образец прислали Ралстон с партнёрами: говорить «инвесторы показали камни Тиффани». Там же сказано, что Тиффани потом оказался и среди вкладчиков.",
+        "Как Кинг попал на участок — версии разные: статья об афере говорит о случайной встрече в поезде с горным инженером Генри Джанином (он осматривал участок для инвесторов и назвал его «wonderfully rich») и о собственной инициативе Кинга; статья об Арнольде — что экспедицию в октябре 1872 года послало Министерство внутренних дел. Безопасно: «геолог, только что обследовавший эти места, поехал проверить».",
+        "Смерть Арнольда: в одной статье — «умер в 1878 году после перестрелки с конкурентом-банкиром», в другой — в 1878-м получил ранение в плечо и через полгода умер от пневмонии в 49 лет; в той же статье ниже стоит «до смерти в 1879-м». Подробностей ранения в ролик не надо; год называть осторожно («в конце 1870-х»).",
+        "Наказали ли мошенников — в прочитанных статьях не сказано: только то, что Арнольд купил в Кентукки двухэтажный кирпичный дом и около пятисот акров земли, записав всё на жену. Не утверждать ни «их посадили», ни «им всё сошло с рук». По памяти, Арнольд откупился от иска частью денег, но этого я не проверил.",
+        "Место и годы: камни показывали с 1870–1871 годов (статьи расходятся), участок был на северо-западе тогдашней Территории Колорадо, у горы Даймонд-Пик; к нему инвесторов вели запутанным четырёхдневным маршрутом от Ролинса (Вайоминг), чтобы скрыть место.",
+        "Подбрасывали в основном дешёвые необработанные камни: технические и некондиционные алмазы, низкосортные рубины, гранаты, шпинели, сапфиры. Не говорить «рассыпали драгоценности».",
+        "Не брать: подкуп конгрессмена и поправку к горному закону 1872 года (политика); «Натана Ротшильда» среди вкладчиков (в Википедии без ссылки и выглядит ошибкой); утверждение, что банкир Ралстон мог быть соучастником (в его статье одна фраза без источника)."
+      ],
+      "wiki": {
+        "ru": null,
+        "en": "Great Diamond Hoax"
+      },
+      "evidence": [
+        "He and his cousin John Slack obtained some industrial-grade diamonds from their friend James B. Cooper, then an assistant bookkeeper for the Diamond Drill Company of San Francisco. They mixed the diamonds in with garnets, rubies, and sapphires he bought from Indians in Arizona.",
+        "They swore Roberts to secrecy and asked him to store the gems in his office. But, Roberts could not keep a secret and eventually drew several other men into Arnold's trap, including: William C. Ralston, founder of the Bank of California; Asbury Harpending; William Lent; and General George S. Dodge.",
+        "Together, they put together an offer to buy out Arnold and Slack, and gave them a $50,000 down payment. Arnold and Slack used the money to go to England and acquire additional uncut gems, valued at about $20,000.",
+        "Tiffany grossly overestimated the value of the stones at $150,000, far more than the $20,000 that Arnold had actually spent to acquire them in England.",
+        "On June 4, 1872, Arnold, Slack, and company finally reached the spot where they had previously planted some gems and encouraged the investors to begin digging. For more than an hour, precious stones were found in abundance, and before all was said and done, they had given Arnold $450,000 for the remainder of his rights to any future claim on the property.",
+        "King and his team were alarmed at the reports of such a prominent diamond field which their survey had not noted. King sent geologist Samuel Franklin Emmons and cartographer A. D. Wilson ahead to investigate, with King joining them soon after. Upon locating the site, they quickly concluded that it had been salted (as a geologist, King was aware that the various stones formed under different conditions and would never be found together in a single deposit), and notified investors.",
+        "Tiffany was publicly embarrassed in an 1872 diamond and gemstone hoax perpetrated by Philip Arnold that cost investors more than half a million dollars.",
+        "Arnold fled to Elizabethtown, Kentucky, but died in 1878 after a shootout with a banking rival. In 1896, Slack died in White Oaks, New Mexico, where he had become a coffinmaker.",
+        "Salting or \"salting the mine\" are terms for a scam in which gemstones or gold ore are planted in a mine or on the landscape, duping the mark into purchasing shares in a worthless or non-existent mining company. During gold rushes, scammers would load shotguns with gold dust and shoot into the sides of the mine to give the appearance of a rich ore, thus \"salting the mine\"."
+      ]
+    },
+    {
+      "code": "38b",
+      "title": "За что пингвина посвятили в рыцари и сделали генералом",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено: пингвин Нильс Улаф — рыцарь (2008) и генерал-майор (2023) норвежской Королевской гвардии; уточнение — звания наследуются, сейчас их носит уже третий пингвин",
+      "timely": "Вечная тема. Свежий повод — яйцо: 14 августа 2026 года у Нильса Улафа и его подруги Конни появилось первое за 17 лет яйцо королевских пингвинов в Шотландии. Что с ним стало, на 19.11.2026 я не нашёл (инкубация около 55 дней) — перед выпуском проверить на сайте зоопарка. Повышают пингвина раз в несколько лет, в августе, когда гвардия приезжает на Эдинбургский парад военных оркестров.",
+      "caveats": [
+        "Звания «наследуются»: нынешний генерал — третий пингвин с этим именем (первый умер в 1987-м; третий сменил второго «между 2008 и 2016» — точной даты нет). Не говорить «пингвин служит с 1972 года» про одну птицу. Какого по счёту пингвина посвятили в рыцари в 2008-м, источники передают по-разному (Википедия — второго, заметка AP — третьего) — номер не называть.",
+        "В чью честь «Улаф» — спорно. Зоопарк Эдинбурга, AP и русская Википедия: в честь короля Улафа V. Английская Википедия со ссылкой на журнал норвежской армии Forsvarets Forum (2023, заголовок «Ikke oppkalt etter kong Olav» — «Не назван в честь короля Улафа»): в честь командира контингента Улафа Сиггеруда. Безопасно говорить только: «Нильс — в честь лейтенанта Нильса Эгельена».",
+        "«Генерал» — почётное звание талисмана: пингвин никем не командует, colonel-in-chief — почётный шеф полка. Бригадир (2016) в Норвегии — младшее генеральское звание.",
+        "Первое звание: в Википедии — visekorporal (1972); на сайте зоопарка карьера начинается с «талисмана», а первое повышение — капрал в 1982-м.",
+        "Сколько военных было на церемонии 2023 года — расходится: 160 (пресс-релиз зоопарка, русская Википедия) или 120 (Forces News). Цифру не называть.",
+        "Титул «барон острова Буве» есть в официальном именовании пингвина, но когда и кем он пожалован, я не проверил — не утверждать. Год первых пингвинов в зоопарке тоже расходится (1913 или январь 1914) — не использовать.",
+        "Яйцо 2026 года: вылупился ли птенец, на 19.11.2026 я подтверждения не нашёл. Если к выпуску новость не подтвердится — пункт убрать или сказать только «снесли яйцо».",
+        "Имя британского генерала (Юэн Лаудон) и детали с мечом — из заметки AP на NBC News; пункт про яйцо — с сайта зоопарка. Цитаты не из Википедии взяты из поисковой выдачи: открыть сами страницы из этой сессии нельзя (сайты закрыты сетевыми правилами). Перед прямым цитированием в ролике сверить формулировку по ссылке."
+      ],
+      "wiki": {
+        "ru": "Нильс Улаф",
+        "en": "Nils Olav"
+      },
+      "evidence": [
+        "When the Norwegian King's Guard (HMKG) visited the Edinburgh Military Tattoo of 1961 for a drill display, a lieutenant named Nils Egelien became interested in the zoo's penguin colony. When the King's Guard returned to Edinburgh in 1972, Egelien arranged for the regiment to adopt a penguin.",
+        "Nils Olav was initially given the rank of visekorporal (lance corporal) in the battalion. He has been promoted each time the King's Guard has returned to the zoo. He was made a corporal in 1982, then promoted to sergeant in 1987. Nils Olav I died shortly after his promotion to sergeant in 1987, and his place was taken by Nils Olav II, a two-year-old near-double.",
+        "He was promoted in 1993 to the rank of regimental sergeant major and in 2001 promoted to \"honourable regimental sergeant major\". On 18 August 2005, he was appointed as colonel-in-chief of the same regiment. During the 2005 visit, a 4-foot-high (1.2 m) bronze statue of Nils Olav was presented to Edinburgh Zoo.",
+        "The knighthood was approved by King Harald V and Nils was the first penguin to receive such an honour in the Norwegian Army. During the ceremony a crowd of several hundred people watched the 130 guardsmen on parade at the zoo, and a citation from the King was read out, which described Nils as a penguin \"in every way qualified to receive the honour and dignity of knighthood\".",
+        "Loudon dropped the king's sword on both sides of Nils' black-and-white frame, and the penguin's colonel-in-chief badge, tied to his flipper, was swapped for one symbolizing his knighthood.",
+        "A third penguin, Nils Olav III, took over at some point between 2008 and 2016. On 22 August 2016 he was promoted to brigadier in a ceremony attended by more than 50 members of the King's Guard. On 21 August 2023 he was promoted to major general. Nils Olav is recognised by Guinness World Records as the highest-ranking penguin.",
+        "Sir Nils inspects troops of the King's Guard, of which he is colonel-in-chief, following his knighthood ceremony in 2008. Military insignia is attached to his right flipper.",
+        "Nils Olav outranked the human Nils Egelien from 2005 until Egelien died on 11 December 2020, aged 87.",
+        "Scotland's first king penguin egg in 17 years has been laid at the Royal Zoological Society of Scotland's (RZSS) Edinburgh Zoo. […] The egg was laid by Connie in the early hours of Friday 14 August. […] The lucky father is none other than the world's highest-ranking penguin Major General Sir Nils Olav."
+      ]
+    },
+    {
+      "code": "38c",
+      "title": "Почему петля на американских горках не круглая",
+      "checked": "2026-11-19",
+      "verdict": "частично: круглые петли и травмы шеи — правда, клотоидная петля Штенгеля 1976 года — правда; но «12 g», вероятно, завышено (расчёты дают 6–8 g), а вытянутую петлю пробовали уже в 1901 году — и аттракцион она не спасла: петли вернулись только через десятилетия",
+      "timely": "В 2026 году горке Revolution исполнилось 50 лет (открыта 8 мая 1976 года; к юбилею ей вернули имя The Great American Revolution). Привязка «полвека петле-капле» работает до конца 2026 года, дальше — вечная тема.",
+      "caveats": [
+        "«Аттракцион спасла капля» — упрощение. Слегка вытянутую петлю пробовали уже в 1901 году (Loop the Loop), и она не спасла: горка прогорела из-за крошечной пропускной способности. Петли вернула только клотоида 1976 года — уже на стальных горках (первой современной инверсией годом раньше стал «штопор» фирмы Arrow).",
+        "Форму петли Loop the Loop en-wiki описывает по-разному: «modern teardrop-shaped loop» (Vertical loop), «more elliptical design» (Loop the Loop), «slightly oval-shaped rather than circular, though not clothoid in shape like modern loops» (Roller coaster inversion). Говорить «слегка вытянутая, овальная», не «капля».",
+        "12 g — расхожая цифра; сама en-wiki (раздел «G-Force claims») называет её вероятным преувеличением и даёт 6–8 g по расчёту. В ролике: «по рассказам — до 12 g, по расчётам — скорее 6–8».",
+        "«Калечили людей» — слишком сильно. В источниках: «discomfort and neck injuries from whiplash», «frequent injuries». Говорить «травмировали шеи».",
+        "Даты первых петель: статья Vertical loop пишет про 1850-е, статья Centrifugal railway — про 1843 год (Британия) и 1848-й (Париж). Берём 1840-е.",
+        "Когда исчезли петли: Loop the Loop работала до 1910 года, а последние аттракционы с петлями, по статье Roller coaster inversion, разобрали в годы Великой депрессии. Не говорить «с 1910 по 1976 петель не было» — безопасно «на несколько десятилетий».",
+        "Круглая петля не «запрещена»: на горках Шварцкопфа встречаются почти круглые петли — это даёт жёсткие ощущения и считается его фирменным стилем (en-wiki Vertical loop). Дело не в круге как таковом, а в размере, скорости и резкости входа. Поэтому в хуке «чаще всего» (в источнике — «Most roller coaster loops are not circular in shape»).",
+        "Лина Бичер (Lina Beecher) — мужчина, инженер и изобретатель.",
+        "Про обезьян — без подробностей: о вреде животным в источниках ничего нет, не домысливать.",
+        "Revolution — «первая современная» горка с вертикальной петлёй (и первая с петлёй на полном замкнутом круге), а не первая петля вообще.",
+        "Русских статей о вертикальной петле и о Штенгеле в Википедии нет; в статье «Американские горки» о форме петли не говорится.",
+        "Веб-поиск в этой сессии был недоступен (исчерпан общий лимит), другие сайты закрыты сетью: всё проверено только по статьям en/ru Википедии. Первоисточники и сайты музеев/ведомств не читал — перед публикацией цифры стоит перепроверить по ним."
+      ],
+      "wiki": {
+        "ru": "Американские горки",
+        "en": "Vertical loop"
+      },
+      "evidence": [
+        "In 1843, designers Hutchinson and Higgins registered a design and exhibited a \"Centrifugal Iron Railway\" at theaters in various British cities including London, Manchester, and Liverpool. … A more permanent outdoor version called the \"Centrifugal Railway\", the first permanent looping roller coaster, was installed Paris in 1848. The coaster had a 13-metre (43 ft) drop and a 4-metre (13 ft) loop. … The operators of the Railways tested the rides with a variety of things occupying the cars, including egg crates, glasses of water, flowers, sandbags, and even a monkey.",
+        "Although the 1840s centrifugal railways had no reported safety issues, a later version built in 1865 at the Cirque Napoléon was quickly closed by police after the first car sent through the loop derailed.",
+        "The coaster, which opened in 1895, was one of the first looping roller coasters to operate in North America. … The coaster was tested with sand bags and monkeys before human riders were allowed on the coaster. … The circular nature of the coaster's loop, as well as its relatively small diameter of 7.6 metres (25 ft), meant that it could produce forces of approximately 12 g0 (120 m/s2).",
+        "This caused riders to often experience discomfort and neck injuries from whiplash. … calculations indicate that the actual forces experienced would have been in the range of 6 to 8 G … It closed in 1902 after low rider interest and frequent injuries.",
+        "Loop the Loop was a dual-tracked steel roller coaster that operated on Coney Island in Brooklyn, New York City, from 1901 to 1910. … This low rider volume was partly a function of the small cars on the coaster and partly because safety inspectors would not allow more than one car on the course at any given time, nor would they allow the cars to be joined into trains. … This was primarily because Loop the Loop incorporated a more elliptical design, thereby reducing the g-forces which riders experienced on more circular roller coaster loops (which could be up to 12 g on the Flip Flap Railway). … The operators attempted to supplement the coaster's revenue by having an observation gallery where patrons could pay to watch others ride the roller coaster. Rides on the coaster itself cost 10 cents.",
+        "Although the ride was safe, it had a low capacity, loading four people every five minutes (48 people per hour, compared to 1800 riders per hour on Corkscrew, an early modern coaster that opened in 1976), and was poorly received after the discomfort of the Flip Flap Railway. As their novelty wore off and their dangerous reputation spread, compounded with the developing Great Depression, the early looping coasters disappeared.",
+        "Manufactured by Anton Schwarzkopf and designed by Werner Stengel, the roller coaster opened to the public on May 8, 1976. … Unlike many of the previous looping roller coasters in the 19th and early-20th centuries which attempted circular loops, Revolution used a clothoid-shaped vertical loop – a first in the industry. … On May 8, 2026, to commemorate its 50th anniversary, it was renamed back to the Great American Revolution for the second time.",
+        "A commonly used shape is the clothoid loop, which resembles an inverted tear drop and allows for less intense G-forces throughout the element for the rider. … Schwarzkopf-designed roller coasters often feature near-circular loops (in case of Thriller even without any reduction of curvature between two almost perfectly circular loops) resulting in intense rides—a trademark for the designer. … If the loop's curvature is constant, the rider is subjected to the greatest force at the bottom. If the curvature of the track changes suddenly, as from level to a circular loop, the greatest force is imposed almost instantly (see: Jerk). Gradual changes in curvature, as in the clothoid, reduce the force maximum (permitting more speed) and allow the rider time to cope safely with the changing force.",
+        "His clothoid loop is now standard on many roller coasters, as it produces less intense forces on the human body than a circular vertical loop. … Stengel received an honorary doctorate from University of Gothenburg in 2005 for \"inexhaustible creativity in linking physics and design to the experience of the body in roller coasters and other rides,\"."
+      ]
+    },
+    {
+      "code": "39a",
+      "title": "Император США Нортон I: город подыгрывал ему 20 лет",
+      "checked": "2026-11-19",
+      "verdict": "частично: император, указы, собственные деньги, арест с извинениями начальника полиции и около 10 000 человек на прощании подтверждаются; но «город кормил бесплатно и принимал его деньги» — с натяжкой: расписки брали лишь «некоторые» заведения (и известны они с 1870 года), еда — это бесплатные ланчи в салунах и помощь друзей, а честь полицейские стали отдавать только после ареста 1867 года",
+      "timely": "вечная тема. Возможный свежий повод (по английской Википедии, не перепроверял): 12 ноября 2026 года мосту Бэй-Бридж исполнилось 90 лет, а резолюцию назвать его тоннель в честь императора Нортона сенат Калифорнии в августе 2026 года принял единогласно (39–0), но ассамблея её не рассмотрела; сторонники обещают внести её снова в сессии, которая открывается в декабре 2026 года.",
+      "caveats": [
+        "Число на похоронах: газета в 1880 году писала примерно о 10 000 человек, пришедших проститься с телом; «30 000» (так в русской Википедии) появилось десятилетия спустя. «Кортеж длиной две мили» — легенда: гроб сопровождали три экипажа, на кладбище было около тридцати человек.",
+        "Собаки Баммер и Лазарус — не его питомцы: слух пошёл от карикатур Эдварда Джампа, свидетельств современников нет (по рассказам, Нортон на такую карикатуру даже обиделся). Байку про три бесплатных места в театрах «для императора и двух собак» не брать.",
+        "Указ о штрафе в 25 долларов за слово «Фриско» — подлинность не установлена (английская Википедия: «evidence is elusive»; Emperor Norton Trust относит появление этой истории к 1939 году). Не использовать.",
+        "«Бесплатно ел в любом ресторане» — по данным Emperor Norton Trust, скорее апокриф: документированы бесплатные ланчи в салунах и помощь друзей. Расписки принимали «некоторые» заведения, а самая ранняя сохранившаяся датирована 11 ноября 1870 года — то есть «деньги императора» ходили не все двадцать лет. Говорить «в некоторых ресторанах», «друзья и сочувствующие».",
+        "Из русской Википедии не брать без проверки: таблички «By Appointment to His Majesty…» на ресторанах, велосипед, «банки обналичивали его банкноты», «город оплачивал жильё», толпа погромщиков, остановленная молчаливой молитвой. Последнее Emperor Norton Trust называет недокументированной легендой.",
+        "Дата указа о роспуске Конгресса — 12 октября 1859 года (английская Википедия, Emperor Norton Trust); в русской Википедии стоит 12 декабря — это ошибка.",
+        "Про «отдавали честь»: так пишут английская Википедия и Emperor Norton Trust, но ссылки на газету или документ тех лет я не нашёл. И началось это только после ареста 1867 года. В тексте — «как рассказывают».",
+        "Арестовал Нортона не кадровый полицейский, а «special officer» — частный охранник, которому платили жители квартала; извинялся начальник полиции Патрик Кроули.",
+        "Мост Нортон не изобрёл: идею обсуждали со времён золотой лихорадки, в 1872 году над проектом уже работал городской комитет. Корректно: «повелел построить», «мост прошёл там, где он указал, — через остров».",
+        "Слух, будто он сын Наполеона III, — выдумка; в его комнате нашли поддельные телеграммы о «свадьбе с королевой Викторией» — над ним подшучивали. В ролик не брать.",
+        "В переписи 1870 года рядом с «императором» стоит пометка «insane». Диагнозов не ставить и над болезнью не смеяться: тон — «город и его чудак».",
+        "Год рождения спорный (вероятно, 1818), возраст не называть — кроме «50 лет» из переписи.",
+        "Точную формулу указа — «We do hereby abolish Congress, and it is therefore abolished» — приводит Emperor Norton Trust; я видел её только в поисковой выдаче, саму страницу открыть не удалось. Перед цитированием сверить."
+      ],
+      "wiki": {
+        "ru": "Нортон I",
+        "en": "Emperor Norton"
+      },
+      "evidence": [
+        "He had success in commodities markets and in real estate speculation, and by late 1852, he was one of the more prosperous, respected citizens of the city. … Norton's failed effort to corner the rice market in December 1852 set in motion a cascade of events — a rice contract dispute that he lost in the California Supreme Court in October 1854; the court-ordered foreclosure of all of his real estate interests; and loss of business clients — that forced him to declare bankruptcy in August 1856.",
+        "Two months later, on September 17, 1859, Norton hand-delivered the following letter declaring himself \"Emperor of these United States\" to the offices of the Bulletin: … declare and proclaim myself Emperor of these United States … The paper printed the letter in that evening's edition, for humorous effect, and thus began Norton's whimsical 20-year \"reign\" over the United States.",
+        "Norton issued numerous decrees on matters of state, including a decree on October 12, 1859, to formally abolish the United States Congress. … to proceed with a suitable force and clear the Halls of Congress. … Norton's orders were ignored by the Army and Congress.",
+        "He wore an elaborate blue uniform with gold-plated epaulettes, at some time given to him secondhand by officers of the United States Army post at the Presidio of San Francisco. … Norton received free ferry and train passage and a variety of favors, such as help with rent and free meals, from well-placed friends and sympathizers. … the idea being 'let him be emperor if he wants to.' San Francisco played the game with him.",
+        "Norton issued his own money in the form of scrip, or promissory notes, which were accepted from him by some restaurants in San Francisco. The notes came in denominations between fifty cents and ten dollars, and the few surviving ones are collector's items that routinely sell for more than $10,000 at auction.",
+        "\"that he had shed no blood; robbed no one; and despoiled no country; which is more than can be said of his fellows in that line.\" In response to this widespread backlash, Police Chief Patrick Crowley ordered Norton released and issued a formal apology on behalf of the police force, and Norton granted an Imperial Pardon to Barbier. Police officers of San Francisco thereafter saluted Norton as he passed in the street.",
+        "The 1870 U.S. census lists Joshua Norton as 50 years old and residing at 624 Commercial Street, with his occupation listed as \"Emperor.\"",
+        "In 1872, the San Francisco entrepreneur and eccentric Emperor Norton issued three proclamations calling for the design and construction of a suspension bridge between San Francisco and Oakland via Yerba Buena Island (formerly Goat Island). … we do hereby command the arrest by the army of both the Boards of City Fathers if they persist in neglecting our decrees. … The bridge opened on November 12, 1936, at 12:30 p.m.",
+        "On the evening of Thursday, January 8, 1880, Norton collapsed on the corner of California Street and Dupont Street (now Grant Avenue), across the street from Old Saint Mary's Cathedral, while on his way to a debate at the California Academy of Sciences. … Five or six dollars in small change was found on his person … established a funeral fund that provided for a handsome rosewood casket and arranged a dignified farewell. … the San Francisco Chronicle reported, under the headline \"Le Roi Est Mort,\" that some 10,000 people had come to view the emperor's body in advance of the 2 p.m. funeral."
+      ]
+    },
+    {
+      "code": "39b",
+      "title": "Гроб с колокольчиком: зачем его патентовали в XIX веке",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено (с оговорками: задокументированных спасений с помощью таких гробов нет; слово «патент» в источниках стоит не при каждом изобретателе; масштабы реальных «погребений заживо» историки считают преувеличенными)",
+      "timely": "вечная тема",
+      "caveats": [
+        "Проверено только по Википедии (en «Safety coffin», «Premature burial», «Taphophobia», «Dead ringer (idiom)», «List of sports idioms», «Morgue» — раздел о «залах ожидания», «London Association for the Prevention of Premature Burial», «William Tebb»; ru «Безопасный гроб», «Тафофобия», «Погребение заживо»): общий лимит веб-поиска был исчерпан, сами патенты и книгу Яна Бондесона «Buried Alive» я не читал. Отдельной статьи об идиоме «saved by the bell» в английской Википедии нет — под этим названием статья о телесериале.",
+        "Слово «патент» в прочитанном тексте стоит при Эйзенбрандте (1843, крышка на пружине), Кричбауме (патент США 268,693 от 5 декабря 1882 года — труба-«перископ» для воздуха и сигнала), Зибере и Борнтрегере (1885), Карнице-Карницком (1897) и Казелли (1995). Про Табергера (1829) и Вестера (1868) сказано «разработал» и «Burial Case» — в ролике «придумал», а не «запатентовал».",
+        "О спасённых: английская статья — «нет задокументированных случаев», русская — «свидетельства отсутствуют за исключением полулегендарных рассказов полуторавековой давности». Формулировка — «неизвестно ни одного задокументированного случая».",
+        "Насколько реальной была опасность — вопрос спорный. Активист Уильям Тебб в 1905 году собрал сообщения о 149 погребениях заживо и 219 случаях «едва не», но фольклорист Пол Барбер считает такие подсчёты завышенными. Цифры Тебба как факт не подавать; Тебб, кстати, был ещё и известным противником прививок — в ролик это не тянуть.",
+        "Идиомы английские: русскому зрителю их придётся перевести («спасён звонком», «точная копия»), поэтому главный поворот ролика — «никого не спасли», а идиомы — бонус в конце. Датировки 1932 и 1959 даны по списку в Википедии со ссылкой на Оксфордский словарь; сам словарь я не открывал. То, что выражение из бокса, подтверждает и статья «Morgue».",
+        "Гоголь: в русской Википедии сказано, что он подчеркнул свой страх в «Выбранных местах из переписки с друзьями», а легенда о его погребении заживо несостоятельна. Источник — только русская Википедия; саму книгу я не открывал.",
+        "Не брать: пастора Песслера с верёвкой к церковным колоколам (1798) — в статье стоит «allegedly»; рекорд Фароппо Лоренцо «девять дней в гробу» (1898) — выглядит как байка; запах, вздутие и прочие физиологические причины ложных тревог; завещания Шопена, Андерсена и Нобеля (натурализм).",
+        "Какому именно царю служил Карнице-Карницкий, в статье не сказано — говорить «камергер русского царя». Имя «Михаил» — мой перевод французского «Michel».",
+        "Хронология: первые «безопасные гробы» — ещё конец XVIII века (герцог Фердинанд Брауншвейгский перед смертью в 1792 году заказал гроб с окошком, трубкой для воздуха и замком, ключи положили в карман савана). По русской статье, такие гробы патентовали и делали до 1934 года; по английской, итальянец Фабрицио Казелли запатентовал современный вариант в 1995-м."
+      ],
+      "wiki": {
+        "ru": "Безопасный гроб",
+        "en": "Safety coffin"
+      },
+      "evidence": [
+        "A large number of designs for safety coffins were patented during the 18th and 19th centuries and variations on the idea are still available today. […] The fear of being buried alive peaked during the cholera epidemics of the 19th century, when fear of contagion led to quick burials without making a difference between the dead and the dying, but accounts of unintentional live burial have been recorded even earlier.",
+        "Гоголь и Цветаева боялись быть похороненными живьём и специально это подчеркнули — Гоголь в «Выбранных местах из переписки с друзьями» […] (распространённая легенда о том, что Гоголь действительно был похоронен живым — при эксгумации его тело было обнаружено лежащим ниц в гробу, — несостоятельна)",
+        "Dr. Adolf Gutsmuth was buried alive several times to demonstrate a safety coffin of his own design, which was connected to the surface by a pipe. The pipe had bells installed in it, through which food and light could be provided until the person inside was let out. In 1822 he stayed underground for several hours and even ate a meal of soup, beer and sausages, delivered to him through the pipe.",
+        "In 1829, Dr. Johann Gottfried Taberger designed a system using a bell which would alert the cemetery nightwatchman. The corpse would have strings attached to its hands, head and feet. […] Franz Vester's 1868 \"Burial Case\" overcame this problem by adding a tube through which the face of the \"corpse\" could be viewed. If the interred person came to, they could ring the bell (if not strong enough to ascend the tube by means of a supplied ladder) and the watchmen could check to see if the person had genuinely returned to life or whether it was merely a movement of the corpse.",
+        "Count Michel de Karnice-Karnicki, a chamberlain to the Tsar of Russia, patented his own safety coffin, called Le Karnice, in 1897. His design detected movement in the coffin and opened a tube to supply air while simultaneously raising a flag and ringing a bell. […] Le Karnice never caught on: it was too sensitive to allow for even a slight movement in a decaying corpse, and a demonstration in which one of Karnice-Karnicki's assistants had been buried alive ended badly when the signalling systems failed. Luckily, the breathing tube had activated and the assistant was disinterred unharmed, but the reputation of Le Karnice was damaged beyond repair.",
+        "The London Association for the Prevention of Premature Burial was an association that was co-founded in 1896 by William Tebb and Walter Hadwen. In the 1800s, it was not common nor mandatory for a physician to examine a body after death and declare the person deceased. […] The association campaigned for improvements in death certification and for the building of \"safety coffins\" with warning devices that could be activated by a person mistakenly declared dead and buried.",
+        "Despite the fear of burial while still alive, there are no documented cases of anybody being saved by a safety coffin. In addition to that, numerous factors could cause false alarms, making the coffins inconvenient or the coffins had significant flaws that made them useless.",
+        "Boxing: to be saved from misfortune or unpleasantness by a timely interruption. Alludes to a boxer who is knocked to the canvas, and must regain his feet before a count of ten or lose the contest; if the bell signalling the end of the round is rung before the count is finished, the fighter now has until the start of the next round to recover and resume fighting. ADHI dates this to the \"mid-1900s\"; OED cites first boxing use in 1932, figurative use in 1959.",
+        "The term ringer was also used in horseracing, where it denoted someone who fraudulently substituted one horse for another, as well as the horse that had been substituted. Subsequently, it came to be used for anything that resembled something else, often with the addition of the adjective dead (meaning \"exact\"). As with saved by the bell, the idiom is sometimes said to derive from a custom of providing bell-pulls in coffins so that people who had been buried alive could call for help, but this is a folk etymology."
+      ]
+    },
+    {
+      "code": "39c",
+      "title": "Виктор Люстиг: аферист, «продавший» Эйфелеву башню",
+      "checked": "2026-11-19",
+      "verdict": "частично: сам Люстиг, арест 1935 года за фальшивые доллары, побег, 20 лет, Алькатрас и смерть в 1947-м задокументированы; а «продажа башни» в 1925 году — общепринятая версия (её излагает даже официальный сайт башни), но документов того времени ни один прочитанный источник не приводит, суммы и детали расходятся; «продал дважды» неверно — вторая попытка сорвалась",
+      "timely": "вечная тема",
+      "caveats": [
+        "Главное: ни один из прочитанных источников (английская и русская Википедия, сайт Эйфелевой башни, Smithsonian, Музей мафии) не ссылается на парижские газеты или полицейские документы 1925 года. Сама версия объясняет это тем, что жертва постыдилась заявить. Подавать не как установленный факт, а «по самой известной версии», «как рассказывают».",
+        "«Продал дважды» — штамп. Даже по легенде вторая сделка сорвалась: покупатель пошёл в полицию. Говорить «продал и попробовал ещё раз».",
+        "Сумму не называть — источники расходятся: около 70 000 франков (английская Википедия), 20 000 долларов наличными плюс ещё 50 000 (Smithsonian), «неизвестная сумма» (сайт башни), 1 200 000 франков (со ссылкой на биографию Кристофера Сэндфорда).",
+        "Расходятся и детали: по сайту башни другие покупатели были подставными, по Википедии — настоящими торговцами; отель «Крийон» называет Smithsonian, в Википедии просто «дорогой отель»; вторую попытку датируют то «через месяц», то «позже в том же году».",
+        "История с Аль Капоне (взял 50 000 долларов «на дело», через два месяца вернул и получил «за честность» 5 000 — или 1 000) документами не подтверждена; Музей мафии пишет «purportedly». Известно лишь, что при аресте в Чикаго 5 июля 1929 года Люстиг назвался человеком Капоне. В ролик как факт не брать.",
+        "«Румынская шкатулка»: описания разные (сундук из красного дерева размером с дорожный кофр — или небольшая шкатулка из кедра), суммы тоже («тысячи долларов» у шерифа — по Википедии; 123 000 долларов у шерифа и сборщика налогов — по Smithsonian). Обойтись без цифр.",
+        "Умер он не в Алькатрасе, как написано на сайте башни, а в тюремной больнице в Спрингфилде (Миссури), куда его перевели: так у Википедии, Smithsonian и Музея мафии.",
+        "Имя и происхождение под вопросом: «граф» — самозваный титул, в тюремных бумагах он Robert V. Miller, а Smithsonian пишет, что исследователь в чешском Гостинне не нашёл следов его рождения. Музей мафии насчитал у него не меньше 45 вымышленных имён.",
+        "Не брать цифру «арестовывали 50 раз» из русской Википедии (у Музея мафии — 38 арестов к 1935 году) и «десять заповедей афериста»: их Люстигу лишь приписывают.",
+        "Мелочи, где источники расходятся: месяц приговора (9 декабря 1935 года — Википедия; ноябрь — Smithsonian), из чего была верёвка (по Smithsonian — из простыней), название тюрьмы. Безопасно: «бежал из федеральной тюрьмы в Нью-Йорке по самодельной верёвке».",
+        "Анонимный звонок обиженной любовницы, из-за которого его якобы и взяли, — только в Википедии; не брать."
+      ],
+      "wiki": {
+        "ru": "Люстиг, Виктор",
+        "en": "Victor Lustig"
+      },
+      "evidence": [
+        "4 January 1890 – 11 March 1947) was a con artist from Austria-Hungary … Many of Lustig's initial cons were committed on ocean liners sailing between the Atlantic ports of France and New York City. He would pose as a musical producer seeking investors in a non-existent Broadway production.",
+        "In 1925, Lustig traveled back to France. While staying in Paris, he chanced upon a newspaper article discussing the problems faced with maintaining the Eiffel Tower, which gave him inspiration for a new con. … which included hiring a forger to produce fake government stationery for him. … Lustig invited a small group of scrap metal dealers to a confidential meeting at an expensive hotel, whereupon he identified himself to them as the Deputy Director-General of the Ministère de Postes et Télégraphes (Ministry of Posts and Telegraphs).",
+        "he convinced the men that the upkeep of the Eiffel Tower was becoming too much for Paris and that the French government wished to sell it for scrap, but that because such a deal would be controversial and likely spark public outcry, nothing could be disclosed until all the details were thought out. … Poisson agreed to pay a large bribe to secure ownership of the Eiffel Tower. … he soon fled to Austria.",
+        "Lustig suspected that when Poisson found out he had been conned, he would be too ashamed and embarrassed to inform the French police … thus he decided to return to Paris later that year to pull off the scheme once more. However, when Lustig attempted to con another group of dealers and had managed to find a mark among them willing to buy the Eiffel Tower, the police were informed about the scam and he fled to the U.S. to evade arrest.",
+        "Scrap dealer André Poisson took the bait and showed up for an auction with other potential buyers, who were in fact Lustig's accomplices.",
+        "Though best remembered for purportedly swindling Capone (and then returning the money) and \"selling\" the Eiffel Tower — twice — it was his infamous \"money box\" scam",
+        "It involved selling unsuspecting marks a machine that could duplicate any currency that was inserted into it, the only catch being that the device needed six hours to print a copy. … Lustig had already stocked the machine with a genuine bill to match the one the mark inserted. … Lustig once sold a money box to a Texas sheriff for thousands of dollars.",
+        "On 10 May 1935, Lustig was arrested in New York and charged with counterfeiting. … it was later found to open a locker in the Times Square subway station containing $51,000 in counterfeit bills and the plates with which they had been printed.",
+        "On 1 September 1935, the day before his trial, Lustig managed to escape from the Federal House of Detention, The Tombs, in New York City by faking illness and using a specially made rope to climb out of the building, but he was recaptured 27 days later in Pittsburgh. … he was sentenced to fifteen years in prison on Alcatraz Island, California for his original charge, with a further five years for his prison escape. … On 9 March 1947, Lustig contracted pneumonia and died two days later at 8:30pm at the Medical Center for Federal Prisoners in Springfield, Missouri."
+      ]
+    },
+    {
+      "code": "40a",
+      "title": "Война виски: как Канада и Дания делили голый остров",
+      "checked": "2026-11-19",
+      "verdict": "частично: остров, флаги, бутылки, записка и соглашение 14 июня 2022 года — правда; но бутылочная «война» шла с 1984 года и фактически закончилась перемирием 2005-го (сам спор — с 1973-го, 49 лет), кто первым оставил бутылку — источники расходятся, а Канада на ноябрь 2025 года договор ещё не ратифицировала, так что сухопутная граница пока на бумаге",
+      "timely": "вечная тема; новостной повод появится, когда Канада ратифицирует договор и граница заработает официально",
+      "caveats": [
+        "Кто был первым в 1984 году, источники описывают по-разному. Популярная версия (статья «Whisky War» в английской Википедии, сайт ООН UNRIC): сначала канадские военные оставили флаг и бутылку виски, а датский министр ответил. По CBC, Canadian Encyclopedia, блогу Библиотеки Конгресса США и статье арктических историков (Arctic Yearbook, 2022) традицию начал датчанин Том Хёйем — после того как выяснилось, что на острове работали исследователи канадской нефтяной компании. Русская Википедия упоминает обе версии. В ролике не говорить «первыми были канадцы» или «первыми были датчане» — достаточно «в 1984 году».",
+        "Что было в датской бутылке — тоже разнобой: шнапс (Википедия, UNRIC), бренди (CBC, Arctic Yearbook), коньяк (блог Библиотеки Конгресса), на флоте говорят о биттере Gammel Dansk. «Шнапс» — самая распространённая версия; можно сказать «бутылку датского крепкого».",
+        "Срок: спор возник в 1973 году (до соглашения 2022-го — 49 лет), флаги и бутылки — с 1984-го, а в сентябре 2005-го страны объявили перемирие и перешли к переговорам (по сайту UNRIC, обмен флагами и бутылками продолжался до 2005 года). «Почти сорок лет оставляли друг другу бутылки» — натяжка. Точнее: «спор длился почти полвека, а началось всё с бутылки в 1984-м».",
+        "Ратификация: парламент Дании одобрил договор 19 декабря 2023 года; МИД Канады в документе от 27 ноября 2025 года пишет, что страна только готовится к ратификации; известий о ратификации в 2026 году я не нашёл. Поэтому не «появилась граница», а «подписали соглашение о границе». Перед выпуском проверить статус.",
+        "Доли: правительство Канады говорит «примерно пополам», Canadian Encyclopedia и русская Википедия — около 60% Дании (Гренландии) и 40% Канаде. Можно сказать «почти пополам».",
+        "В русской статье «Ханс (остров)» сказано, что десант высаживался «раз в несколько месяцев» и распивал оставленное противником — подтверждений этому нет, по хронике визиты случались раз в несколько лет. Не брать.",
+        "Политику не трогать: в 2022 году соглашение подавали как пример мирного решения споров на фоне событий на Украине, а сама Гренландия в 2025–2026 годах — тема большой политики. Ролик — только про остров, флаги и бутылки.",
+        "Суперлативы из Википедии («самая северная сухопутная граница в мире», «четвёртая по краткости») не проверял — лучше обойтись без них. Площадь — 1,3 км² (английская Википедия, CBC); в русской статье «Война виски» — 1,2 км².",
+        "Формально сторона спора — Королевство Дания (за Гренландию); гренландское название острова — Тартупалук.",
+        "По Canadian Encyclopedia, Хёйем поставил флаг 28 июля 1984 года, и Канада заявила протест; точная дата — из одного источника."
+      ],
+      "wiki": {
+        "ru": "Война виски",
+        "en": "Whisky War"
+      },
+      "evidence": [
+        "The island itself is barren and uninhabited with an area of 130 ha (320 acres), measuring 1,290 by 1,199 m (4,232 by 3,934 ft) … Its location in the strait that separates Ellesmere Island of Canada from northern Greenland … During negotiations between Canada and the Danish Realm on their maritime boundary in 1973, both states claimed Hans Island was part of their territory. No agreement was reached between the two governments on the issue.",
+        "with the Danish flag, a bottle of schnapps, and a letter stating \"Welcome to the Danish Island\" (Velkommen til den danske ø). … 1984 – Tom Høyem, Danish Minister for Greenland, chartered a helicopter to the island to place a flag and a bottle of schnapps.",
+        "Peter Taksøe-Jensen stated \"when Danish military go there, they leave a bottle of schnapps. And when Canadian military forces come there, they leave a bottle of Canadian Club and a sign saying, 'Welcome to Canada.'\"",
+        "August 13, 2002 – The Danish inspection ship HDMS Vædderen arrived and erected a new cairn, flagpole and flag, finding the 1988 flag missing and the 1995 flag in pieces. … August 1, 2003 – The crew of the Danish frigate HDMS Triton landed on the island and replaced the Danish flag again. … July 13, 2005 – Canadian soldiers landed on the Island, placing a traditional Inuit stone marker (Inukshuk) with a plaque and a Canadian flag. … July 20, 2005 – As a symbolic move, Canadian Defence Minister Bill Graham set foot on the island.",
+        "July 25, 2005 – A Danish government official announced Denmark would issue a letter of protest to Canada. … The news was welcomed by Danish Prime Minister Anders Fogh Rasmussen, who stated \"It is time to stop the flag war. It has no place in a modern, international world. Countries like Denmark and Canada must be able to find a peaceful solution in a case such as this.\" … September 19, 2005 – According to Canada's Foreign Affairs Minister, Pierre Pettigrew, Canada and Denmark agreed on a process to resolve the dispute over the island.",
+        "In response, the Canadian author ordered his own advertisement stating that the island belongs to Canada, along with a link to a page with a rotating Canadian flag and the Canadian national anthem. Similar to the actual dispute, the \"Google fight\" was considered quite harmless and treated as entertainment by the media, with the Canadian Foreign Affairs Ministry responding that they – as a goodwill gesture to Denmark – still would allow Danish pastries to be sold in the ministry cafeteria.",
+        "14 июня 2022 года в Оттаве состоялась встреча Мелани Жоли и Йеппе Кофода, министров иностранных дел Канады и Дании соответственно, а также премьер-министра Гренландии Мюте Эгеде. Они подписали соглашение, завершившее конфликт. По его условиям, остров был разделён по расщелине в его центре, проходящей с севера на юг; 60 % острова достались Дании, остальные 40 % — Канаде. Стороны обменялись бутылками алкоголя. Мелани Жоли назвала конфликт «самой дружелюбной из всех войн».",
+        "By this, Canada and the Danish Realm, through Greenland, have an international land border of 1,280 m (4,200 ft) … also a second land neighbour for Canada and for the Danish Realm, each of which had only one, with the United States and Germany respectively.",
+        "Canada and the Kingdom of Denmark continue to work on access and mobility issues for Hans Island in anticipation of our ability to ratify the treaty signed in 2022."
+      ]
+    },
+    {
+      "code": "40b",
+      "title": "Кот Стаббс 20 лет был мэром на Аляске. Или не был?",
+      "checked": "2026-11-19",
+      "verdict": "частично: кота Стаббса действительно 20 лет (1997–2017) называли мэром Талкитны, но это почётное прозвище — должности мэра там нет, а история про победу на выборах — легенда (это признали NPR и местная газета)",
+      "timely": "Вечная тема, привязки к дате нет.",
+      "caveats": [
+        "Мэра у Талкитны нет: это невключённая территория (census-designated place) с общественным советом. Говорить «кота называли мэром», «почётный мэр» — а не «был мэром» или «занимал должность».",
+        "Выборы 1997 года (в заметках AP — 1998-го), где кот якобы победил как вписанный в бюллетень кандидат, — легенда: NPR 18 июля 2012 года опровергло собственный сюжет, Anchorage Daily News написала «there was no write-in bid». Русская Википедия пересказывает выборы как факт («всё население (900 человек) проголосовало за кота») — не повторять.",
+        "Колумнист Alaska Dispatch News Крейг Медред вообще называл историю про кота-мэра уткой, на которую купились СМИ. То есть титул никто официально не присваивал: так кота прозвали в магазине, а дальше подхватили журналисты.",
+        "Точная дата «18 июля 1997» есть только в Википедии и восходит к заметке UPI 2012 года со словами «около 15 лет назад»; телеканал KTUU писал лишь «вскоре после рождения». В ролике — «с 1997 года», без дня.",
+        "Преемник спорный: хозяева называли Денали (статья о Стаббсе в Википедии), а статья Википедии о Талкитне называет неофициальным мэром кошку Аврору; по непроверенным сообщениям из поисковой выдачи, Денали умер в 2022 году. «Нового мэра» уверенно не называть.",
+        "Дата нападения собаки: 31 августа 2013 (английская Википедия) или 1 сентября (русская). Травмы не смаковать. Эпизод со стрельбой по коту из пневматики и «кампанию» кота на выборах в Сенат 2014 года не брать (жестокость и политика).",
+        "Бокал — «wine or margarita glass»: источники называют и винный, и для «Маргариты». Цитата Лори Стек — из заметки NY Daily News 2012 года, приведённой в сносках английской Википедии (сама Стек говорила это CNN).",
+        "Цитата Anchorage Daily News: Цитаты не из Википедии взяты из поисковой выдачи: открыть сами страницы из этой сессии нельзя (сайты закрыты сетевыми правилами). Перед прямым цитированием в ролике сверить формулировку по ссылке."
+      ],
+      "wiki": {
+        "ru": "Стаббс (кот)",
+        "en": "Stubbs (cat)"
+      },
+      "evidence": [
+        "Later in 1997, Lauri Stec, manager of Nagley's General Store, found Stubbs in a box full of kittens in her parking lot. The owners were giving the kittens away; Stec chose \"Stubbs\" because he did not have a tail.",
+        "Stubbs (April 12, 1997 – July 21, 2017) was a cat who was the honorary mayor of Talkeetna, Alaska, from July 18, 1997, until his death in 2017.",
+        "A popular rumor is that Stubbs was elected by a write-in campaign by voters who opposed the human candidates. But according to NPR, the cat could not have been elected as a write-in candidate because \"The tiny town has no real mayor, so there was no election\". Stubbs's position was honorary as the town is unincorporated.",
+        "That never happened: there was no write-in bid. Also: there is no mayor of Talkeetna, human, feline or any other species.",
+        "Stubbs was described as a tourist attraction, having been flooded with cards and letters, and drawing 30 to 40 tourists each day (most of whom were en route to other Alaska destinations, such as Denali) who hoped to meet the mayor of Talkeetna. His position was honorary, as the town is only a historic district. Every afternoon, Stubbs went to a nearby restaurant and drank water mixed with catnip out of a wine or margarita glass.",
+        "Stec manages Stubbs’s main haunt, Nagley’s General Store, and says the cat has been a good leader when it comes to local small businesses. \"He doesn't raise our taxes - we have no sales tax. He doesn't interfere with business\", she told CNN. \"He's honest\".",
+        "On August 31, 2013, Stubbs was attacked by a dog. He was placed under heavy sedation at a veterinary hospital 70 miles (110 km) away in Wasilla, having suffered a punctured lung, a fractured sternum, and a deep cut in his side. A crowd-funding page was set up to help pay his veterinary bills. Stubbs remained in the veterinary hospital for nine days before returning to the upstairs room of the general store. As a result, he was discouraged from roaming. Donations toward his care were received from around the world; the surplus was given to an animal shelter and to the local veterinary clinic.",
+        "Other incidents included Stubbs being shot by teenagers with BB guns, falling into a restaurant's deep fryer (which was switched off and cold at the time), and hitching a ride to the outskirts of Talkeetna on a garbage truck.",
+        "He died on July 21, 2017. His owners said that \"He was a trooper until the end of his life.\" Stubbs's owners have suggested that another family cat, Denali, may assume Talkeetna's \"mayoralty\"."
+      ]
+    },
+    {
+      "code": "40c",
+      "title": "Деньги не пахнут: фраза родилась из налога на мочу",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено (с оговорками): налог на мочу и сцену с монетой описывают Светоний и Дион Кассий; но самих слов «деньги не пахнут» у них нет — это позднейшая формула, а кто именно платил налог, из источников неясно",
+      "timely": "вечная тема",
+      "caveats": [
+        "Не вкладывать «деньги не пахнут» в уста Веспасиана как цитату: ни у Светония, ни у Диона Кассия этих слов нет, фразу императору приписывают. В русской Википедии в цитату вставлено «[Non olet]» — это пояснение в скобках, у Светония Тит просто отвечает «нет».",
+        "«Золотая монета» — деталь из английской Википедии; у Светония просто деньги «из первого платежа» (pecuniam ex prima pensione). Говорить «монета».",
+        "Как был устроен налог, неизвестно. Светоний называет его двумя словами — urinae vectigal; что платили сукновалы, скупавшие мочу, — догадка комментаторов (в словаре Смита: «is supposed by Casaubon and others»), по другому прочтению это сбор с общественных уборных. Утверждение Википедии «налог платили покупатели мочи» как факт не подавать.",
+        "«Налог первым ввёл Нерон, а Веспасиан вернул его около 70 года» — так в английской Википедии, но без античного источника; у Светония Веспасиан налог «придумал» (commentus esset). Нерона и точный год не упоминать — достаточно «в I веке».",
+        "Это исторический анекдот, а не протокол: Светоний писал около 121 года — через сорок с лишним лет после смерти Веспасиана (79 год), а рассказ Диона Кассия (ок. 165 — ок. 235) дошёл только в сокращении византийского монаха XI века.",
+        "Картинка «рабы по щиколотку в чанах с мочой» — из английской статьи Fulling, без ссылки на источник; надёжнее сказать, что мочой стирали и отбеливали шерсть.",
+        "Не связывать налог на мочу с Колизеем: по Википедии, Колизей строили на военную добычу. Колизей годится только как «примета» императора; войну в Иудее не трогать.",
+        "Год, когда Рамбюто поставил первые писсуары, в источниках разный (1834, 1841, «после 1843») — не называть. И вместо «до сих пор называют» точнее «в языке осталось слово»: старых уличных писсуаров в Париже почти нет.",
+        "В русской статье о Веспасиане латинская формула дана иначе — «Aes non olet»; сама разноголосица подсказывает, что это не цитата, а позднее крылатое выражение."
+      ],
+      "wiki": {
+        "ru": "Деньги не пахнут",
+        "en": "Pecunia non olet"
+      },
+      "evidence": [
+        "After the death of Nero in 68, Rome saw a succession of short-lived emperors and a year of civil wars. … Vespasian and Mucianus renewed old taxes and instituted new ones, increased the tribute of the provinces, and kept a watchful eye upon the treasury officials. … initiated several ambitious construction projects, including the building of the Flavian Amphitheatre, better known today as the Colosseum",
+        "Reprehendenti filio Tito, quod etiam urinae vectigal commentus esset, pecuniam ex prima pensione admovit ad nares",
+        "The urine collected from these public urinals was sold as an ingredient for several chemical processes. It was used in tanning, wool production, and also by launderers as a source of ammonia to clean and whiten woollen togas.",
+        "To procure a sufficient supply of it, the fullones were accustomed to place at the corners of the streets vessels, which they carried away after they had been filled by the passengers",
+        "Тит упрекал отца, что и нужники он обложил налогом; тот взял монету из первой прибыли, поднес к его носу и спросил, воняет ли она. «Нет», — ответил Тит. «А ведь это деньги с мочи», — сказал Веспасиан.",
+        "tax placed upon public urinals … one of the new taxes that had been established … \"See, my son, if they have any smell.\"",
+        "The phrase is ascribed to the Roman emperor Vespasian (ruled AD 69–79). … When Titus said \"No\", Vespasian replied, \"Yet it comes from urine\" (Atqui ex lotio est).",
+        "In modern Romance languages, urinals are named after him (for example, vespasiano in Italian, and vespasienne in French), probably in reference to a tax he placed on urine collection.",
+        "over 400 were installed by Claude-Philibert Barthelot, comte de Rambuteau, the Préfet of the Department of the Seine … they were popularly known as colonnes Rambuteau (Rambuteau columns). … In response, Rambuteau suggested the name vespasiennes, in reference to the 1st century Roman emperor Titus Flavius Vespasianus, who placed a tax on urine collected from public toilets for use in tanning. … By 2006, only one historic pissoir remained, on Boulevard Arago."
+      ]
+    },
+    {
+      "code": "41a",
+      "title": "Чем Nintendo занималась до Марио: карты, такси, рис",
+      "checked": "2026-11-19",
+      "verdict": "частично: 1889 год, игральные карты ханафуда, такси (Daiya, 1960) и рис быстрого приготовления подтверждаются; «отели любви» — нет: в отчётности Nintendo с 1962 года и в газетах тех лет следов такого бизнеса не нашли, а первоисточник байки — книга Дэвида Шеффа Game Over (1993).",
+      "timely": "вечная тема; хороший повод — любой крупный релиз Nintendo или 23 сентября, день основания компании.",
+      "caveats": [
+        "«Отели любви» нельзя подавать как факт. Но и «доказанным мифом» называть не стоит: отсутствие записей в отчётности — не стопроцентное опровержение (так оговаривается и исследователь, которого пересказывает издание Automaton; историк Nintendo Исао Ямадзаки считает такой бизнес «очень маловероятным»). Честная формулировка: «этого никто не смог подтвердить документами».",
+        "Русская Википедия в этом месте ненадёжна: в статье о Хироси Ямаути «гостиницы любви» поданы как факт («пробовала себя во время бума на так называемые «гостиницы любви»»), а вместо риса названы «быстрорастворимые супы». Опираться на английские статьи.",
+        "Перевод названия Nintendo как «оставь удачу небесам» — общепринятое предположение без исторических подтверждений («there are no historical records to validate this»); как факт не говорить.",
+        "Когда Хироси Ямаути стал президентом: 25 апреля 1949 года (статья о нём; History of Nintendo — тоже 1949; русская Википедия — март 1949) или 1950 год (основная статья Nintendo). Возраст 21 год посчитан по дате рождения 7 ноября 1927 года; в русской Википедии — «в 22 года». Безопасно: «студент чуть за двадцать».",
+        "Такси: источник говорит лишь, что в 1960 году Nintendo владела таксомоторной компанией Daiya и позже её продала; сколько лет она работала — не сказано.",
+        "Рис: марка, вкус и годы в источниках не названы — не придумывать подробностей вроде «рис за три минуты».",
+        "Пылесос Chiritory в статье History of Nintendo стоит в одном ряду с рисом, но в статье о Гумпэе Ёкои это его игрушка («a miniature remote-controlled vacuum cleaner called the Chiritory»). Не говорить «Nintendo в 60-х делала пылесосы».",
+        "Продажи Ultra Hand в Википедии разные: «сотни тысяч» (History of Nintendo), «больше миллиона» (Ultra Hand), «More than 1.2 million units of Ultra Hand were sold in Japan.» (Nintendo); год выхода — 1966, в русской статье о Ямаути — 1967. Говорить «больше миллиона».",
+        "«Больше восьмидесяти лет без видеоигр» посчитано от 1889 года до 1972-го — первого касательства к видеоиграм (световой пистолет для чужой приставки). Собственная приставка — Color TV-Game 1977 года (совместно с Mitsubishi Electric), Famicom — 1983-й.",
+        "Не трогать военный сюжет про Киото в 1945 году и связь первых карт ханафуда с игорными домами якудза — канал такого не берёт."
+      ],
+      "wiki": {
+        "ru": "Nintendo",
+        "en": "History of Nintendo"
+      },
+      "evidence": [
+        "The history of Nintendo began when craftsman Fusajiro Yamauchi founded the company in 1889 to produce handmade hanafuda playing cards. […] Nintendo was founded as Nintendo Koppai on 23 September 1889 by craftsman Fusajiro Yamauchi in Shimogyō-ku, Kyoto, Japan, as an unincorporated establishment, to produce and distribute Japanese playing cards, or karuta (かるた; from Portuguese carta, 'card'), most notably hanafuda (花札, 'flower cards').",
+        "Hiroshi Yamauchi (Japanese: 山内 溥; 7 November 1927 – 19 September 2013) was a Japanese businessman and the third president of Nintendo, serving in the role from 25 April 1949 to 24 May 2002 […] his great-grandfather, Fusajiro Yamauchi, founded the company […] After the end of the war, he studied law at Waseda University […] In 1948, while Yamauchi was at Waseda University, Kaneda suffered a stroke. As he lacked a designated successor as president of Nintendo, Yamauchi was asked to replace him immediately. […] Convinced by a visit to the small headquarters of the United States Playing Card Company, the world's biggest manufacturer of playing cards, that Nintendo would struggle to grow if it remained on this path, he took steps to diversify the company.",
+        "In 1960, Nintendo operated a taxi company in Kyoto known as \"Daiya Taxi\". It was sold off due to difficulties with the labor unions that made it hard to manage the company.",
+        "In 1963, Yamauchi shortened the company's name from \"Nintendo Playing Card Co., Ltd.\" to \"Nintendo.\" Following this name change, Nintendo started to begin experimenting in other areas of business using the newly injected capital. This included establishing a food company in partnership with two other firms, with a product line featuring instant rice (similar to instant noodles)",
+        "While many sources have reported that Nintendo owned a chain of love hotels during this period, an investigation by a Japanese blogger as well as Nintendo historian Isao Yamazaki found that there was no evidence of this in any of Nintendo's securities reports dating to 1962, which detail the many other businesses, nor any contemporary newspapers. The claim appears to have originated in David Sheff's book Game Over (first published in 1993), which alleged that Yamauchi opened a love hotel of which he was the most frequent patron.",
+        "All of Nintendo's other business ventures eventually failed. […] In 1964, while Japan was experiencing an economic boom due to the Tokyo Olympics, the playing card business reached saturation. Japanese households stopped buying playing cards, and the price of Nintendo stock fell from 900 yen to 60 yen.",
+        "In 1965, Nintendo hired Gunpei Yokoi as a Maintenance Engineer for the assembly line. […] In 1966, Yamauchi, upon visiting one of the company's hanafuda factories, noticed an extending arm-shaped toy, which had been made by one of its maintenance engineers, Gunpei Yokoi, for his own enjoyment. Yamauchi ordered Yokoi to develop it as a proper product for the Christmas rush.",
+        "It was created in 1966 by Gunpei Yokoi, who later designed the Love Tester, the D-pad, the Game & Watch, the Game Boy, and the WonderSwan. […] Ultra Hand was a commercial success, selling more than one million units. It is the first of several toys developed by Yokoi that helped to save the company from financial difficulties.",
+        "Shigeru Miyamoto designed Donkey Kong (1981) for arcades: Nintendo's first international hit game, and origin of the company's mascot, Mario. […] Released in 1972, the first commercially available video game console, the Magnavox Odyssey, has a light gun accessory, the Shooting Gallery. This was the first involvement of Nintendo in video games. According to Martin Picard in the International Journal of Computer Game Research: \"in 1971, Nintendo had—even before the marketing of the first home console in the United States—an alliance with the American pioneer Magnavox to develop and produce optoelectronic guns for the [Odyssey, since] it was similar to what Nintendo was able to offer in the Japanese toy market in 1970s\". […] In 1977, Nintendo released the Color TV-Game 6 and Color TV-Game 15, two consoles jointly developed with Mitsubishi Electric."
+      ]
+    },
+    {
+      "code": "41b",
+      "title": "Чемпионат мира по ношению жён: чем награждают чемпионов",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено: чемпионат проходит в финском Сонкаярви с 1992 года (как чемпионат мира — с 1996-го), главный приз — пиво по весу «жены»; уточнение — в правилах на сайте организаторов приз назван «напитком»",
+      "timely": "Вечная тема; пик интереса — начало июля, когда проходит чемпионат (следующий, по сайту организаторов, — 2–3 июля 2027 года в Сонкаярви).",
+      "caveats": [
+        "Год начала расходится: первые соревнования — 1992 (английская Википедия, сайт организаторов, Гиннесс), но «чемпионатом мира» их считают с 1996-го (английская Википедия, организаторы), с 1994-го (статья Википедии о Сонкаярви) или с 1995-го (русская Википедия). В ролике: «с 1992 года».",
+        "Приз: в правилах на сайте организаторов победителям полагается «wife-carrying drink» по весу «жены» плюс меняющиеся призы; «пивом» его называют русская Википедия и СМИ (Euronews, 2025). Как именно отмеряют (в пересказах — качели-весы с ящиками пива), у организаторов подтверждения не нашёл — не показывать как факт.",
+        "«Жена» не обязана быть женой: так в английской Википедии, а на сайте Гиннесса сказано, что по правилам пары не обязаны быть женаты (многократные чемпионы Миеттинен и Хаапанен не женаты). При этом Euronews в 2017 и 2025 годах писал, что нужна законная супруга, — это противоречит остальным источникам, не повторять.",
+        "Рекорд: 55,5 с (2000) показан до введения минимального веса, Гиннесс считает рекордом 56,9 с (2006). Трассу обновили в 2024 году, поэтому организаторы назвали «рекордом трассы» 1:01,17 (2025, первая победа пары из США). Не говорить «мировой рекорд 55,5» без оговорки.",
+        "Разбойник Ронкайнен — легенда («tales have been passed down», на сайте организаторов — «local legend»), исторических подтверждений я не видел. Мотив похищения женщин подавать коротко и именно как легенду.",
+        "Возраст: «жене» — больше 17 лет; по сайту организаторов носильщику должно быть не меньше 18.",
+        "Данные 2026 года (Миеттинен, 61 год, девятая победа) — с сайта организаторов по поисковой выдаче; таблица в английской Википедии совпадает (2026: Taisto Miettinen / Katja Kovanen, 1:04,4). Преграды на трассе — по Euronews, рекорд — по сайту Гиннесса. Цитаты не из Википедии взяты из поисковой выдачи: открыть сами страницы из этой сессии нельзя (сайты закрыты сетевыми правилами). Перед прямым цитированием в ролике сверить формулировку по ссылке."
+      ],
+      "wiki": {
+        "ru": "Чемпионат мира по ношению жён",
+        "en": "Wife-carrying"
+      },
+      "evidence": [
+        "The Finnish Wife Carrying Championships were first held in 1992 in Sonkajärvi, Finland. Following the rapid growth and international interest in the event, the national competition expanded into the official Wife Carrying World Championships in 1996.",
+        "The basic rules are that the woman must be over 17 years of age and have a weight of at least 49 kilograms (108 lb). If she is below that weight, she must be burdened with such a heavy rucksack so that the total weight to be carried by the man is at least 49 kilograms. The only equipment allowed is a belt worn by the carrier and a helmet worn by the carried. The track in Sonkajärvi used annually for the World Championship is 253.5 metres (832 ft) long.",
+        "two dry obstacles and a water obstacle about one metre deep",
+        "While most teams consist of a man carrying a woman, there are generally no rules about gender or marital status.",
+        "Several types of carrying may be practiced: a classic piggyback, a fireman's carry (over the shoulder), or the Estonian‑style (the 'wife' upside‑down on the carrier's back, with her legs over their neck and shoulders).",
+        "Tales have been passed down of a man named Herkko Rosvo‑Ronkainen (also known as Ronkainen the Robber). This man was thought to be a robber in the late 1800s who lived in a forest. He supposedly ran around with his gang of thieves causing harm to villagers. From what has been found, there are three ideas as to why and how this sport was invented. Firstly, that Rosvo‑Ronkainen and his thieves were accused of stealing food and abducting women from villages in the area where he lived, then carrying these women on their backs as they ran away (hence the 'wife' or woman carrying). The second suggestion is that young men would go to neighboring villages and abduct women to forcibly marry, often women who were already married. These wives were also carried on the backs of the young men; this was referred to as 'the practice of wife stealing'. Lastly, there is the idea that Rosvo‑Ronkainen trained his thieves to be \"faster and stronger\" by carrying big, heavy sacks on their backs, from which this sport evolved.",
+        "Главный приз, получаемый победителем — количество пива, по весу соответствующее весу его любимой жены.",
+        "The fastest time to complete the 253.5-m (831-ft 8-in) obstacle course of the World Wife-Carrying Championships, held annually in Sonkajärvi, Finland (first held 1992) is 56.9 seconds by Margo Uusorg and Sandra Kullas (both Estonia) on 1 July 2006. […] the previous record of 55.5 seconds was achieved prior to the 2002 rule change, requiring the wife to weigh a minimum of 49 kg (108 lb)",
+        "Taisto Miettinen won the Wife Carrying World Championship for the ninth time on Saturday at the Wife Carrying World Championships held in Sonkajärvi. Miettinen, from Kauniainen, carried Katja Kovanen. The 61 years old Miettinen renewed his world championship title after a shorter training period than usual due to back surgery performed last winter."
+      ]
+    },
+    {
+      "code": "41c",
+      "title": "Бутерброд, за который NASA отвечало перед Конгрессом",
+      "checked": "2026-11-19",
+      "verdict": "частично: бутерброд, крошки и слушания в Конгрессе — правда; но «первая контрабанда в космосе» не доказана (сам Янг писал, что это был уже третий бутерброд на борту космического корабля), а в Конгрессе это обсуждали на бюджетных слушаниях, а не отдельным расследованием",
+      "timely": "Вечная тема; естественная дата — 23 марта, годовщина полёта «Джемини-3».",
+      "caveats": [
+        "«Первая контрабанда в космосе» — не говорить. У Гиннесса есть рекорд «First food smuggled into space», в списке Википедии «List of items smuggled into space» бутерброд стоит первым по времени (список неполный), но сам Янг в мемуарах называл его третьим бутербродом на борту. Безопасно: «самый знаменитый контрабандный бутерброд» или «первый бутерброд с солониной на орбите».",
+        "Сама «контрабанда» под вопросом: по Википедии, Дик Слейтон писал в автобиографии, что разрешил Янгу взять бутерброд; в других пересказах — знал, но не одобрял.",
+        "Наказание: в Википедии — «were reprimanded» / «mildly rebuked», у Гиннесса — «disciplined», а в статье историков NASA сказано, что официального выговора Янг не получил. Говорить «отчитали», а не «объявили выговор».",
+        "Конгресс: это не отдельное расследование. По статье историков NASA, вопрос подняли на слушаниях о бюджете NASA на 1966 год в комитете Палаты представителей по ассигнованиям; в части пересказов слушания ошибочно датируют 1966 годом. Реплики конгрессмена Шипли («немного отвратительно», «глупо») и «бутерброд за 30 миллионов долларов» источники передают по-разному — дословно не цитировать.",
+        "Сколько съели и сколько это длилось: Википедия — «каждый откусил несколько раз», NASA — Гриссом откусил и убрал бутерброд в карман; NASA — около 30 секунд, Space.com — около минуты. Диалог на борту («Откуда это?» — «Принёс с собой») известен по расшифровке переговоров, но дословно я его не сверял — пересказывать, не цитировать.",
+        "По Space.com, Ширра купил бутерброд за два дня до старта — деталь не из NASA, дословной цитаты у меня нет, в keyFacts не включена.",
+        "В музее — не тот самый бутерброд, а похожий. Крошки ничего не повредили: по NASA, эксперименты не пострадали. Длительность полёта — 4 часа 52 минуты 31 секунда (Википедия); «почти 6 часов» у Space.com — не использовать.",
+        "Пункты про закусочную Wolfie's, 30 секунд и Мюллера, «третий бутерброд», музей и меню шаттла — с сайтов NASA, Space.com и Smithsonian. Цитаты не из Википедии взяты из поисковой выдачи: открыть сами страницы из этой сессии нельзя (сайты закрыты сетевыми правилами). Перед прямым цитированием в ролике сверить формулировку по ссылке."
+      ],
+      "wiki": {
+        "ru": "Джемини-3",
+        "en": "Gemini 3"
+      },
+      "evidence": [
+        "Gemini 3 (officially Gemini III) was the first crewed mission in NASA's Project Gemini and was the first time two American astronauts flew together into space. On March 23, 1965, astronauts Gus Grissom and John Young flew three low Earth orbits in their spacecraft, which they nicknamed Molly Brown.",
+        "Schirra had bought it at \"Wolfie's\" on North Atlantic Avenue in Cocoa Beach and given it to Young, who smuggled it on board the spacecraft.",
+        "The only major incident during the orbital phase involved a contraband corned beef sandwich that Young had smuggled on board, hiding it in a pocket of his spacesuit (though Director of Flight Crew Operations Deke Slayton wrote in his autobiography that he gave Young permission to do so). Grissom found this to be highly amusing, saying later,  \"After the flight our superiors at NASA let us know in no uncertain terms that non-man-rated corned beef sandwiches were out for future space missions. But John's deadpan offer of this strictly non-regulation goodie remains one of the highlights of our flight for me.\"",
+        "The crewmen each took a few bites before the sandwich was restowed. The crumbs it released could have wreaked havoc with the craft's electronics, so the crewmen were reprimanded when they returned to Earth. Other crews were warned not to pull the same type of stunt.",
+        "After the flight, it was discovered that Young had smuggled a corned beef sandwich aboard, which he and Grissom shared while testing food. The House Committee on Appropriations launched a hearing regarding the incident, and some members argued that the two astronauts had disrupted the scheduled food test.",
+        "The conversation about and the consumption of the sandwich, which lasted only about 30 seconds during the Gemini III flight, became a serious matter that drew the ire of Congress and NASA's administrator after the crew returned home. […] taken steps, obviously, to prevent recurrence of corned beef sandwiches in future flights.",
+        "It was very common to carry sandwiches — in fact, the corned beef was the third sandwich that had been carried on a spacecraft.",
+        "a similar one, preserved in acrylic, is on display at the Grissom Memorial Museum in Mitchell, Indiana.",
+        "corned beef made it officially onto the menu in time for the first space shuttle flight in April 1981 — a mission commanded by John Young."
+      ]
+    },
+    {
+      "code": "42a",
+      "title": "Почему «Дюну» напечатало издательство автосправочников",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено: роман отвергли около двадцати издательств (в источниках — «почти двадцать», «больше двадцати» и 23), а выпустило его Chilton, известное главным образом руководствами по ремонту автомобилей. Редактора Стерлинга Ланье через год уволили; «Дюна» взяла «Хьюго» и первую «Небьюлу» и продана тиражом почти 20 миллионов.",
+      "timely": "18 декабря 2026 года выходит «Дюна: Часть третья» Дени Вильнёва (в один день с новыми «Мстителями»). Ролик актуален с конца ноября до января 2027-го; сама история вечная.",
+      "caveats": [
+        "Число отказов плавает: «rejected by nearly twenty book publishers» (статья о Герберте), «submitted to more than twenty publishers, each of whom rejected it» (статья о романе), «отвергли 23 издательства» (русская Википедия). В ролике — «около двадцати» или «больше двадцати», без точной цифры.",
+        "Chilton — не автомастерская и не крошечная контора: это крупный издатель отраслевых журналов и автосправочников («most famous for its trade magazines and automotive manuals»), который в 1958 году купил обычное книжное издательство, а в 1966-м выпустил ещё один фантастический роман. Не говорить «никогда не печатали художественных книг».",
+        "Первый тираж 2200 экземпляров есть только в русской Википедии («Первый тираж составил 2200 экземпляров»); перепроверить по другим источникам не удалось — брать с оговоркой или не брать.",
+        "Дата выхода книги: август 1965 года в английской Википедии и 1 октября 1965 года в русской. Говорить «в 1965 году».",
+        "Причина увольнения Ланье: английская Википедия подаёт её как факт, русская осторожнее («что, вероятно, стоило Ланье увольнения из-за слабых первоначальных продаж книги»). Безопасно: «через год его уволили — как считается, из-за провальных первых продаж».",
+        "Автора фразы про «ошибку десятилетия» Википедия не называет — имя редактора в ролике не придумывать.",
+        "«Самый продаваемый фантастический роман в истории» — так «Дюну» часто называют («frequently described as the best-selling science fiction novel in history»), но это не измеренный рекорд: говорить «один из самых продаваемых».",
+        "«Небьюла» — за лучший роман 1965 года, вручена в 1966-м (в статье о Герберте стоит «in 1965»); «Хьюго» 1966 года «Дюна» поделила с Желязны, а не получила единолично.",
+        "Аванс 7500 долларов — из статьи о Герберте; там же сказано, что бестселлером книга стала не сразу, а полностью уйти в писатели Герберт смог только к концу 1972 года. Не говорить «проснулся знаменитым».",
+        "«Дюна: Часть третья»: 18 декабря 2026 года — дата проката в США; про российские кинотеатры ничего не обещать."
+      ],
+      "wiki": {
+        "ru": "Дюна (роман)",
+        "en": "Dune (novel)"
+      },
+      "evidence": [
+        "He also wrote short stories and worked as a newspaper journalist, photographer, book reviewer, ecological consultant, and lecturer. […] Dune took six years of research and writing to complete, and was much longer than other commercial science fiction of the time. […] Analog (formerly Astounding, but still edited by John W. Campbell) published it in two parts comprising eight installments, \"Dune World\" from December 1963 and \"Prophet of Dune\" in 1965.",
+        "It was then rejected by nearly twenty book publishers. One editor prophetically wrote, \"I might be making the mistake of the decade, but...\"",
+        "Sterling E. Lanier, an editor of Chilton Book Company (known mainly for its auto-repair manuals), had read the Dune serials and offered a $7,500 advance plus future royalties for the rights to publish them as a hardcover book.",
+        "The novel, Dune, was finally accepted and published in August 1965 by Chilton Books, a printing house better known for publishing auto repair manuals. […] However, the first printing, priced at $5.95 (equivalent to $60.79 in 2025), did not sell well and was poorly received by critics as being atypical of science fiction at the time. Chilton considered the publication of Dune a write-off and Lanier was fired.",
+        "Having read Dune World in Analog magazine, he was responsible for tracking down the author and conveying Chilton's offer. More than 20 other publishing companies had already turned the book down.  Despite Lanier's insight into the book's value, he was dismissed from Chilton a year later because of high publication costs and poor initial book sales.",
+        "The most prominent of Lanier's writings are his stories of the crypto-adventurer Brigadier Donald Ffellowes (told in the \"club story\" style of Lord Dunsany's Jorkens tales) and the post-apocalyptic novels Hiero's Journey (1973) and The Unforsaken Hiero (1983). […] He specialized in miniatures, among which were a series featuring characters from J. R. R. Tolkien’s The Lord of the Rings. One set was given to Tolkien himself, with whom Lanier corresponded.",
+        "It tied with Roger Zelazny's This Immortal for the Hugo Award for Best Novel and won the inaugural Nebula Award for Best Novel in 1966.",
+        "The novel has been translated into dozens of languages, and has sold almost 20 million copies. Dune has been regularly cited as one of the world's best-selling science fiction novels. […] The first edition of Dune is one of the most valuable in science fiction book collecting. Copies have been sold for more than $20,000 at auction.",
+        "Based on the 1969 novel Dune Messiah by Frank Herbert, it is the sequel to Dune: Part Two (2024) and the final installment of a trilogy of films developed by Legendary Pictures. […] Dune: Part Three is scheduled for release in the United States on December 18, 2026."
+      ]
+    },
+    {
+      "code": "42b",
+      "title": "Jingle Bells в космосе: как астронавты разыграли Землю",
+      "checked": "2026-11-19",
+      "verdict": "частично: розыгрыш, дата, имена и инструменты подтверждаются, но «первая песня в космосе» — неверно. Первым в космосе спел Павел Попович ещё в 1962 году; «Jingle Bells» — первая мелодия, сыгранная в космосе на музыкальных инструментах (оценка Смитсоновского института), а английская Википедия осторожно пишет «one of the first songs to be broadcast from space».",
+      "timely": "16 декабря 2026 года — 61 год со дня розыгрыша; ролик уместен весь декабрь: лучше выпустить к 16 декабря или в неделю перед Рождеством и Новым годом. После праздников тема засыпает до следующей зимы.",
+      "caveats": [
+        "Заголовки «первая песня в космосе» (так, со ссылкой на History.com, пишет и русская Википедия) неточны. Говорить: «первые музыкальные инструменты, на которых сыграли в космосе».",
+        "Санта в докладе не назван: шутка — в намёке (объект идёт с севера на юг, с полюса). Знаменитые фразы про «командный модуль и восемь модулей поменьше впереди» и пилота «в красном костюме» есть в пересказе журнала Smithsonian (выдача поиска), но в расшифровке, которую цитирует Википедия, на этом месте многоточия. Цитировать расшифровку; «красный костюм» — только со словами «по рассказу журнала Smithsonian».",
+        "Перевод доклада в keyFacts — вольный и с сокращениями (опущена фраза «has a very high climbing ratio»); при озвучке не выдавать за дословный. Доклад начинается с обращения к Gemini 7 — разыгрывали и соседний экипаж, и Землю.",
+        "Дата: старт — 15 декабря, розыгрыш — 16 декабря 1965 года, перед возвращением. Не говорить «в Рождество» — это было за девять дней до него.",
+        "«Ну вы даёте» («You're too much») в расшифровке говорит CC — оператор связи. Статья «Music in space» называет Эллиота Си «директором ЦУПа» — это ошибка: в статье о Gemini 6A он значится оператором связи в Хьюстоне. Имя лучше не называть: «ответили с Земли».",
+        "Гармошка «восьминотная» (статьи Gemini 6A и Music in space) и «с четырьмя отверстиями» (статья о Ширре) — одно и то же. «Тайком» — по Википедии: «smuggled», «without NASA's knowledge».",
+        "Где инструменты: по Википедии — в Смитсоновском институте, «on display»; по сайту NASA (выдача поиска) — в Национальном музее авиации и космонавтики в Вашингтоне; запись музея о бубенцах (выдача) называет галерею «Destination Moon». Один сторонний сайт пишет, что гармошка сейчас в Космическом центре Кеннеди, — не подтверждено. Безопасно: «хранятся в Смитсоновском институте». Не путать с самим кораблём: он — в музее Стаффорда в Оклахоме.",
+        "День благодарения: русская Википедия подаёт как факт («написана… ко Дню благодарения») — не повторять. Исследовательница Кайна Хэмилл в эфире NPR в ноябре 2025 года назвала такие утверждения кликбейтом без доказательств (по выдаче поиска). Где и когда Пьерпонт сочинил песню — «unsettled question»: место не называть.",
+        "1857: в статье о песне — издана в сентябре, авторское право 16 сентября; в статье о Пьерпонте — издана в августе. Говорить просто «в 1857 году». Название «Jingle Bells» появилось при переиздании 1859 года.",
+        "Не брать: первое исполнение прошло в зале менестрель-шоу с «блэкфейсом», а Пьерпонт воевал за Конфедерацию — не для праздничного ролика.",
+        "Запас проверенных деталей (английская Википедия): за три дня до старта, 12 декабря, двигатели ракеты заглохли примерно через 1,5 секунды после зажигания, и Ширра решил не катапультироваться; Стаффорд в 1975 году командовал американским экипажем в полёте «Союз — Аполлон»; автор песни Пьерпонт — дядя банкира Дж. П. Моргана."
+      ],
+      "wiki": {
+        "ru": "Jingle Bells",
+        "en": "Jingle Bells"
+      },
+      "evidence": [
+        "The mission, flown by Wally Schirra and Thomas P. Stafford, achieved the first crewed rendezvous with another spacecraft, its sister Gemini 7. […] the Gemini 6 and 7 spacecraft came as close as one foot (30 cm)",
+        "While in space on December 16, 1965, they sent this report to Mission Control: […] Gemini VII, this is Gemini VI. We have an object, looks like a satellite going from north to south, probably in a polar orbit. He's in a very low trajectory traveling from north to south and has a very high climbing ratio. It looks like it might even be a ... Very low. Looks like he might be going to reenter soon. Stand by one ... You might just let me try to pick up that thing.",
+        "(Music – Jingle Bells – from Spacecraft VI) P7: We got the tune, VI. C6: That was live, VII, not tape. CC: You're too much, VI.",
+        "The astronauts then produced a smuggled harmonica and sleigh bells, and with Schirra on the harmonica and Stafford on the bells, broadcast a rendition of \"Jingle Bells\". The harmonica, shown to the press upon their return, was a Hohner \"Little Lady\", a tiny harmonica approximately one inch (2.5 cm) long, by 3⁄8 of an inch (0.95 cm) wide.",
+        "According to the Smithsonian Institution, the first musical instruments played in outer space were an 8-note Hohner \"Little Lady\" harmonica and a handful of small bells carried by American astronauts Wally Schirra and Thomas P. Stafford aboard Gemini 6A. […] The harmonica was donated to the Smithsonian by Schirra in 1967, with his note that it \"...plays quite well\".",
+        "The Smithsonian Institution claims these were the first musical instruments played in space and keeps the instruments on display.",
+        "The first ever song that was performed in space was a Ukrainian song “Watching the sky and thinking a thought” (Ukrainian: «Дивлюсь я на небо та й думку гадаю») sung on 12 August 1962 by Pavel Popovich at a special request of Sergei Korolev.",
+        "It was published under the title \"The One Horse Open Sleigh\" in September 1857. Although it has no original connection to Christmas, it became associated with winter and Christmas in the 1860s and 1870s […] Possibly intended as a drinking song, it did not become a Christmas song until decades after it was first performed.",
+        "Researcher Kyna Hamill found a playbill showing that the first attested performance of \"One Horse Open Sleigh\" took place on Sept. 15, 1857, at Ordway Hall, a prominent minstrel theater in Boston. […] It has been previously claimed that the song was originally performed in a Sunday school concert on Thanksgiving in Savannah, Georgia."
+      ]
+    },
+    {
+      "code": "42c",
+      "title": "Почему в Японии на Рождество едят курицу из KFC",
+      "checked": "2026-11-19",
+      "verdict": "подтверждено",
+      "timely": "Актуально прямо сейчас: приём рождественских заказов в KFC Japan открыт с 11 ноября 2026 года, выдача — 19–25 декабря. Ролик уместен до 25 декабря 2026-го; дальше — до следующего декабря.",
+      "caveats": [
+        "Подтверждён сам обычай и предзаказы за недели; происхождение традиции спорно, и это надо говорить прямо. Версий минимум три: Окавары («это была ложь», 2018), компании (подсказал иностранец, скучавший по индейке) и «детсадовская» (Окавара в костюме Санты раздавал курицу на детском празднике). Ни одну не подавать как установленный факт.",
+        "Пять пунктов (признание Окавары, версия Yum Brands, Atlas Obscura, данные CNN, пресс-релиз 2026 года) подтверждены дословными фразами из выдачи поиска: сами страницы открыть нельзя (сетевые правила). Цитата CNN взята из перепечатки на abc17news.com; оригинал — статья CNN «How KFC became a Christmas tradition in Japan».",
+        "Статуи полковника Сандерса в костюме Санты: в выдаче поиска есть фраза журнала The Diplomat (2013) — «KFC outlets across the country dress their ubiquitous store-front Colonel Sanders statues in red and white Santa costumes…». В keyFacts не включил (лимит пунктов, страницу не открывал), но деталь годится — со словами «рестораны наряжают фигуры полковника у входа».",
+        "Доля в выручке: Википедия — почти 5% (2019); в ряде СМИ гуляет «до трети годовых продаж» — цифры противоречат друг другу, «треть» не использовать.",
+        "«3,6 млн японских семей» — оценка из статьи Би-би-си 2016 года; я видел её только в пересказе (Fortune, выдача поиска), свежих официальных данных нет. Если брать — только со словами «по оценке Би-би-си 2016 года».",
+        "Выручка за 20–25 декабря 2018 года — около 63 млн долларов (6,9 млрд иен), очереди «out the door» с 23 декабря — это CNN и The Daily Meal в выдаче поиска; цифры старые, только с указанием года. С 2021 года у сети есть онлайн-заказ, так что про «многочасовые очереди сегодня» лучше не говорить — свежих репортажей я не проверял.",
+        "1970 и 1974 — разные события: «бочонки» в первом ресторане и общенациональная кампания. Не говорить «с 1970 года по всей стране».",
+        "Окавара позже возглавлял KFC Japan (по Business Insider — в 1984–2002 годах; выдача поиска). Цена «Party Barrel» в 2026 году — 5990 иен, с ранней скидкой 5490 (японские СМИ в выдаче поиска, без дословной цитаты).",
+        "Не объяснять традицию религией: для большинства японцев Рождество — светский праздник."
+      ],
+      "wiki": {
+        "ru": "KFC в Японии",
+        "en": "KFC in Japan"
+      },
+      "evidence": [
+        "Encouraged by commerce, the secular celebration of Christmas is popular in Japan, though Christmas is not a national holiday. […] A successful advertising campaign in the 1970s made eating at KFC around Christmas a national custom. Its chicken meals are so popular during the season that stores take reservations months in advance.",
+        "In 1970, Takeshi Okawara—manager of the first KFC restaurant in Japan—began promoting fried chicken \"party barrels\" as a Christmas meal intended to serve as a substitute for the traditional American turkey dinner. Okawara marketed the party barrels as a way to celebrate Christmas, a holiday which lacked widespread traditions in Japan at the time.",
+        "KFC Japan expanded the promotion nationwide in 1974 with its long running \"Kentucky for Christmas\" (Japanese: クリスマスはケンタッキー) or \"Kentucky Christmas\" (Japanese: ケンタッキークリスマス) advertising campaign. Eating KFC food as a Christmas time meal has since become a widely practiced custom in Japan.",
+        "\"I still regret that. But people ... like it.\"",
+        "According to parent company Yum Brands, a visiting foreigner suggested that KFC start selling chicken on Christmas instead of the traditional turkey.",
+        "KFC Japan declined to comment further about Okawara's story, and, half a century on, I could not locate the NHK tape",
+        "KFC Japan's busiest day is usually December 24, on which they usually sell about five to 10 times more than typical days.",
+        "As of 2019, in Japan, Christmas sales of KFC made around Christmas Eve account for nearly five percent of annual revenue.",
+        "クリスマスメニューの予約受付は11月11日(水)から開始「Xmas早割」は12月13日(日)まで"
+      ]
+    }
+  ]
+}

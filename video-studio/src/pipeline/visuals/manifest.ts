@@ -43,6 +43,8 @@ export function visualKey(scene: ScriptScene, format: Format, env: Env, hints: V
     visuals: (env.VISUALS ?? "").trim().toLowerCase(),
     prefer: (env.VISUALS_PREFER ?? "").trim().toLowerCase(),
     style: (env.VISUALS_STYLE ?? "").trim(),
+    // Стиль сценария (VideoScript.style) — только когда задан: ключи старых манифестов прежние.
+    ...(hints.style ? { sst: hints.style } : {}),
     // Только когда включено — ключи старых манифестов остаются прежними.
     ...(hints.realFirst ? { real: 1 } : {}),
     rules: PICK_RULES_VERSION,

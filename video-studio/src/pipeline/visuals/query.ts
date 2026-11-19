@@ -1,7 +1,7 @@
 // Запросы для стоков и промпты для генерации из полей сцены.
 
 import { createHash } from "node:crypto";
-import type { Format, ScriptScene } from "../../types";
+import type { Format, SceneShot, ScriptScene, ShotFraming, VisualStyle } from "../../types";
 
 const CYRILLIC = /[Ѐ-ӿ]/;
 
@@ -44,11 +44,73 @@ export function buildQueries(scene: ScriptScene): string[] {
   return out.slice(0, 3);
 }
 
+// ---- Кинорежим: план и общий стиль ролика ----
+
+// Общий стиль ролика (VideoScript.style) → хвост промпта каждого AI-кадра —
+// у сценариев со «стилем отдельно» (без shotPrompts "complete"). Привлекательность —
+// всегда и словами «что нужно»: FLUX не понимает отрицаний («no text» он читает
+// как «text»). Окружение (environment) в хвост не идёт: «дом, снежный парк,
+// лаборатория» в каждом промпте дало в 30a 4 коллажа из 16 кадров — место
+// называет сам план.
+export function styleText(style: VisualStyle | undefined): string | undefined {
+  if (!style) return undefined;
+  const t = (v: string | undefined) => v?.trim().replace(/[.\s]+$/, "") || "";
+  const parts = [
+    t(style.direction),
+    t(style.realism),
+    t(style.lighting),
+    t(style.palette) && `${t(style.palette)} color palette`,
+    t(style.mood) && `${t(style.mood)} mood`,
+  ].filter(Boolean);
+  return parts.length ? `${parts.join(", ")}, ${APPEAL}` : undefined;
+}
+
+export const APPEAL = "appealing and aesthetically pleasing, clean and wholesome";
+
+const FRAMING_TEXT: Record<ShotFraming, string> = {
+  establishing: "establishing extreme wide shot",
+  wide: "wide shot",
+  medium: "medium shot",
+  "close-up": "close-up shot",
+  detail: "extreme close-up detail shot",
+  reaction: "close-up reaction shot, expressive face",
+  pov: "first-person point-of-view shot",
+  "low-angle": "low-angle shot",
+  "high-angle": "high-angle shot",
+  overhead: "overhead top-down shot",
+};
+
+// Промпт плана без стиля: крупность + описание + герой (если его не назвали в
+// описании — иначе кадры одного героя расходятся). Стиль добавит imagePromptFor.
+export function shotImagePrompt(shot: SceneShot): string {
+  const body = shot.prompt.trim().replace(/[.\s]+$/, "");
+  const subject = shot.subject?.trim();
+  const full = subject && !body.toLowerCase().includes(subject.toLowerCase()) ? `${body}, featuring ${subject}` : body;
+  return shot.framing ? `${FRAMING_TEXT[shot.framing]}: ${full}` : full;
+}
+
 export const DEFAULT_STYLE =
   "cinematic photo, soft dramatic lighting, rich color grading, shallow depth of field, highly detailed, no text, no letters, no watermark";
 
 // Промпт для AI-картинки: imagePrompt сцены + общий стиль ролика (одинаковый
 // для всех сцен — так кадры выглядят как один фильм).
+// Полный промпт плана (shotPrompts "complete") — как есть: в нём уже герой,
+// место, свет, объектив и композиция. Предел — как у imagePromptFor.
+export function completePrompt(text: string | undefined): string | null {
+  const p = text?.replace(/\s+/g, " ").trim() ?? "";
+  return p && !CYRILLIC.test(p) ? p.slice(0, 1800) : null;
+}
+
+// Что уходит в генератор: полный промпт плана или imagePrompt сцены + стиль.
+export function aiPromptFor(scene: ScriptScene, ctx: { format: Format; style?: string; rawPrompt?: boolean }, env: Record<string, string | undefined>): string | null {
+  return ctx.rawPrompt ? completePrompt(scene.imagePrompt) : imagePromptFor(scene, ctx.format, ctx.style ?? env.VISUALS_STYLE);
+}
+
+// seed — от кадра и промпта; salt — новая попытка того же кадра (перегенерация после проверки).
+export function aiSeed(sceneId: string, prompt: string, salt?: string): number {
+  return seedFor(`${sceneId}|${prompt}${salt ? `|${salt}` : ""}`);
+}
+
 export function imagePromptFor(scene: ScriptScene, format: Format, style: string | undefined): string | null {
   const base = scene.imagePrompt?.trim() || (scene.visualQuery?.trim() ? `cinematic shot of ${scene.visualQuery.trim()}` : "");
   if (!base || CYRILLIC.test(base)) return null;

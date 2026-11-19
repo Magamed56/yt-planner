@@ -19,6 +19,16 @@
 - Сетевой код — с таймаутами и понятной деградацией (визуал → без визуала, Edge → Piper).
 - Не используй `@remotion/google-fonts`: без доступа к хосту шрифтов рендер висит до таймаута.
   Шрифты лежат в `assets/fonts` и подключаются через webpack.
+- **Темы — нелепые, но правдивые факты и актуальное, а не школьная программа** (решение владельца,
+  19.11.2026: 55 «учебных» Shorts набрали по ≈ 1100 просмотров и дальше пробного показа не ушли).
+  Половина тем — абсурдные случаи, странные законы, традиции и рекорды, курьёзы известных людей,
+  брендов, игр и фильмов, а также хитрости и скрытая механика привычных вещей с неожиданным ответом
+  (уловки, лазейки, аферы — образец владельца: Ricks Clips, «Why Perfect Railroads Don't Work»,
+  30 млн просмотров; «учебные» названия у того же канала набирают в 30–100 раз меньше); половина —
+  привязано к тому, что обсуждают сейчас (премьеры, праздники, сезон). «Почему небо голубое» и
+  «эффекты» из учебника не предлагай; название — загадка без ответа, а не заголовок параграфа.
+  Нелепый факт обязан быть правдой: байки отсеивай, легенду называй легендой. Правила — в промптах
+  `script/topic-ideas.ts` и `script/plan-gen.ts`, ниша — `channel.json` → `niche`.
 - **Канал — `channel.json`** («Суть за минуту»): имя, голос, тема, хэштеги, призывы, ссылки,
   дисклеймер, слоты Shorts 12:00/16:00/19:00 Europe/Moscow. С диска читает только `src/pipeline/channel-file.ts`
   (`loadChannel`), разбирает `channel.ts` (`channelFromJson`, `applyChannelDefaults`, слоты — без
@@ -53,6 +63,16 @@
   композиции Video в конце хука, тот же кадр → `thumb_offset`), `telegram.ts` (канал Telegram:
   sendVideo с `cover.jpg`, подпись `telegram.txt`/`instagram.txt` ≤ 1024, пережатие > 50 МБ,
   отметка `telegram-result.json` «sending» до запроса — против дублей).
+- **Кинорежим** (`VideoScript.mode = "cinematic"`, README «Кинорежим»): планы `ScriptScene.shots` и
+  общий `VideoScript.style` — в `types.ts` (`layoutShots`/`renderShots` делят длину сцены, не трогая
+  тайминг звука и субтитров); кадры планов — `visuals/shots.ts` (тот же `findVisual` с `aiOnly`,
+  промпт — `query.ts`: полный промпт сценариста при `shotPrompts: "complete"`, иначе `shotImagePrompt` +
+  `styleText`; ключ манифеста — `shotVisualKey`; повторы кадра `reuse`, бюджет `capNewFrames`); общий кэш
+  кадров — `visuals/ai-cache.ts`; проверка кадров зрением Claude и перегенерация — `visuals/review.ts` +
+  `reviewAndFixShots` в `cli/make.ts`; рисует `MediaScene` (`lib/shots.ts`, движения камеры —
+  `lib/camera.ts`, `MediaLayer` с `dim="none"`, подписи и цифры — `components/ShotMarks.tsx`).
+  Обычный ответ LLM — `ClassicVideoScriptSchema` (JSON Schema для модели без полей кино);
+  проверки — `src/dev/cinematic-test.ts`.
 - `src/pipeline/plan.ts` — `content/plan.json` (60 тем: хук, угол, факты с источниками): `parsePlan`,
   `planNotes` (пожелания LLM), `scriptCode` (код из `scripts/sut-08a-….json`); `npm run script --
   --plan 08a,08b` пишет сценарии по плану. `google-api.ts` — access token и разбор ошибок API без

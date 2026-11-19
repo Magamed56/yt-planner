@@ -26,7 +26,6 @@ import { cloudflareProvider } from "./providers/cloudflare";
 import { pexelsProvider } from "./providers/pexels";
 import { pixabayProvider } from "./providers/pixabay";
 import { openverseProvider } from "./providers/openverse";
-import { pollinationsProvider } from "./providers/pollinations";
 import { wikimediaProvider } from "./providers/wikimedia";
 import { buildQueries } from "./query";
 import { visualQuery } from "./relevance";
@@ -39,7 +38,6 @@ export const VISUAL_PROVIDERS: Record<string, VisualProvider> = {
   wikimedia: wikimediaProvider,
   openverse: openverseProvider,
   cloudflare: cloudflareProvider,
-  pollinations: pollinationsProvider,
 };
 
 export const DEFAULT_VISUALS = "pexels,pixabay,wikimedia,openverse,cloudflare";
@@ -254,7 +252,15 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
     const prefer = (env.VISUALS_PREFER ?? "").trim().toLowerCase();
     const realFirst = Boolean(ctx.realFirst) || prefer === "real";
     const perScene = { calls: 0 };
-    for (const step of buildPlan(ready, ctx.format, prefer === "image", realFirst)) {
+    const plan = buildPlan(ready, ctx.format, prefer === "image", realFirst);
+    const steps = ctx.aiOnly
+      ? plan.filter((s) => s.provider.kind === "ai")
+      : ctx.only === "footage"
+        ? plan.filter((s) => s.provider.kind === "stock" && s.stage.media === "video")
+        : ctx.only === "photo"
+          ? plan.filter((s) => s.provider.kind === "photo")
+          : plan;
+    for (const step of steps) {
       const { provider } = step;
       if (disabled.has(provider.name)) continue;
       if (provider.kind !== "ai" && queries.length === 0) continue;
@@ -295,7 +301,7 @@ export async function findVisual(scene: ScriptScene, ctx: VisualContext & Visual
         }
       }
     }
-    deps.log.info(`${tag}: подходящего визуала по теме не нашлось — сцена будет на моушен-графике.`);
+    deps.log.info(ctx.only ? `${tag}: ${ctx.only === "footage" ? "видео" : "фото"} по теме не нашлось — будет рисованный кадр.` : `${tag}: подходящего визуала по теме не нашлось — сцена будет на моушен-графике.`);
     return NONE;
   } catch (e) {
     // Страховка: ни одна ошибка визуала не должна ронять сборку ролика.

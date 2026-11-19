@@ -1,0 +1,309 @@
+{
+  "title": "Пётр I сам рвал зубы: трофеи царя в Кунсткамере",
+  "description": "Как Пётр Первый в Голландии научился удалять зубы, почему с тех пор не расставался со щипцами и зачем вырвал здоровый зуб жене своего камердинера. А ещё — что увидели стоматологи, когда изучили царские трофеи из Кунсткамеры.\n#shorts #пётрпервый #история #кунсткамера #стоматология",
+  "tags": [
+    "пётр i сам рвал зубы",
+    "пётр рвал зубы",
+    "пётр i сам рвал",
+    "пётр первый",
+    "кунсткамера",
+    "история россии",
+    "великое посольство",
+    "стоматология",
+    "зубы",
+    "фредерик рюйш",
+    "меншиков",
+    "интересные факты",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Заболел зуб при дворе? Плохо. Узнал царь — ещё хуже.",
+      "onScreen": "Узнал царь — *ещё хуже*",
+      "shots": [
+        {
+          "prompt": "Peter, a tall man in his late twenties with a round face, a small dark mustache, shoulder-length curly dark brown hair, wearing a dark green wool caftan with brass buttons and a white linen cravat, raises a pair of iron dental forceps and smiles with mischievous enthusiasm in a wood-panelled palace room in Saint Petersburg on a bright afternoon. 35mm film photograph, 35mm lens, soft natural window light, warm true-to-life colors, gentle film grain, close-up. Vertical 9:16 frame, face and forceps in the upper two thirds, calm plain lower third.",
+          "seconds": 4.5,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Peter"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "В первом русском музее лежат чьи-то зубы. Откуда?",
+      "onScreen": "Чьи-то *зубы* в музее",
+      "shots": [
+        {
+          "prompt": "A grand museum hall of the Kunstkamera in Saint Petersburg with tall wooden cabinets holding rows of glass jars with curious specimens, polished parquet floor, daylight from tall arched windows. 35mm film photograph, 35mm lens, soft natural window light, warm true-to-life colors, gentle film grain, wide shot. Vertical 9:16 frame, cabinets and jars filling the upper two thirds, calm plain floor in the lower third.",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "Kunstkamera hall",
+          "photo": "Kunstkamera Saint Petersburg interior"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Тысяча шестьсот девяносто восьмой. Пётр в Голландии учится у анатома Рюйша.",
+      "onScreen": "1698: царь *учится* в Голландии",
+      "visualQuery": "Frederik Ruysch portrait",
+      "imagePrompt": "Peter the Great as a young man watching an anatomy lesson in a round wooden anatomy theatre in Amsterdam, soft winter daylight, warm 35mm film look",
+      "shots": [
+        {
+          "prompt": "Peter, a tall man in his late twenties with a round face, a small dark mustache, shoulder-length curly dark brown hair, wearing a dark green wool caftan with brass buttons and a white linen cravat, leans forward with fascinated eyes on a wooden bench of a round anatomy theatre in Amsterdam on a winter morning, rows of tiered wooden seats around him. 35mm film photograph, 35mm lens, soft daylight from a high window, warm true-to-life colors, gentle film grain, medium shot. Vertical 9:16 frame, Peter in the upper two thirds, calm wooden benches in the lower third.",
+          "seconds": 2.5,
+          "framing": "medium",
+          "camera": "tilt-down",
+          "subject": "Peter",
+          "sticker": {
+            "text": "1698",
+            "beat": "Тысяча шестьсот"
+          }
+        },
+        {
+          "prompt": "Formal portrait of the Dutch anatomist Frederik Ruysch, an elderly man with a long curled wig and a dark coat, seated calmly in his study in Amsterdam. 35mm film photograph look, soft window light, warm true-to-life colors, gentle film grain, medium shot. Vertical 9:16 frame, face in the upper two thirds, calm dark background in the lower third.",
+          "seconds": 2.8,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Frederik Ruysch",
+          "beat": "Пётр в Голландии",
+          "photo": "Frederik Ruysch portrait"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "В Амстердаме цирюльник рвёт зубы ручкой ложки и концом шпаги. Несколько уроков — и царь не хуже.",
+      "onScreen": "Ложка, шпага и *несколько* уроков",
+      "shots": [
+        {
+          "prompt": "Barber, a cheerful middle-aged Dutch barber with a short grey beard, a brown leather apron over a white shirt and a black felt hat, holds a silver spoon handle near the open mouth of a laughing seated sailor, a sheathed sword leaning on the stool beside him, inside a cosy Amsterdam barber shop on a winter afternoon. 35mm film photograph, 35mm lens, warm candlelight and window light, warm true-to-life colors, gentle film grain, medium shot. Vertical 9:16 frame, action in the upper two thirds, calm plain floor in the lower third.",
+          "seconds": 4,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "Barber",
+          "callouts": [
+            {
+              "label": "Ручка ложки",
+              "target": "silver spoon handle",
+              "beat": "ручкой ложки"
+            }
+          ]
+        },
+        {
+          "prompt": "Peter, a tall man in his late twenties with a round face, a small dark mustache, shoulder-length curly dark brown hair, wearing a dark green wool caftan with brass buttons and a white linen cravat, proudly lifts iron forceps in triumph while Barber, a cheerful middle-aged Dutch barber with a short grey beard, a brown leather apron over a white shirt and a black felt hat, applauds beside him in a cosy Amsterdam barber shop. 35mm film photograph, 35mm lens, warm candlelight, warm true-to-life colors, gentle film grain, medium shot. Vertical 9:16 frame, both men in the upper two thirds, calm lower third.",
+          "seconds": 3.6,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "Peter",
+          "beat": "Несколько уроков"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "К нему толпами идут голландцы с больными зубами. И по шиллингу платит им царь.",
+      "onScreen": "Платит *царь*, а не пациент",
+      "visualQuery": "Amsterdam canal houses winter",
+      "imagePrompt": "young Peter the Great handing a silver coin to a smiling Dutch townsman inside a warm wooden Amsterdam inn, candlelight, warm 35mm film look",
+      "shots": [
+        {
+          "prompt": "Old brick canal houses along a frozen canal in Amsterdam on a cold winter morning, small groups of townsfolk in dark coats walking along the embankment. 35mm film photograph, 35mm lens, soft overcast daylight, warm true-to-life colors, gentle film grain, establishing shot. Vertical 9:16 frame, houses in the upper two thirds, calm icy canal in the lower third.",
+          "seconds": 3.3,
+          "framing": "establishing",
+          "camera": "pan-left",
+          "subject": "Amsterdam canal",
+          "footage": "Amsterdam canal houses winter"
+        },
+        {
+          "prompt": "Peter, a tall man in his late twenties with a round face, a small dark mustache, shoulder-length curly dark brown hair, wearing a dark green wool caftan with brass buttons and a white linen cravat, places a silver coin into the palm of a surprised, smiling Dutch townsman holding his cheek, inside a warm wooden inn room in Amsterdam on a winter afternoon. 35mm film photograph, 35mm lens, warm candlelight, warm true-to-life colors, gentle film grain, close-up. Vertical 9:16 frame, hands and faces in the upper two thirds, calm lower third.",
+          "seconds": 3.4,
+          "framing": "close-up",
+          "camera": "pull-out",
+          "subject": "Peter",
+          "beat": "И по шиллингу"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "С тех пор щипцы всегда при нём. Рвёт зубы служанке, графу Апраксину, жене Меншикова.",
+      "onScreen": "Щипцы *всегда* при себе",
+      "shots": [
+        {
+          "prompt": "An open small wooden case lined with dark green velvet holding iron dental forceps and a few other polished steel surgical tools, resting on an oak table in a Saint Petersburg palace room in the afternoon. 35mm film photograph, 35mm lens, soft natural window light, warm true-to-life colors, gentle film grain, detail shot from above. Vertical 9:16 frame, case in the upper two thirds, calm plain tabletop in the lower third.",
+          "seconds": 3.3,
+          "framing": "overhead",
+          "camera": "push-in",
+          "subject": "dental case",
+          "callouts": [
+            {
+              "label": "Щипцы",
+              "target": "iron dental forceps",
+              "beat": "щипцы"
+            }
+          ]
+        },
+        {
+          "prompt": "Slow pull-out from Peter raising the forceps with a cheerful grin.",
+          "seconds": 3.4,
+          "framing": "medium",
+          "camera": "pull-out",
+          "subject": "Peter",
+          "beat": "Рвёт зубы",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Но часть зубов оказалась здоровой. Камердинер Полубояров пожаловался: жена отказывает в близости, мол, зуб болит.",
+      "onScreen": "Но часть зубов — *здоровые*",
+      "shots": [
+        {
+          "prompt": "Slow pan across the museum cabinets as if searching for the answer.",
+          "seconds": 2.5,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "Kunstkamera hall",
+          "reuse": "s2-k1"
+        },
+        {
+          "prompt": "Poluboyarov, a thin man in his thirties with a neatly trimmed light brown beard, wearing a grey servant's livery coat with silver buttons, bows and gestures with an exasperated face while Peter, a tall man in his late twenties with a round face, a small dark mustache, shoulder-length curly dark brown hair, wearing a dark green wool caftan with brass buttons and a white linen cravat, listens with a sly smirk in a palace study in Saint Petersburg at evening. 35mm film photograph, 35mm lens, warm candlelight, warm true-to-life colors, gentle film grain, medium shot. Vertical 9:16 frame, both men in the upper two thirds, calm lower third.",
+          "seconds": 4.6,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Poluboyarov",
+          "beat": "Камердинер Полубояров"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "media",
+      "narration": "Пётр усмехнулся: добро, я её поучу. И вырвал камердинерше здоровый зуб.",
+      "onScreen": "«Добро, я её *поучу*»",
+      "visualQuery": "antique dental forceps",
+      "imagePrompt": "young Peter the Great with a playful grin holding iron forceps beside a surprised young Russian woman in a red sarafan, warm candlelit palace room, 35mm film look",
+      "shots": [
+        {
+          "prompt": "Peter, a tall man in his late twenties with a round face, a small dark mustache, shoulder-length curly dark brown hair, wearing a dark green wool caftan with brass buttons and a white linen cravat, steps forward holding iron dental forceps with a playful grin toward Wife, a young woman with a long blond braid, a blue silk headscarf and a red sarafan over a white blouse, who raises her eyebrows in comic surprise, in a warm palace room in Saint Petersburg at evening. 35mm film photograph, 35mm lens, warm candlelight, warm true-to-life colors, gentle film grain, medium shot. Vertical 9:16 frame, both figures in the upper two thirds, calm lower third.",
+          "seconds": 3.3,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "Peter"
+        },
+        {
+          "prompt": "Slow pan over the forceps resting in the open case, the lesson over.",
+          "seconds": 2.5,
+          "framing": "detail",
+          "camera": "pan-right",
+          "subject": "dental case",
+          "beat": "И вырвал",
+          "reuse": "s6-k1"
+        }
+      ]
+    },
+    {
+      "id": "s9",
+      "kind": "statement",
+      "narration": "Нартов писал о целом мешке зубов. Под стеклом Кунсткамеры их тридцать два.",
+      "onScreen": "Целый мешок. Под стеклом — *32*",
+      "shots": [
+        {
+          "prompt": "A smiling young woman museum visitor in a beige coat leans over a glass display case with raised eyebrows of amused surprise, looking at a small flat antique wooden box inside, in the bright Kunstkamera museum hall in Saint Petersburg in daytime, wooden cabinets in the background. 35mm film photograph, 35mm lens, soft natural window light, warm true-to-life colors, gentle film grain, medium shot. Vertical 9:16 frame, visitor and case in the upper two thirds, calm plain parquet in the lower third.",
+          "seconds": 5.7,
+          "framing": "medium",
+          "camera": "tilt-down",
+          "subject": "museum visitor",
+          "callouts": [
+            {
+              "label": "Трофеи царя",
+              "target": "small flat antique wooden box",
+              "beat": "Под стеклом"
+            }
+          ],
+          "sticker": {
+            "text": "32",
+            "beat": "тридцать два"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "kind": "statement",
+      "narration": "Почти на всех стоматологи нашли сильный кариес, а удаления — почти все грамотные. Выходит, царь чаще лечил.",
+      "onScreen": "Кариес и *грамотная* работа",
+      "shots": [
+        {
+          "prompt": "Slow push-in on the visitor's curious, impressed smile over the display case.",
+          "seconds": 4.6,
+          "framing": "reaction",
+          "camera": "push-in",
+          "subject": "museum visitor",
+          "reuse": "s9-k1"
+        },
+        {
+          "prompt": "Slow tilt-up from the forceps to Peter's satisfied smile.",
+          "seconds": 3,
+          "framing": "low-angle",
+          "camera": "tilt-up",
+          "subject": "Peter",
+          "beat": "Выходит",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "kind": "cta",
+      "narration": "А ты бы открыл рот перед царём?",
+      "onScreen": "Открыл бы рот *перед царём*?"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "warm historical comedy-drama, story told through Peter's curiosity and the reactions around him",
+    "lighting": "soft natural window light mixed with warm candlelight",
+    "palette": "warm amber, deep green, cream linen, muted brick red",
+    "realism": "photorealistic period film still",
+    "mood": "curious, playful, warm with a wink of irony",
+    "environment": "Dutch inns and anatomy theatres, Russian palace rooms of the early 18th century, the Kunstkamera museum hall",
+    "world": "Late 17th and early 18th century: winter Amsterdam in 1698 with canals and wooden inns, then Peter's court in Saint Petersburg in the 1720s, ending in the Kunstkamera museum hall in Saint Petersburg today",
+    "look": "35mm film photograph, 35mm lens, soft natural window light and warm candlelight, warm true-to-life colors, gentle film grain",
+    "characters": [
+      {
+        "name": "Peter",
+        "look": "a tall man in his late twenties with a round face, a small dark mustache, shoulder-length curly dark brown hair, wearing a dark green wool caftan with brass buttons and a white linen cravat"
+      },
+      {
+        "name": "Barber",
+        "look": "a cheerful middle-aged Dutch barber with a short grey beard, a brown leather apron over a white shirt and a black felt hat"
+      },
+      {
+        "name": "Poluboyarov",
+        "look": "a thin man in his thirties with a neatly trimmed light brown beard, wearing a grey servant's livery coat with silver buttons"
+      },
+      {
+        "name": "Wife",
+        "look": "a young woman with a long blond braid, a blue silk headscarf and a red sarafan over a white blouse"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}

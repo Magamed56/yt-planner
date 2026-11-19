@@ -46,6 +46,91 @@ export interface SceneCompare {
   suffix?: string; // единицы после числа: " лет", "%"
 }
 
+// ---- Кинорежим (аддитивно) ----
+// VideoScript.mode = "cinematic": сцена — один голос и одни субтитры, а картинка
+// меняется по планам (shots). Каждый план — свой AI-кадр в общем стиле ролика
+// (VideoScript.style) со своим движением камеры; заголовков и плашек поверх нет.
+
+// Крупность или ракурс плана — попадает в промпт кадра.
+export type ShotFraming = "establishing" | "wide" | "medium" | "close-up" | "detail" | "reaction" | "pov" | "low-angle" | "high-angle" | "overhead";
+export const SHOT_FRAMINGS: ShotFraming[] = ["establishing", "wide", "medium", "close-up", "detail", "reaction", "pov", "low-angle", "high-angle", "overhead"];
+
+// Движение камеры по кадру (src/remotion/lib/camera.ts). pan — по горизонтали,
+// tilt — по вертикали; handheld — лёгкое «дыхание» с рук.
+export type CameraMove = "push-in" | "pull-out" | "pan-left" | "pan-right" | "tilt-up" | "tilt-down" | "handheld";
+export const CAMERA_MOVES: CameraMove[] = ["push-in", "pull-out", "pan-left", "pan-right", "tilt-up", "tilt-down", "handheld"];
+
+export interface SceneShot {
+  // АНГЛИЙСКИЙ промпт кадра. При VideoScript.shotPrompts = "complete" — полный
+  // (герой с приметами, действие, одно место, свет, объектив, композиция) и
+  // уходит в генератор как есть; иначе — только содержание, стиль добавит код.
+  prompt: string;
+  seconds?: number; // желаемая длина плана; реальная — доля длины сцены, которую задаёт голос
+  framing?: ShotFraming;
+  camera?: CameraMove; // нет — подберётся по крупности (defaultCamera)
+  subject?: string; // кто/что в кадре: один и тот же герой или предмет называется одинаково во всех планах
+  beat?: string; // первые слова narration, на которых начинается план (склейка под фразу)
+  reuse?: string; // "s2-k1": кадр того плана ещё раз, с другим движением камеры — без новой генерации
+  callouts?: ShotCallout[]; // подписи со стрелкой к предметам в кадре (моушен поверх картинки)
+  sticker?: ShotSticker; // крупная цифра или дата поверх кадра
+  // Настоящая съёмка вместо рисунка (ENGLISH, 2–6 слов): видео со стоков или фото из
+  // архивов (Wikimedia Commons, Openverse). Не нашлось по теме — кадр по prompt.
+  footage?: string;
+  photo?: string;
+}
+
+// Подпись к предмету в кадре: где он — скажет проверка кадра (visuals/review.ts).
+export interface ShotCallout {
+  label: string; // по-русски, 1–3 слова: «пулемёт Льюиса»
+  target: string; // ENGLISH: что в кадре подписываем — "the machine gun"
+  beat?: string; // слова narration, на которых подпись появляется
+}
+
+export interface ShotSticker {
+  text: string; // «1932», «×10», «986»
+  beat?: string;
+}
+
+export type VideoMode = "infographic" | "cinematic";
+
+// Общий вид кадров ролика (по-английски). Старые сценарии: поля direction…
+// environment дописываются в промпт каждого кадра. Новые (shotPrompts =
+// "complete"): world, look и characters — «библия» ролика, по которой
+// сценарист пишет полные промпты; код к ним ничего не дописывает.
+export interface VisualStyle {
+  direction?: string; // художественное направление: "dark fantasy film still"
+  lighting?: string; // "low-key candle light, volumetric haze"
+  palette?: string; // "deep teal and amber"
+  realism?: string; // "photorealistic" | "painterly" …
+  mood?: string; // "mysterious, tense"
+  environment?: string; // "misty northern village, wooden houses"
+  world?: string; // один мир ролика: место, эпоха, время года, погода
+  look?: string; // съёмка: камера, объектив, плёнка, свет, цвет
+  characters?: StyleCharacter[]; // сквозные герои с неизменными приметами
+}
+
+export interface StyleCharacter {
+  name: string; // "Major Meredith"
+  look: string; // ENGLISH приметы — слово в слово в каждом промпте с этим героем
+}
+
+// newFrames — сколько НОВЫХ картинок просим у сценариста на ролик (остальные
+// планы повторяют кадры через reuse): бесплатной квоты Cloudflare хватает на
+// ≈ 60 кадров в сутки, а одна картинка с движением камеры держит 3–5 с.
+export const SHOT_LIMITS = { perScene: 6, minSec: 1, maxSec: 10, newFrames: 12, callouts: 2 } as const;
+// Новых кадров на ролик: у Shorts — SHOT_LIMITS.newFrames, у «Разбора» — один на ~7 с
+// (7 минут ≈ 60 кадров: суточная бесплатная квота Cloudflare — около 60 картинок,
+// часть планов закрывает настоящая съёмка и повторы reuse).
+export function framesBudget(format: "shorts" | "landscape", seconds: number): number {
+  return format === "shorts" ? SHOT_LIMITS.newFrames : Math.max(SHOT_LIMITS.newFrames, Math.round(seconds / 7));
+}
+// План короче секунды мелькает: такие точки склейки сдвигаются.
+export const MIN_SHOT_FRAMES = 30;
+// Склейка на фразу — чуть раньше первого слова: картинка «ведёт» голос.
+export const BEAT_LEAD_FRAMES = 2;
+
+export const isCinematic = (script: { mode?: VideoMode }): boolean => script.mode === "cinematic";
+
 // Сцена сценария — то, что пишет LLM (или человек руками в JSON).
 export interface ScriptScene {
   id: string; // "s1", "s2", …
@@ -61,6 +146,7 @@ export interface ScriptScene {
   chapter?: string; // у первой сцены главы длинного ролика: название главы (карточка + таймкод в описании)
   map?: SceneMap; // необязательно: сцена показывает место на карте
   compare?: SceneCompare; // необязательно: сцена показывает сравнение столбиками
+  shots?: SceneShot[]; // кинорежим: планы сцены по порядку (без mode "cinematic" не используются)
 }
 
 // ---- Викторина и главы (аддитивно) ----
@@ -105,6 +191,9 @@ export interface VideoScript {
   format: Format;
   theme?: ThemeName;
   scenes: ScriptScene[];
+  mode?: VideoMode; // нет — обычный режим (инфографика)
+  style?: VisualStyle; // общий стиль AI-кадров ролика
+  shotPrompts?: "complete"; // промпты планов полные — стиль к ним не дописывается (кинорежим, сценарий от 10.2026)
 }
 
 // ---- Рендер ----
@@ -134,6 +223,35 @@ export interface RenderScene extends ScriptScene {
   audioStartFrame: number; // через сколько кадров после начала сцены стартует голос
   words: WordTiming[]; // тайминги слов относительно начала аудио сцены
   visual: SceneVisual;
+  shots?: RenderShot[]; // кинорежим: планы с кадром и местом внутри сцены (layoutShots)
+}
+
+export interface RenderShot extends SceneShot {
+  camera: CameraMove; // всегда задано (своё или defaultCamera)
+  visual: SceneVisual;
+  from: number; // кадр начала плана относительно начала сцены
+  durationInFrames: number;
+  marks?: ShotMarks; // моушен поверх кадра: подписи и цифра (кадры — от начала плана)
+}
+
+// Прямоугольник на картинке в долях её ширины и высоты (левый верхний угол + размер).
+export interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+// Что знает проверка о кадре (visuals/review.ts): где главный предмет и
+// предметы для подписей. Нет — подписи плана не рисуются.
+export interface ShotMeta {
+  subject?: Box;
+  boxes?: Record<string, Box>; // target подписи → где он на картинке
+}
+
+export interface ShotMarks {
+  callouts: { label: string; box: Box; at: number }[];
+  sticker: { text: string; at: number; place: "top" | "middle" } | null;
 }
 
 // Слово субтитров на ОБЩЕЙ таймлинии (совместимо с Caption из @remotion/captions).
@@ -242,4 +360,168 @@ export function buildTimelineCaptions(
     }
   }
   return captions;
+}
+
+// ---- Планы кинорежима ----
+
+// Камера по крупности, если сценарий её не задал: общий план «осматривается»
+// панорамой, деталь — наездом, реакция — с рук. Подряд одно и то же движение
+// не повторяем — соседние планы иначе сливаются.
+const CAMERA_PAIR: Record<CameraMove, CameraMove> = {
+  "push-in": "pull-out",
+  "pull-out": "push-in",
+  "pan-left": "pan-right",
+  "pan-right": "pan-left",
+  "tilt-up": "tilt-down",
+  "tilt-down": "tilt-up",
+  handheld: "push-in",
+};
+
+export function defaultCamera(framing: ShotFraming | undefined, index: number, prev?: CameraMove): CameraMove {
+  let move: CameraMove;
+  switch (framing) {
+    case "establishing":
+    case "wide":
+    case "overhead":
+      move = index % 2 === 0 ? "pan-right" : "pan-left";
+      break;
+    case "low-angle":
+      move = "tilt-up";
+      break;
+    case "high-angle":
+      move = "tilt-down";
+      break;
+    case "reaction":
+    case "pov":
+      move = "handheld";
+      break;
+    case "close-up":
+    case "detail":
+      move = "push-in";
+      break;
+    default:
+      move = index % 2 === 0 ? "push-in" : "pull-out";
+  }
+  return move === prev ? CAMERA_PAIR[move] : move;
+}
+
+const normWord = (w: string) => w.toLowerCase().replace(/ё/g, "е").replace(/[^\p{L}\p{N}]+/gu, "");
+
+// Где в словах сцены начинается фраза beat (по первым трём её словам), начиная
+// со слова fromIndex: склейка не может уйти назад, к уже показанному плану.
+export function findBeat(beat: string, words: WordTiming[], fromIndex = 0): { index: number; startMs: number } | null {
+  const target = beat.split(/\s+/).map(normWord).filter(Boolean).slice(0, 3);
+  if (!target.length) return null;
+  const ws = words.map((w) => normWord(w.text));
+  for (let i = Math.max(0, fromIndex); i + target.length <= ws.length; i++) {
+    if (target.every((t, k) => ws[i + k] === t)) return { index: i, startMs: words[i]!.startMs };
+  }
+  return null;
+}
+
+// Раскладка планов внутри сцены: длину сцены задаёт голос (layoutScenes), планы
+// её только делят — тайминг сцен, звука и субтитров от них не меняется, а сумма
+// длин планов всегда ровно durationInFrames сцены. Точка склейки — по beat
+// (слово найдено), иначе по доле seconds. Края сцены (edgeFrames — переход к
+// соседней сцене) и минимум MIN_SHOT_FRAMES на план соблюдаются; не влезающие
+// планы с конца отбрасываются.
+export function layoutShots<S extends SceneShot & { visual: SceneVisual }>(
+  shots: S[],
+  scene: { durationInFrames: number; audioStartFrame: number; words: WordTiming[] },
+  edgeFrames = 0,
+): (S & { camera: CameraMove; from: number; durationInFrames: number })[] {
+  const total = Math.max(1, Math.round(scene.durationInFrames));
+  const edge = Math.max(0, Math.round(edgeFrames));
+  const fit = Math.max(1, Math.floor((total - 2 * edge) / MIN_SHOT_FRAMES));
+  const list = shots.slice(0, Math.min(shots.length, fit));
+  const n = list.length;
+  if (n === 0) return [];
+
+  const given = list.map((s) => (typeof s.seconds === "number" && s.seconds > 0 ? s.seconds : null));
+  const known = given.filter((v): v is number => v !== null);
+  const fallback = known.length ? known.reduce((a, b) => a + b, 0) / known.length : 1;
+  const weights = given.map((v) => v ?? fallback);
+  const sum = weights.reduce((a, b) => a + b, 0);
+
+  const cuts: number[] = [0];
+  let acc = 0;
+  let wordFrom = 0;
+  for (let k = 1; k < n; k++) {
+    acc += weights[k - 1]!;
+    let at = Math.round((total * acc) / sum);
+    const beat = list[k]!.beat;
+    const hit = beat ? findBeat(beat, scene.words, wordFrom) : null;
+    if (hit) {
+      at = scene.audioStartFrame + Math.floor((Math.max(0, hit.startMs) / 1000) * FPS) - BEAT_LEAD_FRAMES;
+      wordFrom = hit.index + 1;
+    }
+    const lo = k === 1 ? edge + MIN_SHOT_FRAMES : cuts[k - 1]! + MIN_SHOT_FRAMES;
+    const hi = total - edge - MIN_SHOT_FRAMES * (n - k);
+    cuts.push(Math.min(hi, Math.max(lo, at)));
+  }
+  cuts.push(total);
+
+  let prev: CameraMove | undefined;
+  return list.map((s, k) => {
+    const camera = s.camera ?? defaultCamera(s.framing, k, prev);
+    prev = camera;
+    return { ...s, camera, from: cuts[k]!, durationInFrames: cuts[k + 1]! - cuts[k]! };
+  });
+}
+
+// Планы сценария + их кадры → планы рендера (props и фикстуры собирают их
+// одинаково). План без кадра выпадает — соседние делят его время. Ни одного
+// кадра — один план из визуала сцены, если он есть; иначе undefined, и сцена
+// рисуется обычной раскладкой.
+export function renderShots(
+  scene: { durationInFrames: number; audioStartFrame: number; words: WordTiming[]; visual: SceneVisual },
+  shots: SceneShot[] | undefined,
+  visuals: (SceneVisual | null | undefined)[],
+  edgeFrames: number,
+  metas: (ShotMeta | null | undefined)[] = [],
+): RenderShot[] | undefined {
+  if (!shots?.length) return undefined;
+  const ready = shots
+    .map((s, k) => ({ ...s, visual: visuals[k] ?? ({ type: "none" } as SceneVisual), meta: metas[k] ?? null }))
+    .filter((s) => s.visual.type !== "none");
+  if (!ready.length) {
+    if (scene.visual.type === "none") return undefined;
+    ready.push({ ...shots[0]!, visual: scene.visual, meta: null });
+  }
+  const out = layoutShots(ready, scene, edgeFrames).map(({ meta, ...shot }) => {
+    const marks = shotMarks(shot, meta, scene);
+    return marks ? { ...shot, marks } : shot;
+  });
+  return out.length ? out : undefined;
+}
+
+// Подпись появляется на своих словах (beat) и держится не меньше MARK_TAIL
+// кадров; план короче MARK_MIN_SHOT — без подписей (не успеть прочитать).
+const MARK_FIRST = 6;
+const MARK_TAIL = 20;
+const MARK_MIN_SHOT = 36;
+
+export function shotMarks(
+  shot: SceneShot & { from: number; durationInFrames: number },
+  meta: ShotMeta | null | undefined,
+  scene: { audioStartFrame: number; words: WordTiming[] },
+): ShotMarks | undefined {
+  const dur = shot.durationInFrames;
+  if (dur < MARK_MIN_SHOT) return undefined;
+  // Кадр слов beat относительно начала плана; не нашлось — запасной момент.
+  const at = (beat: string | undefined, fallback: number): number => {
+    const hit = beat ? findBeat(beat, scene.words) : null;
+    const f = hit ? scene.audioStartFrame + Math.floor((Math.max(0, hit.startMs) / 1000) * FPS) - shot.from : fallback;
+    return Math.max(MARK_FIRST, Math.min(dur - MARK_TAIL, f));
+  };
+  const callouts: ShotMarks["callouts"] = [];
+  (shot.callouts ?? []).slice(0, SHOT_LIMITS.callouts).forEach((c, k) => {
+    const box = meta?.boxes?.[c.target];
+    if (!box) return; // проверка не нашла предмет — подпись в пустоту не рисуем
+    callouts.push({ label: c.label, box, at: at(c.beat, MARK_FIRST + 4 + k * 14) });
+  });
+  const sticker = shot.sticker?.text.trim()
+    ? { text: shot.sticker.text.trim(), at: at(shot.sticker.beat, MARK_FIRST), place: meta?.subject && meta.subject.y < 0.3 ? ("middle" as const) : ("top" as const) }
+    : null;
+  return callouts.length || sticker ? { callouts, sticker } : undefined;
 }

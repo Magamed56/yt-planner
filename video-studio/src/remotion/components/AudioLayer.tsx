@@ -91,6 +91,8 @@ export const AudioLayer: React.FC<{ props: VideoProps }> = ({ props }) => {
             // Варианты свиста по кругу и чуть разная громкость — склейки не звучат одинаково.
             const variants = props.sfx?.whooshes?.length ? props.sfx.whooshes : props.whooshSrc ? [props.whooshSrc] : [];
             if (variants.length === 0) return null;
+            // Кинорежим: между сценами — мягкий наплыв, свист к нему не идёт.
+            if (s.shots?.length) return null;
             const from = Math.max(0, s.startFrame - WHOOSH_LEAD_FRAMES);
             const voiceAt = s.startFrame + s.audioStartFrame - from; // голос новой сцены — от начала свиста
             const volume = props.sfxVolume * WHOOSH_GAIN[i % WHOOSH_GAIN.length]!;
