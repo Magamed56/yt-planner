@@ -1,0 +1,246 @@
+{
+  "title": "Почему поезд стучит и рельсы кладут с зазором",
+  "description": "Почему рельсы нельзя просто уложить впритык, откуда берётся стук колёс и что такое выброс пути в жару. А ещё как современные рельсы сваривают в плети на километры и почему они от этого не изгибаются.",
+  "tags": [
+    "рельсы",
+    "почему поезд стучит",
+    "железная дорога",
+    "выброс пути",
+    "бесстыковой путь",
+    "стук колёс",
+    "тепловое расширение",
+    "физика",
+    "поезд",
+    "сварные рельсы",
+    "sun kink",
+    "railway",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "mono",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Положи рельсы впритык, и обычная жара скрутит их змеёй.",
+      "onScreen": "Рельсы впритык — и *змея*",
+      "icon": "flame",
+      "shots": [
+        {
+          "prompt": "A long steel railway track bent sideways into a smooth snake-like wave across the gravel ballast, with a 45-year-old railway track engineer with short grey hair, a tanned face and a trimmed grey beard, wearing a white hard hat, a bright orange high-visibility vest over a white t-shirt and dark blue work trousers standing beside it and raising his eyebrows in surprise, golden farmland on a hot summer afternoon with heat shimmer, 35mm film photograph, 35mm lens, bright sunlight, warm true-to-life colors, soft grain, wide shot, the wavy rails and the man in the upper two thirds of the vertical frame, calm gravel in the lower third",
+          "seconds": 4,
+          "framing": "wide",
+          "camera": "push-in",
+          "subject": "Engineer"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Сталь на солнце растёт. Поэтому в старом пути между рельсами нарочно оставляли зазоры. На них колёса и стучат.",
+      "onScreen": "Зазор — место для *роста*",
+      "icon": "sun",
+      "shots": [
+        {
+          "prompt": "A small gap between the ends of two steel rails joined by a bolted metal fishplate, sunlight glinting on the polished rail heads, wooden sleepers and grey gravel ballast around, rural railway in golden farmland on a hot summer afternoon, 35mm film photograph, 35mm lens, bright sunlight, warm true-to-life colors, soft grain, detail shot from a low angle, the rail gap and fishplate in the upper two thirds of the vertical frame, plain gravel in the lower third",
+          "seconds": 5,
+          "framing": "detail",
+          "camera": "pan-right",
+          "subject": "rail joint gap",
+          "callouts": [
+            {
+              "label": "Зазор",
+              "target": "small gap between the ends of two steel rails",
+              "beat": "оставляли зазоры"
+            },
+            {
+              "label": "Накладка",
+              "target": "bolted metal fishplate",
+              "beat": "нарочно"
+            }
+          ]
+        },
+        {
+          "prompt": "Steel train wheels rolling over railway rails on a sunny summer day, motion close to the track, golden fields beyond, 35mm film photograph, warm true-to-life colors, close-up, wheels in the upper two thirds of the vertical frame, calm ballast in the lower third",
+          "seconds": 3.5,
+          "framing": "close-up",
+          "camera": "handheld",
+          "subject": "train wheels",
+          "beat": "На них",
+          "footage": "train wheels on rails"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "Если стали расти некуда, путь выбрасывает: за две десятых секунды рельсы уходят вбок волнами.",
+      "onScreen": "Выброс пути — *вбок* волнами",
+      "icon": "zap",
+      "visualQuery": "Sun kink railway track",
+      "imagePrompt": "high-angle view of a railway track with both steel rails thrown sideways into smooth lateral waves, shifted concrete sleepers and scattered gravel, golden summer farmland, heat shimmer, 35mm film look, warm true-to-life colors",
+      "shots": [
+        {
+          "prompt": "A railway track seen from above, both steel rails thrown sideways into several smooth lateral waves along a short stretch, a few concrete sleepers shifted and scattered grey gravel around them, empty rural line in golden farmland on a hot summer afternoon with heat shimmer, 35mm film photograph, 35mm lens, bright sunlight, warm true-to-life colors, soft grain, high-angle shot, the wavy rails filling the upper two thirds of the vertical frame, quiet gravel in the lower third",
+          "seconds": 4,
+          "framing": "high-angle",
+          "camera": "tilt-down",
+          "subject": "buckled railway track",
+          "callouts": [
+            {
+              "label": "Выброс пути",
+              "target": "steel rails thrown sideways into lateral waves",
+              "beat": "путь выбрасывает"
+            }
+          ],
+          "sticker": {
+            "text": "0,2 с",
+            "beat": "за две десятых"
+          }
+        },
+        {
+          "prompt": "slow pull-out from the snake-shaped rails with the surprised engineer beside them",
+          "seconds": 3,
+          "framing": "establishing",
+          "camera": "pull-out",
+          "subject": "Engineer",
+          "beat": "рельсы уходят",
+          "reuse": "s1-k1"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "В Америке это зовут солнечным изломом.",
+      "onScreen": "Sun kink — *солнечный* излом",
+      "icon": "sun",
+      "shots": [
+        {
+          "prompt": "A 45-year-old railway track engineer with short grey hair, a tanned face and a trimmed grey beard, wearing a white hard hat, a bright orange high-visibility vest over a white t-shirt and dark blue work trousers, crouching by a sideways bend in the steel rails and pointing at it with a wry amused smile while shading his eyes from the sun, rural railway in golden farmland on a hot summer afternoon, 35mm film photograph, 35mm lens, bright sunlight, warm true-to-life colors, soft grain, medium shot, man and bent rail in the upper two thirds of the vertical frame, calm gravel in the lower third",
+          "seconds": 3,
+          "framing": "reaction",
+          "camera": "pan-left",
+          "subject": "Engineer"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "statement",
+      "narration": "И всё же сегодня рельсы сваривают в плети на километры. Но не просто кладут.",
+      "onScreen": "Плети на *километры*",
+      "icon": "trending-up",
+      "shots": [
+        {
+          "prompt": "Long continuous welded steel rails stretching in a perfectly straight line to the horizon across golden farmland on a hot summer afternoon, smooth seamless rail heads shining in the sun, concrete sleepers in neat rows, 35mm film photograph, 35mm lens, bright sunlight, warm true-to-life colors, soft grain, low-angle shot from rail level, the converging rails and horizon in the upper two thirds of the vertical frame, gravel in the lower third",
+          "seconds": 6,
+          "framing": "low-angle",
+          "camera": "push-in",
+          "subject": "continuous welded rail",
+          "photo": "Continuous welded rail"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "media",
+      "narration": "Холодный рельс греют или растягивают гидравликой и крепят уже вытянутым, как тугую резинку.",
+      "onScreen": "Рельс крепят *натянутым*",
+      "icon": "lock",
+      "visualQuery": "railway track workers rail maintenance",
+      "imagePrompt": "railway track engineer in orange high-visibility vest and white hard hat operating a yellow hydraulic rail tensor on a long steel rail, golden summer farmland, bright afternoon sun, 35mm film look, warm true-to-life colors",
+      "shots": [
+        {
+          "prompt": "A 45-year-old railway track engineer with short grey hair, a tanned face and a trimmed grey beard, wearing a white hard hat, a bright orange high-visibility vest over a white t-shirt and dark blue work trousers, operating a yellow hydraulic rail tensor clamped onto a long steel rail, looking focused and calm, rural railway in golden farmland on a hot summer afternoon, 35mm film photograph, 35mm lens, bright sunlight, warm true-to-life colors, soft grain, medium shot, man and machine in the upper two thirds of the vertical frame, quiet ballast in the lower third",
+          "seconds": 3.5,
+          "framing": "medium",
+          "camera": "pan-right",
+          "subject": "Engineer",
+          "callouts": [
+            {
+              "label": "Гидронатяжитель",
+              "target": "yellow hydraulic rail tensor",
+              "beat": "растягивают гидравликой"
+            }
+          ]
+        },
+        {
+          "prompt": "A steel elastic rail clip being pressed down to fasten a shiny steel rail onto a grey concrete sleeper, a gloved hand of a railway worker in a bright orange high-visibility vest holding the tool, gravel ballast around, hot summer afternoon on a rural railway, 35mm film photograph, 35mm lens, bright sunlight, warm true-to-life colors, soft grain, detail shot, clip and rail in the upper two thirds of the vertical frame, plain gravel in the lower third",
+          "seconds": 2.5,
+          "framing": "detail",
+          "camera": "tilt-down",
+          "subject": "rail clip",
+          "beat": "и крепят",
+          "callouts": [
+            {
+              "label": "Крепление",
+              "target": "steel elastic rail clip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "statement",
+      "narration": "Расширение уходит в силу: до ста десяти тонн-сил на каждую нить. А риск выброса никуда не делся.",
+      "onScreen": "Не длина, а *сила*",
+      "icon": "shield",
+      "shots": [
+        {
+          "prompt": "A clean simple illustration of one polished steel rail segment lying horizontally on a plain light warm-grey background, two large orange arrows pressing into its ends from both sides to show compression, soft even studio light, minimal composition, the rail and arrows in the upper two thirds of the vertical frame, empty light background in the lower third",
+          "seconds": 4.5,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "steel rail",
+          "callouts": [
+            {
+              "label": "Сжатие",
+              "target": "orange arrows pressing into rail ends",
+              "beat": "уходит в силу"
+            }
+          ],
+          "sticker": {
+            "text": "110 тс",
+            "beat": "до ста десяти"
+          }
+        },
+        {
+          "prompt": "A passenger train passing along a straight rural railway through golden summer farmland on a hot sunny afternoon, heat shimmer over the rails, 35mm film photograph, warm true-to-life colors, wide shot, train in the upper two thirds of the vertical frame, calm field in the lower third",
+          "seconds": 3.5,
+          "framing": "wide",
+          "camera": "pan-left",
+          "subject": "train",
+          "beat": "А риск",
+          "footage": "train countryside summer"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "kind": "cta",
+      "narration": "А ты замечал, что поезд перестал стучать?",
+      "onScreen": "Поезд перестал *стучать*?",
+      "icon": "message-circle"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "grounded documentary-style short film following one track engineer along a summer railway",
+    "lighting": "hard bright afternoon sun, warm highlights, gentle heat haze",
+    "palette": "steel grey rails, golden fields, orange vest, pale blue sky",
+    "mood": "curious, warm, lightly ironic",
+    "world": "a rural single-track railway line crossing flat golden farmland in midsummer, present day, hot cloudless afternoon with heat shimmer above the rails",
+    "look": "35mm film photograph, 35mm lens, bright afternoon summer sunlight, warm true-to-life colors, soft grain",
+    "characters": [
+      {
+        "name": "Engineer",
+        "look": "a 45-year-old railway track engineer with short grey hair, a tanned face and a trimmed grey beard, wearing a white hard hat, a bright orange high-visibility vest over a white t-shirt and dark blue work trousers"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}

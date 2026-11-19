@@ -1,0 +1,225 @@
+{
+  "title": "Чёрная пятница: откуда название на самом деле",
+  "description": "Почему главный день скидок называется как катастрофа? История названия «чёрная пятница»: от золотой паники 1869 года и ругательства полицейских Филадельфии до легенды про «выход в плюс», которая появилась только в 1981 году.\n#shorts #чёрнаяпятница #история #маркетинг",
+  "tags": [
+    "чёрная пятница",
+    "черная пятница реклама",
+    "black friday",
+    "история названия",
+    "распродажи",
+    "скидки",
+    "маркетинг",
+    "филадельфия",
+    "день благодарения",
+    "история сша",
+    "факты",
+    "shorts"
+  ],
+  "language": "ru",
+  "format": "shorts",
+  "theme": "sunset",
+  "scenes": [
+    {
+      "id": "s1",
+      "kind": "hook",
+      "narration": "Главный день скидок торговцы когда-то мечтали переименовать. Почему?",
+      "onScreen": "Его хотели *переименовать*",
+      "icon": "store",
+      "shots": [
+        {
+          "prompt": "A slim man in his fifties with neatly combed grey hair, round wire-rimmed glasses, a brown three-piece suit and a red bow tie stands in the doorway of his department store, scratching his head with a puzzled half-smile as shoppers hurry past, downtown Philadelphia street on a cold overcast November morning in the early 1960s. Kodachrome-style 35mm film photograph, 35mm lens, soft overcast daylight, warm true-to-life colors, gentle grain. Medium shot, vertical 9:16, his face in the upper two thirds, calm pavement in the lower third.",
+          "seconds": 4,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Store Owner"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "kind": "statement",
+      "narration": "Чёрными в английском звали дни бедствий, вроде золотой паники тысяча восемьсот шестьдесят девятого.",
+      "onScreen": "«Чёрный» день — это *бедствие*",
+      "icon": "coins",
+      "shots": [
+        {
+          "prompt": "A crowded nineteenth-century gold exchange hall full of excited traders in top hats and dark frock coats raising their arms and waving papers, tall arched windows letting in pale daylight, New York in 1869. Period engraving look rendered as a warm 35mm film photograph, soft daylight, true-to-life colors, gentle grain. Wide shot, vertical 9:16, the waving crowd in the upper two thirds, a calm wooden floor in the lower third.",
+          "seconds": 6,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "gold traders",
+          "sticker": {
+            "text": "1869",
+            "beat": "тысяча восемьсот"
+          },
+          "photo": "Black Friday 1869 Gold Room"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "kind": "media",
+      "narration": "А к началу шестидесятых полицейские Филадельфии ругали так день после Дня благодарения: толпы, пробки, давка.",
+      "onScreen": "Толпы, пробки, *давка*",
+      "icon": "users",
+      "visualQuery": "Philadelphia street traffic crowd",
+      "imagePrompt": "A downtown Philadelphia street packed with shoppers and rounded 1960s cars stuck bumper to bumper on a cold overcast November afternoon, Kodachrome-style 35mm film photograph, warm true-to-life colors, gentle grain",
+      "map": {
+        "lat": 39.95,
+        "lon": -75.16,
+        "label": "Филадельфия",
+        "zoom": "city"
+      },
+      "shots": [
+        {
+          "prompt": "A downtown Philadelphia street packed with shoppers carrying paper bags and gift boxes, rounded 1960s cars stuck bumper to bumper between brick department stores, the day after Thanksgiving on a cold overcast November afternoon in the early 1960s. Kodachrome-style 35mm film photograph, 35mm lens, soft overcast daylight, warm true-to-life colors, gentle grain. Establishing high-angle wide shot, vertical 9:16, the jammed street filling the upper two thirds, a calm sidewalk edge in the lower third.",
+          "seconds": 3,
+          "framing": "establishing",
+          "camera": "tilt-down",
+          "subject": "crowded street",
+          "callouts": [
+            {
+              "label": "пробка",
+              "target": "rounded 1960s cars stuck bumper to bumper",
+              "beat": "пробки"
+            }
+          ]
+        },
+        {
+          "prompt": "A stocky police officer in his forties with a round friendly face, a thick dark mustache, a navy blue uniform with a peaked cap and white gloves stands at a busy intersection blowing a whistle and waving both arms, rolling his eyes with comic exasperation as cars and shoppers swirl around him, downtown Philadelphia on a cold overcast November afternoon in the early 1960s. Kodachrome-style 35mm film photograph, 35mm lens, soft overcast daylight, warm true-to-life colors, gentle grain. Medium shot, vertical 9:16, the officer in the upper two thirds, calm asphalt in the lower third.",
+          "seconds": 4,
+          "framing": "medium",
+          "camera": "handheld",
+          "subject": "Officer",
+          "beat": "ругали так"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "kind": "statement",
+      "narration": "В шестьдесят первом торговцы попробовали переименовать его в большую пятницу. Новое имя быстро забылось.",
+      "onScreen": "Большая пятница — *провал*",
+      "icon": "circle-x",
+      "shots": [
+        {
+          "prompt": "A slim man in his fifties with neatly combed grey hair, round wire-rimmed glasses, a brown three-piece suit and a red bow tie leans over a wooden meeting table and proudly points at a large blank poster board, smiling with hope, in a wood-panelled department store office with a window onto the busy street, overcast November afternoon in the early 1960s. Kodachrome-style 35mm film photograph, 35mm lens, soft overcast daylight, warm true-to-life colors, gentle grain. Medium shot, vertical 9:16, his face and the board in the upper two thirds, calm tabletop in the lower third.",
+          "seconds": 4,
+          "framing": "medium",
+          "camera": "push-in",
+          "subject": "Store Owner"
+        },
+        {
+          "prompt": "A slim man in his fifties with neatly combed grey hair, round wire-rimmed glasses, a brown three-piece suit and a red bow tie stands at his store window holding the blank poster board under his arm and shrugs with a wry good-humored sigh while busy shoppers stream past outside, downtown Philadelphia on an overcast November afternoon in the early 1960s. Kodachrome-style 35mm film photograph, 35mm lens, soft overcast daylight, warm true-to-life colors, gentle grain. Close-up reaction shot, vertical 9:16, his face in the upper two thirds, calm window sill in the lower third.",
+          "seconds": 3,
+          "framing": "reaction",
+          "camera": "pull-out",
+          "subject": "Store Owner",
+          "beat": "Новое имя"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "kind": "media",
+      "narration": "Тогда в восемьдесят первом газета напечатала удобную легенду: мол, в этот день магазины выходят из красного минуса в чёрный плюс.",
+      "onScreen": "Из красного — в *чёрный* плюс",
+      "icon": "trending-up",
+      "visualQuery": "accounting ledger red ink",
+      "imagePrompt": "An open leather-bound accounting ledger with red ink and black ink columns and a fountain pen on a wooden desk, warm desk lamp light, Kodachrome-style 35mm film photograph, warm true-to-life colors, gentle grain",
+      "shots": [
+        {
+          "prompt": "A folded morning newspaper lying on a diner counter next to a steaming cup of coffee, warm late-autumn morning light from a nearby window, Philadelphia in November 1981. Kodachrome-style 35mm film photograph, 35mm lens, soft window daylight, warm true-to-life colors, gentle grain. Close-up, vertical 9:16, the newspaper and cup in the upper two thirds, a calm counter surface in the lower third.",
+          "seconds": 4,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "newspaper",
+          "sticker": {
+            "text": "1981",
+            "beat": "восемьдесят первом"
+          },
+          "photo": "The Philadelphia Inquirer newspaper"
+        },
+        {
+          "prompt": "An open leather-bound accounting ledger on a wooden desk, one column filled with red ink entries and the next with black ink entries, a fountain pen resting across the page, soft warm desk lamp light in a quiet store office. Kodachrome-style 35mm film photograph, 35mm lens, warm true-to-life colors, gentle grain. Overhead detail shot, vertical 9:16, the two ink columns in the upper two thirds, calm desk wood in the lower third.",
+          "seconds": 5,
+          "framing": "overhead",
+          "camera": "pan-left",
+          "subject": "ledger",
+          "beat": "магазины выходят",
+          "callouts": [
+            {
+              "label": "минус",
+              "target": "red ink entries",
+              "beat": "красного минуса"
+            },
+            {
+              "label": "плюс",
+              "target": "black ink entries",
+              "beat": "чёрный плюс"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "kind": "statement",
+      "narration": "Ругательство стало брендом и в две тысячи тринадцатом добралось до России. А имя ему дали не скидки, а пробки.",
+      "onScreen": "Имя дали не скидки, а *пробки*",
+      "icon": "car",
+      "shots": [
+        {
+          "prompt": "A bright modern shopping mall full of cheerful shoppers carrying colorful shopping bags along a glass atrium, warm festive evening light, late November. Kodachrome-style 35mm film photograph, 35mm lens, warm true-to-life colors, gentle grain. Wide shot, vertical 9:16, the bustling crowd in the upper two thirds, a calm polished floor in the lower third.",
+          "seconds": 5,
+          "framing": "wide",
+          "camera": "pan-right",
+          "subject": "shoppers",
+          "sticker": {
+            "text": "2013",
+            "beat": "две тысячи"
+          },
+          "footage": "shopping mall crowd bags"
+        },
+        {
+          "prompt": "Slow push-in on the officer blowing his whistle in the jammed street.",
+          "seconds": 4,
+          "framing": "close-up",
+          "camera": "push-in",
+          "subject": "Officer",
+          "beat": "А имя",
+          "reuse": "s3-k2"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "kind": "cta",
+      "narration": "А как бы ты переименовал этот день?",
+      "onScreen": "Твоё *название* для этого дня?",
+      "icon": "message-circle"
+    }
+  ],
+  "mode": "cinematic",
+  "style": {
+    "direction": "warm nostalgic Americana with light humor, story told through a store owner and a traffic officer",
+    "lighting": "soft overcast daylight with warm glow from shop windows",
+    "palette": "warm reds, mustard yellow, navy blue, cream and brown",
+    "realism": "photorealistic period photograph",
+    "mood": "cheerful bustle with gentle irony",
+    "environment": "busy downtown shopping street and a department store",
+    "world": "Downtown Philadelphia in the early 1960s, the Friday after Thanksgiving, late November, crisp overcast cold day with crowded sidewalks, department store windows and bumper-to-bumper traffic",
+    "look": "Kodachrome-style 35mm film photograph, 35mm lens, soft overcast daylight, warm true-to-life colors, gentle film grain",
+    "characters": [
+      {
+        "name": "Store Owner",
+        "look": "a slim man in his fifties with neatly combed grey hair, round wire-rimmed glasses, a brown three-piece suit and a red bow tie"
+      },
+      {
+        "name": "Officer",
+        "look": "a stocky police officer in his forties with a round friendly face, a thick dark mustache, a navy blue uniform with a peaked cap and white gloves"
+      }
+    ]
+  },
+  "shotPrompts": "complete"
+}
